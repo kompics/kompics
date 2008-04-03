@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>se.sics.kompics</groupId>
+    <artifactId>build</artifactId>
+    <version>0.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>kompics-core</artifactId>
+  <name>KOMPICS Core</name>
+  <packaging>jar</packaging>
+  <properties>
+    <symbolicName>${pom.groupId}.core</symbolicName>
+    <exportedPackage>${pom.groupId}</exportedPackage>
+  </properties>
+  <dependencies>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.4</version>
+      </dependency>    
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.14</version>
+      <scope>compile</scope>
+    </dependency>
+	<dependency>
+    	<groupId>jdom</groupId>
+    	<artifactId>jdom</artifactId>
+    	<version>b9</version>
+	</dependency>
+  </dependencies>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <excludePackageNames>kompics.core</excludePackageNames>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+</project> 
