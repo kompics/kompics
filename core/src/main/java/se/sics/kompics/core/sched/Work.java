@@ -1,5 +1,6 @@
 package se.sics.kompics.core.sched;
 
+import se.sics.kompics.api.Priority;
 import se.sics.kompics.core.ChannelCore;
 import se.sics.kompics.core.ComponentCore;
 import se.sics.kompics.core.EventCore;
@@ -15,13 +16,16 @@ public class Work {
 
 	private EventHandler eventHandler;
 
+	private Priority priority;
+
 	public Work(ComponentCore componentCore, ChannelCore channelCore,
-			EventCore eventCore, EventHandler eventHandler) {
+			EventCore eventCore, EventHandler eventHandler, Priority priority) {
 		super();
 		this.componentCore = componentCore;
 		this.channelCore = channelCore;
 		this.eventCore = eventCore;
 		this.eventHandler = eventHandler;
+		this.priority = priority;
 	}
 
 	public ComponentCore getComponentCore() {
@@ -38,5 +42,9 @@ public class Work {
 
 	public EventHandler getEventHandler() {
 		return eventHandler;
+	}
+
+	public Priority getPriority() {
+		return priority;
 	}
 }

@@ -1,6 +1,7 @@
 package se.sics.kompics.core;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
@@ -12,23 +13,26 @@ import se.sics.kompics.core.sched.Work;
 
 public class ChannelCore implements Channel {
 
-	private HashMap<Class<? extends Event>, ReentrantLock> eventTypes;
+	private HashSet<Class<? extends Event>> eventTypes;
 
 	private HashMap<Class<? extends Event>, LinkedList<Subscription>> subscriptions;
 
 	private HashMap<Class<? extends Event>, LinkedList<Binding>> bindings;
 
+	private ReentrantLock channelLock;
+
 	public ChannelCore() {
 		super();
-		eventTypes = new HashMap<Class<? extends Event>, ReentrantLock>();
+		eventTypes = new HashSet<Class<? extends Event>>();
 		subscriptions = new HashMap<Class<? extends Event>, LinkedList<Subscription>>();
 		bindings = new HashMap<Class<? extends Event>, LinkedList<Binding>>();
+		channelLock = new ReentrantLock();
 	}
 
 	/* =============== CONFIGURATION =============== */
 
 	public Set<Class<? extends Event>> getEventTypes() {
-		return eventTypes.keySet();
+		return eventTypes;
 	}
 
 	public LinkedList<Subscription> getSubscriptions(
@@ -41,13 +45,13 @@ public class ChannelCore implements Channel {
 	}
 
 	public void addEventType(Class<? extends Event> eventType) {
-		if (!eventTypes.containsKey(eventType)) {
-			eventTypes.put(eventType, new ReentrantLock());
+		if (!eventTypes.contains(eventType)) {
+			eventTypes.add(eventType);
 		}
 	}
 
 	public void removeEventType(Class<? extends Event> eventType) {
-		if (!eventTypes.containsKey(eventType)) {
+		if (!eventTypes.contains(eventType)) {
 			return;
 		}
 		if (subscriptions.containsKey(eventType)
@@ -62,7 +66,7 @@ public class ChannelCore implements Channel {
 	/* =============== EVENT TRIGGERING =============== */
 	public void publishEventCore(EventCore eventCore) {
 		Class<? extends Event> eventType = eventCore.getEvent().getClass();
-		if (!eventTypes.containsKey(eventType)) {
+		if (!eventTypes.contains(eventType)) {
 			throw new ConfigurationException("Cannot publish event "
 					+ eventType + " in channel");
 		}
@@ -71,16 +75,14 @@ public class ChannelCore implements Channel {
 		if (subs == null)
 			return;
 
-		ReentrantLock lock = eventTypes.get(eventType);
-
-		lock.lock();
+		channelLock.lock();
 		for (Subscription sub : subs) {
 			ComponentCore componentCore = sub.getComponentCore();
 			Work work = new Work(componentCore, this, eventCore, sub
-					.getEventHandler());
+					.getEventHandler(), eventCore.getPriority());
 
 			componentCore.handleWork(work);
 		}
-		lock.unlock();
+		channelLock.unlock();
 	}
 }
