@@ -30,6 +30,15 @@ public class WorkQueue {
 		this.componentCore = componentCore;
 	}
 
+	/*
+	 * add() and take() lock the work queue. they have to lock the componentCore
+	 * for moving the workQueue to a different priority pool, except for the
+	 * case where the priority pool does not change (common case). For this
+	 * reason we do not grab the componentCore lock directly, but only lock the
+	 * workQueue first. This may result in grabbing 2 locks in some cases but
+	 * improves parallelism in the common case.
+	 */
+
 	/* called by the publisher thread */
 	public synchronized void add(Work work) {
 		workQueue.add(work);
@@ -97,13 +106,13 @@ public class WorkQueue {
 	private void decrementCounter(Priority priority) {
 		switch (priority) {
 		case MEDIUM:
-			--mediumCounter;
+			mediumCounter--;
 			break;
 		case HIGH:
-			--highCounter;
+			highCounter--;
 			break;
 		case LOW:
-			--lowCounter;
+			lowCounter--;
 			break;
 		}
 	}

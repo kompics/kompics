@@ -12,25 +12,23 @@ import se.sics.kompics.core.ComponentCore;
  * @author Cosmin Arad
  * 
  */
-public class PriorityReadyQueue {
+public class FairPriorityReadyQueue {
 
 	/**
 	 * @return
 	 */
-	public synchronized ComponentCore take() {
+	public synchronized ReadyComponent take() {
 		return null;
 	}
 
-	
 	/**
-	 * Makes a component ready, by adding it to the ready queue.
-	 * This method should be called when a new work item is created for this 
+	 * Makes a component ready, by adding it to the ready queue. This method
+	 * should be called when a new work item is created for this
 	 * 
 	 * @param component
 	 * @param priority
 	 */
-	public synchronized void ready(ComponentCore component,
-			Priority priority) {
+	public synchronized void ready(ComponentCore component, Priority priority) {
 
 	}
 }

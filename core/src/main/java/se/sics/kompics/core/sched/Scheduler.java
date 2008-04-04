@@ -1,8 +1,10 @@
 package se.sics.kompics.core.sched;
 
+import java.util.concurrent.PriorityBlockingQueue;
+
 public class Scheduler {
 
-	private PriorityReadyQueue readyQueue;
-	
-	
+	private FairPriorityReadyQueue fairReadyQueue;
+
+	private PriorityBlockingQueue<ReadyComponent> readyQueue;
 }

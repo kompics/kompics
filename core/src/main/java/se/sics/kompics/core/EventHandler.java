@@ -73,13 +73,12 @@ public class EventHandler {
 	 * 
 	 * @param event
 	 *            the event to be handled
-	 * @return true if the handler was executed
+	 * @return <code>true</code> if the handler was executed
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	public boolean handleEvent(Event event) throws IllegalArgumentException,
-			IllegalAccessException, InvocationTargetException {
+	public boolean handleEvent(Event event) throws Throwable {
 		if (guarded) {
 			// test guard
 			boolean allowed = (Boolean) guardMethod
@@ -101,14 +100,13 @@ public class EventHandler {
 	}
 
 	/**
-	 * @return true if one event was handled, false if no blocked event could be
-	 *         executed
+	 * @return <code>true</code> if one event was handled, false if no blocked
+	 *         event could be executed
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
 	 */
-	public boolean handleOneBlockedEvent() throws IllegalArgumentException,
-			IllegalAccessException, InvocationTargetException {
+	public boolean handleOneBlockedEvent() throws Throwable {
 		if (!guarded) {
 			return false;
 		}
