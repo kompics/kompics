@@ -7,14 +7,14 @@ public class EventCore implements Event {
 
 	private Event event;
 	
-	private ChannelCore channel;
+	private ChannelCore channelCore;
 
 	private Priority priority;
 
-	public EventCore(Event event, ChannelCore channel, Priority priority) {
+	public EventCore(Event event, ChannelCore channelCore, Priority priority) {
 		super();
 		this.event = event;
-		this.channel = channel;
+		this.channelCore = channelCore;
 		this.priority = priority;
 	}
 
@@ -22,8 +22,8 @@ public class EventCore implements Event {
 		return event;
 	}
 
-	public ChannelCore getChannel() {
-		return channel;
+	public ChannelCore getChannelCore() {
+		return channelCore;
 	}
 
 	public Priority getPriority() {
