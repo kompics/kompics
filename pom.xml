@@ -28,7 +28,7 @@
 	</snapshotRepository>
 	<site>
       <id>kompics-site</id>
-      <url>scpexe://small.sics.se/var/www/kompics</url>
+      <url>scpexe://kompics.sics.se/var/www/kompics</url>
     </site>
 	<downloadUrl>http://korsakov.sics.se/maven/repository</downloadUrl>
     </distributionManagement>
@@ -111,9 +111,10 @@
     
     <modules>
     <module>core</module>
+<!--
     <module>timer</module>
     <module>network</module>
-<!--
+
     <module>failure-detector</module>
     <module>inspector</module>
     <module>timer</module>
