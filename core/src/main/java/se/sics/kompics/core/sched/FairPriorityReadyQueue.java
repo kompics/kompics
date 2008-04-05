@@ -31,4 +31,8 @@ public class FairPriorityReadyQueue {
 	public synchronized void ready(ComponentCore component, Priority priority) {
 
 	}
+
+	public synchronized void put(ReadyComponent readyComponent) {
+
+	}
 }

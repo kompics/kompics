@@ -1,16 +1,15 @@
 package se.sics.kompics.core;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.sched.ComponentState;
+import se.sics.kompics.core.sched.Scheduler;
 import se.sics.kompics.core.sched.Work;
 import se.sics.kompics.core.sched.WorkQueue;
 
@@ -20,30 +19,34 @@ public class ComponentCore implements Component {
 	 * reference to the component instance implementing the component
 	 * functionality, i.e., state and event handlers
 	 */
-	private Object behaviour;
-
+	// private Object handlerObject;
 	/* =============== COMPOSITION =============== */
 
 	/**
 	 * internal sub-components
 	 */
-	private HashSet<ComponentCore> subcomponents;
-
+	// private HashSet<ComponentCore> subcomponents;
 	/**
 	 * internal channels
 	 */
-	private HashSet<ChannelCore> subchannels;
-
+	// private HashSet<ChannelCore> subchannels;
 	/* =============== CONFIGURATION =============== */
 
 	private HashMap<Class<? extends Event>, Binding> bindings;
 
-	private HashMap<Class<? extends Event>, Subscription> subscriptions;
+	// private HashMap<Class<? extends Event>, Subscription> subscriptions;
 
 	/* =============== SCHEDULING =============== */
 
+	private Scheduler scheduler;
+
 	private ComponentState componentState;
-	private AtomicInteger workCounter;
+	private int allWorkCounter;
+	private int highWorkCounter;
+	private int mediumWorkCounter;
+	private int lowWorkCounter;
+	private Priority priority;
+	private Object componentStateLock;
 
 	private HashMap<ChannelCore, WorkQueue> channelWorkQueues;
 
@@ -56,27 +59,34 @@ public class ComponentCore implements Component {
 	private int mediumPoolCounter;
 	private int lowPoolCounter;
 
-	public ComponentCore() {
+	public ComponentCore(Scheduler scheduler) {
 		super();
-		bindings = new HashMap<Class<? extends Event>, Binding>();
-		subscriptions = new HashMap<Class<? extends Event>, Subscription>();
+		this.bindings = new HashMap<Class<? extends Event>, Binding>();
+		// this.subscriptions = new HashMap<Class<? extends Event>,
+		// Subscription>();
 
-		componentState = ComponentState.PASSIVE;
-		workCounter = new AtomicInteger(0);
+		this.scheduler = scheduler;
+		this.componentState = ComponentState.ASLEEP;
+		this.allWorkCounter = 0;
+		this.highWorkCounter = 0;
+		this.mediumWorkCounter = 0;
+		this.lowWorkCounter = 0;
+		this.priority = null;
+		this.componentStateLock = new Object();
 
-		channelWorkQueues = new HashMap<ChannelCore, WorkQueue>();
+		this.channelWorkQueues = new HashMap<ChannelCore, WorkQueue>();
 
-		highWorkQueuePool = new LinkedHashSet<WorkQueue>();
-		mediumWorkQueuePool = new LinkedHashSet<WorkQueue>();
-		lowWorkQueuePool = new LinkedHashSet<WorkQueue>();
+		this.highWorkQueuePool = new LinkedHashSet<WorkQueue>();
+		this.mediumWorkQueuePool = new LinkedHashSet<WorkQueue>();
+		this.lowWorkQueuePool = new LinkedHashSet<WorkQueue>();
 
-		highPoolCounter = 0;
-		mediumPoolCounter = 0;
-		lowPoolCounter = 0;
+		this.highPoolCounter = 0;
+		this.mediumPoolCounter = 0;
+		this.lowPoolCounter = 0;
 	}
 
-	public void setBehaviour(Object behaviour) {
-		this.behaviour = behaviour;
+	public void setHandlerObject(Object handlerObject) {
+		// this.handlerObject = handlerObject;
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
@@ -140,7 +150,30 @@ public class ComponentCore implements Component {
 		WorkQueue workQueue = channelWorkQueues.get(work.getChannelCore());
 		workQueue.add(work);
 
-		// we make the component ready
+		// we make the component ready, if passive
+		synchronized (componentStateLock) {
+			allWorkCounter++;
+			switch (work.getPriority()) {
+			case HIGH:
+				highWorkCounter++;
+				break;
+			case MEDIUM:
+				mediumWorkCounter++;
+				break;
+			case LOW:
+				lowWorkCounter++;
+				break;
+			}
+			priority = (highWorkCounter > 0 ? Priority.HIGH
+					: mediumWorkCounter > 0 ? Priority.MEDIUM : Priority.LOW);
+
+			if (componentState == ComponentState.ASLEEP) {
+				componentState = ComponentState.AWAKE;
+				scheduler.componentReady(this, priority);
+			}
+		}
+
+		scheduler.publishedEvent(work.getPriority());
 	}
 
 	/* only one thread at a time calls this method */
@@ -173,7 +206,36 @@ public class ComponentCore implements Component {
 		}
 
 		// make the component passive or ready
-		;
+		synchronized (componentStateLock) {
+			allWorkCounter--;
+			switch (work.getPriority()) {
+			case HIGH:
+				highWorkCounter--;
+				break;
+			case MEDIUM:
+				mediumWorkCounter--;
+				break;
+			case LOW:
+				lowWorkCounter--;
+				break;
+			}
+
+			if (allWorkCounter == 0) {
+				componentState = ComponentState.ASLEEP;
+				priority = null;
+			} else if (allWorkCounter > 0) {
+				priority = (highWorkCounter > 0 ? Priority.HIGH
+						: mediumWorkCounter > 0 ? Priority.MEDIUM
+								: Priority.LOW);
+
+				componentState = ComponentState.AWAKE;
+				scheduler.componentReady(this, priority);
+			} else {
+				throw new RuntimeException("Negative work counter");
+			}
+		}
+
+		scheduler.executedEvent(work.getPriority());
 	}
 
 	/**
@@ -193,6 +255,10 @@ public class ComponentCore implements Component {
 		return false;
 	}
 
+	/*
+	 * synchronized with moveWorkQueue between executing thread (calling
+	 * pickWorkQueue) and publisher thread (calling move...)
+	 */
 	private synchronized WorkQueue pickWorkQueue() {
 		WorkQueue workQueue;
 		if (highPoolCounter > 0) {
@@ -211,14 +277,11 @@ public class ComponentCore implements Component {
 	}
 
 	/*
-	 * called by the WorkQueue to move itself, maybe to a different priority
-	 * pool. Both from and to can be null.
+	 * called by the WorkQueue to move itself to the end of the priority pool,
+	 * maybe to a different priority pool. Both from and to can be null.
 	 */
 	public synchronized void moveWorkQueueToPriorityPool(WorkQueue workQueue,
 			Priority from, Priority to) {
-		if (from == to) {
-			return;
-		}
 
 		// constant-time removal
 		switch (from) {

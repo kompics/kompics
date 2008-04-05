@@ -27,16 +27,4 @@ public class ReadyComponent implements Runnable, Prioritizable,
 	public int compareTo(ReadyComponent that) {
 		return this.priority.compareTo(that.priority);
 	}
-
-	public boolean equals(Object obj) {
-		if (getClass() != obj.getClass())
-			return false;
-		final ReadyComponent other = (ReadyComponent) obj;
-		if (priority == null) {
-			if (other.priority != null)
-				return false;
-		} else if (!priority.equals(other.priority))
-			return false;
-		return true;
-	}
 }

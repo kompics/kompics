@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Event;
@@ -19,14 +18,14 @@ public class ChannelCore implements Channel {
 
 	private HashMap<Class<? extends Event>, LinkedList<Binding>> bindings;
 
-	private ReentrantLock channelLock;
+	private Object channelLock;
 
 	public ChannelCore() {
 		super();
 		eventTypes = new HashSet<Class<? extends Event>>();
 		subscriptions = new HashMap<Class<? extends Event>, LinkedList<Subscription>>();
 		bindings = new HashMap<Class<? extends Event>, LinkedList<Binding>>();
-		channelLock = new ReentrantLock();
+		channelLock = new Object();
 	}
 
 	/* =============== CONFIGURATION =============== */
@@ -75,14 +74,14 @@ public class ChannelCore implements Channel {
 		if (subs == null)
 			return;
 
-		channelLock.lock();
-		for (Subscription sub : subs) {
-			ComponentCore componentCore = sub.getComponentCore();
-			Work work = new Work(componentCore, this, eventCore, sub
-					.getEventHandler(), eventCore.getPriority());
+		synchronized (channelLock) {
+			for (Subscription sub : subs) {
+				ComponentCore componentCore = sub.getComponentCore();
+				Work work = new Work(componentCore, this, eventCore, sub
+						.getEventHandler(), eventCore.getPriority());
 
-			componentCore.handleWork(work);
+				componentCore.handleWork(work);
+			}
 		}
-		channelLock.unlock();
 	}
 }
