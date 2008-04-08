@@ -6,7 +6,7 @@ import se.sics.kompics.api.Priority;
 public class EventCore implements Event {
 
 	private Event event;
-	
+
 	private ChannelCore channelCore;
 
 	private Priority priority;

@@ -11,6 +11,7 @@ public class FairPriorityReadyComponent implements Runnable {
 	}
 
 	public void run() {
+		// take a ready component from the fair priority queue
 		ReadyComponent readyComponent = fairPriorityReadyQueue.take();
 		readyComponent.run();
 	}

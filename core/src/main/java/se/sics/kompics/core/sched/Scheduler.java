@@ -7,7 +7,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import se.sics.kompics.api.Priority;
-import se.sics.kompics.core.ComponentCore;
 
 public class Scheduler {
 
@@ -19,13 +18,13 @@ public class Scheduler {
 
 	private boolean fair;
 
-	public Scheduler(int workers, boolean fair) {
+	public Scheduler(int workers, int fairnessRate) {
 		super();
 
-		this.fair = fair;
+		this.fair = (fairnessRate > 0);
 
 		if (fair) {
-			fairPriorityReadyQueue = new FairPriorityReadyQueue();
+			fairPriorityReadyQueue = new FairPriorityReadyQueue(fairnessRate);
 			readyQueue = new LinkedBlockingQueue<Runnable>();
 		} else {
 			readyQueue = new PriorityBlockingQueue<Runnable>();
@@ -39,10 +38,7 @@ public class Scheduler {
 		return fair;
 	}
 
-	public void componentReady(ComponentCore componentCore, Priority priority) {
-		ReadyComponent readyComponent = new ReadyComponent(componentCore,
-				priority);
-
+	public void componentReady(ReadyComponent readyComponent) {
 		if (fair) {
 			fairPriorityReadyQueue.put(readyComponent);
 			FairPriorityReadyComponent fprc = new FairPriorityReadyComponent(
@@ -54,11 +50,15 @@ public class Scheduler {
 		}
 	}
 
-	public void executedEvent(Priority priority) {
-		// TODO fairness
+	public void publishedEvent(Priority priority) {
+		if (fair) {
+			fairPriorityReadyQueue.publishedEvent(priority);
+		}
 	}
 
-	public void publishedEvent(Priority priority) {
-		// TODO fairness
+	public void executedEvent(Priority priority) {
+		if (fair) {
+			fairPriorityReadyQueue.executedEvent(priority);
+		}
 	}
 }

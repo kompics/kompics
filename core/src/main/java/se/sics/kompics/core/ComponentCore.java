@@ -9,6 +9,7 @@ import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.sched.ComponentState;
+import se.sics.kompics.core.sched.ReadyComponent;
 import se.sics.kompics.core.sched.Scheduler;
 import se.sics.kompics.core.sched.Work;
 import se.sics.kompics.core.sched.WorkQueue;
@@ -45,7 +46,6 @@ public class ComponentCore implements Component {
 	private int highWorkCounter;
 	private int mediumWorkCounter;
 	private int lowWorkCounter;
-	private Priority priority;
 	private Object componentStateLock;
 
 	private HashMap<ChannelCore, WorkQueue> channelWorkQueues;
@@ -71,7 +71,6 @@ public class ComponentCore implements Component {
 		this.highWorkCounter = 0;
 		this.mediumWorkCounter = 0;
 		this.lowWorkCounter = 0;
-		this.priority = null;
 		this.componentStateLock = new Object();
 
 		this.channelWorkQueues = new HashMap<ChannelCore, WorkQueue>();
@@ -142,10 +141,10 @@ public class ComponentCore implements Component {
 		channelCore.publishEventCore(eventCore);
 	}
 
-	/* =============== SCHEDULING =============== */
+	/* =============== EVENT SCHEDULING =============== */
 
 	// many publisher threads can call this method but they shall synchronize on
-	// the work queue
+	// the work queue and on the component state lock
 	public void handleWork(Work work) {
 		WorkQueue workQueue = channelWorkQueues.get(work.getChannelCore());
 		workQueue.add(work);
@@ -164,22 +163,28 @@ public class ComponentCore implements Component {
 				lowWorkCounter++;
 				break;
 			}
-			priority = (highWorkCounter > 0 ? Priority.HIGH
-					: mediumWorkCounter > 0 ? Priority.MEDIUM : Priority.LOW);
 
 			if (componentState == ComponentState.ASLEEP) {
 				componentState = ComponentState.AWAKE;
-				scheduler.componentReady(this, priority);
+				scheduler.componentReady(new ReadyComponent(this,
+						highWorkCounter, mediumWorkCounter, lowWorkCounter,
+						work.getPriority(), null));
+			} else {
+				scheduler.publishedEvent(work.getPriority());
 			}
 		}
-
-		scheduler.publishedEvent(work.getPriority());
 	}
 
-	/* only one thread at a time calls this method */
+	/*
+	 * only one thread at a time calls this method. causes the component to
+	 * execute one event of the given priority. it is guaranteed that the
+	 * component has such an event. If an event of the given priority is not
+	 * found at the head of a channel queue, a lower priority event is executed,
+	 * if one is available, othewise a higer priority one.
+	 */
 	public void schedule(Priority priority) {
-		// pick a work queue
-		WorkQueue workQueue = pickWorkQueue();
+		// pick a work queue, if possible from the given priority pool
+		WorkQueue workQueue = pickWorkQueue(priority);
 
 		// take from it
 		Work work = workQueue.take();
@@ -222,20 +227,16 @@ public class ComponentCore implements Component {
 
 			if (allWorkCounter == 0) {
 				componentState = ComponentState.ASLEEP;
-				priority = null;
+				scheduler.executedEvent(work.getPriority());
 			} else if (allWorkCounter > 0) {
-				priority = (highWorkCounter > 0 ? Priority.HIGH
-						: mediumWorkCounter > 0 ? Priority.MEDIUM
-								: Priority.LOW);
-
 				componentState = ComponentState.AWAKE;
-				scheduler.componentReady(this, priority);
+				scheduler.componentReady(new ReadyComponent(this,
+						highWorkCounter, mediumWorkCounter, lowWorkCounter,
+						null, work.getPriority()));
 			} else {
 				throw new RuntimeException("Negative work counter");
 			}
 		}
-
-		scheduler.executedEvent(work.getPriority());
 	}
 
 	/**
@@ -246,12 +247,12 @@ public class ComponentCore implements Component {
 	 *         event could be executed due to no satisfied guard
 	 */
 	private boolean handleOneBlockedEvent() {
-		// TODO
+		// TODO finish guarded handlers
 		return false;
 	}
 
 	private boolean hasBlockedEvents() {
-		// TODO
+		// TODO finish guarded handlers
 		return false;
 	}
 
@@ -259,21 +260,50 @@ public class ComponentCore implements Component {
 	 * synchronized with moveWorkQueue between executing thread (calling
 	 * pickWorkQueue) and publisher thread (calling move...)
 	 */
-	private synchronized WorkQueue pickWorkQueue() {
-		WorkQueue workQueue;
-		if (highPoolCounter > 0) {
-			Iterator<WorkQueue> iterator = highWorkQueuePool.iterator();
-			workQueue = iterator.next();
-		} else if (mediumPoolCounter > 0) {
-			Iterator<WorkQueue> iterator = mediumWorkQueuePool.iterator();
-			workQueue = iterator.next();
-		} else if (mediumPoolCounter > 0) {
-			Iterator<WorkQueue> iterator = lowWorkQueuePool.iterator();
-			workQueue = iterator.next();
+	private synchronized WorkQueue pickWorkQueue(Priority priority) {
+		if (priority == Priority.MEDIUM) {
+			// this component has been scheduled to execute a MEDIUM event, so
+			// it must have a MEDIUM event, in a channel that can only be in the
+			// MEDIUM or HIGH pools.
+			if (mediumPoolCounter > 0) {
+				Iterator<WorkQueue> iterator = mediumWorkQueuePool.iterator();
+				return iterator.next();
+			} else if (highPoolCounter > 0) {
+				Iterator<WorkQueue> iterator = highWorkQueuePool.iterator();
+				return iterator.next();
+			} else {
+				throw new RuntimeException(
+						"scheduled MEDIUM but both MEDIUM and HIGH pools empty");
+			}
+		} else if (priority == Priority.HIGH) {
+			// this component has been scheduled to execute a HIGH event, so it
+			// must have a HIGH event in a channel that can only be in the HIGH
+			// pool.
+			if (highPoolCounter > 0) {
+				Iterator<WorkQueue> iterator = highWorkQueuePool.iterator();
+				return iterator.next();
+			} else {
+				throw new RuntimeException("scheduled HIGH but HIGH pool empty");
+			}
+		} else if (priority == Priority.LOW) {
+			// this component has been scheduled to execute a LOW event, so it
+			// must have a LOW event in a channel that can be in the LOW, MEDIUM
+			// or HIGH pools.
+			if (lowPoolCounter > 0) {
+				Iterator<WorkQueue> iterator = lowWorkQueuePool.iterator();
+				return iterator.next();
+			} else if (highPoolCounter > 0) {
+				Iterator<WorkQueue> iterator = highWorkQueuePool.iterator();
+				return iterator.next();
+			} else if (mediumPoolCounter > 0) {
+				Iterator<WorkQueue> iterator = mediumWorkQueuePool.iterator();
+				return iterator.next();
+			} else {
+				throw new RuntimeException("scheduled LOW but all pools empty");
+			}
 		} else {
-			throw new RuntimeException("All work queue pools are empty");
+			throw new RuntimeException("Bad priority");
 		}
-		return workQueue;
 	}
 
 	/*
