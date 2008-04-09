@@ -50,7 +50,7 @@ public class Kompics {
 	public Component getBootstrapComponent() {
 		if (bootstrapComponent == null) {
 			Scheduler scheduler = new Scheduler(workers, fairnessRate);
-			bootstrapComponent = new ComponentCore(scheduler, null);
+			bootstrapComponent = new ComponentCore(scheduler, null, null);
 		}
 		return bootstrapComponent;
 	}

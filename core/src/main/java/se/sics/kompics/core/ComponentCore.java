@@ -1,5 +1,6 @@
 package se.sics.kompics.core;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -27,19 +28,13 @@ import se.sics.kompics.core.sched.WorkQueue;
  */
 public class ComponentCore implements Component {
 
+	private FactoryCore factoryCore;
+
+	private Object handlerObject;
+
 	private HashMap<String, EventHandler> eventHandlers;
 
-	/* =============== COMPOSITION =============== */
-
-	/**
-	 * internal sub-components
-	 */
-	// private HashSet<ComponentCore> subcomponents;
-	/**
-	 * internal channels
-	 */
-	// private HashSet<ChannelCore> subchannels;
-	/* =============== CONFIGURATION =============== */
+	/* =============== COMPONENT CONFIGURATION =============== */
 
 	private HashMap<Class<? extends Event>, Binding> bindings;
 
@@ -67,10 +62,11 @@ public class ComponentCore implements Component {
 	private int mediumPoolCounter;
 	private int lowPoolCounter;
 
-	public ComponentCore(Scheduler scheduler,
+	public ComponentCore(Scheduler scheduler, FactoryCore factoryCore,
 			HashMap<String, EventHandler> eventHandlers) {
 		super();
 		this.scheduler = scheduler;
+		this.factoryCore = factoryCore;
 		this.eventHandlers = eventHandlers;
 
 		this.bindings = new HashMap<Class<? extends Event>, Binding>();
@@ -93,6 +89,10 @@ public class ComponentCore implements Component {
 		this.highPoolCounter = 0;
 		this.mediumPoolCounter = 0;
 		this.lowPoolCounter = 0;
+	}
+
+	public void setHandlerObject(Object handlerObject) {
+		this.handlerObject = handlerObject;
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
@@ -214,9 +214,7 @@ public class ComponentCore implements Component {
 			}
 
 		} catch (Throwable throwable) {
-			// TODO implement fault handling. e.g. send a fault event on a
-			// supervision channel
-			throwable.printStackTrace();
+			handleFault(throwable);
 		}
 
 		// make the component passive or ready
@@ -355,7 +353,7 @@ public class ComponentCore implements Component {
 		}
 	}
 
-	/* =============== COMPOSITION =============== */
+	/* =============== COMPONENT COMPOSITION =============== */
 
 	public Channel createChannel() {
 		// TODO createChannel
@@ -372,7 +370,7 @@ public class ComponentCore implements Component {
 		return new FactoryCore(scheduler, handlerComponentClassName);
 	}
 
-	/* =============== CONFIGURATION =============== */
+	/* =============== COMPONENT CONFIGURATION =============== */
 
 	public void bind(Class<? extends Event> eventType, Channel channel) {
 		// TODO bind
@@ -400,12 +398,36 @@ public class ComponentCore implements Component {
 		// TODO unsubscribe
 	}
 
-	/* =============== CONFIGURATION =============== */
+	/* =============== COMPONENT LIFE-CYCLE =============== */
 	public void start() {
+		try {
+			Method startMethod = factoryCore.getStartMethod();
+			if (startMethod != null) {
+				startMethod.invoke(handlerObject);
+			}
+		} catch (Throwable throwable) {
+			handleFault(throwable);
+		}
 		// TODO start
 	}
 
 	public void stop() {
+		try {
+			Method stopMethod = factoryCore.getStopMethod();
+			if (stopMethod != null) {
+				stopMethod.invoke(handlerObject);
+			}
+		} catch (Throwable throwable) {
+			handleFault(throwable);
+		}
 		// TODO stop
+	}
+
+	/* =============== COMPONENT FAULT-HANDLING =============== */
+	private void handleFault(Throwable throwable) {
+		// TODO implement fault handling. e.g. send a fault event on a
+		// supervision channel
+
+		throwable.printStackTrace();
 	}
 }

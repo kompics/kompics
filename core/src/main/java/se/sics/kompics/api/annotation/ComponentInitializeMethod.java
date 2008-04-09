@@ -11,4 +11,10 @@ import java.lang.annotation.Documented;
  */
 @Documented
 public @interface ComponentInitializeMethod {
+	/**
+	 * @return the name of a properties file, provided as a resource of the
+	 *         component class, in the same package, used to initialize the
+	 *         component.
+	 */
+	String value() default "";
 }

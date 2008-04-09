@@ -1,11 +1,20 @@
 package se.sics.kompics.core;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Factory;
+import se.sics.kompics.api.annotation.ComponentCreateMethod;
+import se.sics.kompics.api.annotation.ComponentDestroyMethod;
+import se.sics.kompics.api.annotation.ComponentInitializeMethod;
+import se.sics.kompics.api.annotation.ComponentStartMethod;
+import se.sics.kompics.api.annotation.ComponentStopMethod;
+import se.sics.kompics.api.annotation.ComponentType;
+import se.sics.kompics.api.annotation.EventHandlerGuardMethod;
+import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.core.sched.Scheduler;
 
 /**
@@ -29,7 +38,11 @@ public class FactoryCore implements Factory {
 
 	private HashMap<String, Method> eventHandlerGuardMethods;
 
+	private Constructor<?> constructor;
+
 	private Method createMethod;
+
+	private Method initializeMethod;
 
 	private Method destroyMethod;
 
@@ -45,13 +58,62 @@ public class FactoryCore implements Factory {
 		this.handlerComponentClass = Class.forName(handlerComponentClassName,
 				true, getClass().getClassLoader());
 
-		// load the handlers
+		this.reflectHandlerComponentClass();
+	}
+
+	private void reflectHandlerComponentClass() {
+		if (!handlerComponentClass.isAnnotationPresent(ComponentType.class)) {
+			throw new RuntimeException("not an annotated component class");
+		}
+
+		Method methods[] = handlerComponentClass.getMethods();
+		for (int i = 0; i < methods.length; i++) {
+			Method method = methods[i];
+
+			if (method.isAnnotationPresent(EventHandlerMethod.class)) {
+				;
+			}
+			if (method.isAnnotationPresent(EventHandlerGuardMethod.class)) {
+				;
+			}
+			if (method.isAnnotationPresent(ComponentStartMethod.class)) {
+				startMethod = method;
+			}
+			if (method.isAnnotationPresent(ComponentStopMethod.class)) {
+				stopMethod = method;
+			}
+			if (method.isAnnotationPresent(ComponentCreateMethod.class)) {
+				createMethod = method;
+			}
+			if (method.isAnnotationPresent(ComponentInitializeMethod.class)) {
+				initializeMethod = method;
+			}
+			if (method.isAnnotationPresent(ComponentDestroyMethod.class)) {
+				destroyMethod = method;
+			}
+		}
 	}
 
 	public Component createComponent(Channel... channelParameters) {
 		// TODO test number of parameters
-		ComponentCore componentCore = new ComponentCore(scheduler, null);
+		ComponentCore componentCore = new ComponentCore(scheduler, this, null);
 		// TODO load and create the event handlers
 		return componentCore;
+	}
+
+	public Method getCreateMethod() {
+		return createMethod;
+	}
+
+	public Method getDestroyMethod() {
+		return destroyMethod;
+	}
+
+	public Method getStartMethod() {
+		return startMethod;
+	}
+
+	public Method getStopMethod() {
+		return stopMethod;
 	}
 }
