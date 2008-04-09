@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
+import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Event;
+import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.sched.ComponentState;
@@ -14,6 +16,15 @@ import se.sics.kompics.core.sched.Scheduler;
 import se.sics.kompics.core.sched.Work;
 import se.sics.kompics.core.sched.WorkQueue;
 
+/**
+ * The core of a component. It contains scheduling data, configuration data,
+ * life-cycle data, and methods for triggering events, reconfiguration and
+ * life-cycle.
+ * 
+ * @author Cosmin Arad
+ * @since Kompics 0.1
+ * @version $Id$
+ */
 public class ComponentCore implements Component {
 
 	/**
@@ -37,7 +48,7 @@ public class ComponentCore implements Component {
 
 	// private HashMap<Class<? extends Event>, Subscription> subscriptions;
 
-	/* =============== SCHEDULING =============== */
+	/* =============== EVENT SCHEDULING =============== */
 
 	private Scheduler scheduler;
 
@@ -346,5 +357,36 @@ public class ComponentCore implements Component {
 		}
 	}
 
+	/* =============== COMPOSITION =============== */
+
+	public Channel createChannel() {
+		// TODO createChannel
+		return null;
+	}
+
+	public Factory createFactory(String componentClassName) {
+		// TODO createFactory
+		return null;
+	}
+
 	/* =============== CONFIGURATION =============== */
+
+	public void bind(Class<? extends Event> eventType, Channel channel) {
+		// TODO bind
+
+	}
+
+	public void subscribe(Channel channel, String eventHandlerName) {
+		// TODO subscribe
+
+	}
+
+	/* =============== CONFIGURATION =============== */
+	public void start() {
+		// TODO start
+	}
+
+	public void stop() {
+		// TODO stop
+	}
 }
