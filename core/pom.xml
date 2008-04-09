@@ -6,7 +6,7 @@
     <version>0.1-SNAPSHOT</version>
   </parent>
   <artifactId>kompics-core</artifactId>
-  <name>KOMPICS Core</name>
+  <name>Kompics Core</name>
   <packaging>jar</packaging>
   <properties>
     <symbolicName>${pom.groupId}.core</symbolicName>

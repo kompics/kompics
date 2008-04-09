@@ -1,6 +1,5 @@
 package se.sics.kompics.api;
 
-import se.sics.kompics.core.ChannelCore;
 
 public interface Component {
 
@@ -8,8 +7,30 @@ public interface Component {
 
 	public void triggerEvent(Event event, Priority priority);
 
-	public void triggerEvent(Event event, ChannelCore channel);
+	public void triggerEvent(Event event, Channel channel);
 
-	public void triggerEvent(Event event, ChannelCore channel, Priority priority);
+	public void triggerEvent(Event event, Channel channel, Priority priority);
 
+	/**
+	 * Creates a component factory.
+	 * 
+	 * @param componentClassName
+	 *            the name of the class that contains the implementation of the
+	 *            state and event handlers of the components created by the
+	 *            returned factory.
+	 * 
+	 * @return the created factory.
+	 */
+	public Factory createFactory(String componentClassName)
+			throws ClassNotFoundException;
+
+	public Channel createChannel();
+
+	public void subscribe(Channel channel, String eventHandlerName);
+
+	public void bind(Class<? extends Event> eventType, Channel channel);
+
+	public void start();
+
+	public void stop();
 }

@@ -27,11 +27,8 @@ import se.sics.kompics.core.sched.WorkQueue;
  */
 public class ComponentCore implements Component {
 
-	/**
-	 * reference to the component instance implementing the component
-	 * functionality, i.e., state and event handlers
-	 */
-	// private Object handlerObject;
+	private HashMap<String, EventHandler> eventHandlers;
+
 	/* =============== COMPOSITION =============== */
 
 	/**
@@ -46,7 +43,7 @@ public class ComponentCore implements Component {
 
 	private HashMap<Class<? extends Event>, Binding> bindings;
 
-	// private HashMap<Class<? extends Event>, Subscription> subscriptions;
+	private HashMap<Class<? extends Event>, Subscription> subscriptions;
 
 	/* =============== EVENT SCHEDULING =============== */
 
@@ -70,13 +67,16 @@ public class ComponentCore implements Component {
 	private int mediumPoolCounter;
 	private int lowPoolCounter;
 
-	public ComponentCore(Scheduler scheduler) {
+	public ComponentCore(Scheduler scheduler,
+			HashMap<String, EventHandler> eventHandlers) {
 		super();
+		this.scheduler = scheduler;
+		this.eventHandlers = eventHandlers;
+
 		this.bindings = new HashMap<Class<? extends Event>, Binding>();
 		// this.subscriptions = new HashMap<Class<? extends Event>,
 		// Subscription>();
 
-		this.scheduler = scheduler;
 		this.componentState = ComponentState.ASLEEP;
 		this.allWorkCounter = 0;
 		this.highWorkCounter = 0;
@@ -93,10 +93,6 @@ public class ComponentCore implements Component {
 		this.highPoolCounter = 0;
 		this.mediumPoolCounter = 0;
 		this.lowPoolCounter = 0;
-	}
-
-	public void setHandlerObject(Object handlerObject) {
-		// this.handlerObject = handlerObject;
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
@@ -134,16 +130,18 @@ public class ComponentCore implements Component {
 		triggerEventCore(eventCore);
 	}
 
-	public void triggerEvent(Event event, ChannelCore channel) {
-		EventCore eventCore = new EventCore(event, channel, Priority.MEDIUM);
+	public void triggerEvent(Event event, Channel channel) {
+		EventCore eventCore = new EventCore(event, (ChannelCore) channel,
+				Priority.MEDIUM);
 		triggerEventCore(eventCore);
 	}
 
-	public void triggerEvent(Event event, ChannelCore channel, Priority priority) {
+	public void triggerEvent(Event event, Channel channel, Priority priority) {
 		if (priority == null)
 			throw new RuntimeException("triggered event with null priority");
 
-		EventCore eventCore = new EventCore(event, channel, priority);
+		EventCore eventCore = new EventCore(event, (ChannelCore) channel,
+				priority);
 		triggerEventCore(eventCore);
 	}
 
@@ -191,7 +189,7 @@ public class ComponentCore implements Component {
 	 * execute one event of the given priority. it is guaranteed that the
 	 * component has such an event. If an event of the given priority is not
 	 * found at the head of a channel queue, a lower priority event is executed,
-	 * if one is available, othewise a higer priority one.
+	 * if one is available, otherwise a higher priority one.
 	 */
 	public void schedule(Priority priority) {
 		// pick a work queue, if possible from the given priority pool
@@ -364,21 +362,42 @@ public class ComponentCore implements Component {
 		return null;
 	}
 
-	public Factory createFactory(String componentClassName) {
-		// TODO createFactory
-		return null;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see se.sics.kompics.api.Component#createFactory(java.lang.String)
+	 */
+	public Factory createFactory(String handlerComponentClassName)
+			throws ClassNotFoundException {
+		return new FactoryCore(scheduler, handlerComponentClassName);
 	}
 
 	/* =============== CONFIGURATION =============== */
 
 	public void bind(Class<? extends Event> eventType, Channel channel) {
 		// TODO bind
+	}
 
+	public void unbind(Class<? extends Event> eventType, Channel channel) {
+		// TODO unbind
 	}
 
 	public void subscribe(Channel channel, String eventHandlerName) {
-		// TODO subscribe
+		ChannelCore channelCore = (ChannelCore) channel;
+		EventHandler eventHandler = eventHandlers.get(eventHandlerName);
+		if (eventHandler != null) {
+			Subscription subscription = new Subscription(this, channelCore,
+					eventHandler);
 
+			// TODO subscribe
+		} else {
+			throw new RuntimeException("I have no eventHandler named "
+					+ eventHandlerName);
+		}
+	}
+
+	public void unsubscribe(Channel channel, String eventHandlerName) {
+		// TODO unsubscribe
 	}
 
 	/* =============== CONFIGURATION =============== */

@@ -1,5 +1,6 @@
 package se.sics.kompics.core;
 
+
 public class Subscription {
 
 	private ComponentCore componentCore;

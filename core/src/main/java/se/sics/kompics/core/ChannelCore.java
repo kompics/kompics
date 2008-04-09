@@ -62,6 +62,10 @@ public class ChannelCore implements Channel {
 		eventTypes.remove(eventType);
 	}
 
+	public boolean hasEventType(Class<? extends Event> eventType) {
+		return eventTypes.contains(eventType);
+	}
+
 	/* =============== EVENT TRIGGERING =============== */
 	public void publishEventCore(EventCore eventCore) {
 		Class<? extends Event> eventType = eventCore.getEvent().getClass();

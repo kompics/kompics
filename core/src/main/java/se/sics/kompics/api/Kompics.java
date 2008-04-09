@@ -4,6 +4,10 @@ import se.sics.kompics.core.ComponentCore;
 import se.sics.kompics.core.sched.Scheduler;
 
 /**
+ * A Kompics system with a scheduler and an associated set of worker threads.
+ * Provides a method to get a bootstrap component, the parent of all components
+ * in a Kompics system.
+ * 
  * @author Cosmin Arad
  * @since Kompics 0.1
  * @version $Id$
@@ -21,9 +25,9 @@ public class Kompics {
 	/**
 	 * Creates a Kompics system or virtual node.
 	 * 
-	 * @param workers -
+	 * @param workers
 	 *            the number of worker threads for running components.
-	 * @param fairnessRate -
+	 * @param fairnessRate
 	 *            the fairness rate of the scheduler. A fairness rate of 0 means
 	 *            that the scheduler is not fair. A fairness rate of <i>k</i>,
 	 *            for example, means that under contention the scheduler tries
@@ -38,7 +42,7 @@ public class Kompics {
 	}
 
 	/**
-	 * Returns the bootstrap components, the parent of all other components in
+	 * Returns the bootstrap component, the parent of all other components in
 	 * the current Kompics system.
 	 * 
 	 * @return the bootstrap component.
@@ -46,7 +50,7 @@ public class Kompics {
 	public Component getBootstrapComponent() {
 		if (bootstrapComponent == null) {
 			Scheduler scheduler = new Scheduler(workers, fairnessRate);
-			bootstrapComponent = new ComponentCore(scheduler);
+			bootstrapComponent = new ComponentCore(scheduler, null);
 		}
 		return bootstrapComponent;
 	}
@@ -64,7 +68,7 @@ public class Kompics {
 	 * Sets the global Kompics system. This method has the effect of setting the
 	 * global reference to a Kompics system only the first time it is called.
 	 * 
-	 * @param kompics -
+	 * @param kompics
 	 *            a newly created Kompics system.
 	 * 
 	 */

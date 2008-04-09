@@ -7,6 +7,7 @@ import java.util.ListIterator;
 
 import se.sics.kompics.api.Event;
 
+
 public class EventHandler {
 
 	private Object handlerObject;
