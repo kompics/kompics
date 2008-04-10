@@ -1,4 +1,4 @@
-package se.sics.kompics.core.sched;
+package se.sics.kompics.core.scheduler;
 
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.core.ComponentCore;

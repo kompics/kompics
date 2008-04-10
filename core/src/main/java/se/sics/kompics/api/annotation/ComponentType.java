@@ -12,7 +12,7 @@ import java.lang.annotation.Documented;
 @Documented
 public @interface ComponentType {
 	/**
-	 * @return specifies whether the component is composite or not
+	 * @return <code>true</code>if the component is composite.
 	 */
 	boolean composite() default false;
 }

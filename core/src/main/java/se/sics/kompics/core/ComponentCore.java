@@ -11,11 +11,11 @@ import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.core.config.ConfigurationException;
-import se.sics.kompics.core.sched.ComponentState;
-import se.sics.kompics.core.sched.ReadyComponent;
-import se.sics.kompics.core.sched.Scheduler;
-import se.sics.kompics.core.sched.Work;
-import se.sics.kompics.core.sched.WorkQueue;
+import se.sics.kompics.core.scheduler.ComponentState;
+import se.sics.kompics.core.scheduler.ReadyComponent;
+import se.sics.kompics.core.scheduler.Scheduler;
+import se.sics.kompics.core.scheduler.Work;
+import se.sics.kompics.core.scheduler.WorkQueue;
 
 /**
  * The core of a component. It contains scheduling data, configuration data,
@@ -29,6 +29,8 @@ import se.sics.kompics.core.sched.WorkQueue;
 public class ComponentCore implements Component {
 
 	private FactoryCore factoryCore;
+
+	// private Channel faultChannel;
 
 	private Object handlerObject;
 
@@ -62,12 +64,10 @@ public class ComponentCore implements Component {
 	private int mediumPoolCounter;
 	private int lowPoolCounter;
 
-	public ComponentCore(Scheduler scheduler, FactoryCore factoryCore,
-			HashMap<String, EventHandler> eventHandlers) {
+	public ComponentCore(Scheduler scheduler, FactoryCore factoryCore) {
 		super();
 		this.scheduler = scheduler;
 		this.factoryCore = factoryCore;
-		this.eventHandlers = eventHandlers;
 
 		this.bindings = new HashMap<Class<? extends Event>, Binding>();
 		// this.subscriptions = new HashMap<Class<? extends Event>,
@@ -93,6 +93,10 @@ public class ComponentCore implements Component {
 
 	public void setHandlerObject(Object handlerObject) {
 		this.handlerObject = handlerObject;
+	}
+
+	public void setEventHandlers(HashMap<String, EventHandler> eventHandlers) {
+		this.eventHandlers = eventHandlers;
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
@@ -365,8 +369,7 @@ public class ComponentCore implements Component {
 	 * 
 	 * @see se.sics.kompics.api.Component#createFactory(java.lang.String)
 	 */
-	public Factory createFactory(String handlerComponentClassName)
-			throws ClassNotFoundException {
+	public Factory createFactory(String handlerComponentClassName) {
 		return new FactoryCore(scheduler, handlerComponentClassName);
 	}
 
@@ -427,6 +430,12 @@ public class ComponentCore implements Component {
 	private void handleFault(Throwable throwable) {
 		// TODO implement fault handling. e.g. send a fault event on a
 		// supervision channel
+
+		// fault channel type check
+		// if (!this.faultChannel.hasEventType(FaultEvent.class)) {
+		// throw new RuntimeException(
+		// "Provided fault channel does not have the FaultEvent type");
+		// }
 
 		throwable.printStackTrace();
 	}

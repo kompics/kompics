@@ -8,7 +8,7 @@ import java.util.Set;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.core.config.ConfigurationException;
-import se.sics.kompics.core.sched.Work;
+import se.sics.kompics.core.scheduler.Work;
 
 public class ChannelCore implements Channel {
 
@@ -20,6 +20,7 @@ public class ChannelCore implements Channel {
 
 	private Object channelLock;
 
+	// TODO fix core visibility
 	public ChannelCore() {
 		super();
 		eventTypes = new HashSet<Class<? extends Event>>();

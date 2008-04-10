@@ -1,7 +1,7 @@
 package se.sics.kompics.api;
 
 import se.sics.kompics.core.ComponentCore;
-import se.sics.kompics.core.sched.Scheduler;
+import se.sics.kompics.core.scheduler.Scheduler;
 
 /**
  * A Kompics system with a scheduler and an associated set of worker threads.
@@ -50,7 +50,7 @@ public class Kompics {
 	public Component getBootstrapComponent() {
 		if (bootstrapComponent == null) {
 			Scheduler scheduler = new Scheduler(workers, fairnessRate);
-			bootstrapComponent = new ComponentCore(scheduler, null, null);
+			bootstrapComponent = new ComponentCore(scheduler, null);
 		}
 		return bootstrapComponent;
 	}

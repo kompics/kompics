@@ -1,4 +1,4 @@
-package se.sics.kompics.core.sched;
+package se.sics.kompics.core.scheduler;
 
 import java.util.LinkedList;
 
