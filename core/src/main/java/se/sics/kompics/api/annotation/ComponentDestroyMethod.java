@@ -1,6 +1,8 @@
 package se.sics.kompics.api.annotation;
 
 import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Annotates the <code>destroy</code> method of a component.
@@ -10,5 +12,6 @@ import java.lang.annotation.Documented;
  * @version $Id$
  */
 @Documented
+@Retention(RetentionPolicy.RUNTIME)
 public @interface ComponentDestroyMethod {
 }

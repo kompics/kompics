@@ -7,7 +7,6 @@ import java.util.ListIterator;
 
 import se.sics.kompics.api.Event;
 
-
 public class EventHandler {
 
 	private Object handlerObject;
@@ -101,8 +100,8 @@ public class EventHandler {
 	}
 
 	/**
-	 * @return <code>true</code> if one event was handled, false if no blocked
-	 *         event could be executed
+	 * @return <code>true</code> if one event was handled, <code>false</code>
+	 *         if no blocked event could be executed.
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
@@ -115,14 +114,14 @@ public class EventHandler {
 		ListIterator<Event> iter = blockedEvents.listIterator();
 		while (iter.hasNext()) {
 			Event event = iter.next();
-			boolean handled = handleEvent(event);
 
-			if (handled) {
+			boolean allow = (Boolean) guardMethod.invoke(handlerObject, event);
+			if (allow) {
+				handlerMethod.invoke(handlerObject, event);
 				iter.remove();
 				return true;
 			}
 		}
-
 		return false;
 	}
 }

@@ -4,13 +4,13 @@ import se.sics.kompics.api.Event;
 
 public class Binding {
 
-	private ComponentCore component;
-	
-	private ChannelCore channel;
-	
+	private ComponentReference component;
+
+	private ChannelReference channel;
+
 	private Class<? extends Event> eventType;
 
-	public Binding(ComponentCore component, ChannelCore channel,
+	public Binding(ComponentReference component, ChannelReference channel,
 			Class<? extends Event> eventType) {
 		super();
 		this.component = component;
@@ -18,11 +18,11 @@ public class Binding {
 		this.eventType = eventType;
 	}
 
-	public ComponentCore getComponent() {
+	public ComponentReference getComponent() {
 		return component;
 	}
 
-	public ChannelCore getChannel() {
+	public ChannelReference getChannel() {
 		return channel;
 	}
 

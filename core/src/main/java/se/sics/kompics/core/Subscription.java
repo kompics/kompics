@@ -1,28 +1,27 @@
 package se.sics.kompics.core;
 
-
 public class Subscription {
 
-	private ComponentCore componentCore;
+	private ComponentReference componentReference;
 
-	private ChannelCore channelCore;
+	private ChannelReference channelReference;
 
 	private EventHandler eventHandler;
 
-	public Subscription(ComponentCore componentCore, ChannelCore channelCore,
-			EventHandler eventHandler) {
+	public Subscription(ComponentReference componentReference,
+			ChannelReference channelReference, EventHandler eventHandler) {
 		super();
-		this.componentCore = componentCore;
-		this.channelCore = channelCore;
+		this.componentReference = componentReference;
+		this.channelReference = channelReference;
 		this.eventHandler = eventHandler;
 	}
 
-	public ComponentCore getComponentCore() {
-		return componentCore;
+	public ComponentReference getComponent() {
+		return componentReference;
 	}
 
-	public ChannelCore getChannelCore() {
-		return channelCore;
+	public ChannelReference getChannel() {
+		return channelReference;
 	}
 
 	public EventHandler getEventHandler() {

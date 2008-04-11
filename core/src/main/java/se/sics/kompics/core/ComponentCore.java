@@ -1,15 +1,20 @@
 package se.sics.kompics.core;
 
 import java.lang.reflect.Method;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 
 import se.sics.kompics.api.Channel;
-import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Factory;
+import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Priority;
+import se.sics.kompics.api.capability.ChannelCapabilityFlags;
+import se.sics.kompics.api.capability.ComponentCapabilityFlags;
 import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.scheduler.ComponentState;
 import se.sics.kompics.core.scheduler.ReadyComponent;
@@ -26,21 +31,27 @@ import se.sics.kompics.core.scheduler.WorkQueue;
  * @since Kompics 0.1
  * @version $Id$
  */
-public class ComponentCore implements Component {
+public class ComponentCore {
+
+	private ComponentIdentifier componentIdentifier;
 
 	private FactoryCore factoryCore;
 
-	// private Channel faultChannel;
+	private Channel faultChannel;
 
 	private Object handlerObject;
 
 	private HashMap<String, EventHandler> eventHandlers;
 
+	private HashSet<EventHandler> guardedHandlersWithBlockedEvents;
+
+	private int blockedEventsCount;
+
 	/* =============== COMPONENT CONFIGURATION =============== */
 
 	private HashMap<Class<? extends Event>, Binding> bindings;
 
-	private HashMap<Class<? extends Event>, Subscription> subscriptions;
+	private LinkedList<Subscription> subscriptions;
 
 	/* =============== EVENT SCHEDULING =============== */
 
@@ -64,14 +75,17 @@ public class ComponentCore implements Component {
 	private int mediumPoolCounter;
 	private int lowPoolCounter;
 
-	public ComponentCore(Scheduler scheduler, FactoryCore factoryCore) {
+	public ComponentCore(Scheduler scheduler, FactoryCore factoryCore,
+			Channel faultChannel) {
 		super();
 		this.scheduler = scheduler;
 		this.factoryCore = factoryCore;
+		// TODO type check fault channel
+		this.faultChannel = faultChannel;
+		this.componentIdentifier = new ComponentIdentifier();
 
 		this.bindings = new HashMap<Class<? extends Event>, Binding>();
-		// this.subscriptions = new HashMap<Class<? extends Event>,
-		// Subscription>();
+		this.subscriptions = new LinkedList<Subscription>();
 
 		this.componentState = ComponentState.ASLEEP;
 		this.allWorkCounter = 0;
@@ -95,8 +109,13 @@ public class ComponentCore implements Component {
 		this.handlerObject = handlerObject;
 	}
 
-	public void setEventHandlers(HashMap<String, EventHandler> eventHandlers) {
+	public void setEventHandlers(HashMap<String, EventHandler> eventHandlers,
+			boolean hasGuarded) {
 		this.eventHandlers = eventHandlers;
+		if (hasGuarded) {
+			this.guardedHandlersWithBlockedEvents = new HashSet<EventHandler>();
+			this.blockedEventsCount = 0;
+		}
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
@@ -135,7 +154,7 @@ public class ComponentCore implements Component {
 	}
 
 	public void triggerEvent(Event event, Channel channel) {
-		EventCore eventCore = new EventCore(event, (ChannelCore) channel,
+		EventCore eventCore = new EventCore(event, (ChannelReference) channel,
 				Priority.MEDIUM);
 		triggerEventCore(eventCore);
 	}
@@ -144,14 +163,14 @@ public class ComponentCore implements Component {
 		if (priority == null)
 			throw new RuntimeException("triggered event with null priority");
 
-		EventCore eventCore = new EventCore(event, (ChannelCore) channel,
+		EventCore eventCore = new EventCore(event, (ChannelReference) channel,
 				priority);
 		triggerEventCore(eventCore);
 	}
 
 	private void triggerEventCore(EventCore eventCore) {
-		ChannelCore channelCore = eventCore.getChannelCore();
-		channelCore.publishEventCore(eventCore);
+		ChannelReference channelReference = eventCore.getChannel();
+		channelReference.publishEventCore(eventCore);
 	}
 
 	/* =============== EVENT SCHEDULING =============== */
@@ -160,6 +179,8 @@ public class ComponentCore implements Component {
 	// the work queue and on the component state lock
 	public void handleWork(Work work) {
 		WorkQueue workQueue = channelWorkQueues.get(work.getChannelCore());
+		System.out.println("WQ PUT+" + workQueue + " in "
+				+ handlerObject.getClass().getName());
 		workQueue.add(work);
 
 		// we make the component ready, if passive
@@ -199,6 +220,10 @@ public class ComponentCore implements Component {
 		// pick a work queue, if possible from the given priority pool
 		WorkQueue workQueue = pickWorkQueue(priority);
 
+		System.out.println("EXECUTING " + handlerObject.getClass().getName());
+
+		System.out.println("WQ TAKE+" + workQueue + " in "
+				+ handlerObject.getClass().getName());
 		// take from it
 		Work work = workQueue.take();
 
@@ -211,6 +236,12 @@ public class ComponentCore implements Component {
 		// handlers and guard methods
 		try {
 			handled = eventHandler.handleEvent(event);
+
+			if (!handled) {
+				// the event handler was guarded and the guard was not satisfied
+				blockedEventsCount++;
+				guardedHandlersWithBlockedEvents.add(eventHandler);
+			}
 
 			// try to execute blocked event handlers until no more possible
 			while (handled && hasBlockedEvents()) {
@@ -251,20 +282,34 @@ public class ComponentCore implements Component {
 	}
 
 	/**
-	 * tries to execute one guarded event handler
+	 * Tries to execute one guarded event handler.
 	 * 
 	 * @return <code>true</code> if one blocked event was executed from any
 	 *         guarded event handler and <code>false</code> if no blocked
 	 *         event could be executed due to no satisfied guard
 	 */
-	private boolean handleOneBlockedEvent() {
-		// TODO finish guarded handlers
+	private boolean handleOneBlockedEvent() throws Throwable {
+		Iterator<EventHandler> iterator = guardedHandlersWithBlockedEvents
+				.iterator();
+
+		// try every guarded event handler with blocked events until one
+		// bocked event is handled
+		while (iterator.hasNext()) {
+			EventHandler eventHandler = iterator.next();
+
+			boolean handled = eventHandler.handleOneBlockedEvent();
+			if (handled) {
+				if (!eventHandler.hasBlockedEvents()) {
+					iterator.remove();
+				}
+				return true;
+			}
+		}
 		return false;
 	}
 
 	private boolean hasBlockedEvents() {
-		// TODO finish guarded handlers
-		return false;
+		return blockedEventsCount > 0;
 	}
 
 	/*
@@ -324,44 +369,53 @@ public class ComponentCore implements Component {
 	public synchronized void moveWorkQueueToPriorityPool(WorkQueue workQueue,
 			Priority from, Priority to) {
 
-		// constant-time removal
-		switch (from) {
-		case LOW:
-			lowWorkQueuePool.remove(workQueue);
-			lowPoolCounter--;
-			break;
-		case MEDIUM:
-			mediumWorkQueuePool.remove(workQueue);
-			mediumPoolCounter--;
-			break;
-		case HIGH:
-			highWorkQueuePool.remove(workQueue);
-			highPoolCounter--;
-			break;
+		System.out.println("MOVE WQ " + workQueue + " in "
+				+ handlerObject.getClass().getName() + " FROM " + from + " TO "
+				+ to);
+
+		if (from != null) {
+			// constant-time removal
+			switch (from) {
+			case LOW:
+				lowWorkQueuePool.remove(workQueue);
+				lowPoolCounter--;
+				break;
+			case MEDIUM:
+				mediumWorkQueuePool.remove(workQueue);
+				mediumPoolCounter--;
+				break;
+			case HIGH:
+				highWorkQueuePool.remove(workQueue);
+				highPoolCounter--;
+				break;
+			}
 		}
 
-		// constant-time addition
-		switch (to) {
-		case LOW:
-			lowWorkQueuePool.add(workQueue);
-			lowPoolCounter++;
-			break;
-		case MEDIUM:
-			mediumWorkQueuePool.add(workQueue);
-			mediumPoolCounter++;
-			break;
-		case HIGH:
-			highWorkQueuePool.add(workQueue);
-			highPoolCounter++;
-			break;
+		if (to != null) {
+			// constant-time addition
+			switch (to) {
+			case LOW:
+				lowWorkQueuePool.add(workQueue);
+				lowPoolCounter++;
+				break;
+			case MEDIUM:
+				mediumWorkQueuePool.add(workQueue);
+				mediumPoolCounter++;
+				break;
+			case HIGH:
+				highWorkQueuePool.add(workQueue);
+				highPoolCounter++;
+				break;
+			}
 		}
 	}
 
 	/* =============== COMPONENT COMPOSITION =============== */
 
-	public Channel createChannel() {
-		// TODO createChannel
-		return null;
+	public ChannelReference createChannel() {
+		ChannelCore channelCore = new ChannelCore();
+		return new ChannelReference(channelCore, EnumSet
+				.allOf(ChannelCapabilityFlags.class));
 	}
 
 	/*
@@ -375,22 +429,38 @@ public class ComponentCore implements Component {
 
 	/* =============== COMPONENT CONFIGURATION =============== */
 
-	public void bind(Class<? extends Event> eventType, Channel channel) {
-		// TODO bind
+	public void bind(ComponentReference componentReference,
+			Class<? extends Event> eventType, Channel channel) {
+		// TODO bind synchronization
+
+		ChannelReference channelReference = (ChannelReference) channel;
+		Binding binding = new Binding(componentReference, channelReference,
+				eventType);
+
+		bindings.put(eventType, binding);
+		channelReference.addBinding(binding);
 	}
 
 	public void unbind(Class<? extends Event> eventType, Channel channel) {
 		// TODO unbind
 	}
 
-	public void subscribe(Channel channel, String eventHandlerName) {
-		ChannelCore channelCore = (ChannelCore) channel;
+	public void subscribe(ComponentReference componentReference,
+			Channel channel, String eventHandlerName) {
+		ChannelReference channelReference = (ChannelReference) channel;
 		EventHandler eventHandler = eventHandlers.get(eventHandlerName);
 		if (eventHandler != null) {
-			Subscription subscription = new Subscription(this, channelCore,
-					eventHandler);
+			Subscription subscription = new Subscription(componentReference,
+					channelReference, eventHandler);
 
-			// TODO subscribe
+			// TODO subscribe synchronization
+			subscriptions.add(subscription);
+			ChannelCore channelCore = channelReference
+					.addSubscription(subscription);
+			if (!channelWorkQueues.containsKey(channelCore)) {
+				WorkQueue workQueue = new WorkQueue(this);
+				channelWorkQueues.put(channelCore, workQueue);
+			}
 		} else {
 			throw new RuntimeException("I have no eventHandler named "
 					+ eventHandlerName);
@@ -436,7 +506,13 @@ public class ComponentCore implements Component {
 		// throw new RuntimeException(
 		// "Provided fault channel does not have the FaultEvent type");
 		// }
+		System.out.println("ISOLATED EXCEPTION");
+		throwable.getCause().printStackTrace();
+		triggerEvent(new FaultEvent(throwable.getCause()), faultChannel);
+	}
 
-		throwable.printStackTrace();
+	public ComponentReference createReference() {
+		return new ComponentReference(this, EnumSet
+				.allOf(ComponentCapabilityFlags.class));
 	}
 }

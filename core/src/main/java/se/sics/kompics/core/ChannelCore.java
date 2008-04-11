@@ -5,12 +5,11 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.scheduler.Work;
 
-public class ChannelCore implements Channel {
+public class ChannelCore {
 
 	private HashSet<Class<? extends Event>> eventTypes;
 
@@ -67,6 +66,37 @@ public class ChannelCore implements Channel {
 		return eventTypes.contains(eventType);
 	}
 
+	public void addSubscription(Subscription subscription) {
+		synchronized (channelLock) {
+			Class<? extends Event> eventType = subscription.getEventHandler()
+					.getEventType();
+
+			LinkedList<Subscription> subs = subscriptions.get(eventType);
+			if (subs == null) {
+				subs = new LinkedList<Subscription>();
+				subs.add(subscription);
+				subscriptions.put(eventType, subs);
+			} else {
+				subs.add(subscription);
+			}
+		}
+	}
+
+	public void addBinding(Binding binding) {
+		synchronized (channelLock) {
+			Class<? extends Event> eventType = binding.getEventType();
+
+			LinkedList<Binding> binds = bindings.get(eventType);
+			if (binds == null) {
+				binds = new LinkedList<Binding>();
+				binds.add(binding);
+				bindings.put(eventType, binds);
+			} else {
+				binds.add(binding);
+			}
+		}
+	}
+
 	/* =============== EVENT TRIGGERING =============== */
 	public void publishEventCore(EventCore eventCore) {
 		Class<? extends Event> eventType = eventCore.getEvent().getClass();
@@ -75,17 +105,19 @@ public class ChannelCore implements Channel {
 					+ eventType + " in channel");
 		}
 
-		LinkedList<Subscription> subs = subscriptions.get(eventType);
-		if (subs == null)
-			return;
-
 		synchronized (channelLock) {
-			for (Subscription sub : subs) {
-				ComponentCore componentCore = sub.getComponentCore();
-				Work work = new Work(componentCore, this, eventCore, sub
-						.getEventHandler(), eventCore.getPriority());
+			LinkedList<Subscription> subs = subscriptions.get(eventType);
+			if (subs == null) {
+				System.out.println("NO SUBS");
+				return;
+			}
 
-				componentCore.handleWork(work);
+			for (Subscription sub : subs) {
+				ComponentReference componentReference = sub.getComponent();
+				Work work = new Work(this, eventCore, sub.getEventHandler(),
+						eventCore.getPriority());
+
+				componentReference.handleWork(work);
 			}
 		}
 	}

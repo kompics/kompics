@@ -1,6 +1,8 @@
 package se.sics.kompics.api.annotation;
 
 import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 import se.sics.kompics.api.Event;
 
@@ -13,6 +15,7 @@ import se.sics.kompics.api.Event;
  * @version $Id$
  */
 @Documented
+@Retention(RetentionPolicy.RUNTIME)
 public @interface MayTriggerEventTypes {
 	Class<? extends Event>[] value();
 }

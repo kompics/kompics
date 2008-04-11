@@ -63,8 +63,8 @@ public class WorkQueue {
 
 		if (lowCounter + mediumCounter + highCounter == 0) {
 			// if all counters are 0, remove work queue from any pool
-			priority = null;
 			componentCore.moveWorkQueueToPriorityPool(this, priority, null);
+			priority = null;
 			return work;
 		}
 

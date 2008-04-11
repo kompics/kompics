@@ -1,6 +1,6 @@
 package se.sics.kompics.core.sched;
 
-import org.junit.Before;
+import org.junit.Ignore;
 
 /**
  * 
@@ -10,10 +10,11 @@ import org.junit.Before;
  * @author cosmin
  * 
  */
+@Ignore
 public class SchedulerTest {
-
-	@Before
-	public void setUp() throws Exception {
-	}
-
+	//
+	// @Before
+	// public void setUp() throws Exception {
+	// }
+	//
 }

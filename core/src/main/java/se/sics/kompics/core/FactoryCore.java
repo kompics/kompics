@@ -2,9 +2,11 @@ package se.sics.kompics.core;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -22,6 +24,7 @@ import se.sics.kompics.api.annotation.ComponentType;
 import se.sics.kompics.api.annotation.EventHandlerGuardMethod;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
+import se.sics.kompics.api.capability.ComponentCapabilityFlags;
 import se.sics.kompics.core.scheduler.Scheduler;
 
 /**
@@ -54,6 +57,11 @@ public class FactoryCore implements Factory {
 	 * The event handler methods indexed by name.
 	 */
 	private HashMap<String, Method> eventHandlerMethods = null;
+
+	/**
+	 * The number of guarded event handlers.
+	 */
+	private int guardedHandlersCount;
 
 	/**
 	 * The event handler methods indexed by name.
@@ -133,15 +141,18 @@ public class FactoryCore implements Factory {
 		this.handlerComponentClassName = handlerComponentClassName;
 
 		try {
-			this.handlerComponentClass = Class.forName(
-					this.handlerComponentClassName, true, getClass()
-							.getClassLoader());
+			this.handlerComponentClass = Class
+					.forName(handlerComponentClassName);
+			// this.handlerComponentClass = Class.forName(
+			// handlerComponentClassName, true, getClass()
+			// .getClassLoader());
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(
 					"Cannot find component implementation class "
 							+ handlerComponentClassName, e);
 		}
 
+		this.guardedHandlersCount = 0;
 		this.reflectHandlerComponentClass();
 	}
 
@@ -150,9 +161,16 @@ public class FactoryCore implements Factory {
 	 */
 	private void reflectHandlerComponentClass() {
 		if (!handlerComponentClass.isAnnotationPresent(ComponentType.class)) {
+			Annotation[] annotations = handlerComponentClass.getAnnotations();
+
+			System.out.println(annotations.length);
+
 			throw new RuntimeException("Class " + handlerComponentClassName
 					+ " is not an annotated component class.");
 		}
+
+		// TODO also reflect declared methods and raise exception if there exist
+		// non-public annotated methods
 
 		Method methods[] = handlerComponentClass.getMethods();
 		// reflect every method of the class
@@ -194,6 +212,7 @@ public class FactoryCore implements Factory {
 					if (eventHandlerGuardNames == null) {
 						eventHandlerGuardNames = new HashMap<String, String>();
 					}
+					guardedHandlersCount++;
 					eventHandlerGuardNames.put(method.getName(),
 							handlerAnnotation.guard());
 				}
@@ -277,6 +296,10 @@ public class FactoryCore implements Factory {
 									+ " should take one java.util.Properties argument.");
 				}
 				initializeMethod = method;
+
+				ComponentInitializeMethod initializeMethodAnnotation = method
+						.getAnnotation(ComponentInitializeMethod.class);
+				initializeConfigFileName = initializeMethodAnnotation.value();
 			}
 			// reflect the component's destroy method
 			if (method.isAnnotationPresent(ComponentDestroyMethod.class)) {
@@ -342,15 +365,22 @@ public class FactoryCore implements Factory {
 	 * @see se.sics.kompics.api.Factory#createComponent(se.sics.kompics.api.Channel,
 	 *      se.sics.kompics.api.Channel[])
 	 */
-	public Component createComponent(Channel faultChannel,
+	public ComponentReference createComponent(Channel faultChannel,
 			Channel... channelParameters) {
 
 		try {
+			if (faultChannel == null)
+				throw new RuntimeException("YYYY");
+
 			// create a component core
-			ComponentCore componentCore = new ComponentCore(scheduler, this);
+			ComponentCore componentCore = new ComponentCore(scheduler, this,
+					faultChannel);
+			ComponentReference componentReference = new ComponentReference(
+					componentCore, EnumSet
+							.allOf(ComponentCapabilityFlags.class));
 
 			// create an instance of the implementing component type
-			Object handlerObject = constructor.newInstance(componentCore);
+			Object handlerObject = constructor.newInstance(componentReference);
 
 			// create the event handlers
 			HashMap<String, EventHandler> eventHandlers = new HashMap<String, EventHandler>();
@@ -358,23 +388,27 @@ public class FactoryCore implements Factory {
 					.entrySet()) {
 				String handlerName = handlerEntry.getKey();
 				Method handlerMethod = handlerEntry.getValue();
-				Method guardMethod = eventHandlerGuardMethods.get(handlerName);
 				Class<? extends Event> eventType = eventHandlerAcceptedEventTypes
 						.get(handlerName);
 
 				EventHandler eventHandler;
-				if (guardMethod == null) {
-					eventHandler = new EventHandler(handlerObject,
-							handlerMethod, eventType);
-				} else {
+				String guardName;
+				if (guardedHandlersCount > 0
+						&& (guardName = eventHandlerGuardNames.get(handlerName)) != null) {
+					Method guardMethod = eventHandlerGuardMethods
+							.get(guardName);
 					eventHandler = new EventHandler(handlerObject,
 							handlerMethod, guardMethod, eventType);
+				} else {
+					eventHandler = new EventHandler(handlerObject,
+							handlerMethod, eventType);
 				}
 				eventHandlers.put(handlerName, eventHandler);
 			}
 
 			componentCore.setHandlerObject(handlerObject);
-			componentCore.setEventHandlers(eventHandlers);
+			componentCore.setEventHandlers(eventHandlers,
+					guardedHandlersCount > 0);
 
 			// invoke the create method
 			if (createMethod != null) {
@@ -402,7 +436,7 @@ public class FactoryCore implements Factory {
 
 				initializeMethod.invoke(handlerObject, properties);
 			}
-			return componentCore;
+			return componentReference;
 		} catch (IllegalArgumentException e) {
 			throw new RuntimeException(
 					"Cannot create component instance of type "
