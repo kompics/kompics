@@ -1,5 +1,6 @@
 package se.sics.kompics.api;
 
+import se.sics.kompics.core.ChannelCore;
 import se.sics.kompics.core.ComponentCore;
 import se.sics.kompics.core.ComponentReference;
 import se.sics.kompics.core.scheduler.Scheduler;
@@ -49,10 +50,14 @@ public class Kompics {
 	 * @return the bootstrap component.
 	 */
 	public Component getBootstrapComponent() {
+		// TODO add bootstrap class in core package
 		if (bootstrapComponent == null) {
 			Scheduler scheduler = new Scheduler(workers, fairnessRate);
-			bootstrapComponent = new ComponentCore(scheduler, null, null)
-					.createReference();
+			ChannelCore bootFaultChannelCore = new ChannelCore();
+			bootFaultChannelCore.addEventType(FaultEvent.class);
+
+			bootstrapComponent = new ComponentCore(scheduler, null,
+					bootFaultChannelCore.createReference()).createReference();
 		}
 		return bootstrapComponent;
 	}

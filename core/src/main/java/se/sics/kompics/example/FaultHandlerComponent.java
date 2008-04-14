@@ -24,6 +24,10 @@ public class FaultHandlerComponent {
 	@EventHandlerMethod
 	public void handleFaultEvent(FaultEvent event) {
 		System.out.print("HANDLE FAULT in FAULT HANDLER: ");
-		event.getThrowable().printStackTrace(System.out);
+		Throwable throwable = event.getThrowable();
+		throwable.printStackTrace(System.out);
+
+		// int x = 0;
+		// x = 1 / x;
 	}
 }

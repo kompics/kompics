@@ -3,9 +3,12 @@
  */
 package se.sics.kompics.api.capability;
 
-public class CapabilityNotSupportedException extends Exception {
+public class CapabilityNotSupportedException extends RuntimeException {
 
-	private static final long serialVersionUID = -8339558110826831632L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -625610361107775942L;
 
 	public CapabilityNotSupportedException() {
 		super();
@@ -21,5 +24,13 @@ public class CapabilityNotSupportedException extends Exception {
 
 	public CapabilityNotSupportedException(Throwable cause) {
 		super(cause);
+	}
+
+	public CapabilityNotSupportedException(ComponentCapabilityFlags flag) {
+		super(flag.toString());
+	}
+
+	public CapabilityNotSupportedException(ChannelCapabilityFlags flag) {
+		super(flag.toString());
 	}
 }

@@ -60,8 +60,9 @@ public class UserComponent {
 		System.out.println("HANDLE RESPONSE in USER");
 		String message = event.getMessage();
 		System.out.println("USER: I got message: \"" + message + "\"");
+		System.out.println("TRIGGER OUTPUT in USER");
 		component.triggerEvent(new OutputEvent());
-		System.out.println("USER TRIGGERED OUTPUT");
-		int x = 1 / 0;
+		int x = 0;
+		x = 1 / x;
 	}
 }

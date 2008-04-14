@@ -1,11 +1,13 @@
 package se.sics.kompics.core;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
 import se.sics.kompics.api.Event;
+import se.sics.kompics.api.capability.ChannelCapabilityFlags;
 import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.scheduler.Work;
 
@@ -120,5 +122,10 @@ public class ChannelCore {
 				componentReference.handleWork(work);
 			}
 		}
+	}
+
+	public ChannelReference createReference() {
+		return new ChannelReference(this, EnumSet
+				.allOf(ChannelCapabilityFlags.class));
 	}
 }

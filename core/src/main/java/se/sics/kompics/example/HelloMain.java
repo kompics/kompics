@@ -49,6 +49,7 @@ public class HelloMain {
 		universeComponent.start();
 		faultHandlerComponent.start();
 
+		System.out.println("TRIGGER INPUT in MAIN");
 		// trigger an input event in the request channel
 		boot.triggerEvent(new InputEvent(), requestChannel);
 	}

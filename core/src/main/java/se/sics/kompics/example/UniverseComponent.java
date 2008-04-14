@@ -3,6 +3,7 @@ package se.sics.kompics.example;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Factory;
+import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
@@ -59,8 +60,9 @@ public class UniverseComponent {
 		Factory worldFactory = component
 				.createFactory("se.sics.kompics.example.WorldComponent");
 
-		// TODO fix faultChannel
-		Channel faultChannel = null;
+		Channel faultChannel = component.createChannel();
+		faultChannel.addEventType(FaultEvent.class);
+		component.subscribe(faultChannel, "handleFaultEvent");
 
 		// create sub-components
 		userComponent = userFactory.createComponent(faultChannel);
@@ -110,5 +112,11 @@ public class UniverseComponent {
 	@EventHandlerMethod
 	public void handleInputEvent(InputEvent event) {
 		System.out.println("HANDLE INPUT in UNIVERSE");
+	}
+
+	@EventHandlerMethod
+	public void handleFaultEvent(FaultEvent event) throws Throwable {
+		System.out.println("HANDLE FAULT in UNIVERSE");
+		throw event.getThrowable();
 	}
 }

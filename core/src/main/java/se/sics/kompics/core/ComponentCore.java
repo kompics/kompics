@@ -80,7 +80,12 @@ public class ComponentCore {
 		super();
 		this.scheduler = scheduler;
 		this.factoryCore = factoryCore;
-		// TODO type check fault channel
+
+		// check fault channel
+		if (!faultChannel.hasEventType(FaultEvent.class)) {
+			throw new RuntimeException(
+					"Provided fault channel does not have the FaultEvent type");
+		}
 		this.faultChannel = faultChannel;
 		this.componentIdentifier = new ComponentIdentifier();
 
@@ -179,8 +184,6 @@ public class ComponentCore {
 	// the work queue and on the component state lock
 	public void handleWork(Work work) {
 		WorkQueue workQueue = channelWorkQueues.get(work.getChannelCore());
-		System.out.println("WQ PUT+" + workQueue + " in "
-				+ handlerObject.getClass().getName());
 		workQueue.add(work);
 
 		// we make the component ready, if passive
@@ -217,13 +220,13 @@ public class ComponentCore {
 	 * if one is available, otherwise a higher priority one.
 	 */
 	public void schedule(Priority priority) {
+		// set the thread local component identifier. The thread executes now on
+		// behalf of this component.
+		ComponentIdentifier.set(componentIdentifier);
+
 		// pick a work queue, if possible from the given priority pool
 		WorkQueue workQueue = pickWorkQueue(priority);
 
-		System.out.println("EXECUTING " + handlerObject.getClass().getName());
-
-		System.out.println("WQ TAKE+" + workQueue + " in "
-				+ handlerObject.getClass().getName());
 		// take from it
 		Work work = workQueue.take();
 
@@ -369,10 +372,6 @@ public class ComponentCore {
 	public synchronized void moveWorkQueueToPriorityPool(WorkQueue workQueue,
 			Priority from, Priority to) {
 
-		System.out.println("MOVE WQ " + workQueue + " in "
-				+ handlerObject.getClass().getName() + " FROM " + from + " TO "
-				+ to);
-
 		if (from != null) {
 			// constant-time removal
 			switch (from) {
@@ -498,16 +497,33 @@ public class ComponentCore {
 
 	/* =============== COMPONENT FAULT-HANDLING =============== */
 	private void handleFault(Throwable throwable) {
-		// TODO implement fault handling. e.g. send a fault event on a
-		// supervision channel
-
-		// fault channel type check
-		// if (!this.faultChannel.hasEventType(FaultEvent.class)) {
-		// throw new RuntimeException(
-		// "Provided fault channel does not have the FaultEvent type");
-		// }
 		System.out.println("ISOLATED EXCEPTION");
-		throwable.getCause().printStackTrace();
+
+		// filter out stack frames showing Kompics internals
+		StackTraceElement stackTrace[] = throwable.getCause().getStackTrace();
+		int i;
+		boolean hitInvoke = false;
+		for (i = stackTrace.length - 1; i >= 0; i--) {
+			if (!hitInvoke
+					&& stackTrace[i].getClassName().equals(
+							"se.sics.kompics.core.EventHandler")
+					&& stackTrace[i].getMethodName().equals("handleEvent")) {
+				hitInvoke = true;
+				continue;
+			}
+			if (hitInvoke && !stackTrace[i].getMethodName().equals("invoke0")
+					&& !stackTrace[i].getMethodName().equals("invoke")) {
+				i++;
+				break;
+			}
+		}
+		if (i > 0) {
+			StackTraceElement[] newStackTrace = new StackTraceElement[i];
+			for (int j = 0; j < i; j++) {
+				newStackTrace[j] = stackTrace[j];
+			}
+			throwable.getCause().setStackTrace(newStackTrace);
+		}
 		triggerEvent(new FaultEvent(throwable.getCause()), faultChannel);
 	}
 

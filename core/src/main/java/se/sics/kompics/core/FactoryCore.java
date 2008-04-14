@@ -370,7 +370,7 @@ public class FactoryCore implements Factory {
 
 		try {
 			if (faultChannel == null)
-				throw new RuntimeException("YYYY");
+				throw new RuntimeException("FaultChannel cannot be null.");
 
 			// create a component core
 			ComponentCore componentCore = new ComponentCore(scheduler, this,
