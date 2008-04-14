@@ -1,11 +1,18 @@
-package tbn.timer.events;
+package se.sics.kompics.timer.events;
 
-import tbn.api.Event;
+import se.sics.kompics.api.Event;
+import se.sics.kompics.api.annotation.EventType;
 
+/**
+ * 
+ * @author Cosmin Arad
+ * @version $Id$
+ */
+@EventType
 public class TimerExpiredEvent implements Event {
 
 	private long timerId;
-	
+
 	public long getTimerId() {
 		return timerId;
 	}
