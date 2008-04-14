@@ -1,5 +1,8 @@
 package se.sics.kompics.core.sched;
 
+import org.junit.Ignore;
+
+@Ignore
 public abstract class ComponentTest {
 
 	public static ComponentTest componentTest;

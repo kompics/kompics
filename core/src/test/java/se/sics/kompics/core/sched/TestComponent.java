@@ -1,9 +1,12 @@
 package se.sics.kompics.core.sched;
 
+import org.junit.Ignore;
+
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.annotation.ComponentType;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 
+@Ignore
 @ComponentType
 public class TestComponent {
 
