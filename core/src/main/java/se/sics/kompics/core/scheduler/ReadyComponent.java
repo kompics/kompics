@@ -26,9 +26,14 @@ public class ReadyComponent implements Runnable, Comparable<ReadyComponent> {
 		this.highReadyEventCount = high;
 		this.mediumReadyEventCount = medium;
 		this.lowReadyEventCount = low;
-		this.scheduledPriority = null;
 		this.publishedPriority = publishedPriority;
 		this.executedPriority = executedPriority;
+		if (publishedPriority != null) {
+			this.scheduledPriority = publishedPriority;
+		}
+		if (executedPriority != null) {
+			this.scheduledPriority = executedPriority;
+		}
 	}
 
 	public void run() {

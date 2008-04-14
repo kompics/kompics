@@ -73,6 +73,7 @@ public class WorkQueue {
 			componentCore.moveWorkQueueToPriorityPool(this, priority,
 					Priority.MEDIUM);
 			priority = Priority.MEDIUM;
+			return work;
 		}
 
 		if (highCounter > 0) {

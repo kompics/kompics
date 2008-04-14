@@ -1,6 +1,5 @@
 package se.sics.kompics.api;
 
-
 public interface Component {
 
 	public void triggerEvent(Event event);
@@ -26,6 +25,8 @@ public interface Component {
 
 	public Channel createChannel();
 
+	// TODO document
+	// TODO createFaultChannel
 	public void subscribe(Channel channel, String eventHandlerName);
 
 	public void bind(Class<? extends Event> eventType, Channel channel);

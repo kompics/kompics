@@ -110,7 +110,6 @@ public class ChannelCore {
 		synchronized (channelLock) {
 			LinkedList<Subscription> subs = subscriptions.get(eventType);
 			if (subs == null) {
-				System.out.println("NO SUBS");
 				return;
 			}
 

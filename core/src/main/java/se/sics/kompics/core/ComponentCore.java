@@ -35,6 +35,8 @@ public class ComponentCore {
 
 	private ComponentIdentifier componentIdentifier;
 
+	private String componentName;
+
 	private FactoryCore factoryCore;
 
 	private Channel faultChannel;
@@ -112,6 +114,8 @@ public class ComponentCore {
 
 	public void setHandlerObject(Object handlerObject) {
 		this.handlerObject = handlerObject;
+		this.componentName = handlerObject.getClass().getSimpleName() + "@"
+				+ Integer.toHexString(this.hashCode());
 	}
 
 	public void setEventHandlers(HashMap<String, EventHandler> eventHandlers,
@@ -203,10 +207,21 @@ public class ComponentCore {
 
 			if (componentState == ComponentState.ASLEEP) {
 				componentState = ComponentState.AWAKE;
+
+				// System.out.println("HCR:" + highWorkCounter + ":"
+				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
+				// + highPoolCounter + ":" + mediumPoolCounter + ":"
+				// + lowPoolCounter);
+
 				scheduler.componentReady(new ReadyComponent(this,
 						highWorkCounter, mediumWorkCounter, lowWorkCounter,
 						work.getPriority(), null));
 			} else {
+				// System.out.println("HPE:" + highWorkCounter + ":"
+				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
+				// + highPoolCounter + ":" + mediumPoolCounter + ":"
+				// + lowPoolCounter);
+
 				scheduler.publishedEvent(work.getPriority());
 			}
 		}
@@ -223,6 +238,7 @@ public class ComponentCore {
 		// set the thread local component identifier. The thread executes now on
 		// behalf of this component.
 		ComponentIdentifier.set(componentIdentifier);
+		Thread.currentThread().setName(componentName);
 
 		// pick a work queue, if possible from the given priority pool
 		WorkQueue workQueue = pickWorkQueue(priority);
@@ -271,9 +287,19 @@ public class ComponentCore {
 			}
 
 			if (allWorkCounter == 0) {
+				// System.out.println("SEE:" + highWorkCounter + ":"
+				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
+				// + highPoolCounter + ":" + mediumPoolCounter + ":"
+				// + lowPoolCounter);
+
 				componentState = ComponentState.ASLEEP;
 				scheduler.executedEvent(work.getPriority());
 			} else if (allWorkCounter > 0) {
+				// System.out.println("SCR:" + highWorkCounter + ":"
+				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
+				// + highPoolCounter + ":" + mediumPoolCounter + ":"
+				// + lowPoolCounter);
+
 				componentState = ComponentState.AWAKE;
 				scheduler.componentReady(new ReadyComponent(this,
 						highWorkCounter, mediumWorkCounter, lowWorkCounter,
