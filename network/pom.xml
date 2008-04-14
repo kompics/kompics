@@ -6,7 +6,7 @@
     <version>0.1-SNAPSHOT</version>
   </parent>
   <artifactId>kompics-network</artifactId>
-  <name>KOMPICS Network Component</name>
+  <name>Kompics Network Component</name>
   <packaging>jar</packaging>
   <properties>
     <symbolicName>${pom.groupId}.network</symbolicName>
