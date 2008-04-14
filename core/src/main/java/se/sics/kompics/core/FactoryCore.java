@@ -6,7 +6,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -24,7 +23,6 @@ import se.sics.kompics.api.annotation.ComponentType;
 import se.sics.kompics.api.annotation.EventHandlerGuardMethod;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
-import se.sics.kompics.api.capability.ComponentCapabilityFlags;
 import se.sics.kompics.core.scheduler.Scheduler;
 
 /**
@@ -375,9 +373,8 @@ public class FactoryCore implements Factory {
 			// create a component core
 			ComponentCore componentCore = new ComponentCore(scheduler, this,
 					faultChannel);
-			ComponentReference componentReference = new ComponentReference(
-					componentCore, EnumSet
-							.allOf(ComponentCapabilityFlags.class));
+			ComponentReference componentReference = componentCore
+					.createReference();
 
 			// create an instance of the implementing component type
 			Object handlerObject = constructor.newInstance(componentReference);

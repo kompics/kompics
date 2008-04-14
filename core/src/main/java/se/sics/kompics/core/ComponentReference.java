@@ -14,6 +14,11 @@ import se.sics.kompics.core.scheduler.Work;
 public class ComponentReference implements Component {
 
 	/**
+	 * The referenced component's identifier.
+	 */
+	private final ComponentUUID componentUUID;
+
+	/**
 	 * The component referenced by this component reference.
 	 */
 	private ComponentCore componentCore;
@@ -27,7 +32,7 @@ public class ComponentReference implements Component {
 	 * The identifier of the component that is capable to use this reference. If
 	 * <code>null</code> any component is capable to use this reference.
 	 */
-	private final ComponentIdentifier capable;
+	private final ComponentUUID capable;
 
 	/**
 	 * Constructs a component reference. This constructor is only visible in the
@@ -37,6 +42,7 @@ public class ComponentReference implements Component {
 	 * @param componentCapabilities
 	 */
 	ComponentReference(ComponentCore componentCore,
+			ComponentUUID componentUUID,
 			EnumSet<ComponentCapabilityFlags> componentCapabilities) {
 		super();
 
@@ -46,6 +52,7 @@ public class ComponentReference implements Component {
 		}
 
 		this.componentCore = componentCore;
+		this.componentUUID = componentUUID;
 
 		if (componentCapabilities == null) {
 			this.componentCapabilities = EnumSet
@@ -65,8 +72,9 @@ public class ComponentReference implements Component {
 	 * @param capable
 	 */
 	ComponentReference(ComponentCore componentCore,
+			ComponentUUID componentUUID,
 			EnumSet<ComponentCapabilityFlags> componentCapabilities,
-			ComponentIdentifier capable) {
+			ComponentUUID capable) {
 		super();
 
 		if (componentCore == null) {
@@ -75,6 +83,7 @@ public class ComponentReference implements Component {
 		}
 
 		this.componentCore = componentCore;
+		this.componentUUID = componentUUID;
 
 		if (componentCapabilities == null) {
 			this.componentCapabilities = EnumSet
@@ -91,8 +100,7 @@ public class ComponentReference implements Component {
 
 	public void bind(Class<? extends Event> eventType, Channel channel) {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.BIND)
-				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			componentCore.bind(this, eventType, channel);
 			return;
 		}
@@ -112,8 +120,7 @@ public class ComponentReference implements Component {
 
 	public void start() {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.START)
-				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			componentCore.start();
 			return;
 		}
@@ -123,8 +130,7 @@ public class ComponentReference implements Component {
 
 	public void stop() {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.STOP)
-				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			componentCore.stop();
 			return;
 		}
@@ -133,8 +139,7 @@ public class ComponentReference implements Component {
 
 	public void subscribe(Channel channel, String eventHandlerName) {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.SUBSCRIBE)
-				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			componentCore.subscribe(this, channel, eventHandlerName);
 			return;
 		}
@@ -144,8 +149,7 @@ public class ComponentReference implements Component {
 
 	public void triggerEvent(Event event) {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.TRIGGER)
-				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			componentCore.triggerEvent(event);
 			return;
 		}
@@ -155,8 +159,7 @@ public class ComponentReference implements Component {
 
 	public void triggerEvent(Event event, Priority priority) {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.TRIGGER)
-				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			componentCore.triggerEvent(event, priority);
 			return;
 		}
@@ -166,8 +169,7 @@ public class ComponentReference implements Component {
 
 	public void triggerEvent(Event event, Channel channel) {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.TRIGGER)
-				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			componentCore.triggerEvent(event, channel);
 			return;
 		}
@@ -177,8 +179,7 @@ public class ComponentReference implements Component {
 
 	public void triggerEvent(Event event, Channel channel, Priority priority) {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.TRIGGER)
-				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			componentCore.triggerEvent(event, channel, priority);
 			return;
 		}
@@ -189,12 +190,41 @@ public class ComponentReference implements Component {
 	void handleWork(Work work) {
 		if (componentCapabilities
 				.contains(ComponentCapabilityFlags.HANDLE_EVENTS)
-				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			componentCore.handleWork(work);
 			return;
 		}
 		throw new CapabilityNotSupportedException(
 				ComponentCapabilityFlags.HANDLE_EVENTS);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((componentUUID == null) ? 0 : componentUUID.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		final ComponentReference other = (ComponentReference) obj;
+		if (componentUUID == null) {
+			if (other.componentUUID != null)
+				return false;
+		} else if (!componentUUID.equals(other.componentUUID))
+			return false;
+		return true;
+	}
+
+	public ComponentUUID getComponentUUID() {
+		return componentUUID;
 	}
 }

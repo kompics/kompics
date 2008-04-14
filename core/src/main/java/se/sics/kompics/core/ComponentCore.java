@@ -33,7 +33,7 @@ import se.sics.kompics.core.scheduler.WorkQueue;
  */
 public class ComponentCore {
 
-	private ComponentIdentifier componentIdentifier;
+	private ComponentUUID componentIdentifier;
 
 	private String componentName;
 
@@ -89,7 +89,7 @@ public class ComponentCore {
 					"Provided fault channel does not have the FaultEvent type");
 		}
 		this.faultChannel = faultChannel;
-		this.componentIdentifier = new ComponentIdentifier();
+		this.componentIdentifier = new ComponentUUID();
 
 		this.bindings = new HashMap<Class<? extends Event>, Binding>();
 		this.subscriptions = new LinkedList<Subscription>();
@@ -237,7 +237,7 @@ public class ComponentCore {
 	public void schedule(Priority priority) {
 		// set the thread local component identifier. The thread executes now on
 		// behalf of this component.
-		ComponentIdentifier.set(componentIdentifier);
+		ComponentUUID.set(componentIdentifier);
 		Thread.currentThread().setName(componentName);
 
 		// pick a work queue, if possible from the given priority pool
@@ -554,7 +554,7 @@ public class ComponentCore {
 	}
 
 	public ComponentReference createReference() {
-		return new ComponentReference(this, EnumSet
+		return new ComponentReference(this, componentIdentifier, EnumSet
 				.allOf(ComponentCapabilityFlags.class));
 	}
 }

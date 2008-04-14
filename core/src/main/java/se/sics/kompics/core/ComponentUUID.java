@@ -2,22 +2,22 @@ package se.sics.kompics.core;
 
 import java.util.UUID;
 
-public class ComponentIdentifier {
+public class ComponentUUID {
 
-	private static ThreadLocal<ComponentIdentifier> threadLocalComponentIdentifier = new ThreadLocal<ComponentIdentifier>();
+	private static ThreadLocal<ComponentUUID> threadLocalComponentIdentifier = new ThreadLocal<ComponentUUID>();
 
-	private UUID uuid;
+	private final UUID uuid;
 
-	public ComponentIdentifier() {
+	public ComponentUUID() {
 		super();
 		this.uuid = UUID.randomUUID();
 	}
 
-	public static ComponentIdentifier get() {
+	static ComponentUUID get() {
 		return threadLocalComponentIdentifier.get();
 	}
 
-	public static void set(ComponentIdentifier componentIdentifier) {
+	static void set(ComponentUUID componentIdentifier) {
 		threadLocalComponentIdentifier.set(componentIdentifier);
 	}
 
@@ -37,7 +37,7 @@ public class ComponentIdentifier {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		final ComponentIdentifier other = (ComponentIdentifier) obj;
+		final ComponentUUID other = (ComponentUUID) obj;
 		if (uuid == null) {
 			if (other.uuid != null)
 				return false;

@@ -1,5 +1,7 @@
 package se.sics.kompics.api;
 
+import se.sics.kompics.core.ComponentUUID;
+
 public interface Component {
 
 	public void triggerEvent(Event event);
@@ -34,4 +36,6 @@ public interface Component {
 	public void start();
 
 	public void stop();
+
+	public ComponentUUID getComponentUUID();
 }

@@ -23,7 +23,7 @@ public class ChannelReference implements Channel {
 	 * The identifier of the component that is capable to use this reference. If
 	 * <code>null</code> any component is capable to use this reference.
 	 */
-	private ComponentIdentifier capable;
+	private ComponentUUID capable;
 
 	/**
 	 * Constructs a channel reference. This constructor is only visible in the
@@ -61,7 +61,7 @@ public class ChannelReference implements Channel {
 	 */
 	ChannelReference(ChannelCore channelCore,
 			EnumSet<ChannelCapabilityFlags> channelCapabilities,
-			ComponentIdentifier capable) {
+			ComponentUUID capable) {
 		this(channelCore, channelCapabilities);
 		this.capable = capable;
 	}
@@ -77,7 +77,7 @@ public class ChannelReference implements Channel {
 	public void addEventType(Class<? extends Event> eventType) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.ADD_EVENT_TYPE)
 				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+						.equals(ComponentUUID.get()))) {
 			channelCore.addEventType(eventType);
 			return;
 		}
@@ -94,7 +94,7 @@ public class ChannelReference implements Channel {
 		if (channelCapabilities
 				.contains(ChannelCapabilityFlags.REMOVE_EVENT_TYPE)
 				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+						.equals(ComponentUUID.get()))) {
 			channelCore.removeEventType(eventType);
 			return;
 		}
@@ -105,7 +105,7 @@ public class ChannelReference implements Channel {
 	ChannelCore addSubscription(Subscription subscription) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.SUBSCRIBE)
 				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+						.equals(ComponentUUID.get()))) {
 			channelCore.addSubscription(subscription);
 			return channelCore;
 		}
@@ -116,7 +116,7 @@ public class ChannelReference implements Channel {
 	void addBinding(Binding binding) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.BIND)
 				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+						.equals(ComponentUUID.get()))) {
 			channelCore.addBinding(binding);
 			return;
 		}
@@ -126,7 +126,7 @@ public class ChannelReference implements Channel {
 	void publishEventCore(EventCore eventCore) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.PUBLISH)
 				&& (capable == null || capable
-						.equals(ComponentIdentifier.get()))) {
+						.equals(ComponentUUID.get()))) {
 			channelCore.publishEventCore(eventCore);
 			return;
 		}
