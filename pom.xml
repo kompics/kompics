@@ -1,126 +1,148 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>se.sics.kompics</groupId>
-  <artifactId>build</artifactId>
-  <packaging>pom</packaging>
-  <version>0.1-SNAPSHOT</version>
-  <name>Kompics Parent POM</name>
-  <url>http://kompics.sics.se</url>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>se.sics.kompics</groupId>
+	<artifactId>build</artifactId>
+	<packaging>pom</packaging>
+	<version>0.1-SNAPSHOT</version>
+	<name>Kompics Parent POM</name>
+	<url>http://kompics.sics.se</url>
 
-  <scm>
-    <connection>scm:svn:svn://small.sics.se/kompics/trunk</connection>
-    <url>http://small.sics.se/viewvc/kompics/trunk</url>
-    <developerConnection>scm:svn:svn://small.sics.se/kompics/trunk</developerConnection>
-  </scm>
+	<scm>
+		<connection>
+			scm:svn:svn://small.sics.se/kompics/trunk
+		</connection>
+		<url>http://small.sics.se/viewvc/kompics/trunk</url>
+		<developerConnection>
+			scm:svn:svn://small.sics.se/kompics/trunk
+		</developerConnection>
+	</scm>
 
-    <distributionManagement>
-         <!-- use the following if you're not using a snapshot version. -->
-	<repository>
-	    <id>repo</id>
-	    <name>SICS Repository</name>
-	    <url>scpexe://korsakov.sics.se/home/maven2/repository</url>
-	</repository>
-	<!-- use the following if you ARE using a snapshot version. -->
-	<snapshotRepository>
-	    <id>snaprepo</id>
-	    <name>SICS Snapshot Repository</name>
-	    <url>scpexe://korsakov.sics.se/home/maven2/snapshotrepository</url>
-	</snapshotRepository>
-	<site>
-      <id>kompics-site</id>
-      <url>scpexe://kompics.sics.se/var/www/kompics/report/trunk</url>
-    </site>
-	<downloadUrl>http://korsakov.sics.se/maven/repository</downloadUrl>
-    </distributionManagement>
+	<distributionManagement>
+		<!-- use the following if you're not using a snapshot version. -->
+		<repository>
+			<id>repo</id>
+			<name>SICS Repository</name>
+			<url>scpexe://korsakov.sics.se/home/maven2/repository</url>
+		</repository>
+		<!-- use the following if you ARE using a snapshot version. -->
+		<snapshotRepository>
+			<id>snaprepo</id>
+			<name>SICS Snapshot Repository</name>
+			<url>
+				scpexe://korsakov.sics.se/home/maven2/snapshotrepository
+			</url>
+		</snapshotRepository>
+		<site>
+			<id>kompics-site</id>
+			<url>
+				scpexe://kompics.sics.se/var/www/kompics/report/trunk
+			</url>
+		</site>
+		<downloadUrl>
+			http://korsakov.sics.se/maven/repository
+		</downloadUrl>
+	</distributionManagement>
 
 	<repositories>
 		<repository>
-	    	<id>repo</id>
-	    	<name>SICS Repository</name>
-	    	<url>http://korsakov.sics.se/maven/repository</url>
+			<id>repo</id>
+			<name>SICS Repository</name>
+			<url>http://korsakov.sics.se/maven/repository</url>
 		</repository>
 		<repository>
-	    	<id>snaprepo</id>
-	    	<name>SICS Snapshot Repository</name>
-		    <url>http://korsakov.sics.se/maven/snapshotrepository</url>
+			<id>snaprepo</id>
+			<name>SICS Snapshot Repository</name>
+			<url>http://korsakov.sics.se/maven/snapshotrepository</url>
 		</repository>
 	</repositories>
-	
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <aggregate>true</aggregate>
-          <breakiterator>true</breakiterator>
-          <charset>UTF-8</charset>
-          <docencoding>UTF-8</docencoding>
-          <windowtitle>Kompics ${project.version} API Documentation</windowtitle>
-          <doctitle>Kompics ${project.version} API Documentation</doctitle>
-          <encoding>UTF-8</encoding>
-          <excludePackageNames>1se.sics.kompics</excludePackageNames>
-          <includePackageNames>1se.sics.kompics.api</includePackageNames>
-          <links>
-            <link>http://java.sun.com/j2se/1.5.0/docs/api/</link>
-            <link>http://www.slf4j.org/api/</link>
-          </links>
-          <locale>en_US</locale>
-          </configuration>
-      </plugin>      
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jxr-plugin</artifactId>
-        <configuration>
-          <aggregate>true</aggregate>
-          <linkJavadoc>true</linkJavadoc>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-report-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-pmd-plugin</artifactId>
-        <configuration>
-          <linkXref>true</linkXref>
-          <sourceEncoding>utf-8</sourceEncoding>
-          <minimumTokens>100</minimumTokens>
-          <targetJdk>1.5</targetJdk>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
-      
-    <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <encoding>UTF-8</encoding>
-          <source>1.5</source>
-          <target>1.5</target>
-          <debug>true</debug>
-          <optimize>true</optimize>
-          <showDeprecations>true</showDeprecations>
-        </configuration>
-      </plugin>
-      </plugins>
-    </build>  
-    
-    <modules>
-    <module>core</module>
-    <module>timer</module>
-<!--
-    <module>network</module>
 
-    <module>failure-detector</module>
-    <module>inspector</module>
-    <module>timer</module>
-    <module>web</module>
-    <module>example</module>
--->
-  </modules>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+					<breakiterator>true</breakiterator>
+					<charset>UTF-8</charset>
+					<docencoding>UTF-8</docencoding>
+					<windowtitle>
+						Kompics ${project.version} API Documentation
+					</windowtitle>
+					<doctitle>
+						Kompics ${project.version} API Documentation
+					</doctitle>
+					<encoding>UTF-8</encoding>
+					<excludePackageNames>
+						1se.sics.kompics
+					</excludePackageNames>
+					<includePackageNames>
+						1se.sics.kompics.api
+					</includePackageNames>
+					<links>
+						<link>
+							http://java.sun.com/j2se/1.5.0/docs/api/
+						</link>
+						<link>http://www.slf4j.org/api/</link>
+					</links>
+					<locale>en_US</locale>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+					<linkJavadoc>true</linkJavadoc>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<configuration>
+					<linkXref>true</linkXref>
+					<sourceEncoding>utf-8</sourceEncoding>
+					<minimumTokens>100</minimumTokens>
+					<targetJdk>1.5</targetJdk>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<source>1.5</source>
+					<target>1.5</target>
+					<debug>true</debug>
+					<optimize>true</optimize>
+					<showDeprecations>true</showDeprecations>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<modules>
+		<module>core</module>
+		<module>timer</module>
+		<!--
+			<module>network</module>
+			
+			<module>failure-detector</module>
+			<module>inspector</module>
+			<module>timer</module>
+			<module>web</module>
+			<module>example</module>
+		-->
+	</modules>
 </project>
