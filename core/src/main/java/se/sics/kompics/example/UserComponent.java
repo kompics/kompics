@@ -62,6 +62,10 @@ public class UserComponent {
 		System.out.println("USER: I got message: \"" + message + "\"");
 		System.out.println("TRIGGER OUTPUT in USER");
 		component.triggerEvent(new OutputEvent());
+		myMethod();
+	}
+
+	private void myMethod() {
 		int x = 0;
 		x = 1 / x;
 	}
