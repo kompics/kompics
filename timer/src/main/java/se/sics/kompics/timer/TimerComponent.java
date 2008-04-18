@@ -14,7 +14,7 @@ import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
 import se.sics.kompics.timer.events.CancelTimerEvent;
 import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
 import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerExpiredEvent;
+import se.sics.kompics.timer.events.TimerSignalEvent;
 
 /**
  * The <code>TimerComponent</code> class
@@ -26,10 +26,10 @@ import se.sics.kompics.timer.events.TimerExpiredEvent;
 public class TimerComponent {
 
 	// set of active timers
-	private HashMap<TimerId, TimeoutTask> activeTimers;
+	private HashMap<TimerId, TimerSignalTask> activeTimers;
 
 	// set of active periodic timers
-	private HashMap<TimerId, PeriodicTimeoutTask> activePeriodicTimers;
+	private HashMap<TimerId, PeriodicTimerSignalTask> activePeriodicTimers;
 
 	private Timer timer;
 
@@ -40,12 +40,19 @@ public class TimerComponent {
 	 */
 	public TimerComponent(Component component) {
 		this.component = component;
-		this.activeTimers = new HashMap<TimerId, TimeoutTask>();
-		this.activePeriodicTimers = new HashMap<TimerId, PeriodicTimeoutTask>();
+		this.activeTimers = new HashMap<TimerId, TimerSignalTask>();
+		this.activePeriodicTimers = new HashMap<TimerId, PeriodicTimerSignalTask>();
 	}
 
 	@ComponentCreateMethod
-	public void create() {
+	public void create(Channel requestChannel, Channel signalChannel) {
+		// bind and subscribe to the given channels
+		component.subscribe(signalChannel, "handleSetTimerEvent");
+		component.subscribe(signalChannel, "handleSetPeriodicTimerEvent");
+		component.subscribe(signalChannel, "handleCancelTimerEvent");
+		component.subscribe(signalChannel, "handleCancelPeriodicTimerEvent");
+		component.bind(TimerSignalEvent.class, signalChannel);
+
 		this.timer = new Timer("TimerComponent@"
 				+ Integer.toHexString(this.hashCode()));
 	}
@@ -61,8 +68,9 @@ public class TimerComponent {
 		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
 				event.getTimerId());
 
-		PeriodicTimeoutTask timeOutTask = new PeriodicTimeoutTask(component,
-				event.getTimerExpiredEvent(), event.getClientChannel(), id);
+		PeriodicTimerSignalTask timeOutTask = new PeriodicTimerSignalTask(
+				component, event.getTimerExpiredEvent(), event
+						.getClientChannel(), id);
 
 		activePeriodicTimers.put(id, timeOutTask);
 		timer.scheduleAtFixedRate(timeOutTask, event.getDelay(), event
@@ -84,7 +92,7 @@ public class TimerComponent {
 		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
 				event.getTimerId());
 
-		TimeoutTask timeOutTask = new TimeoutTask(this, event
+		TimerSignalTask timeOutTask = new TimerSignalTask(this, event
 				.getTimerExpiredEvent(), event.getClientChannel(), id);
 
 		activeTimers.put(id, timeOutTask);
@@ -103,7 +111,7 @@ public class TimerComponent {
 	}
 
 	// called by the timeout task
-	void timeout(TimerId timerId, TimerExpiredEvent timerExpiredEvent,
+	void timeout(TimerId timerId, TimerSignalEvent timerExpiredEvent,
 			Channel clientChannel) {
 		activeTimers.remove(timerId);
 		component.triggerEvent(timerExpiredEvent, clientChannel, Priority.HIGH);

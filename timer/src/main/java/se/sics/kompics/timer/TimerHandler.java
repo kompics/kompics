@@ -9,7 +9,7 @@ import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
 import se.sics.kompics.timer.events.CancelTimerEvent;
 import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
 import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerExpiredEvent;
+import se.sics.kompics.timer.events.TimerSignalEvent;
 
 /**
  * The <code>TimerHandler</code> class
@@ -37,7 +37,7 @@ public class TimerHandler {
 		this.outstandingPeriodicTimers = new HashSet<Long>();
 	}
 
-	public long setTimer(TimerExpiredEvent timerExpiredEvent,
+	public long setTimer(TimerSignalEvent timerExpiredEvent,
 			Channel timeoutChannel, long delay) {
 
 		if (!timeoutChannel.hasEventType(timerExpiredEvent.getClass())) {
@@ -54,7 +54,7 @@ public class TimerHandler {
 		return nextTimerId;
 	}
 
-	public long setPeriodicTimer(TimerExpiredEvent timerExpiredEvent,
+	public long setPeriodicTimer(TimerSignalEvent timerExpiredEvent,
 			Channel timeoutChannel, long delay, long period) {
 
 		if (!timeoutChannel.hasEventType(timerExpiredEvent.getClass())) {

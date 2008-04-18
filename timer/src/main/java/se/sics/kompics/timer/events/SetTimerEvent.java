@@ -8,7 +8,7 @@ import se.sics.kompics.api.annotation.EventType;
 /**
  * 
  * @author Cosmin Arad
- * @version $Id$
+ * @version $Id:SetTimerEvent.java 24 2008-04-14 18:17:59Z cosmin $
  */
 @EventType
 public class SetTimerEvent implements Event {
@@ -19,11 +19,11 @@ public class SetTimerEvent implements Event {
 
 	private long timerId;
 
-	private TimerExpiredEvent timerExpiredEvent;
+	private TimerSignalEvent timerExpiredEvent;
 
 	private Channel clientChannel;
 
-	public SetTimerEvent(long timerId, TimerExpiredEvent timerExpiredEvent,
+	public SetTimerEvent(long timerId, TimerSignalEvent timerExpiredEvent,
 			Channel channel, Component component, long delay) {
 		this.clientChannel = channel;
 		this.timerId = timerId;
@@ -32,7 +32,7 @@ public class SetTimerEvent implements Event {
 		this.delay = delay;
 	}
 
-	public TimerExpiredEvent getTimerExpiredEvent() {
+	public TimerSignalEvent getTimerExpiredEvent() {
 		return timerExpiredEvent;
 	}
 
