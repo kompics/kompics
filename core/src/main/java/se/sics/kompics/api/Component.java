@@ -27,6 +27,8 @@ public interface Component {
 
 	public Channel createChannel();
 
+	public Channel getFaultChannel();
+
 	// TODO document
 	// TODO createFaultChannel
 	public void subscribe(Channel channel, String eventHandlerName);

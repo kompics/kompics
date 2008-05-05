@@ -117,7 +117,6 @@ public class ChannelCore {
 				ComponentReference componentReference = sub.getComponent();
 				Work work = new Work(this, eventCore, sub.getEventHandler(),
 						eventCore.getPriority());
-
 				componentReference.handleWork(work);
 			}
 		}

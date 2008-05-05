@@ -107,6 +107,11 @@ public class ComponentReference implements Component {
 		throw new CapabilityNotSupportedException(ComponentCapabilityFlags.BIND);
 	}
 
+	public Channel getFaultChannel() {
+		// TODO create channel capability
+		return componentCore.getFaultChannel();
+	}
+
 	public Channel createChannel() {
 		// TODO create channel capability
 		return componentCore.createChannel();

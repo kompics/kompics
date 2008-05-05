@@ -1,8 +1,8 @@
 package se.sics.kompics.api;
 
 import se.sics.kompics.core.ChannelCore;
-import se.sics.kompics.core.ComponentCore;
 import se.sics.kompics.core.ComponentReference;
+import se.sics.kompics.core.FactoryCore;
 import se.sics.kompics.core.scheduler.Scheduler;
 
 /**
@@ -50,14 +50,16 @@ public class Kompics {
 	 * @return the bootstrap component.
 	 */
 	public Component getBootstrapComponent() {
-		// TODO add bootstrap class in core package
 		if (bootstrapComponent == null) {
 			Scheduler scheduler = new Scheduler(workers, fairnessRate);
 			ChannelCore bootFaultChannelCore = new ChannelCore();
 			bootFaultChannelCore.addEventType(FaultEvent.class);
+			FactoryCore factoryCore = new FactoryCore(scheduler,
+					"se.sics.kompics.core.BootstrapComponent");
 
-			bootstrapComponent = new ComponentCore(scheduler, null,
-					bootFaultChannelCore.createReference()).createReference();
+			Channel faultChannel = bootFaultChannelCore.createReference();
+			bootstrapComponent = factoryCore.createComponent(faultChannel,
+					faultChannel);
 		}
 		return bootstrapComponent;
 	}

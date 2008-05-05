@@ -138,9 +138,24 @@ public class ComponentCore {
 	public void triggerEvent(Event event) {
 		Binding binding = bindings.get(event.getClass());
 
-		if (binding == null)
-			throw new ConfigurationException("Event type "
-					+ event.getClass().getCanonicalName() + " not bound");
+		if (binding == null) {
+			Class<?> eventType = event.getClass();
+
+			while (binding == null && eventType != Object.class) {
+				eventType = eventType.getSuperclass();
+				binding = bindings.get(eventType);
+			}
+
+			if (binding != null) {
+				Binding newBinding = new Binding(binding.getComponent(),
+						binding.getChannel(), event.getClass());
+				bindings.put(event.getClass(), newBinding);
+				newBinding.getChannel().addBinding(newBinding);
+			} else if (eventType == Object.class) {
+				throw new ConfigurationException("Event type "
+						+ event.getClass().getCanonicalName() + " not bound");
+			}
+		}
 
 		EventCore eventCore = new EventCore(event, binding.getChannel(),
 				Priority.MEDIUM);
@@ -443,6 +458,10 @@ public class ComponentCore {
 				.allOf(ChannelCapabilityFlags.class));
 	}
 
+	public ChannelReference getFaultChannel() {
+		return (ChannelReference) faultChannel;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -457,6 +476,8 @@ public class ComponentCore {
 	public void bind(ComponentReference componentReference,
 			Class<? extends Event> eventType, Channel channel) {
 		// TODO bind synchronization
+		// TODO bind type check
+		// TODO check MayTriggerEvents
 
 		ChannelReference channelReference = (ChannelReference) channel;
 		Binding binding = new Binding(componentReference, channelReference,
@@ -475,10 +496,13 @@ public class ComponentCore {
 		ChannelReference channelReference = (ChannelReference) channel;
 		EventHandler eventHandler = eventHandlers.get(eventHandlerName);
 		if (eventHandler != null) {
+			// TODO subscribe type check
+
 			Subscription subscription = new Subscription(componentReference,
 					channelReference, eventHandler);
 
 			// TODO subscribe synchronization
+
 			subscriptions.add(subscription);
 			ChannelCore channelCore = channelReference
 					.addSubscription(subscription);
