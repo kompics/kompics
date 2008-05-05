@@ -6,7 +6,7 @@ import se.sics.kompics.api.annotation.EventType;
 /**
  * 
  * @author Cosmin Arad
- * @version $TimerSignalEvent.java 24 2008-04-14 18:17:59Z cosmin $
+ * @version $Id$
  */
 @EventType
 public abstract class TimerSignalEvent implements Event {
