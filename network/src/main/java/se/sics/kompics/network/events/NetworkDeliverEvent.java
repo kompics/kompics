@@ -13,6 +13,7 @@ import se.sics.kompics.network.Transport;
  * @author Cosmin Arad
  * @version $Id$
  */
+@SuppressWarnings("serial")
 @EventType
 public abstract class NetworkDeliverEvent implements Event, Serializable {
 
