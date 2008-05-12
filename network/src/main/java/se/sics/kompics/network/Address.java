@@ -11,16 +11,6 @@ public class Address implements Comparable<Address>, Serializable {
 	 */
 	private static final long serialVersionUID = 226803467944970895L;
 
-	private static Address localAddress;
-
-	public static void setLocalAddress(Address address) {
-		localAddress = address;
-	}
-
-	public static Address getLocalAddress() {
-		return localAddress;
-	}
-
 	private InetAddress ip;
 
 	private int port;

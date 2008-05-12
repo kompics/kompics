@@ -17,26 +17,23 @@ import se.sics.kompics.network.Transport;
 @EventType
 public abstract class NetworkDeliverEvent implements Event, Serializable {
 
-	private transient Address source;
+	private final Address source;
 
-	private transient Address destination;
+	private final Address destination;
 
 	private transient Transport protocol;
+
+	protected NetworkDeliverEvent(Address source, Address destination) {
+		this.source = source;
+		this.destination = destination;
+	}
 
 	public final Address getSource() {
 		return source;
 	}
 
-	public final void setSource(Address source) {
-		this.source = source;
-	}
-
 	public final Address getDestination() {
 		return destination;
-	}
-
-	public final void setDestination(Address destination) {
-		this.destination = destination;
 	}
 
 	public final Transport getProtocol() {

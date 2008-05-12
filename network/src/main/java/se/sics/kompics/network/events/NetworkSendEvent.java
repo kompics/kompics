@@ -12,15 +12,15 @@ import se.sics.kompics.network.Transport;
  * @version $Id$
  */
 @EventType
-public class NetworkSendEvent implements Event {
+public final class NetworkSendEvent implements Event {
 
-	private Address source;
+	private final Address source;
 
-	private Address destination;
+	private final Address destination;
 
-	private Transport protocol;
+	private final Transport protocol;
 
-	private NetworkDeliverEvent networkDeliverEvent;
+	private final NetworkDeliverEvent networkDeliverEvent;
 
 	public NetworkSendEvent(NetworkDeliverEvent networkDeliverEvent,
 			Address source, Address destination, Transport protocol) {
@@ -46,31 +46,19 @@ public class NetworkSendEvent implements Event {
 		this(networkDeliverEvent, source, destination, Transport.UDP);
 	}
 
-	public NetworkSendEvent(NetworkDeliverEvent networkDeliverEvent,
-			Address destination) {
-		this(networkDeliverEvent, Address.getLocalAddress(), destination,
-				Transport.UDP);
-	}
-
-	public NetworkSendEvent(NetworkDeliverEvent networkDeliverEvent,
-			Address destination, Transport protocol) {
-		this(networkDeliverEvent, Address.getLocalAddress(), destination,
-				protocol);
-	}
-
-	public Address getDestination() {
+	public final Address getDestination() {
 		return destination;
 	}
 
-	public Address getSource() {
+	public final Address getSource() {
 		return source;
 	}
 
-	public Transport getProtocol() {
+	public final Transport getProtocol() {
 		return protocol;
 	}
 
-	public NetworkDeliverEvent getNetworkDeliverEvent() {
+	public final NetworkDeliverEvent getNetworkDeliverEvent() {
 		return networkDeliverEvent;
 	}
 }
