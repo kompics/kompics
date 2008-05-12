@@ -290,20 +290,20 @@ public class FactoryCore implements Factory {
 			// reflect the component's initialize method
 			if (method.isAnnotationPresent(ComponentInitializeMethod.class)) {
 				// type check the initialize method
-				Class<?>[] parameterTypes = method.getParameterTypes();
-				if (parameterTypes.length != 1) {
-					throw new RuntimeException(
-							"The initialize method for component class "
-									+ handlerComponentClassName
-									+ " should take one java.util.Properties argument.");
-				}
-
-				if (!Properties.class.isAssignableFrom(parameterTypes[0])) {
-					throw new RuntimeException(
-							"The initialize method for component class "
-									+ handlerComponentClassName
-									+ " should take one java.util.Properties argument.");
-				}
+				// Class<?>[] parameterTypes = method.getParameterTypes();
+				// if (parameterTypes.length != 1) {
+				// throw new RuntimeException(
+				// "The initialize method for component class "
+				// + handlerComponentClassName
+				// + " should take one java.util.Properties argument.");
+				// }
+				//
+				// if (!Properties.class.isAssignableFrom(parameterTypes[0])) {
+				// throw new RuntimeException(
+				// "The initialize method for component class "
+				// + handlerComponentClassName
+				// + " should take one java.util.Properties argument.");
+				// }
 				initializeMethod = method;
 
 				ComponentInitializeMethod initializeMethodAnnotation = method
@@ -447,7 +447,7 @@ public class FactoryCore implements Factory {
 			// invoke the initialize method ...
 			if (initializeMethod != null) {
 				if (initializationParameters == null) {
-					if (initializeConfigFileName != "") {
+					if (!initializeConfigFileName.equals("")) {
 						Properties properties = new Properties();
 						InputStream inputStream = handlerComponentClass
 								.getResourceAsStream(initializeConfigFileName);
@@ -460,7 +460,7 @@ public class FactoryCore implements Factory {
 						initializeMethod.invoke(handlerObject);
 					}
 				} else {
-					if (initializeConfigFileName != "") {
+					if (!initializeConfigFileName.equals("")) {
 						Properties properties = new Properties();
 						InputStream inputStream = handlerComponentClass
 								.getResourceAsStream(initializeConfigFileName);
