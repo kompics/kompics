@@ -122,6 +122,7 @@ public class NetworkComponent {
 		if (event.getDestination().equals(event.getSource())) {
 			// deliver locally
 			component.triggerEvent(deliverEvent);
+			return;
 		}
 
 		Transport protocol = event.getProtocol();
