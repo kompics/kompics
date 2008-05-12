@@ -3,6 +3,14 @@ package se.sics.kompics.api;
 public interface Factory {
 
 	/**
+	 * Sets the parameters used to initialize the created component instances.
+	 * 
+	 * @param objects
+	 *            the parameters
+	 */
+	public void setInitializationParameters(Object... objects);
+
+	/**
 	 * Creates a new component instance.
 	 * 
 	 * @param faultChannel

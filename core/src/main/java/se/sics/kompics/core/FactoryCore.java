@@ -34,6 +34,10 @@ import se.sics.kompics.core.scheduler.Scheduler;
  * @since Kompics 0.1
  * @version $Id$
  */
+/**
+ * @author cosmin
+ * 
+ */
 public class FactoryCore implements Factory {
 
 	/**
@@ -104,11 +108,18 @@ public class FactoryCore implements Factory {
 	 * class.
 	 */
 	private Method initializeMethod;
+
 	/**
 	 * The name of the file containing properties used to initialize the
 	 * component.
 	 */
 	private String initializeConfigFileName;
+
+	/**
+	 * array of objects passed to the init method when creating a component
+	 * instance
+	 */
+	private Object[] initializationParameters = null;
 
 	/**
 	 * The <code>destroy</code> method of the component implementation class.
@@ -360,6 +371,15 @@ public class FactoryCore implements Factory {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see se.sics.kompics.api.Factory#setInitializationParameters(java.lang.Object[])
+	 */
+	public void setInitializationParameters(Object... objects) {
+		initializationParameters = objects;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.api.Factory#createComponent(se.sics.kompics.api.Channel,
 	 *      se.sics.kompics.api.Channel[])
 	 */
@@ -424,14 +444,37 @@ public class FactoryCore implements Factory {
 				}
 			}
 
-			// invoke the initialize method
+			// invoke the initialize method ...
 			if (initializeMethod != null) {
-				Properties properties = new Properties();
-				InputStream inputStream = handlerComponentClass
-						.getResourceAsStream(initializeConfigFileName);
-				properties.load(inputStream);
+				if (initializationParameters == null) {
+					if (initializeConfigFileName != "") {
+						Properties properties = new Properties();
+						InputStream inputStream = handlerComponentClass
+								.getResourceAsStream(initializeConfigFileName);
+						properties.load(inputStream);
 
-				initializeMethod.invoke(handlerObject, properties);
+						// ... with a properties argument
+						initializeMethod.invoke(handlerObject, properties);
+					} else {
+						// ... with no argument
+						initializeMethod.invoke(handlerObject);
+					}
+				} else {
+					if (initializeConfigFileName != "") {
+						Properties properties = new Properties();
+						InputStream inputStream = handlerComponentClass
+								.getResourceAsStream(initializeConfigFileName);
+						properties.load(inputStream);
+
+						// ... with a properties and init parameters arguments
+						initializeMethod.invoke(handlerObject, properties,
+								initializationParameters);
+					} else {
+						// ... with init parameters arguments
+						initializeMethod.invoke(handlerObject,
+								initializationParameters);
+					}
+				}
 			}
 			return componentReference;
 		} catch (IllegalArgumentException e) {
