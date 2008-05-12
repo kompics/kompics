@@ -22,6 +22,8 @@ public class Kompics {
 
 	private ComponentReference bootstrapComponent;
 
+	private ComponentRegistry componentRegistry;
+
 	private static Kompics globalKompics = null;
 
 	/**
@@ -41,6 +43,7 @@ public class Kompics {
 		this.workers = workers;
 		this.fairnessRate = fairnessRate;
 		this.bootstrapComponent = null;
+		this.componentRegistry = new ComponentRegistry();
 	}
 
 	/**
@@ -85,5 +88,9 @@ public class Kompics {
 		if (Kompics.globalKompics == null) {
 			Kompics.globalKompics = kompics;
 		}
+	}
+
+	public ComponentRegistry getComponentRegistry() {
+		return componentRegistry;
 	}
 }

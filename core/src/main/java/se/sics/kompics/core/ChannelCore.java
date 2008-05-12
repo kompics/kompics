@@ -15,6 +15,8 @@ public class ChannelCore {
 
 	private HashSet<Class<? extends Event>> eventTypes;
 
+	private HashSet<Class<? extends Event>> eventSubtypes;
+
 	private HashMap<Class<? extends Event>, LinkedList<Subscription>> subscriptions;
 
 	private HashMap<Class<? extends Event>, LinkedList<Binding>> bindings;
@@ -25,6 +27,7 @@ public class ChannelCore {
 	public ChannelCore() {
 		super();
 		eventTypes = new HashSet<Class<? extends Event>>();
+		eventSubtypes = new HashSet<Class<? extends Event>>();
 		subscriptions = new HashMap<Class<? extends Event>, LinkedList<Subscription>>();
 		bindings = new HashMap<Class<? extends Event>, LinkedList<Binding>>();
 		channelLock = new Object();
@@ -34,6 +37,10 @@ public class ChannelCore {
 
 	public Set<Class<? extends Event>> getEventTypes() {
 		return eventTypes;
+	}
+
+	public Set<Class<? extends Event>> getEventSubtypes() {
+		return eventSubtypes;
 	}
 
 	public LinkedList<Subscription> getSubscriptions(
@@ -100,14 +107,49 @@ public class ChannelCore {
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
+	@SuppressWarnings("unchecked")
 	public void publishEventCore(EventCore eventCore) {
 		Class<? extends Event> eventType = eventCore.getEvent().getClass();
-		if (!eventTypes.contains(eventType)) {
-			throw new ConfigurationException("Cannot publish event "
-					+ eventType + " in channel");
+		Class<? extends Event> eventSupertype = null;
+		if (!eventTypes.contains(eventType)
+				&& !eventSubtypes.contains(eventType)) {
+			boolean found = false;
+			// check whether the channel has any of the super types
+			while (eventType != Object.class
+					&& Event.class.isAssignableFrom(eventType)) {
+				if (eventTypes.contains(eventType)
+						|| eventSubtypes.contains(eventType)) {
+					found = true;
+					eventSubtypes.add(eventCore.getEvent().getClass());
+					eventSupertype = eventType;
+					break;
+				}
+				eventType = (Class<? extends Event>) eventType.getSuperclass();
+			}
+
+			if (!found) {
+				throw new ConfigurationException("Cannot publish event "
+						+ eventType + " in channel");
+			}
 		}
 
 		synchronized (channelLock) {
+			eventType = eventCore.getEvent().getClass();
+			// add subscriptions to supertype to type
+			if (eventSupertype != null) {
+				LinkedList<Subscription> superSubs = subscriptions
+						.get(eventSupertype);
+				LinkedList<Subscription> subs = subscriptions.get(eventType);
+				if (subs == null) {
+					subs = new LinkedList<Subscription>();
+				}
+				if (superSubs == null) {
+					superSubs = new LinkedList<Subscription>();
+				}
+				subs.addAll(superSubs);
+				subscriptions.put(eventType, subs);
+			}
+
 			LinkedList<Subscription> subs = subscriptions.get(eventType);
 			if (subs == null) {
 				return;
