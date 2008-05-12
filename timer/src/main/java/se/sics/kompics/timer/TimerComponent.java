@@ -47,11 +47,10 @@ public class TimerComponent {
 	@ComponentCreateMethod
 	public void create(Channel requestChannel, Channel signalChannel) {
 		// bind and subscribe to the given channels
-		component.subscribe(signalChannel, "handleSetTimerEvent");
-		component.subscribe(signalChannel, "handleSetPeriodicTimerEvent");
-		component.subscribe(signalChannel, "handleCancelTimerEvent");
-		component.subscribe(signalChannel, "handleCancelPeriodicTimerEvent");
-		component.bind(TimerSignalEvent.class, signalChannel);
+		component.subscribe(requestChannel, "handleSetTimerEvent");
+		component.subscribe(requestChannel, "handleSetPeriodicTimerEvent");
+		component.subscribe(requestChannel, "handleCancelTimerEvent");
+		component.subscribe(requestChannel, "handleCancelPeriodicTimerEvent");
 
 		this.timer = new Timer("TimerComponent@"
 				+ Integer.toHexString(this.hashCode()));
@@ -114,6 +113,7 @@ public class TimerComponent {
 	void timeout(TimerId timerId, TimerSignalEvent timerExpiredEvent,
 			Channel clientChannel) {
 		activeTimers.remove(timerId);
+
 		component.triggerEvent(timerExpiredEvent, clientChannel, Priority.HIGH);
 	}
 }
