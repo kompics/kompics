@@ -3,6 +3,7 @@ package se.sics.kompics.network;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.mina.common.ConnectFuture;
@@ -18,8 +19,11 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
+import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
+import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentType;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
@@ -30,6 +34,8 @@ import se.sics.kompics.network.events.NetworkSendEvent;
 public class NetworkComponent {
 
 	private Component component;
+
+	private Channel sendChannel, deliverChannel;
 
 	/* Acceptors and connectors */
 	private NioDatagramAcceptor udpAcceptor;
@@ -58,6 +64,9 @@ public class NetworkComponent {
 
 	@ComponentCreateMethod
 	public void create(Channel sendChannel, Channel deliverChannel) {
+		this.sendChannel = sendChannel;
+		this.deliverChannel = deliverChannel;
+
 		component.subscribe(sendChannel, "handleNetworkSendEvent");
 		component.bind(NetworkDeliverEvent.class, deliverChannel);
 
@@ -67,6 +76,15 @@ public class NetworkComponent {
 
 		networkHandler = new NetworkHandler(this);
 
+	}
+
+	@ComponentShareMethod
+	public ComponentMembrane share(String name) {
+		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
+		map.put(NetworkSendEvent.class, sendChannel);
+		map.put(NetworkDeliverEvent.class, deliverChannel);
+		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
 	@ComponentInitializeMethod
