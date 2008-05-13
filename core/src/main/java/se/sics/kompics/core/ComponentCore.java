@@ -605,13 +605,16 @@ public class ComponentCore {
 	public ComponentMembrane share(String name) {
 		if (shareMethod != null) {
 			try {
-				Object ret = shareMethod.invoke(handlerObject, name);
+				Object ret;
+				ret = shareMethod.invoke(handlerObject, name);
 				ComponentMembrane membrane = (ComponentMembrane) ret;
 				return membrane;
-			} catch (Throwable throwable) {
-				handleFault(throwable);
+			} catch (Throwable t) {
+				throw new RuntimeException("Exception in share method", t);
 			}
+		} else {
+			throw new RuntimeException(
+					"Component does not declare a share method.");
 		}
-		throw new RuntimeException("Component does not declare a share method.");
 	}
 }
