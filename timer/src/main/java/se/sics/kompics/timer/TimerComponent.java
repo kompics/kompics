@@ -5,9 +5,12 @@ import java.util.Timer;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
+import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
+import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentType;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
@@ -35,6 +38,8 @@ public class TimerComponent {
 
 	private final Component component;
 
+	private Channel requestChannel, signalChannel;
+
 	/**
 	 * Generates a timer component
 	 */
@@ -46,6 +51,9 @@ public class TimerComponent {
 
 	@ComponentCreateMethod
 	public void create(Channel requestChannel, Channel signalChannel) {
+		this.requestChannel = requestChannel;
+		this.signalChannel = signalChannel;
+
 		// bind and subscribe to the given channels
 		component.subscribe(requestChannel, "handleSetTimerEvent");
 		component.subscribe(requestChannel, "handleSetPeriodicTimerEvent");
@@ -54,6 +62,18 @@ public class TimerComponent {
 
 		this.timer = new Timer("TimerComponent@"
 				+ Integer.toHexString(this.hashCode()));
+	}
+
+	@ComponentShareMethod
+	public ComponentMembrane share(String name) {
+		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
+		map.put(SetTimerEvent.class, requestChannel);
+		map.put(SetPeriodicTimerEvent.class, requestChannel);
+		map.put(CancelTimerEvent.class, requestChannel);
+		map.put(CancelPeriodicTimerEvent.class, requestChannel);
+		map.put(TimerSignalEvent.class, signalChannel);
+		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
 	@ComponentDestroyMethod
