@@ -12,11 +12,13 @@ import java.util.Properties;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
+import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
+import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
 import se.sics.kompics.api.annotation.ComponentStopMethod;
 import se.sics.kompics.api.annotation.ComponentType;
@@ -85,7 +87,7 @@ public class FactoryCore implements Factory {
 	/**
 	 * The event handler guard methods indexed by guard name.
 	 */
-	private HashMap<String, Method> eventHandlerGuardMethods = null;
+	private HashMap<String, Method> eventGuardMethods = null;
 
 	/**
 	 * The constructor of the component implementation class.
@@ -102,6 +104,11 @@ public class FactoryCore implements Factory {
 	 * method.
 	 */
 	private int createParameterCount;
+
+	/**
+	 * The <code>share</code> method of the component implementation class.
+	 */
+	private Method shareMethod;
 
 	/**
 	 * The <code>initialize</code> method of the component implementation
@@ -238,7 +245,7 @@ public class FactoryCore implements Factory {
 				}
 			}
 
-			// reflect event handler guard
+			// reflect event guard
 			if (method.isAnnotationPresent(EventGuardMethod.class)) {
 				// check that event handler guard method accepts one Event
 				// argument
@@ -256,10 +263,10 @@ public class FactoryCore implements Factory {
 									+ " should take one se.sics.kompics.api.Event argument");
 				}
 
-				if (eventHandlerGuardMethods == null) {
-					eventHandlerGuardMethods = new HashMap<String, Method>();
+				if (eventGuardMethods == null) {
+					eventGuardMethods = new HashMap<String, Method>();
 				}
-				eventHandlerGuardMethods.put(method.getName(), method);
+				eventGuardMethods.put(method.getName(), method);
 			}
 
 			// reflect the component's start method
@@ -287,23 +294,34 @@ public class FactoryCore implements Factory {
 				createMethod = method;
 				createParameterCount = parameterTypes.length;
 			}
+			// reflect the component's share method
+			if (method.isAnnotationPresent(ComponentShareMethod.class)) {
+				// type check the share method
+				Class<?>[] parameterTypes = method.getParameterTypes();
+				if (parameterTypes.length != 1) {
+					throw new RuntimeException(
+							"The share method for component class "
+									+ handlerComponentClassName
+									+ " should take one java.lang.String argument.");
+				}
+
+				if (!String.class.isAssignableFrom(parameterTypes[0])) {
+					throw new RuntimeException(
+							"The share method for component class "
+									+ handlerComponentClassName
+									+ " should take one java.lang.String argument.");
+				}
+				Class<?> returnType = method.getReturnType();
+				if (!ComponentMembrane.class.isAssignableFrom(returnType)) {
+					throw new RuntimeException(
+							"The share method for component class "
+									+ handlerComponentClassName
+									+ " should return a se.sics.kompics.api.ComponentMembrane argument.");
+				}
+				shareMethod = method;
+			}
 			// reflect the component's initialize method
 			if (method.isAnnotationPresent(ComponentInitializeMethod.class)) {
-				// type check the initialize method
-				// Class<?>[] parameterTypes = method.getParameterTypes();
-				// if (parameterTypes.length != 1) {
-				// throw new RuntimeException(
-				// "The initialize method for component class "
-				// + handlerComponentClassName
-				// + " should take one java.util.Properties argument.");
-				// }
-				//
-				// if (!Properties.class.isAssignableFrom(parameterTypes[0])) {
-				// throw new RuntimeException(
-				// "The initialize method for component class "
-				// + handlerComponentClassName
-				// + " should take one java.util.Properties argument.");
-				// }
 				initializeMethod = method;
 
 				ComponentInitializeMethod initializeMethodAnnotation = method
@@ -324,7 +342,7 @@ public class FactoryCore implements Factory {
 		// check that all declared guard names exist and their argument types
 		// match the event handler argument types
 		if (eventHandlerGuardNames != null) {
-			if (eventHandlerGuardMethods == null) {
+			if (eventGuardMethods == null) {
 				throw new RuntimeException(
 						"Guard names declared but no guard method present.");
 			}
@@ -333,7 +351,7 @@ public class FactoryCore implements Factory {
 					.entrySet()) {
 				String handlerName = entry.getKey();
 				String guardName = entry.getValue();
-				Method guardMethod = eventHandlerGuardMethods.get(guardName);
+				Method guardMethod = eventGuardMethods.get(guardName);
 				if (guardMethod == null) {
 					throw new RuntimeException("Guard name " + guardName
 							+ " declared, but no guard method found");
@@ -412,8 +430,7 @@ public class FactoryCore implements Factory {
 				String guardName;
 				if (guardedHandlersCount > 0
 						&& (guardName = eventHandlerGuardNames.get(handlerName)) != null) {
-					Method guardMethod = eventHandlerGuardMethods
-							.get(guardName);
+					Method guardMethod = eventGuardMethods.get(guardName);
 					eventHandler = new EventHandler(handlerObject,
 							handlerMethod, guardMethod, eventType);
 				} else {
@@ -426,6 +443,7 @@ public class FactoryCore implements Factory {
 			componentCore.setHandlerObject(handlerObject);
 			componentCore.setEventHandlers(eventHandlers,
 					guardedHandlersCount > 0);
+			componentCore.setShareMethod(shareMethod);
 
 			// invoke the create method
 			if (createMethod != null) {
