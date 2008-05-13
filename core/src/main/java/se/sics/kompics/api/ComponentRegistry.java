@@ -2,6 +2,7 @@ package se.sics.kompics.api;
 
 import java.util.HashMap;
 
+
 public class ComponentRegistry {
 
 	private final HashMap<String, ComponentMembrane> membranes;

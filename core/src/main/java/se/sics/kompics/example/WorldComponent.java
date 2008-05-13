@@ -3,7 +3,7 @@ package se.sics.kompics.example;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
 import se.sics.kompics.api.annotation.ComponentType;
-import se.sics.kompics.api.annotation.EventHandlerGuardMethod;
+import se.sics.kompics.api.annotation.EventGuardMethod;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 
@@ -31,7 +31,7 @@ public class WorldComponent {
 		System.out.println("WORLD TRIGGERED RESPONSE: I replied: Hi there!");
 	}
 
-	@EventHandlerGuardMethod
+	@EventGuardMethod
 	public boolean guardHello(HelloEvent event) {
 		System.out.println("TEST GUARD in WORLD");
 		return true;

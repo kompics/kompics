@@ -1,9 +1,11 @@
 package se.sics.kompics.core;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
+import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.Priority;
@@ -231,5 +233,91 @@ public class ComponentReference implements Component {
 
 	public ComponentUUID getComponentUUID() {
 		return componentUUID;
+	}
+
+	/* =============== RECEIVE =============== */
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see se.sics.kompics.api.Component#receive()
+	 */
+	public Event receive() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see se.sics.kompics.api.Component#receive(se.sics.kompics.api.Channel[])
+	 */
+	public Event receive(Channel... channels) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see se.sics.kompics.api.Component#receive(java.lang.Class,
+	 *      se.sics.kompics.api.Channel[])
+	 */
+	public Event receive(Class<? extends Event> eventType, Channel... channels) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see se.sics.kompics.api.Component#receive(java.util.Set,
+	 *      se.sics.kompics.api.Channel[])
+	 */
+	public Event receive(Set<Class<? extends Event>> eventTypes,
+			Channel... channels) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see se.sics.kompics.api.Component#receive(java.lang.Class,
+	 *      java.lang.String, se.sics.kompics.api.Channel[])
+	 */
+	public Event receive(Class<? extends Event> eventType, String guardName,
+			Channel... channels) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* =============== SHARING =============== */
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see se.sics.kompics.api.Component#getSharedComponentMembrane(java.lang.String)
+	 */
+	public ComponentMembrane getSharedComponentMembrane(String name) {
+		return componentCore.getSharedComponentMembrane(name);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see se.sics.kompics.api.Component#share(java.lang.String)
+	 */
+	public ComponentMembrane share(String name) {
+		return componentCore.share(name);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see se.sics.kompics.api.Component#registerSharedComponentMembrane(java.lang.String,
+	 *      se.sics.kompics.api.ComponentMembrane)
+	 */
+	public ComponentMembrane registerSharedComponentMembrane(String name,
+			ComponentMembrane membrane) {
+		return componentCore.registerSharedComponentMembrane(name, membrane);
 	}
 }

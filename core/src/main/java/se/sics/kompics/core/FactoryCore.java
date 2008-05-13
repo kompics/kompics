@@ -20,7 +20,7 @@ import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
 import se.sics.kompics.api.annotation.ComponentStopMethod;
 import se.sics.kompics.api.annotation.ComponentType;
-import se.sics.kompics.api.annotation.EventHandlerGuardMethod;
+import se.sics.kompics.api.annotation.EventGuardMethod;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.core.scheduler.Scheduler;
@@ -239,7 +239,7 @@ public class FactoryCore implements Factory {
 			}
 
 			// reflect event handler guard
-			if (method.isAnnotationPresent(EventHandlerGuardMethod.class)) {
+			if (method.isAnnotationPresent(EventGuardMethod.class)) {
 				// check that event handler guard method accepts one Event
 				// argument
 				Class<?>[] parameterTypes = method.getParameterTypes();
@@ -467,8 +467,12 @@ public class FactoryCore implements Factory {
 						properties.load(inputStream);
 
 						// ... with a properties and init parameters arguments
-						initializeMethod.invoke(handlerObject, properties,
-								initializationParameters);
+						Object[] arguments = new Object[initializationParameters.length + 1];
+						for (int i = 0; i < initializationParameters.length; i++) {
+							arguments[i + 1] = initializationParameters[i];
+						}
+						arguments[0] = properties;
+						initializeMethod.invoke(handlerObject, arguments);
 					} else {
 						// ... with init parameters arguments
 						initializeMethod.invoke(handlerObject,

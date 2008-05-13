@@ -9,9 +9,11 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 import se.sics.kompics.api.Channel;
+import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.FaultEvent;
+import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.capability.ChannelCapabilityFlags;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
@@ -44,6 +46,8 @@ public class ComponentCore {
 	private Object handlerObject;
 
 	private HashMap<String, EventHandler> eventHandlers;
+
+	private Method shareMethod;
 
 	private HashSet<EventHandler> guardedHandlersWithBlockedEvents;
 
@@ -125,6 +129,10 @@ public class ComponentCore {
 			this.guardedHandlersWithBlockedEvents = new HashSet<EventHandler>();
 			this.blockedEventsCount = 0;
 		}
+	}
+
+	public void setShareMethod(Method shareMethod) {
+		this.shareMethod = shareMethod;
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
@@ -580,5 +588,30 @@ public class ComponentCore {
 	public ComponentReference createReference() {
 		return new ComponentReference(this, componentIdentifier, EnumSet
 				.allOf(ComponentCapabilityFlags.class));
+	}
+
+	/* =============== SHARING =============== */
+	public ComponentMembrane registerSharedComponentMembrane(String name,
+			ComponentMembrane membrane) {
+		return Kompics.getGlobalKompics().getComponentRegistry().register(name,
+				membrane);
+	}
+
+	public ComponentMembrane getSharedComponentMembrane(String name) {
+		return Kompics.getGlobalKompics().getComponentRegistry().getMembrane(
+				name);
+	}
+
+	public ComponentMembrane share(String name) {
+		if (shareMethod != null) {
+			try {
+				Object ret = shareMethod.invoke(handlerObject, name);
+				ComponentMembrane membrane = (ComponentMembrane) ret;
+				return membrane;
+			} catch (Throwable throwable) {
+				handleFault(throwable);
+			}
+		}
+		throw new RuntimeException("Component does not declare a share method.");
 	}
 }
