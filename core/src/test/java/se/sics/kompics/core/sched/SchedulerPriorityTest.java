@@ -1,5 +1,6 @@
 package se.sics.kompics.core.sched;
 
+import org.apache.log4j.BasicConfigurator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,10 @@ public class SchedulerPriorityTest extends ComponentTest {
 
 	@Before
 	public void setUp() throws Exception {
-		kompics = new Kompics(1, 0);
+
+		BasicConfigurator.configure();
+
+		kompics = new Kompics(2, 0);
 		Component boot = kompics.getBootstrapComponent();
 
 		Factory factory = boot.createFactory(TestPriorityComponent.class

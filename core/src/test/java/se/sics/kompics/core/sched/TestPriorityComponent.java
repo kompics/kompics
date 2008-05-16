@@ -1,5 +1,6 @@
 package se.sics.kompics.core.sched;
 
+import org.apache.log4j.Logger;
 import org.junit.Ignore;
 
 import se.sics.kompics.api.Channel;
@@ -14,6 +15,8 @@ import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 @Ignore
 @ComponentType
 public class TestPriorityComponent {
+
+	private final Logger logger = Logger.getLogger(TestPriorityComponent.class);
 
 	private Component component;
 
@@ -31,7 +34,7 @@ public class TestPriorityComponent {
 		this.channel1 = channel1;
 		this.channel2 = channel2;
 		this.channel3 = channel3;
-		System.out.println("CREATE");
+		logger.info("CREATE");
 	}
 
 	@EventHandlerMethod
@@ -39,14 +42,18 @@ public class TestPriorityComponent {
 	public void handleTestEvent(TestEvent event) {
 		String message = event.getMessage();
 		if (message == null) {
-			System.out.println("H1");
+			logger.info("H1");
 			component.triggerEvent(new TestEvent("L"), channel1, Priority.LOW);
 			component.triggerEvent(new TestEvent("M"), channel2,
 					Priority.MEDIUM);
 			component.triggerEvent(new TestEvent("H"), channel3, Priority.HIGH);
-			System.out.println("H2");
+			component.triggerEvent(new TestEvent("L"), channel1, Priority.LOW);
+			component.triggerEvent(new TestEvent("M"), channel2,
+					Priority.MEDIUM);
+			component.triggerEvent(new TestEvent("H"), channel3, Priority.HIGH);
+			logger.info("H2");
 		} else {
-			System.out.println("HANDLED: " + message);
+			logger.info("HANDLED: " + message);
 		}
 	}
 
