@@ -7,6 +7,21 @@ import se.sics.kompics.api.annotation.EventType;
 
 @Ignore
 @EventType
-public class TestEvent implements Event {
+public final class TestEvent implements Event {
 
+	private final String message;
+
+	public TestEvent() {
+		super();
+		this.message = null;
+	}
+
+	public TestEvent(String message) {
+		super();
+		this.message = message;
+	}
+
+	public String getMessage() {
+		return message;
+	}
 }
