@@ -20,7 +20,8 @@ public class ReadyComponent implements Runnable, Comparable<ReadyComponent> {
 	private Priority executedPriority;
 
 	public ReadyComponent(ComponentCore component, int high, int medium,
-			int low, Priority publishedPriority, Priority executedPriority) {
+			int low, Priority publishedPriority, Priority executedPriority,
+			Priority scheduledPriority) {
 		super();
 		this.component = component;
 		this.highReadyEventCount = high;
@@ -28,12 +29,7 @@ public class ReadyComponent implements Runnable, Comparable<ReadyComponent> {
 		this.lowReadyEventCount = low;
 		this.publishedPriority = publishedPriority;
 		this.executedPriority = executedPriority;
-		if (publishedPriority != null) {
-			this.scheduledPriority = publishedPriority;
-		}
-		if (executedPriority != null) {
-			this.scheduledPriority = executedPriority;
-		}
+		this.scheduledPriority = scheduledPriority;
 	}
 
 	public void run() {

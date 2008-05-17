@@ -141,7 +141,7 @@ public class ComponentCore {
 	 * triggers an event
 	 * 
 	 * @param event
-	 *            the triggered event
+	 * 		the triggered event
 	 */
 	public void triggerEvent(Event event) {
 		Binding binding = bindings.get(event.getClass());
@@ -238,7 +238,7 @@ public class ComponentCore {
 
 				scheduler.componentReady(new ReadyComponent(this,
 						highWorkCounter, mediumWorkCounter, lowWorkCounter,
-						work.getPriority(), null));
+						work.getPriority(), null, work.getPriority()));
 			} else {
 				// System.out.println("HPE:" + highWorkCounter + ":"
 				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
@@ -317,16 +317,21 @@ public class ComponentCore {
 
 				componentState = ComponentState.ASLEEP;
 				scheduler.executedEvent(work.getPriority());
-			} else if (allWorkCounter > 0) {
-				// System.out.println("SCR:" + highWorkCounter + ":"
-				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
-				// + highPoolCounter + ":" + mediumPoolCounter + ":"
-				// + lowPoolCounter);
-
+			} else if (highWorkCounter > 0) {
 				componentState = ComponentState.AWAKE;
 				scheduler.componentReady(new ReadyComponent(this,
 						highWorkCounter, mediumWorkCounter, lowWorkCounter,
-						null, work.getPriority()));
+						null, work.getPriority(), Priority.HIGH));
+			} else if (mediumWorkCounter > 0) {
+				componentState = ComponentState.AWAKE;
+				scheduler.componentReady(new ReadyComponent(this,
+						highWorkCounter, mediumWorkCounter, lowWorkCounter,
+						null, work.getPriority(), Priority.MEDIUM));
+			} else if (lowWorkCounter > 0) {
+				componentState = ComponentState.AWAKE;
+				scheduler.componentReady(new ReadyComponent(this,
+						highWorkCounter, mediumWorkCounter, lowWorkCounter,
+						null, work.getPriority(), Priority.LOW));
 			} else {
 				throw new RuntimeException("Negative work counter");
 			}
@@ -337,8 +342,8 @@ public class ComponentCore {
 	 * Tries to execute one guarded event handler.
 	 * 
 	 * @return <code>true</code> if one blocked event was executed from any
-	 *         guarded event handler and <code>false</code> if no blocked
-	 *         event could be executed due to no satisfied guard
+	 * 	guarded event handler and <code>false</code> if no blocked event could
+	 * 	be executed due to no satisfied guard
 	 */
 	private boolean handleOneBlockedEvent() throws Throwable {
 		Iterator<EventHandler> iterator = guardedHandlersWithBlockedEvents
