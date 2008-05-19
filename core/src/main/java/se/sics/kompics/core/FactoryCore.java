@@ -2,7 +2,6 @@ package se.sics.kompics.core;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -177,10 +176,7 @@ public class FactoryCore implements Factory {
 	 */
 	private void reflectHandlerComponentClass() {
 		if (!handlerComponentClass.isAnnotationPresent(ComponentType.class)) {
-			Annotation[] annotations = handlerComponentClass.getAnnotations();
-
-			System.out.println(annotations.length);
-
+			// Annotation[] annotations = handlerComponentClass.getAnnotations();
 			throw new RuntimeException("Class " + handlerComponentClassName
 					+ " is not an annotated component class.");
 		}

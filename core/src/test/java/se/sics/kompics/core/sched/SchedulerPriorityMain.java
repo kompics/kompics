@@ -1,6 +1,7 @@
 package se.sics.kompics.core.sched;
 
 import org.apache.log4j.BasicConfigurator;
+import org.junit.Ignore;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
@@ -15,6 +16,7 @@ import se.sics.kompics.api.Kompics;
  * @author cosmin
  * 
  */
+@Ignore
 public class SchedulerPriorityMain extends ComponentTest {
 
 	private Kompics kompics;

@@ -76,12 +76,10 @@ public class ChannelReference implements Channel {
 
 	public void addEventType(Class<? extends Event> eventType) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.ADD_EVENT_TYPE)
-				&& (capable == null || capable
-						.equals(ComponentUUID.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			channelCore.addEventType(eventType);
 			return;
 		}
-		System.out.println(channelCapabilities + "" + capable);
 		throw new CapabilityNotSupportedException(
 				ChannelCapabilityFlags.ADD_EVENT_TYPE);
 	}
@@ -93,8 +91,7 @@ public class ChannelReference implements Channel {
 	public void removeEventType(Class<? extends Event> eventType) {
 		if (channelCapabilities
 				.contains(ChannelCapabilityFlags.REMOVE_EVENT_TYPE)
-				&& (capable == null || capable
-						.equals(ComponentUUID.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			channelCore.removeEventType(eventType);
 			return;
 		}
@@ -104,8 +101,7 @@ public class ChannelReference implements Channel {
 
 	ChannelCore addSubscription(Subscription subscription) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.SUBSCRIBE)
-				&& (capable == null || capable
-						.equals(ComponentUUID.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			channelCore.addSubscription(subscription);
 			return channelCore;
 		}
@@ -115,8 +111,7 @@ public class ChannelReference implements Channel {
 
 	void addBinding(Binding binding) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.BIND)
-				&& (capable == null || capable
-						.equals(ComponentUUID.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			channelCore.addBinding(binding);
 			return;
 		}
@@ -125,8 +120,7 @@ public class ChannelReference implements Channel {
 
 	void publishEventCore(EventCore eventCore) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.PUBLISH)
-				&& (capable == null || capable
-						.equals(ComponentUUID.get()))) {
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
 			channelCore.publishEventCore(eventCore);
 			return;
 		}
