@@ -53,20 +53,19 @@ public class ConnectListener implements IoFutureListener<IoFuture> {
 				session.setAttribute("protocol", protocol);
 			}
 
-			// logger.debug("Connected to:" + session.getRemoteAddress());
+			logger.debug("Connected to {}", session.getRemoteAddress());
 
 			// send pending messages
 			for (NetworkDeliverEvent deliverEvent : pendingMessages) {
-				// // logger.debug("Sending message "
-				// + deliverEvent.getClass().getSimpleName() + " to "
-				// + address);
+				logger.debug("Sending message {} to {}", deliverEvent
+						.getClass().getSimpleName(), address);
 
 				session.write(deliverEvent);
 			}
 		} else {
 			networkComponent.removePendingConnection(address);
-			logger.debug("Failed to connect to "
-					+ connFuture.getSession().getRemoteAddress());
+			logger.debug("Failed to connect to {}", connFuture.getSession()
+					.getRemoteAddress());
 		}
 	}
 

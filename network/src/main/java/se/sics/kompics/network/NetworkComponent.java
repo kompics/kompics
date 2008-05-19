@@ -16,6 +16,8 @@ import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
 import org.apache.mina.transport.socket.nio.NioDatagramConnector;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
@@ -33,8 +35,8 @@ import se.sics.kompics.network.events.NetworkSendEvent;
 @ComponentType
 public class NetworkComponent {
 
-	// private static final Logger logger = LoggerFactory
-	// .getLogger(NetworkComponent.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(NetworkComponent.class);
 
 	private Component component;
 
@@ -135,10 +137,9 @@ public class NetworkComponent {
 	@EventHandlerMethod
 	@MayTriggerEventTypes(NetworkDeliverEvent.class)
 	public void handleNetworkSendEvent(NetworkSendEvent event) {
-		// logger.debug("Handling NetSendEvent: " +
-		// event.getNetworkDeliverEvent()
-		// + " from " + event.getSource() + " to "
-		// + event.getDestination());
+		logger.debug("Handling NetSendEvent {} from {} to {}", new Object[] {
+				event.getNetworkDeliverEvent(), event.getSource(),
+				event.getDestination() });
 
 		NetworkDeliverEvent deliverEvent = event.getNetworkDeliverEvent();
 		if (event.getDestination().equals(event.getSource())) {
@@ -183,8 +184,9 @@ public class NetworkComponent {
 	}
 
 	void deliverMessage(NetworkDeliverEvent message, Transport protocol) {
-		// logger.debug("Delivering message " + message.getClass() + " from "
-		// + message.getSource() + " to " + message.getDestination());
+		logger.debug("Delivering message  {} from {} to {}", new Object[] {
+				message.getClass(), message.getSource(),
+				message.getDestination() });
 
 		message.setProtocol(protocol);
 		component.triggerEvent(message);

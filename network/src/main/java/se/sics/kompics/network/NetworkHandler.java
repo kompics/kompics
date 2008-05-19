@@ -25,10 +25,9 @@ public class NetworkHandler extends IoHandlerAdapter {
 		Address address = (Address) session.getAttribute("address");
 
 		if (address != null)
-			logger.debug("Problems with "
-					+ (Transport) session.getAttribute("protocol")
-					+ " connection to " + address + ": ");
-		cause.printStackTrace();
+			logger.debug("Problems with {} connection to {}",
+					(Transport) session.getAttribute("protocol"), address);
+		logger.debug("Exception caught:", cause);
 	}
 
 	@Override
@@ -37,7 +36,7 @@ public class NetworkHandler extends IoHandlerAdapter {
 		super.messageReceived(session, message);
 		Transport protocol = (Transport) session.getAttribute("protocol");
 
-		// logger.debug("Message received from: " + session.getRemoteAddress());
+		logger.debug("Message received from {}", session.getRemoteAddress());
 		networkComponent
 				.deliverMessage((NetworkDeliverEvent) message, protocol);
 	}
@@ -45,18 +44,18 @@ public class NetworkHandler extends IoHandlerAdapter {
 	@Override
 	public void messageSent(IoSession session, Object message) throws Exception {
 		super.messageSent(session, message);
-		// logger.debug("Message sent to: " + session.getRemoteAddress());
+		logger.debug("Message sent to {}", session.getRemoteAddress());
 	}
 
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
 		super.sessionClosed(session);
-		// logger.debug("Connection closed to: " + session.getRemoteAddress());
+		logger.debug("Connection closed to {}", session.getRemoteAddress());
 	}
 
 	@Override
 	public void sessionOpened(IoSession session) throws Exception {
 		super.sessionOpened(session);
-		// logger.debug("Connection opened to: " + session.getRemoteAddress());
+		logger.debug("Connection opened to {}", session.getRemoteAddress());
 	}
 }
