@@ -6,10 +6,15 @@ import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoFuture;
 import org.apache.mina.common.IoFutureListener;
 import org.apache.mina.common.IoSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.network.events.NetworkDeliverEvent;
 
 public class ConnectListener implements IoFutureListener<IoFuture> {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(ConnectListener.class);
 
 	private NetworkComponent networkComponent;
 
@@ -48,19 +53,19 @@ public class ConnectListener implements IoFutureListener<IoFuture> {
 				session.setAttribute("protocol", protocol);
 			}
 
-			System.out.println("Connected to:" + session.getRemoteAddress());
+			// logger.debug("Connected to:" + session.getRemoteAddress());
 
 			// send pending messages
 			for (NetworkDeliverEvent deliverEvent : pendingMessages) {
-				System.out.println("Sending message "
-						+ deliverEvent.getClass().getSimpleName() + " to  "
-						+ address);
+				// // logger.debug("Sending message "
+				// + deliverEvent.getClass().getSimpleName() + " to "
+				// + address);
 
 				session.write(deliverEvent);
 			}
 		} else {
 			networkComponent.removePendingConnection(address);
-			System.out.println("Failed to connect to "
+			logger.debug("Failed to connect to "
 					+ connFuture.getSession().getRemoteAddress());
 		}
 	}

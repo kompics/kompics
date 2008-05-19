@@ -33,6 +33,9 @@ import se.sics.kompics.network.events.NetworkSendEvent;
 @ComponentType
 public class NetworkComponent {
 
+	// private static final Logger logger = LoggerFactory
+	// .getLogger(NetworkComponent.class);
+
 	private Component component;
 
 	private Channel sendChannel, deliverChannel;
@@ -132,9 +135,10 @@ public class NetworkComponent {
 	@EventHandlerMethod
 	@MayTriggerEventTypes(NetworkDeliverEvent.class)
 	public void handleNetworkSendEvent(NetworkSendEvent event) {
-		System.out.println("NET@SEND " + event.getNetworkDeliverEvent()
-				+ " FROM: " + event.getSource() + " TO: "
-				+ event.getDestination());
+		// logger.debug("Handling NetSendEvent: " +
+		// event.getNetworkDeliverEvent()
+		// + " from " + event.getSource() + " to "
+		// + event.getDestination());
 
 		NetworkDeliverEvent deliverEvent = event.getNetworkDeliverEvent();
 		if (event.getDestination().equals(event.getSource())) {
@@ -179,9 +183,8 @@ public class NetworkComponent {
 	}
 
 	void deliverMessage(NetworkDeliverEvent message, Transport protocol) {
-
-		System.out.println("Delivering message " + message.getClass()
-				+ " from " + message.getSource());
+		// logger.debug("Delivering message " + message.getClass() + " from "
+		// + message.getSource() + " to " + message.getDestination());
 
 		message.setProtocol(protocol);
 		component.triggerEvent(message);

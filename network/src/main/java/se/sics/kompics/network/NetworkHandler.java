@@ -2,10 +2,15 @@ package se.sics.kompics.network;
 
 import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.network.events.NetworkDeliverEvent;
 
 public class NetworkHandler extends IoHandlerAdapter {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(NetworkHandler.class);
 
 	private NetworkComponent networkComponent;
 
@@ -20,7 +25,7 @@ public class NetworkHandler extends IoHandlerAdapter {
 		Address address = (Address) session.getAttribute("address");
 
 		if (address != null)
-			System.out.println("Problems with "
+			logger.debug("Problems with "
 					+ (Transport) session.getAttribute("protocol")
 					+ " connection to " + address + ": ");
 		cause.printStackTrace();
@@ -32,8 +37,7 @@ public class NetworkHandler extends IoHandlerAdapter {
 		super.messageReceived(session, message);
 		Transport protocol = (Transport) session.getAttribute("protocol");
 
-		System.out.println("Message received from: "
-				+ session.getRemoteAddress());
+		// logger.debug("Message received from: " + session.getRemoteAddress());
 		networkComponent
 				.deliverMessage((NetworkDeliverEvent) message, protocol);
 	}
@@ -41,20 +45,18 @@ public class NetworkHandler extends IoHandlerAdapter {
 	@Override
 	public void messageSent(IoSession session, Object message) throws Exception {
 		super.messageSent(session, message);
-		System.out.println("Message sent to: " + session.getRemoteAddress());
+		// logger.debug("Message sent to: " + session.getRemoteAddress());
 	}
 
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
 		super.sessionClosed(session);
-		System.out.println("Connection closed to: "
-				+ session.getRemoteAddress());
+		// logger.debug("Connection closed to: " + session.getRemoteAddress());
 	}
 
 	@Override
 	public void sessionOpened(IoSession session) throws Exception {
 		super.sessionOpened(session);
-		System.out.println("Connection opened to: "
-				+ session.getRemoteAddress());
+		// logger.debug("Connection opened to: " + session.getRemoteAddress());
 	}
 }
