@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.mina.common.CloseFuture;
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.DefaultIoFilterChainBuilder;
+import org.apache.mina.common.ExceptionMonitor;
 import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -24,6 +27,7 @@ import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
+import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentType;
@@ -132,6 +136,33 @@ public class NetworkComponent {
 				.getFilterChain();
 		tcpConnectorChain.addLast("protocol", new ProtocolCodecFilter(
 				new ObjectSerializationCodecFactory()));
+
+		ExceptionMonitor.setInstance(new ExceptionMonitor() {
+			@Override
+			public void exceptionCaught(Throwable throwable) {
+				logger.debug("Exception caught:", throwable);
+			}
+		});
+	}
+
+	@ComponentDestroyMethod
+	public void destroy() {
+		for (Map.Entry<Address, IoSession> entry : udpSessions.entrySet()) {
+			CloseFuture closeFuture = entry.getValue().close();
+			closeFuture.awaitUninterruptibly();
+		}
+
+		for (Map.Entry<Address, IoSession> entry : tcpSessions.entrySet()) {
+			CloseFuture closeFuture = entry.getValue().close();
+			closeFuture.awaitUninterruptibly();
+		}
+
+		tcpConnector.dispose();
+		udpConnector.dispose();
+		tcpAcceptor.unbind();
+		tcpAcceptor.dispose();
+		udpAcceptor.unbind();
+		udpAcceptor.dispose();
 	}
 
 	@EventHandlerMethod
