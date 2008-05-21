@@ -4,7 +4,11 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.capability.ChannelCapabilityFlags;
@@ -12,6 +16,9 @@ import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.scheduler.Work;
 
 public class ChannelCore {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(ChannelCore.class);
 
 	private HashSet<Class<? extends Event>> eventTypes;
 
@@ -75,16 +82,47 @@ public class ChannelCore {
 		return eventTypes.contains(eventType);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void addSubscription(Subscription subscription) {
 		synchronized (channelLock) {
 			Class<? extends Event> eventType = subscription.getEventHandler()
 					.getEventType();
 
-			LinkedList<Subscription> subs = subscriptions.get(eventType);
+			if (!eventTypes.contains(eventType)
+					&& !eventSubtypes.contains(eventType)) {
+				boolean found = false;
+				// check whether the channel has any of the super types
+				while (eventType != Object.class
+						&& Event.class.isAssignableFrom(eventType)) {
+
+					if (eventTypes.contains(eventType)
+							|| eventSubtypes.contains(eventType)) {
+						found = true;
+						logger.debug("ADDING {}", subscription
+								.getEventHandler().getEventType());
+						eventSubtypes.add(subscription.getEventHandler()
+								.getEventType());
+						break;
+					}
+					eventType = (Class<? extends Event>) eventType
+							.getSuperclass();
+				}
+
+				if (!found) {
+					throw new ConfigurationException(
+							"Cannot subscribe eventhandler "
+									+ subscription.getEventHandler().getName()
+									+ " to channel");
+				}
+			}
+
+			LinkedList<Subscription> subs = subscriptions.get(subscription
+					.getEventHandler().getEventType());
 			if (subs == null) {
 				subs = new LinkedList<Subscription>();
 				subs.add(subscription);
-				subscriptions.put(eventType, subs);
+				subscriptions.put(
+						subscription.getEventHandler().getEventType(), subs);
 			} else {
 				subs.add(subscription);
 			}
@@ -111,12 +149,23 @@ public class ChannelCore {
 	public void publishEventCore(EventCore eventCore) {
 		Class<? extends Event> eventType = eventCore.getEvent().getClass();
 		Class<? extends Event> eventSupertype = null;
+
+		boolean log = false;
+		if (eventCore.getEvent().getClass().getName().endsWith("SignalEvent")) {
+			log = true;
+			logger.debug("PUB {}", eventCore.getEvent());
+		}
+
 		if (!eventTypes.contains(eventType)
 				&& !eventSubtypes.contains(eventType)) {
 			boolean found = false;
 			// check whether the channel has any of the super types
 			while (eventType != Object.class
 					&& Event.class.isAssignableFrom(eventType)) {
+
+				if (log)
+					logger.debug("TRYING {}", eventType);
+
 				if (eventTypes.contains(eventType)
 						|| eventSubtypes.contains(eventType)) {
 					found = true;
@@ -130,6 +179,22 @@ public class ChannelCore {
 			if (!found) {
 				throw new ConfigurationException("Cannot publish event "
 						+ eventType + " in channel");
+			}
+		}
+
+		if (log) {
+			logger.debug("EventType is {}", eventType);
+			for (Map.Entry<Class<? extends Event>, LinkedList<Subscription>> entry : subscriptions
+					.entrySet()) {
+				for (Subscription sub : entry.getValue()) {
+					logger.debug("SUB({})={}", entry.getKey(), sub);
+				}
+			}
+			for (Class<? extends Event> eT : eventTypes) {
+				logger.debug("ET: {}", eT);
+			}
+			for (Class<? extends Event> eT : eventSubtypes) {
+				logger.debug("EST: {}", eT);
 			}
 		}
 

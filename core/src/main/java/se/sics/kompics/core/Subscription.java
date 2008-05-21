@@ -27,4 +27,8 @@ public class Subscription {
 	public EventHandler getEventHandler() {
 		return eventHandler;
 	}
+
+	public String toString() {
+		return "Subscription for handler " + eventHandler.getName();
+	}
 }
