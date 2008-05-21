@@ -3,6 +3,9 @@ package se.sics.kompics.timer;
 import java.util.HashMap;
 import java.util.Timer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
@@ -27,6 +30,9 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
  */
 @ComponentType
 public class TimerComponent {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(TimerComponent.class);
 
 	// set of active timers
 	private HashMap<TimerId, TimerSignalTask> activeTimers;
@@ -108,6 +114,9 @@ public class TimerComponent {
 
 	@EventHandlerMethod
 	public void handleSetTimerEvent(SetTimerEvent event) {
+
+		logger.debug("Handling SET TIMER: ", event);
+
 		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
 				event.getTimerId());
 
@@ -133,6 +142,8 @@ public class TimerComponent {
 	void timeout(TimerId timerId, TimerSignalEvent timerExpiredEvent,
 			Channel clientChannel) {
 		activeTimers.remove(timerId);
+
+		logger.debug("TRIGGERing timer expired {}", timerExpiredEvent);
 
 		component.triggerEvent(timerExpiredEvent, clientChannel, Priority.HIGH);
 	}
