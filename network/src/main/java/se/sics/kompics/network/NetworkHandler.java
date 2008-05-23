@@ -44,7 +44,11 @@ public class NetworkHandler extends IoHandlerAdapter {
 	@Override
 	public void messageSent(IoSession session, Object message) throws Exception {
 		super.messageSent(session, message);
-		logger.debug("Message sent to {}", session.getRemoteAddress());
+		if (!message.getClass().getName().startsWith(
+				"se.sics.kompics.protocols.flp2p")) {
+			logger.error("Message {} sent to {}", message, session
+					.getRemoteAddress());
+		}
 	}
 
 	@Override

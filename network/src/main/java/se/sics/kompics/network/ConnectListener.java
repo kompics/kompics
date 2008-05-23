@@ -45,7 +45,7 @@ public class ConnectListener implements IoFutureListener<IoFuture> {
 				duplicate = true;
 			}
 
-			networkComponent.removePendingConnection(address);
+			networkComponent.removePendingConnection(address, protocol);
 
 			if (!duplicate) {
 				networkComponent.addSession(address, session, protocol);
@@ -63,7 +63,7 @@ public class ConnectListener implements IoFutureListener<IoFuture> {
 				session.write(deliverEvent);
 			}
 		} else {
-			networkComponent.removePendingConnection(address);
+			networkComponent.removePendingConnection(address, protocol);
 			logger.debug("Failed to connect to {}", connFuture.getSession()
 					.getRemoteAddress());
 		}

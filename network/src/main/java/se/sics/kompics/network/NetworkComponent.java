@@ -60,7 +60,9 @@ public class NetworkComponent {
 
 	private ConcurrentHashMap<Address, IoSession> tcpSessions;
 
-	private ConcurrentHashMap<Address, ConnectListener> pendingConnections;
+	private ConcurrentHashMap<Address, ConnectListener> udpPendingConnections;
+
+	private ConcurrentHashMap<Address, ConnectListener> tcpPendingConnections;
 
 	private NetworkHandler networkHandler;
 
@@ -81,7 +83,8 @@ public class NetworkComponent {
 
 		udpSessions = new ConcurrentHashMap<Address, IoSession>();
 		tcpSessions = new ConcurrentHashMap<Address, IoSession>();
-		pendingConnections = new ConcurrentHashMap<Address, ConnectListener>();
+		udpPendingConnections = new ConcurrentHashMap<Address, ConnectListener>();
+		tcpPendingConnections = new ConcurrentHashMap<Address, ConnectListener>();
 
 		networkHandler = new NetworkHandler(this);
 
@@ -189,10 +192,12 @@ public class NetworkComponent {
 			session.write(deliverEvent);
 		} else {
 			// create connection
-			if (pendingConnections.containsKey(destination)) {
+			if (((protocol == Transport.TCP) ? tcpPendingConnections
+					: udpPendingConnections).containsKey(destination)) {
 				// add pending message to pending connection
-				pendingConnections.get(destination).addPendingMessage(
-						deliverEvent);
+				((protocol == Transport.TCP) ? tcpPendingConnections
+						: udpPendingConnections).get(destination)
+						.addPendingMessage(deliverEvent);
 			} else {
 				// create pending connection
 				IoConnector connector = (protocol == Transport.UDP ? udpConnector
@@ -208,7 +213,8 @@ public class NetworkComponent {
 				// Enqueue the message for later transmission
 				listener.addPendingMessage(deliverEvent);
 
-				pendingConnections.put(destination, listener);
+				((protocol == Transport.TCP) ? tcpPendingConnections
+						: udpPendingConnections).put(destination, listener);
 				connFuture.addListener(listener);
 			}
 		}
@@ -226,9 +232,9 @@ public class NetworkComponent {
 	boolean alreadyConnected(Address address, Transport protocol) {
 		switch (protocol) {
 		case UDP:
-			return udpSessions.contains(address);
+			return udpSessions.containsKey(address);
 		case TCP:
-			return tcpSessions.contains(address);
+			return tcpSessions.containsKey(address);
 		}
 		return false;
 	}
@@ -254,7 +260,14 @@ public class NetworkComponent {
 		}
 	}
 
-	void removePendingConnection(Address address) {
-		pendingConnections.remove(address);
+	void removePendingConnection(Address address, Transport protocol) {
+		switch (protocol) {
+		case UDP:
+			udpPendingConnections.remove(address);
+			break;
+		case TCP:
+			tcpPendingConnections.remove(address);
+			break;
+		}
 	}
 }
