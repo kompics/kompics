@@ -135,8 +135,9 @@
 	<modules>
 		<module>core</module>
 		<module>timer</module>
+		<module>network</module>
+		<module>protocols</module>
 		<!--
-			<module>network</module>
 			
 			<module>failure-detector</module>
 			<module>inspector</module>

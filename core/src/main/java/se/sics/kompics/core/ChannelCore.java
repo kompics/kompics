@@ -92,7 +92,7 @@ public class ChannelCore {
 					&& !eventSubtypes.contains(eventType)) {
 				boolean found = false;
 				// check whether the channel has any of the super types
-				while (eventType != Object.class
+				while (!eventType.equals(Object.class)
 						&& Event.class.isAssignableFrom(eventType)) {
 
 					if (eventTypes.contains(eventType)
@@ -160,7 +160,7 @@ public class ChannelCore {
 				&& !eventSubtypes.contains(eventType)) {
 			boolean found = false;
 			// check whether the channel has any of the super types
-			while (eventType != Object.class
+			while (!eventType.equals(Object.class)
 					&& Event.class.isAssignableFrom(eventType)) {
 
 				if (log)
