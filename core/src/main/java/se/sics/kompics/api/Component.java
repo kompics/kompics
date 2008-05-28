@@ -1,5 +1,6 @@
 package se.sics.kompics.api;
 
+import java.util.List;
 import java.util.Set;
 
 import se.sics.kompics.core.ComponentUUID;
@@ -103,4 +104,14 @@ public interface Component {
 	 */
 	public Event receive(Class<? extends Event> eventType, String guardName,
 			Channel... channels);
+
+	/* =============== COMPONENT COMPOSITION =============== */
+
+	public List<Component> getSubComponents();
+
+	public List<Channel> getLocalChannels();
+
+	public Component getSuperComponent();
+
+	public String getName();
 }

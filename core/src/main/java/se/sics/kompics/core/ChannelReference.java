@@ -1,6 +1,7 @@
 package se.sics.kompics.core;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Event;
@@ -99,6 +100,10 @@ public class ChannelReference implements Channel {
 				ChannelCapabilityFlags.REMOVE_EVENT_TYPE);
 	}
 
+	public Set<Class<? extends Event>> getEventTypes() {
+		return channelCore.getEventTypes();
+	}
+
 	ChannelCore addSubscription(Subscription subscription) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.SUBSCRIBE)
 				&& (capable == null || capable.equals(ComponentUUID.get()))) {
@@ -118,4 +123,5 @@ public class ChannelReference implements Channel {
 		throw new CapabilityNotSupportedException(
 				ChannelCapabilityFlags.PUBLISH);
 	}
+
 }

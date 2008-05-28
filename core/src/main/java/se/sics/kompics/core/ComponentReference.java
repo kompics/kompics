@@ -1,6 +1,7 @@
 package se.sics.kompics.core;
 
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.Set;
 
 import se.sics.kompics.api.Channel;
@@ -298,5 +299,24 @@ public class ComponentReference implements Component {
 	public ComponentMembrane registerSharedComponentMembrane(String name,
 			ComponentMembrane membrane) {
 		return componentCore.registerSharedComponentMembrane(name, membrane);
+	}
+
+	/* =============== COMPONENT COMPOSITION =============== */
+
+	public LinkedList<Component> getSubComponents() {
+		// TODO navigation capability
+		return componentCore.getSubComponents();
+	}
+
+	public LinkedList<Channel> getLocalChannels() {
+		return componentCore.getLocalChannels();
+	}
+
+	public Component getSuperComponent() {
+		return componentCore.getSuperComponent();
+	}
+
+	public String getName() {
+		return componentCore.getName();
 	}
 }

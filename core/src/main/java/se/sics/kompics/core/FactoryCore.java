@@ -366,8 +366,8 @@ public class FactoryCore {
 	}
 
 	public ComponentCore createComponent(Scheduler scheduler,
-			FactoryRegistry factoryRegistry, Channel faultChannel,
-			Channel... channelParameters) {
+			FactoryRegistry factoryRegistry, ComponentReference parent,
+			Channel faultChannel, Channel... channelParameters) {
 
 		try {
 			if (faultChannel == null)
@@ -375,7 +375,7 @@ public class FactoryCore {
 
 			// create a component core
 			ComponentCore componentCore = new ComponentCore(scheduler,
-					factoryRegistry, this, faultChannel);
+					factoryRegistry, this, parent, faultChannel);
 			ComponentReference componentReference = componentCore
 					.createReference();
 

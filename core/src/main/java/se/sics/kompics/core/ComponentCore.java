@@ -11,12 +11,12 @@ import java.util.LinkedList;
 import java.util.Properties;
 
 import se.sics.kompics.api.Channel;
+import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
-import se.sics.kompics.api.capability.ChannelCapabilityFlags;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
 import se.sics.kompics.core.scheduler.ComponentState;
 import se.sics.kompics.core.scheduler.ReadyComponent;
@@ -52,6 +52,13 @@ public class ComponentCore {
 	private HashSet<EventHandler> guardedHandlersWithBlockedEvents;
 
 	private int blockedEventsCount;
+	/* =============== COMPONENT COMPOSITION =============== */
+
+	private Component superComponent;
+
+	private LinkedList<Component> subComponents;
+
+	private LinkedList<Channel> localChannels;
 
 	/* =============== COMPONENT CONFIGURATION =============== */
 
@@ -80,11 +87,16 @@ public class ComponentCore {
 	private int lowPoolCounter;
 
 	public ComponentCore(Scheduler scheduler, FactoryRegistry factoryRegistry,
-			FactoryCore factoryCore, Channel faultChannel) {
+			FactoryCore factoryCore, ComponentReference parent,
+			Channel faultChannel) {
 		super();
 		this.scheduler = scheduler;
 		this.factoryRegistry = factoryRegistry;
 		this.factoryCore = factoryCore;
+
+		this.superComponent = parent;
+		this.subComponents = new LinkedList<Component>();
+		this.localChannels = new LinkedList<Channel>();
 
 		// check fault channel
 		if (!faultChannel.hasEventType(FaultEvent.class)) {
@@ -412,7 +424,7 @@ public class ComponentCore {
 	/* =============== COMPONENT COMPOSITION =============== */
 
 	@SuppressWarnings("unchecked")
-	public ChannelReference createChannel(Class<?>... eventTypes) {
+	ChannelReference createChannel(Class<?>... eventTypes) {
 		// type check eventTypes and pass correct types to ChannelCore
 		HashSet<Class<? extends Event>> types = new HashSet<Class<? extends Event>>();
 
@@ -425,28 +437,48 @@ public class ComponentCore {
 			}
 		}
 
-		// TODO add hierarchy
-
 		ChannelCore channelCore = new ChannelCore(types);
-		return new ChannelReference(channelCore, EnumSet
-				.allOf(ChannelCapabilityFlags.class));
+
+		synchronized (localChannels) {
+			localChannels.add(channelCore.createReference());
+		}
+		return channelCore.createReference();
 	}
 
-	public ChannelReference getFaultChannel() {
+	ChannelReference getFaultChannel() {
 		return (ChannelReference) faultChannel;
 	}
 
-	public ComponentReference createComponent(String componentClassName,
+	ComponentReference createComponent(String componentClassName,
 			Channel faultChannel, Channel... channelParameters) {
 
 		FactoryCore factoryCore = factoryRegistry
 				.getFactory(componentClassName);
 		ComponentCore newComponentCore = factoryCore.createComponent(scheduler,
-				factoryRegistry, faultChannel, channelParameters);
+				factoryRegistry, createReference(), faultChannel,
+				channelParameters);
 
-		// TODO add hierarchy
+		synchronized (subComponents) {
+			subComponents.add(newComponentCore.createReference());
+		}
 
 		return newComponentCore.createReference();
+	}
+
+	LinkedList<Component> getSubComponents() {
+		return subComponents;
+	}
+
+	LinkedList<Channel> getLocalChannels() {
+		return localChannels;
+	}
+
+	Component getSuperComponent() {
+		return superComponent;
+	}
+
+	public String getName() {
+		return componentName;
 	}
 
 	/* =============== COMPONENT CONFIGURATION =============== */
@@ -481,6 +513,7 @@ public class ComponentCore {
 	}
 
 	/* =============== COMPONENT LIFE-CYCLE =============== */
+
 	public void initialize(Object... args) {
 		// TODO uniform fault handling in share and init
 		Method initializeMethod = factoryCore.getInitializeMethod();

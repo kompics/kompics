@@ -70,7 +70,7 @@ public class Kompics {
 			Channel faultChannel = bootFaultChannelCore.createReference();
 
 			bootstrapComponent = factoryCore.createComponent(scheduler,
-					factoryRegistry, faultChannel, faultChannel)
+					factoryRegistry, null, faultChannel, faultChannel)
 					.createReference();
 		}
 		return bootstrapComponent;
