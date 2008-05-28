@@ -2,6 +2,7 @@ package se.sics.kompics.example;
 
 import java.util.Properties;
 
+import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
@@ -17,13 +18,25 @@ public class UserComponent {
 
 	private final Component component;
 
+	private Channel inChannel, outChannel;
+
+	private Channel helloChannel, responseChannel;
+
 	public UserComponent(Component component) {
 		this.component = component;
 	}
 
 	@ComponentCreateMethod
-	public void create() {
+	public void create(Channel inChannel, Channel outChannel,
+			Channel helloChannel, Channel responseChannel) {
 		System.out.println("CREATE USER");
+		this.inChannel = inChannel;
+		this.outChannel = outChannel;
+		this.helloChannel = helloChannel;
+		this.responseChannel = responseChannel;
+
+		component.subscribe(this.responseChannel, "handleResponseEvent");
+		component.subscribe(this.inChannel, "handleInputEvent");
 	}
 
 	@ComponentInitializeMethod("user.properties")
@@ -50,7 +63,7 @@ public class UserComponent {
 	@MayTriggerEventTypes( { HelloEvent.class })
 	public void handleInputEvent(InputEvent event) {
 		System.out.println("HANDLE INPUT in USER");
-		component.triggerEvent(new HelloEvent("Hello"));
+		component.triggerEvent(new HelloEvent("Hello"), helloChannel);
 		System.out.println("USER TRIGGERED HELLO: I said Hello to the World");
 	}
 
@@ -61,7 +74,7 @@ public class UserComponent {
 		String message = event.getMessage();
 		System.out.println("USER: I got message: \"" + message + "\"");
 		System.out.println("TRIGGER OUTPUT in USER");
-		component.triggerEvent(new OutputEvent());
+		component.triggerEvent(new OutputEvent(), outChannel);
 		myMethod();
 	}
 

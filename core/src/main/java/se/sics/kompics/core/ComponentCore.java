@@ -17,7 +17,6 @@ import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.capability.ChannelCapabilityFlags;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
-import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.scheduler.ComponentState;
 import se.sics.kompics.core.scheduler.ReadyComponent;
 import se.sics.kompics.core.scheduler.Scheduler;
@@ -54,8 +53,6 @@ public class ComponentCore {
 	private int blockedEventsCount;
 
 	/* =============== COMPONENT CONFIGURATION =============== */
-
-	private HashMap<Class<? extends Event>, Binding> bindings;
 
 	private LinkedList<Subscription> subscriptions;
 
@@ -95,7 +92,6 @@ public class ComponentCore {
 		this.faultChannel = faultChannel;
 		this.componentIdentifier = new ComponentUUID();
 
-		this.bindings = new HashMap<Class<? extends Event>, Binding>();
 		this.subscriptions = new LinkedList<Subscription>();
 
 		this.componentState = ComponentState.ASLEEP;
@@ -136,54 +132,6 @@ public class ComponentCore {
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
-
-	/**
-	 * triggers an event
-	 * 
-	 * @param event
-	 * 		the triggered event
-	 */
-	public void triggerEvent(Event event) {
-		Binding binding = bindings.get(event.getClass());
-
-		if (binding == null) {
-			Class<?> eventType = event.getClass();
-
-			while (binding == null && eventType != Object.class) {
-				eventType = eventType.getSuperclass();
-				binding = bindings.get(eventType);
-			}
-
-			if (binding != null) {
-				Binding newBinding = new Binding(binding.getComponent(),
-						binding.getChannel(), event.getClass());
-				bindings.put(event.getClass(), newBinding);
-				newBinding.getChannel().addBinding(newBinding);
-			} else if (eventType == Object.class) {
-				throw new ConfigurationException("Event type "
-						+ event.getClass().getCanonicalName() + " not bound");
-			}
-		}
-
-		EventCore eventCore = new EventCore(event, binding.getChannel(),
-				Priority.MEDIUM);
-		triggerEventCore(eventCore);
-	}
-
-	public void triggerEvent(Event event, Priority priority) {
-		Binding binding = bindings.get(event.getClass());
-
-		if (priority == null)
-			throw new RuntimeException("triggered event with null priority");
-
-		if (binding == null)
-			throw new ConfigurationException("Event type "
-					+ event.getClass().getCanonicalName() + " not bound");
-
-		EventCore eventCore = new EventCore(event, binding.getChannel(),
-				priority);
-		triggerEventCore(eventCore);
-	}
 
 	public void triggerEvent(Event event, Channel channel) {
 		EventCore eventCore = new EventCore(event, (ChannelReference) channel,
@@ -485,24 +433,6 @@ public class ComponentCore {
 	}
 
 	/* =============== COMPONENT CONFIGURATION =============== */
-
-	public void bind(ComponentReference componentReference,
-			Class<? extends Event> eventType, Channel channel) {
-		// TODO bind synchronization
-		// TODO bind type check
-		// TODO check MayTriggerEvents
-
-		ChannelReference channelReference = (ChannelReference) channel;
-		Binding binding = new Binding(componentReference, channelReference,
-				eventType);
-
-		bindings.put(eventType, binding);
-		channelReference.addBinding(binding);
-	}
-
-	public void unbind(Class<? extends Event> eventType, Channel channel) {
-		// TODO unbind
-	}
 
 	public void subscribe(ComponentReference componentReference,
 			Channel channel, String eventHandlerName) {

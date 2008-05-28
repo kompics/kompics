@@ -64,10 +64,6 @@ public class UniverseComponent {
 		faultChannel.addEventType(FaultEvent.class);
 		component.subscribe(faultChannel, "handleFaultEvent");
 
-		// create sub-components
-		userComponent = userFactory.createComponent(faultChannel);
-		worldComponent = worldFactory.createComponent(faultChannel);
-
 		// create internal channels
 		helloChannel = component.createChannel();
 		responseChannel = component.createChannel();
@@ -76,18 +72,11 @@ public class UniverseComponent {
 		helloChannel.addEventType(HelloEvent.class);
 		responseChannel.addEventType(ResponseEvent.class);
 
-		// subscribe sub-components to the internal channels
-		worldComponent.subscribe(helloChannel, "handleHelloEvent");
-		userComponent.subscribe(responseChannel, "handleResponseEvent");
-
-		// bind sub-components to the internal channels
-		worldComponent.bind(ResponseEvent.class, responseChannel);
-		userComponent.bind(HelloEvent.class, helloChannel);
-
-		// subscribe sub-components to the formal channels
-		userComponent.subscribe(this.inputChannel, "handleInputEvent");
-		// bind sub-components to the formal channels
-		userComponent.bind(OutputEvent.class, this.outputChannel);
+		// create sub-components
+		userComponent = userFactory.createComponent(faultChannel, inputChannel,
+				this.outputChannel, helloChannel, responseChannel);
+		worldComponent = worldFactory.createComponent(faultChannel,
+				helloChannel, responseChannel);
 	}
 
 	@ComponentDestroyMethod

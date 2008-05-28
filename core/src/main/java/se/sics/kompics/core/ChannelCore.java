@@ -26,8 +26,6 @@ public class ChannelCore {
 
 	private HashMap<Class<? extends Event>, LinkedList<Subscription>> subscriptions;
 
-	private HashMap<Class<? extends Event>, LinkedList<Binding>> bindings;
-
 	private Object channelLock;
 
 	// TODO fix core visibility
@@ -36,7 +34,6 @@ public class ChannelCore {
 		eventTypes = new HashSet<Class<? extends Event>>();
 		eventSubtypes = new HashSet<Class<? extends Event>>();
 		subscriptions = new HashMap<Class<? extends Event>, LinkedList<Subscription>>();
-		bindings = new HashMap<Class<? extends Event>, LinkedList<Binding>>();
 		channelLock = new Object();
 	}
 
@@ -55,10 +52,6 @@ public class ChannelCore {
 		return subscriptions.get(eventType);
 	}
 
-	public LinkedList<Binding> getBindings(Class<? extends Event> eventType) {
-		return bindings.get(eventType);
-	}
-
 	public void addEventType(Class<? extends Event> eventType) {
 		if (!eventTypes.contains(eventType)) {
 			eventTypes.add(eventType);
@@ -69,11 +62,9 @@ public class ChannelCore {
 		if (!eventTypes.contains(eventType)) {
 			return;
 		}
-		if (subscriptions.containsKey(eventType)
-				|| bindings.containsKey(eventType)) {
+		if (subscriptions.containsKey(eventType)) {
 			throw new ConfigurationException("Cannot remove event type "
-					+ eventType.getCanonicalName()
-					+ ". Binding or subscription present");
+					+ eventType.getCanonicalName() + ". Subscription present");
 		}
 		eventTypes.remove(eventType);
 	}
@@ -125,21 +116,6 @@ public class ChannelCore {
 						subscription.getEventHandler().getEventType(), subs);
 			} else {
 				subs.add(subscription);
-			}
-		}
-	}
-
-	public void addBinding(Binding binding) {
-		synchronized (channelLock) {
-			Class<? extends Event> eventType = binding.getEventType();
-
-			LinkedList<Binding> binds = bindings.get(eventType);
-			if (binds == null) {
-				binds = new LinkedList<Binding>();
-				binds.add(binding);
-				bindings.put(eventType, binds);
-			} else {
-				binds.add(binding);
 			}
 		}
 	}

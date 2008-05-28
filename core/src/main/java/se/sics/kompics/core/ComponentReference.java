@@ -100,15 +100,6 @@ public class ComponentReference implements Component {
 		componentCore = null;
 	}
 
-	public void bind(Class<? extends Event> eventType, Channel channel) {
-		if (componentCapabilities.contains(ComponentCapabilityFlags.BIND)
-				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			componentCore.bind(this, eventType, channel);
-			return;
-		}
-		throw new CapabilityNotSupportedException(ComponentCapabilityFlags.BIND);
-	}
-
 	public Channel getFaultChannel() {
 		// TODO create channel capability
 		return componentCore.getFaultChannel();
@@ -152,26 +143,6 @@ public class ComponentReference implements Component {
 		}
 		throw new CapabilityNotSupportedException(
 				ComponentCapabilityFlags.SUBSCRIBE);
-	}
-
-	public void triggerEvent(Event event) {
-		if (componentCapabilities.contains(ComponentCapabilityFlags.TRIGGER)
-				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			componentCore.triggerEvent(event);
-			return;
-		}
-		throw new CapabilityNotSupportedException(
-				ComponentCapabilityFlags.TRIGGER);
-	}
-
-	public void triggerEvent(Event event, Priority priority) {
-		if (componentCapabilities.contains(ComponentCapabilityFlags.TRIGGER)
-				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			componentCore.triggerEvent(event, priority);
-			return;
-		}
-		throw new CapabilityNotSupportedException(
-				ComponentCapabilityFlags.TRIGGER);
 	}
 
 	public void triggerEvent(Event event, Channel channel) {

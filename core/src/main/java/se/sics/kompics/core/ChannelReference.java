@@ -109,15 +109,6 @@ public class ChannelReference implements Channel {
 				ChannelCapabilityFlags.SUBSCRIBE);
 	}
 
-	void addBinding(Binding binding) {
-		if (channelCapabilities.contains(ChannelCapabilityFlags.BIND)
-				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			channelCore.addBinding(binding);
-			return;
-		}
-		throw new CapabilityNotSupportedException(ChannelCapabilityFlags.BIND);
-	}
-
 	void publishEventCore(EventCore eventCore) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.PUBLISH)
 				&& (capable == null || capable.equals(ComponentUUID.get()))) {

@@ -6,10 +6,6 @@ import se.sics.kompics.core.ComponentUUID;
 
 public interface Component {
 
-	public void triggerEvent(Event event);
-
-	public void triggerEvent(Event event, Priority priority);
-
 	public void triggerEvent(Event event, Channel channel);
 
 	public void triggerEvent(Event event, Channel channel, Priority priority);
@@ -34,8 +30,6 @@ public interface Component {
 	// TODO document
 	// TODO createFaultChannel
 	public void subscribe(Channel channel, String eventHandlerName);
-
-	public void bind(Class<? extends Event> eventType, Channel channel);
 
 	public void start();
 

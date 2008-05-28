@@ -1,6 +1,8 @@
 package se.sics.kompics.example;
 
+import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
+import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
 import se.sics.kompics.api.annotation.ComponentType;
 import se.sics.kompics.api.annotation.EventGuardMethod;
@@ -12,8 +14,19 @@ public class WorldComponent {
 
 	private final Component component;
 
+	private Channel helloChannel, responseChannel;
+
 	public WorldComponent(Component component) {
 		this.component = component;
+	}
+
+	@ComponentCreateMethod
+	public void create(Channel helloChannel, Channel responseChannel) {
+		System.out.println("CREATE WORLD");
+		this.helloChannel = helloChannel;
+		this.responseChannel = responseChannel;
+
+		component.subscribe(this.helloChannel, "handleHelloEvent");
 	}
 
 	@ComponentStartMethod
@@ -27,7 +40,7 @@ public class WorldComponent {
 		String message = event.getMessage();
 		System.out.println("HANDLE HELLO in WORLD: I got message: \"" + message
 				+ "\"");
-		component.triggerEvent(new ResponseEvent("Hi there!"));
+		component.triggerEvent(new ResponseEvent("Hi there!"), responseChannel);
 		System.out.println("WORLD TRIGGERED RESPONSE: I replied: Hi there!");
 	}
 
