@@ -21,6 +21,8 @@ public class TimerHandler {
 
 	private final Component component;
 
+	private final Channel setTimerChannel;
+
 	private long nextTimerId;
 
 	private long nextPeriodicTimerId;
@@ -29,9 +31,10 @@ public class TimerHandler {
 
 	private final HashSet<Long> outstandingPeriodicTimers;
 
-	public TimerHandler(Component component) {
+	public TimerHandler(Component component, Channel setTimerChannel) {
 		super();
 		this.component = component;
+		this.setTimerChannel = setTimerChannel;
 		this.nextTimerId = 0;
 		this.outstandingTimers = new HashSet<Long>();
 		this.outstandingPeriodicTimers = new HashSet<Long>();
@@ -50,7 +53,7 @@ public class TimerHandler {
 				timerExpiredEvent, timeoutChannel, component, delay);
 
 		outstandingTimers.add(nextTimerId);
-		component.triggerEvent(event, Priority.HIGH);
+		component.triggerEvent(event, setTimerChannel, Priority.HIGH);
 		return nextTimerId;
 	}
 
@@ -68,20 +71,20 @@ public class TimerHandler {
 				component, delay, period);
 
 		outstandingPeriodicTimers.add(nextTimerId);
-		component.triggerEvent(event, Priority.HIGH);
+		component.triggerEvent(event, setTimerChannel, Priority.HIGH);
 		return nextTimerId;
 	}
 
 	public void cancelTimer(long timerId) {
 		CancelTimerEvent event = new CancelTimerEvent(component, timerId);
-		component.triggerEvent(event, Priority.HIGH);
+		component.triggerEvent(event, setTimerChannel, Priority.HIGH);
 		outstandingTimers.remove(timerId);
 	}
 
 	public void cancelPeriodicTimer(long timerId) {
 		CancelPeriodicTimerEvent event = new CancelPeriodicTimerEvent(
 				component, timerId);
-		component.triggerEvent(event, Priority.HIGH);
+		component.triggerEvent(event, setTimerChannel, Priority.HIGH);
 		outstandingPeriodicTimers.remove(timerId);
 	}
 

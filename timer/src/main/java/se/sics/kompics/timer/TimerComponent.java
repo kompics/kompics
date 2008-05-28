@@ -60,7 +60,7 @@ public class TimerComponent {
 		this.requestChannel = requestChannel;
 		this.signalChannel = signalChannel;
 
-		// bind and subscribe to the given channels
+		// subscribe to the given channels
 		component.subscribe(requestChannel, "handleSetTimerEvent");
 		component.subscribe(requestChannel, "handleSetPeriodicTimerEvent");
 		component.subscribe(requestChannel, "handleCancelTimerEvent");
