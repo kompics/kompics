@@ -11,19 +11,21 @@ public interface Component {
 	public void triggerEvent(Event event, Channel channel, Priority priority);
 
 	/**
-	 * Creates a component factory.
+	 * Creates a new component instance.
 	 * 
-	 * @param componentClassName
-	 *            the name of the class that contains the implementation of the
-	 *            state and event handlers of the components created by the
-	 *            returned factory.
-	 * 
-	 * @return the created factory.
+	 * @param faultChannel
+	 *            the channel where the faults that occur in the newly created
+	 *            component are reported as fault events.
+	 * @param channelParameters
+	 *            channel parameters of the new component.
+	 * @return a reference to the newly created component.
 	 */
-	public Factory createFactory(String componentClassName)
-			throws ClassNotFoundException;
+	public Component createComponent(String componentClassName,
+			Channel faultChannel, Channel... channelParameters);
 
-	public Channel createChannel();
+	public void initialize(Object... objects);
+
+	public Channel createChannel(Class<?>... eventTypes);
 
 	public Channel getFaultChannel();
 

@@ -1,19 +1,15 @@
 package se.sics.kompics.core;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
-import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
@@ -39,12 +35,7 @@ import se.sics.kompics.core.scheduler.Scheduler;
  * @author cosmin
  * 
  */
-public class FactoryCore implements Factory {
-
-	/**
-	 * A reference to the Kompics scheduler.
-	 */
-	private Scheduler scheduler;
+public class FactoryCore {
 
 	/**
 	 * The name of the implementation class of the component type.
@@ -69,7 +60,7 @@ public class FactoryCore implements Factory {
 	/**
 	 * The event handler methods indexed by name.
 	 */
-	private HashMap<String, Class<? extends Event>> eventHandlerAcceptedEventTypes = null;
+	private HashMap<String, Class<? extends Event>> eventHandlerInputEventTypes = null;
 
 	/**
 	 * The names of the guard methods (if they exist) indexed by event handler
@@ -81,7 +72,7 @@ public class FactoryCore implements Factory {
 	 * The arrays of event types possibly triggered by each event handler,
 	 * indexed by event handler name.
 	 */
-	private HashMap<String, Class<? extends Event>[]> eventHandlerGeneratedEventTypes = null;
+	private HashMap<String, Class<? extends Event>[]> eventHandlerOutputEventTypes = null;
 
 	/**
 	 * The event handler guard methods indexed by guard name.
@@ -99,8 +90,7 @@ public class FactoryCore implements Factory {
 	private Method createMethod;
 
 	/**
-	 * The number of Channel parameters taken by the <code>create</code>
-	 * method.
+	 * The number of Channel parameters taken by the <code>create</code> method.
 	 */
 	private int createParameterCount;
 
@@ -110,8 +100,7 @@ public class FactoryCore implements Factory {
 	private Method shareMethod;
 
 	/**
-	 * The <code>initialize</code> method of the component implementation
-	 * class.
+	 * The <code>initialize</code> method of the component implementation class.
 	 */
 	private Method initializeMethod;
 
@@ -120,12 +109,6 @@ public class FactoryCore implements Factory {
 	 * component.
 	 */
 	private String initializeConfigFileName;
-
-	/**
-	 * array of objects passed to the init method when creating a component
-	 * instance
-	 */
-	private Object[] initializationParameters = null;
 
 	/**
 	 * The <code>destroy</code> method of the component implementation class.
@@ -150,9 +133,8 @@ public class FactoryCore implements Factory {
 	 * @param handlerComponentClassName
 	 *            the name of the implementation class of the component type.
 	 */
-	public FactoryCore(Scheduler scheduler, String handlerComponentClassName) {
+	public FactoryCore(String handlerComponentClassName) {
 		super();
-		this.scheduler = scheduler;
 		this.handlerComponentClassName = handlerComponentClassName;
 
 		try {
@@ -176,7 +158,8 @@ public class FactoryCore implements Factory {
 	 */
 	private void reflectHandlerComponentClass() {
 		if (!handlerComponentClass.isAnnotationPresent(ComponentType.class)) {
-			// Annotation[] annotations = handlerComponentClass.getAnnotations();
+			// Annotation[] annotations =
+			// handlerComponentClass.getAnnotations();
 			throw new RuntimeException("Class " + handlerComponentClassName
 					+ " is not an annotated component class.");
 		}
@@ -213,10 +196,10 @@ public class FactoryCore implements Factory {
 					eventHandlerMethods = new HashMap<String, Method>();
 				}
 				eventHandlerMethods.put(method.getName(), method);
-				if (eventHandlerAcceptedEventTypes == null) {
-					eventHandlerAcceptedEventTypes = new HashMap<String, Class<? extends Event>>();
+				if (eventHandlerInputEventTypes == null) {
+					eventHandlerInputEventTypes = new HashMap<String, Class<? extends Event>>();
 				}
-				eventHandlerAcceptedEventTypes.put(method.getName(), eventType);
+				eventHandlerInputEventTypes.put(method.getName(), eventType);
 
 				EventHandlerMethod handlerAnnotation = method
 						.getAnnotation(EventHandlerMethod.class);
@@ -233,10 +216,10 @@ public class FactoryCore implements Factory {
 				MayTriggerEventTypes eventTypes = method
 						.getAnnotation(MayTriggerEventTypes.class);
 				if (eventTypes != null) {
-					if (eventHandlerGeneratedEventTypes == null) {
-						eventHandlerGeneratedEventTypes = new HashMap<String, Class<? extends Event>[]>();
+					if (eventHandlerOutputEventTypes == null) {
+						eventHandlerOutputEventTypes = new HashMap<String, Class<? extends Event>[]>();
 					}
-					eventHandlerGeneratedEventTypes.put(method.getName(),
+					eventHandlerOutputEventTypes.put(method.getName(),
 							eventTypes.value());
 				}
 			}
@@ -382,22 +365,8 @@ public class FactoryCore implements Factory {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see se.sics.kompics.api.Factory#setInitializationParameters(java.lang.Object[])
-	 */
-	public void setInitializationParameters(Object... objects) {
-		initializationParameters = objects;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see se.sics.kompics.api.Factory#createComponent(se.sics.kompics.api.Channel,
-	 *      se.sics.kompics.api.Channel[])
-	 */
-	public ComponentReference createComponent(Channel faultChannel,
+	public ComponentCore createComponent(Scheduler scheduler,
+			FactoryRegistry factoryRegistry, Channel faultChannel,
 			Channel... channelParameters) {
 
 		try {
@@ -405,8 +374,8 @@ public class FactoryCore implements Factory {
 				throw new RuntimeException("FaultChannel cannot be null.");
 
 			// create a component core
-			ComponentCore componentCore = new ComponentCore(scheduler, this,
-					faultChannel);
+			ComponentCore componentCore = new ComponentCore(scheduler,
+					factoryRegistry, this, faultChannel);
 			ComponentReference componentReference = componentCore
 					.createReference();
 
@@ -419,7 +388,7 @@ public class FactoryCore implements Factory {
 					.entrySet()) {
 				String handlerName = handlerEntry.getKey();
 				Method handlerMethod = handlerEntry.getValue();
-				Class<? extends Event> eventType = eventHandlerAcceptedEventTypes
+				Class<? extends Event> eventType = eventHandlerInputEventTypes
 						.get(handlerName);
 
 				EventHandler eventHandler;
@@ -439,7 +408,6 @@ public class FactoryCore implements Factory {
 			componentCore.setHandlerObject(handlerObject);
 			componentCore.setEventHandlers(eventHandlers,
 					guardedHandlersCount > 0);
-			componentCore.setShareMethod(shareMethod);
 
 			// invoke the create method
 			if (createMethod != null) {
@@ -457,44 +425,7 @@ public class FactoryCore implements Factory {
 									+ " channel parameters");
 				}
 			}
-
-			// invoke the initialize method ...
-			if (initializeMethod != null) {
-				if (initializationParameters == null) {
-					if (!initializeConfigFileName.equals("")) {
-						Properties properties = new Properties();
-						InputStream inputStream = handlerComponentClass
-								.getResourceAsStream(initializeConfigFileName);
-						properties.load(inputStream);
-
-						// ... with a properties argument
-						initializeMethod.invoke(handlerObject, properties);
-					} else {
-						// ... with no argument
-						initializeMethod.invoke(handlerObject);
-					}
-				} else {
-					if (!initializeConfigFileName.equals("")) {
-						Properties properties = new Properties();
-						InputStream inputStream = handlerComponentClass
-								.getResourceAsStream(initializeConfigFileName);
-						properties.load(inputStream);
-
-						// ... with a properties and init parameters arguments
-						Object[] arguments = new Object[initializationParameters.length + 1];
-						for (int i = 0; i < initializationParameters.length; i++) {
-							arguments[i + 1] = initializationParameters[i];
-						}
-						arguments[0] = properties;
-						initializeMethod.invoke(handlerObject, arguments);
-					} else {
-						// ... with init parameters arguments
-						initializeMethod.invoke(handlerObject,
-								initializationParameters);
-					}
-				}
-			}
-			return componentReference;
+			return componentCore;
 		} catch (IllegalArgumentException e) {
 			throw new RuntimeException(
 					"Cannot create component instance of type "
@@ -511,10 +442,6 @@ public class FactoryCore implements Factory {
 			throw new RuntimeException(
 					"Cannot create component instance of type "
 							+ handlerComponentClassName, e);
-		} catch (IOException e) {
-			throw new RuntimeException(
-					"Cannot initialize component instance of type "
-							+ handlerComponentClassName, e);
 		}
 	}
 
@@ -524,6 +451,30 @@ public class FactoryCore implements Factory {
 	 */
 	public Method getCreateMethod() {
 		return createMethod;
+	}
+
+	/**
+	 * @return the <code>initialize</code> method of the component
+	 *         implementation class.
+	 */
+	public Method getInitializeMethod() {
+		return initializeMethod;
+	}
+
+	/**
+	 * @return the name of the component configuration properties file if
+	 *         annotated in the component class.
+	 */
+	public String getConfigurationFileName() {
+		return initializeConfigFileName;
+	}
+
+	/**
+	 * @return the <code>share</code> method of the component implementation
+	 *         class.
+	 */
+	public Method getShareMethod() {
+		return shareMethod;
 	}
 
 	/**

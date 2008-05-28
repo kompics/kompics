@@ -5,7 +5,6 @@ import org.junit.Ignore;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
-import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Kompics;
 
@@ -47,28 +46,20 @@ public class SchedulerPriorityMain extends ComponentTest {
 		kompics = new Kompics(1, 0);
 		Component boot = kompics.getBootstrapComponent();
 
-		Factory factory = boot.createFactory(TestPriorityComponent.class
-				.getName());
+		Channel faultChannel = boot.createChannel(FaultEvent.class);
 
-		Channel faultChannel = boot.createChannel();
-		faultChannel.addEventType(FaultEvent.class);
+		channel11 = boot.createChannel(TestEvent.class);
+		channel12 = boot.createChannel(TestEvent.class);
+		channel13 = boot.createChannel(TestEvent.class);
+		channel21 = boot.createChannel(TestEvent.class);
+		channel22 = boot.createChannel(TestEvent.class);
+		channel23 = boot.createChannel(TestEvent.class);
 
-		channel11 = boot.createChannel();
-		channel12 = boot.createChannel();
-		channel13 = boot.createChannel();
-		channel21 = boot.createChannel();
-		channel22 = boot.createChannel();
-		channel23 = boot.createChannel();
-		channel11.addEventType(TestEvent.class);
-		channel12.addEventType(TestEvent.class);
-		channel13.addEventType(TestEvent.class);
-		channel21.addEventType(TestEvent.class);
-		channel22.addEventType(TestEvent.class);
-		channel23.addEventType(TestEvent.class);
-
-		component1 = factory.createComponent(faultChannel, channel11,
+		component1 = boot.createComponent(
+				TestPriorityComponent.class.getName(), faultChannel, channel11,
 				channel12, channel13);
-		component2 = factory.createComponent(faultChannel, channel21,
+		component2 = boot.createComponent(
+				TestPriorityComponent.class.getName(), faultChannel, channel21,
 				channel22, channel23);
 
 		component1.subscribe(channel21, "handleTestEvent");

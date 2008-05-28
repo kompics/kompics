@@ -7,7 +7,6 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
-import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.capability.CapabilityNotSupportedException;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
@@ -105,15 +104,21 @@ public class ComponentReference implements Component {
 		return componentCore.getFaultChannel();
 	}
 
-	public Channel createChannel() {
+	public Channel createChannel(Class<?>... eventTypes) {
 		// TODO create channel capability
-		return componentCore.createChannel();
+		return componentCore.createChannel(eventTypes);
 	}
 
-	public Factory createFactory(String componentClassName)
-			throws ClassNotFoundException {
-		// TODO create factory capability
-		return componentCore.createFactory(componentClassName);
+	public Component createComponent(String componentClassName,
+			Channel faultChannel, Channel... channelParameters) {
+		// TODO create component capability
+		return componentCore.createComponent(componentClassName, faultChannel,
+				channelParameters);
+	}
+
+	public void initialize(Object... objects) {
+		componentCore.initialize(objects);
+		// TODO init capability
 	}
 
 	public void start() {
@@ -231,7 +236,7 @@ public class ComponentReference implements Component {
 	 * (non-Javadoc)
 	 * 
 	 * @see se.sics.kompics.api.Component#receive(java.lang.Class,
-	 *      se.sics.kompics.api.Channel[])
+	 * se.sics.kompics.api.Channel[])
 	 */
 	public Event receive(Class<? extends Event> eventType, Channel... channels) {
 		// TODO Auto-generated method stub
@@ -242,7 +247,7 @@ public class ComponentReference implements Component {
 	 * (non-Javadoc)
 	 * 
 	 * @see se.sics.kompics.api.Component#receive(java.util.Set,
-	 *      se.sics.kompics.api.Channel[])
+	 * se.sics.kompics.api.Channel[])
 	 */
 	public Event receive(Set<Class<? extends Event>> eventTypes,
 			Channel... channels) {
@@ -254,7 +259,7 @@ public class ComponentReference implements Component {
 	 * (non-Javadoc)
 	 * 
 	 * @see se.sics.kompics.api.Component#receive(java.lang.Class,
-	 *      java.lang.String, se.sics.kompics.api.Channel[])
+	 * java.lang.String, se.sics.kompics.api.Channel[])
 	 */
 	public Event receive(Class<? extends Event> eventType, String guardName,
 			Channel... channels) {
@@ -266,7 +271,9 @@ public class ComponentReference implements Component {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see se.sics.kompics.api.Component#getSharedComponentMembrane(java.lang.String)
+	 * @see
+	 * se.sics.kompics.api.Component#getSharedComponentMembrane(java.lang.String
+	 * )
 	 */
 	public ComponentMembrane getSharedComponentMembrane(String name) {
 		return componentCore.getSharedComponentMembrane(name);
@@ -284,8 +291,9 @@ public class ComponentReference implements Component {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see se.sics.kompics.api.Component#registerSharedComponentMembrane(java.lang.String,
-	 *      se.sics.kompics.api.ComponentMembrane)
+	 * @see
+	 * se.sics.kompics.api.Component#registerSharedComponentMembrane(java.lang
+	 * .String, se.sics.kompics.api.ComponentMembrane)
 	 */
 	public ComponentMembrane registerSharedComponentMembrane(String name,
 			ComponentMembrane membrane) {

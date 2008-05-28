@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
-import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Kompics;
 
@@ -60,19 +59,16 @@ public class SchedulerTest extends ComponentTest {
 		kompics = new Kompics(CORES, FAIRNESS);
 		Component boot = kompics.getBootstrapComponent();
 
-		Factory factory = boot.createFactory(TestComponent.class.getName());
+		Channel faultChannel = boot.createChannel(FaultEvent.class);
 
-		Channel faultChannel = boot.createChannel();
-		faultChannel.addEventType(FaultEvent.class);
-
-		component1 = factory.createComponent(faultChannel);
-		component2 = factory.createComponent(faultChannel);
+		component1 = boot.createComponent(TestComponent.class.getName(),
+				faultChannel);
+		component2 = boot.createComponent(TestComponent.class.getName(),
+				faultChannel);
 		SchedulerTest.components = new AtomicInteger(COMPONENTS);
 
-		channel1 = boot.createChannel();
-		channel1.addEventType(TestEvent.class);
-		channel2 = boot.createChannel();
-		channel2.addEventType(TestEvent.class);
+		channel1 = boot.createChannel(TestEvent.class);
+		channel2 = boot.createChannel(TestEvent.class);
 
 		component1.subscribe(channel1, "handleTestEvent");
 		component2.subscribe(channel2, "handleTestEvent");

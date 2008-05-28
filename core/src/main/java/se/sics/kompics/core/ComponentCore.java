@@ -1,5 +1,6 @@
 package se.sics.kompics.core;
 
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -7,11 +8,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Properties;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
-import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
@@ -40,13 +41,13 @@ public class ComponentCore {
 
 	private FactoryCore factoryCore;
 
+	private FactoryRegistry factoryRegistry;
+
 	private Channel faultChannel;
 
 	private Object handlerObject;
 
 	private HashMap<String, EventHandler> eventHandlers;
-
-	private Method shareMethod;
 
 	private HashSet<EventHandler> guardedHandlersWithBlockedEvents;
 
@@ -78,10 +79,11 @@ public class ComponentCore {
 	private int mediumPoolCounter;
 	private int lowPoolCounter;
 
-	public ComponentCore(Scheduler scheduler, FactoryCore factoryCore,
-			Channel faultChannel) {
+	public ComponentCore(Scheduler scheduler, FactoryRegistry factoryRegistry,
+			FactoryCore factoryCore, Channel faultChannel) {
 		super();
 		this.scheduler = scheduler;
+		this.factoryRegistry = factoryRegistry;
 		this.factoryCore = factoryCore;
 
 		// check fault channel
@@ -125,10 +127,6 @@ public class ComponentCore {
 			this.guardedHandlersWithBlockedEvents = new HashSet<EventHandler>();
 			this.blockedEventsCount = 0;
 		}
-	}
-
-	public void setShareMethod(Method shareMethod) {
-		this.shareMethod = shareMethod;
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
@@ -290,8 +288,8 @@ public class ComponentCore {
 	 * Tries to execute one guarded event handler.
 	 * 
 	 * @return <code>true</code> if one blocked event was executed from any
-	 * 	guarded event handler and <code>false</code> if no blocked event could
-	 * 	be executed due to no satisfied guard
+	 *         guarded event handler and <code>false</code> if no blocked event
+	 *         could be executed due to no satisfied guard
 	 */
 	private boolean handleOneBlockedEvent() throws Throwable {
 		Iterator<EventHandler> iterator = guardedHandlersWithBlockedEvents
@@ -413,8 +411,23 @@ public class ComponentCore {
 
 	/* =============== COMPONENT COMPOSITION =============== */
 
-	public ChannelReference createChannel() {
-		ChannelCore channelCore = new ChannelCore();
+	@SuppressWarnings("unchecked")
+	public ChannelReference createChannel(Class<?>... eventTypes) {
+		// type check eventTypes and pass correct types to ChannelCore
+		HashSet<Class<? extends Event>> types = new HashSet<Class<? extends Event>>();
+
+		for (Class<?> type : eventTypes) {
+			if (Event.class.isAssignableFrom(type)) {
+				types.add((Class<? extends Event>) type);
+			} else {
+				throw new RuntimeException(type.getName() + " is not an event "
+						+ "type and it cannot be carried by a channel");
+			}
+		}
+
+		// TODO add hierarchy
+
+		ChannelCore channelCore = new ChannelCore(types);
 		return new ChannelReference(channelCore, EnumSet
 				.allOf(ChannelCapabilityFlags.class));
 	}
@@ -423,13 +436,17 @@ public class ComponentCore {
 		return (ChannelReference) faultChannel;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see se.sics.kompics.api.Component#createFactory(java.lang.String)
-	 */
-	public Factory createFactory(String handlerComponentClassName) {
-		return new FactoryCore(scheduler, handlerComponentClassName);
+	public ComponentReference createComponent(String componentClassName,
+			Channel faultChannel, Channel... channelParameters) {
+
+		FactoryCore factoryCore = factoryRegistry
+				.getFactory(componentClassName);
+		ComponentCore newComponentCore = factoryCore.createComponent(scheduler,
+				factoryRegistry, faultChannel, channelParameters);
+
+		// TODO add hierarchy
+
+		return newComponentCore.createReference();
 	}
 
 	/* =============== COMPONENT CONFIGURATION =============== */
@@ -464,26 +481,79 @@ public class ComponentCore {
 	}
 
 	/* =============== COMPONENT LIFE-CYCLE =============== */
-	public void start() {
-		try {
-			Method startMethod = factoryCore.getStartMethod();
-			if (startMethod != null) {
-				startMethod.invoke(handlerObject);
+	public void initialize(Object... args) {
+		// TODO uniform fault handling in share and init
+		Method initializeMethod = factoryCore.getInitializeMethod();
+		String initializeConfigFileName = factoryCore
+				.getConfigurationFileName();
+		Class<?> handlerComponentClass = handlerObject.getClass();
+
+		if (initializeMethod != null) {
+			try {
+				// invoke the initialize method ...
+				if (args == null) {
+					if (!initializeConfigFileName.equals("")) {
+						Properties properties = new Properties();
+						InputStream inputStream = handlerComponentClass
+								.getResourceAsStream(initializeConfigFileName);
+						properties.load(inputStream);
+
+						// ... with a properties argument
+						initializeMethod.invoke(handlerObject, properties);
+					} else {
+						// ... with no argument
+						initializeMethod.invoke(handlerObject);
+					}
+				} else {
+					if (!initializeConfigFileName.equals("")) {
+						Properties properties = new Properties();
+						InputStream inputStream = handlerComponentClass
+								.getResourceAsStream(initializeConfigFileName);
+						properties.load(inputStream);
+
+						// ... with a properties and init parameters
+						// arguments
+						Object[] arguments = new Object[args.length + 1];
+						for (int i = 0; i < args.length; i++) {
+							arguments[i + 1] = args[i];
+						}
+						arguments[0] = properties;
+						initializeMethod.invoke(handlerObject, arguments);
+					} else {
+						// ... with init parameters arguments
+						initializeMethod.invoke(handlerObject, args);
+					}
+				}
+			} catch (Throwable t) {
+				throw new RuntimeException("Cannot initialize component instan"
+						+ "ce of type " + handlerObject.getClass(), t);
 			}
-		} catch (Throwable throwable) {
-			handleFault(throwable);
+		} else {
+			throw new RuntimeException(
+					"Component does not declare an initialize method.");
+		}
+	}
+
+	public void start() {
+		Method startMethod = factoryCore.getStartMethod();
+		if (startMethod != null) {
+			try {
+				startMethod.invoke(handlerObject);
+			} catch (Throwable throwable) {
+				handleFault(throwable);
+			}
 		}
 		// TODO start
 	}
 
 	public void stop() {
-		try {
-			Method stopMethod = factoryCore.getStopMethod();
-			if (stopMethod != null) {
+		Method stopMethod = factoryCore.getStopMethod();
+		if (stopMethod != null) {
+			try {
 				stopMethod.invoke(handlerObject);
+			} catch (Throwable throwable) {
+				handleFault(throwable);
 			}
-		} catch (Throwable throwable) {
-			handleFault(throwable);
 		}
 		// TODO stop
 	}
@@ -538,6 +608,7 @@ public class ComponentCore {
 	}
 
 	public ComponentMembrane share(String name) {
+		Method shareMethod = factoryCore.getShareMethod();
 		if (shareMethod != null) {
 			try {
 				Object ret;

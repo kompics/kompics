@@ -1,8 +1,11 @@
 package se.sics.kompics.api;
 
+import java.util.HashSet;
+
 import se.sics.kompics.core.ChannelCore;
 import se.sics.kompics.core.ComponentReference;
 import se.sics.kompics.core.FactoryCore;
+import se.sics.kompics.core.FactoryRegistry;
 import se.sics.kompics.core.scheduler.Scheduler;
 
 /**
@@ -55,14 +58,20 @@ public class Kompics {
 	public Component getBootstrapComponent() {
 		if (bootstrapComponent == null) {
 			Scheduler scheduler = new Scheduler(workers, fairnessRate);
-			ChannelCore bootFaultChannelCore = new ChannelCore();
+			ChannelCore bootFaultChannelCore = new ChannelCore(
+					new HashSet<Class<? extends Event>>());
 			bootFaultChannelCore.addEventType(FaultEvent.class);
-			FactoryCore factoryCore = new FactoryCore(scheduler,
-					"se.sics.kompics.core.BootstrapComponent");
+
+			FactoryRegistry factoryRegistry = new FactoryRegistry();
+
+			FactoryCore factoryCore = factoryRegistry
+					.getFactory("se.sics.kompics.core.BootstrapComponent");
 
 			Channel faultChannel = bootFaultChannelCore.createReference();
-			bootstrapComponent = factoryCore.createComponent(faultChannel,
-					faultChannel);
+
+			bootstrapComponent = factoryCore.createComponent(scheduler,
+					factoryRegistry, faultChannel, faultChannel)
+					.createReference();
 		}
 		return bootstrapComponent;
 	}

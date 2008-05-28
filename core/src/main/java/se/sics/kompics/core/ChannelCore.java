@@ -29,9 +29,9 @@ public class ChannelCore {
 	private Object channelLock;
 
 	// TODO fix core visibility
-	public ChannelCore() {
+	public ChannelCore(HashSet<Class<? extends Event>> eventTypes) {
 		super();
-		eventTypes = new HashSet<Class<? extends Event>>();
+		this.eventTypes = eventTypes;
 		eventSubtypes = new HashSet<Class<? extends Event>>();
 		subscriptions = new HashMap<Class<? extends Event>, LinkedList<Subscription>>();
 		channelLock = new Object();

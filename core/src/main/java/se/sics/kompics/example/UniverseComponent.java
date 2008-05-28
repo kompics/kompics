@@ -2,7 +2,6 @@ package se.sics.kompics.example;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
-import se.sics.kompics.api.Factory;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
@@ -54,28 +53,23 @@ public class UniverseComponent {
 		// subscribe this component to the input channel
 		component.subscribe(this.inputChannel, "handleInputEvent");
 
-		// create factories for the sub-components
-		Factory userFactory = component
-				.createFactory("se.sics.kompics.example.UserComponent");
-		Factory worldFactory = component
-				.createFactory("se.sics.kompics.example.WorldComponent");
+		Channel faultChannel = component.createChannel(FaultEvent.class);
 
-		Channel faultChannel = component.createChannel();
-		faultChannel.addEventType(FaultEvent.class);
 		component.subscribe(faultChannel, "handleFaultEvent");
 
 		// create internal channels
-		helloChannel = component.createChannel();
-		responseChannel = component.createChannel();
-
-		// add appropriate event types to the internal channels
-		helloChannel.addEventType(HelloEvent.class);
-		responseChannel.addEventType(ResponseEvent.class);
+		helloChannel = component.createChannel(HelloEvent.class);
+		responseChannel = component.createChannel(ResponseEvent.class);
 
 		// create sub-components
-		userComponent = userFactory.createComponent(faultChannel, inputChannel,
-				this.outputChannel, helloChannel, responseChannel);
-		worldComponent = worldFactory.createComponent(faultChannel,
+		userComponent = component
+				.createComponent("se.sics.kompics.example.UserComponent",
+						faultChannel, inputChannel, this.outputChannel,
+						helloChannel, responseChannel);
+		userComponent.initialize();
+
+		worldComponent = component.createComponent(
+				"se.sics.kompics.example.WorldComponent", faultChannel,
 				helloChannel, responseChannel);
 	}
 
