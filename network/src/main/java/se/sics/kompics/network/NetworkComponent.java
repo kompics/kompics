@@ -79,7 +79,6 @@ public class NetworkComponent {
 		this.deliverChannel = deliverChannel;
 
 		component.subscribe(sendChannel, "handleNetworkSendEvent");
-		component.bind(NetworkDeliverEvent.class, deliverChannel);
 
 		udpSessions = new ConcurrentHashMap<Address, IoSession>();
 		tcpSessions = new ConcurrentHashMap<Address, IoSession>();
@@ -178,7 +177,7 @@ public class NetworkComponent {
 		NetworkDeliverEvent deliverEvent = event.getNetworkDeliverEvent();
 		if (event.getDestination().equals(event.getSource())) {
 			// deliver locally
-			component.triggerEvent(deliverEvent);
+			component.triggerEvent(deliverEvent, deliverChannel);
 			return;
 		}
 
@@ -226,7 +225,7 @@ public class NetworkComponent {
 				message.getDestination() });
 
 		message.setProtocol(protocol);
-		component.triggerEvent(message);
+		component.triggerEvent(message, deliverChannel);
 	}
 
 	boolean alreadyConnected(Address address, Transport protocol) {
