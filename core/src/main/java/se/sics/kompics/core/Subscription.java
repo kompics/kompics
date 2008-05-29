@@ -1,19 +1,25 @@
 package se.sics.kompics.core;
 
+import se.sics.kompics.api.EventAttributeFilter;
+
 public class Subscription {
 
-	private ComponentReference componentReference;
+	private final ComponentReference componentReference;
 
-	private ChannelReference channelReference;
+	private final ChannelReference channelReference;
 
-	private EventHandler eventHandler;
+	private final EventHandler eventHandler;
+
+	private final EventAttributeFilter[] filters;
 
 	public Subscription(ComponentReference componentReference,
-			ChannelReference channelReference, EventHandler eventHandler) {
+			ChannelReference channelReference, EventHandler eventHandler,
+			EventAttributeFilter[] filters) {
 		super();
 		this.componentReference = componentReference;
 		this.channelReference = channelReference;
 		this.eventHandler = eventHandler;
+		this.filters = filters;
 	}
 
 	public ComponentReference getComponent() {
@@ -26,6 +32,10 @@ public class Subscription {
 
 	public EventHandler getEventHandler() {
 		return eventHandler;
+	}
+
+	public EventAttributeFilter[] getFilters() {
+		return filters;
 	}
 
 	public String toString() {

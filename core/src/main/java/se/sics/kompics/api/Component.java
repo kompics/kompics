@@ -32,7 +32,8 @@ public interface Component {
 
 	// TODO document
 	// TODO createFaultChannel
-	public void subscribe(Channel channel, String eventHandlerName);
+	public void subscribe(Channel channel, String eventHandlerName,
+			EventAttributeFilter... filters);
 
 	public void start();
 

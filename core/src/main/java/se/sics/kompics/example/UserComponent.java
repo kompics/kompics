@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
+import se.sics.kompics.api.EventAttributeFilter;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
@@ -36,7 +37,8 @@ public class UserComponent {
 		this.responseChannel = responseChannel;
 
 		component.subscribe(this.responseChannel, "handleResponseEvent");
-		component.subscribe(this.inChannel, "handleInputEvent");
+		EventAttributeFilter filter = new EventAttributeFilter("attribute", 1);
+		component.subscribe(this.inChannel, "handleInputEvent", filter);
 	}
 
 	@ComponentInitializeMethod("user.properties")

@@ -8,6 +8,7 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
+import se.sics.kompics.api.EventAttributeFilter;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.capability.CapabilityNotSupportedException;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
@@ -141,10 +142,11 @@ public class ComponentReference implements Component {
 		throw new CapabilityNotSupportedException(ComponentCapabilityFlags.STOP);
 	}
 
-	public void subscribe(Channel channel, String eventHandlerName) {
+	public void subscribe(Channel channel, String eventHandlerName,
+			EventAttributeFilter... filters) {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.SUBSCRIBE)
 				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			componentCore.subscribe(this, channel, eventHandlerName);
+			componentCore.subscribe(this, channel, eventHandlerName, filters);
 			return;
 		}
 		throw new CapabilityNotSupportedException(

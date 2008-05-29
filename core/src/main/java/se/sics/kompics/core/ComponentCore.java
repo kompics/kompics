@@ -14,6 +14,7 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
+import se.sics.kompics.api.EventAttributeFilter;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
@@ -484,14 +485,15 @@ public class ComponentCore {
 	/* =============== COMPONENT CONFIGURATION =============== */
 
 	public void subscribe(ComponentReference componentReference,
-			Channel channel, String eventHandlerName) {
+			Channel channel, String eventHandlerName,
+			EventAttributeFilter... filters) {
 		ChannelReference channelReference = (ChannelReference) channel;
 		EventHandler eventHandler = eventHandlers.get(eventHandlerName);
 		if (eventHandler != null) {
 			// TODO subscribe type check
 
 			Subscription subscription = new Subscription(componentReference,
-					channelReference, eventHandler);
+					channelReference, eventHandler, filters);
 
 			// TODO subscribe synchronization
 
