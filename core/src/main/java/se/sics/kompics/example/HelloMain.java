@@ -38,7 +38,9 @@ public class HelloMain {
 
 		System.out.println("TRIGGER INPUT in MAIN");
 		// trigger an input event in the request channel
-		boot.triggerEvent(new InputEvent(1), requestChannel);
-		boot.triggerEvent(new InputEvent(2), requestChannel);
+		boot.triggerEvent(new InputEvent(1, "a"), requestChannel);
+		boot.triggerEvent(new InputEvent(1, "b"), requestChannel);
+		boot.triggerEvent(new InputEvent(2, "a"), requestChannel);
+		boot.triggerEvent(new InputEvent(2, "b"), requestChannel);
 	}
 }

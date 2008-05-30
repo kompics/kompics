@@ -37,8 +37,12 @@ public class UserComponent {
 		this.responseChannel = responseChannel;
 
 		component.subscribe(this.responseChannel, "handleResponseEvent");
-		EventAttributeFilter filter = new EventAttributeFilter("attribute", 1);
-		component.subscribe(this.inChannel, "handleInputEvent", filter);
+		EventAttributeFilter filter1 = new EventAttributeFilter("attribute1", 1);
+		EventAttributeFilter filter2 = new EventAttributeFilter("attribute2",
+				"a");
+		component.subscribe(this.inChannel, "handleInputEvent", filter1,
+				filter2);
+		// component.subscribe(this.inChannel, "handleInputEvent", filter1);
 	}
 
 	@ComponentInitializeMethod("user.properties")
@@ -64,7 +68,8 @@ public class UserComponent {
 	@EventHandlerMethod
 	@MayTriggerEventTypes( { HelloEvent.class })
 	public void handleInputEvent(InputEvent event) {
-		System.out.println("HANDLE INPUT in USER");
+		System.out.println("HANDLE INPUT(" + event.attribute1() + ", "
+				+ event.attribute2() + ") in USER");
 		component.triggerEvent(new HelloEvent("Hello"), helloChannel);
 		System.out.println("USER TRIGGERED HELLO: I said Hello to the World");
 	}
