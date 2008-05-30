@@ -30,13 +30,13 @@ import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
-import se.sics.kompics.api.annotation.ComponentType;
+import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.events.NetworkDeliverEvent;
 import se.sics.kompics.network.events.NetworkSendEvent;
 
-@ComponentType
+@ComponentSpecification
 public class NetworkComponent {
 
 	private static final Logger logger = LoggerFactory
