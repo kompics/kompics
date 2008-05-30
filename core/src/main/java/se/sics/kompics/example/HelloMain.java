@@ -11,7 +11,6 @@ public class HelloMain {
 	 * @param args
 	 */
 	public static void main(String[] args) throws ClassNotFoundException {
-
 		// get the bootstrap Kompics component
 		Kompics kompics = new Kompics(3, 3);
 		Component boot = kompics.getBootstrapComponent();

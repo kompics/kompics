@@ -301,8 +301,8 @@ public class ComponentCore {
 	 * Tries to execute one guarded event handler.
 	 * 
 	 * @return <code>true</code> if one blocked event was executed from any
-	 *         guarded event handler and <code>false</code> if no blocked event
-	 *         could be executed due to no satisfied guard
+	 *         guarded event handler and <code>false</code> if no blocked
+	 *         event could be executed due to no satisfied guard
 	 */
 	private boolean handleOneBlockedEvent() throws Throwable {
 		Iterator<EventHandler> iterator = guardedHandlersWithBlockedEvents
@@ -490,16 +490,42 @@ public class ComponentCore {
 		ChannelReference channelReference = (ChannelReference) channel;
 		EventHandler eventHandler = eventHandlers.get(eventHandlerName);
 		if (eventHandler != null) {
-			// TODO subscribe type check
+			EventAttributeFilterCore[] filterCores;
+
+			Class<? extends Event> eventType = eventHandler.getEventType();
+
+			if (filters.length > 0) {
+				filterCores = new EventAttributeFilterCore[filters.length];
+				for (int i = 0; i < filterCores.length; i++) {
+					try {
+						Method attribute = eventType.getMethod(filters[i]
+								.getAttribute(), new Class<?>[0]);
+						filterCores[i] = new EventAttributeFilterCore(
+								attribute, filters[i].getValue());
+					} catch (SecurityException e) {
+						throw new RuntimeException("Subscription by attribute "
+								+ "failed: no attribute "
+								+ filters[i].getAttribute() + " in event type "
+								+ eventType);
+					} catch (NoSuchMethodException e) {
+						throw new RuntimeException("Subscription by attribute "
+								+ "failed: no attribute "
+								+ filters[i].getAttribute() + " in event type "
+								+ eventType);
+					}
+				}
+			} else {
+				filterCores = new EventAttributeFilterCore[0];
+			}
 
 			Subscription subscription = new Subscription(componentReference,
-					channelReference, eventHandler, filters);
+					channelReference, eventHandler, filterCores);
 
-			// TODO subscribe synchronization
-
-			subscriptions.add(subscription);
 			ChannelCore channelCore = channelReference
 					.addSubscription(subscription);
+			subscriptions.add(subscription);
+
+			// create a local work queue if one does not already exist
 			if (!channelWorkQueues.containsKey(channelCore)) {
 				WorkQueue workQueue = new WorkQueue(this);
 				channelWorkQueues.put(channelCore, workQueue);

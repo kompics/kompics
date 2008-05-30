@@ -1,6 +1,5 @@
 package se.sics.kompics.core;
 
-import se.sics.kompics.api.EventAttributeFilter;
 
 public class Subscription {
 
@@ -10,11 +9,11 @@ public class Subscription {
 
 	private final EventHandler eventHandler;
 
-	private final EventAttributeFilter[] filters;
+	private final EventAttributeFilterCore[] filters;
 
 	public Subscription(ComponentReference componentReference,
 			ChannelReference channelReference, EventHandler eventHandler,
-			EventAttributeFilter[] filters) {
+			EventAttributeFilterCore[] filters) {
 		super();
 		this.componentReference = componentReference;
 		this.channelReference = channelReference;
@@ -34,7 +33,7 @@ public class Subscription {
 		return eventHandler;
 	}
 
-	public EventAttributeFilter[] getFilters() {
+	public EventAttributeFilterCore[] getFilters() {
 		return filters;
 	}
 
