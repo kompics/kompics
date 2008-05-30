@@ -7,10 +7,10 @@ import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
 import se.sics.kompics.api.annotation.ComponentStopMethod;
-import se.sics.kompics.api.annotation.ComponentType;
+import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 
-@ComponentType(composite = true)
+@ComponentSpecification(composite = true)
 public class UniverseComponent {
 
 	private final Component component;

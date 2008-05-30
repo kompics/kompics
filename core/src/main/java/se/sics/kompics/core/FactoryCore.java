@@ -16,7 +16,7 @@ import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
 import se.sics.kompics.api.annotation.ComponentStopMethod;
-import se.sics.kompics.api.annotation.ComponentType;
+import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventGuardMethod;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
@@ -157,7 +157,7 @@ public class FactoryCore {
 	 * Reflects the implementation class of the component type.
 	 */
 	private void reflectHandlerComponentClass() {
-		if (!handlerComponentClass.isAnnotationPresent(ComponentType.class)) {
+		if (!handlerComponentClass.isAnnotationPresent(ComponentSpecification.class)) {
 			// Annotation[] annotations =
 			// handlerComponentClass.getAnnotations();
 			throw new RuntimeException("Class " + handlerComponentClassName

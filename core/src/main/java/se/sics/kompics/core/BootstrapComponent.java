@@ -4,10 +4,10 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
-import se.sics.kompics.api.annotation.ComponentType;
+import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 
-@ComponentType
+@ComponentSpecification
 public class BootstrapComponent {
 
 	private Component component;

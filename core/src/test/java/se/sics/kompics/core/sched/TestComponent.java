@@ -3,11 +3,11 @@ package se.sics.kompics.core.sched;
 import org.junit.Ignore;
 
 import se.sics.kompics.api.Component;
-import se.sics.kompics.api.annotation.ComponentType;
+import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 
 @Ignore
-@ComponentType
+@ComponentSpecification
 public class TestComponent {
 
 	private Component component;

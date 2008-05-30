@@ -4,12 +4,12 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
-import se.sics.kompics.api.annotation.ComponentType;
+import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventGuardMethod;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 
-@ComponentType
+@ComponentSpecification
 public class WorldComponent {
 
 	private final Component component;

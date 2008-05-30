@@ -8,12 +8,12 @@ import se.sics.kompics.api.Component;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
-import se.sics.kompics.api.annotation.ComponentType;
+import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 
 @Ignore
-@ComponentType
+@ComponentSpecification
 public class TestPriorityComponent {
 
 	private final Logger logger = Logger.getLogger(TestPriorityComponent.class);

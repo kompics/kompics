@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Annotates Kompics component types.
+ * Annotates Kompics component specifications.
  * 
  * @author Cosmin Arad
  * @since Kompics 0.1
@@ -13,7 +13,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ComponentType {
+public @interface ComponentSpecification {
 	/**
 	 * @return <code>true</code>if the component is composite.
 	 */
