@@ -14,7 +14,7 @@ import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
-import se.sics.kompics.api.annotation.ComponentType;
+import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
 import se.sics.kompics.timer.events.CancelTimerEvent;
@@ -28,7 +28,7 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
  * @author Cosmin Arad
  * @version $Id$
  */
-@ComponentType
+@ComponentSpecification
 public class TimerComponent {
 
 	private static final Logger logger = LoggerFactory
