@@ -1,5 +1,8 @@
 package se.sics.kompics.p2p.peer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
@@ -16,6 +19,9 @@ import se.sics.kompics.api.annotation.EventHandlerMethod;
 @ComponentSpecification
 public class PeerCluster {
 
+	private static final Logger logger = LoggerFactory
+			.getLogger(PeerCluster.class);
+
 	private final Component component;
 
 	public PeerCluster(Component component) {
@@ -24,12 +30,13 @@ public class PeerCluster {
 
 	@ComponentCreateMethod
 	public void create() {
+		logger.debug("Create");
 		;
 	}
 
 	@ComponentInitializeMethod
 	public void init() {
-		;
+		logger.debug("Init");
 	}
 
 	@EventHandlerMethod

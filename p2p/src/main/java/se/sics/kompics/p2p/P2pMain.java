@@ -15,6 +15,8 @@ import se.sics.kompics.timer.events.CancelTimerEvent;
 import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
 import se.sics.kompics.timer.events.SetTimerEvent;
 import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.web.events.WebRequestEvent;
+import se.sics.kompics.web.events.WebResponseEvent;
 
 /**
  * The <code>P2pMain</code> class
@@ -67,10 +69,26 @@ public class P2pMain {
 		networkComponent.initialize(socketAddress);
 		networkComponent.share("se.sics.kompics.Network");
 
+		// create channels for the web component
+		Channel webRequestChannel = boot.createChannel(WebRequestEvent.class);
+		Channel webResponseChannel = boot.createChannel(WebResponseEvent.class);
+
+		// create and share the web component
+		Component webComponent = boot.createComponent(
+				"se.sics.kompics.web.WebComponent", faultChannel,
+				webRequestChannel, webResponseChannel);
+		webComponent.initialize(8080);
+		webComponent.share("se.sics.kompics.Web");
+
 		// create the PeerCluster component
 		Component peerCluster = boot.createComponent(
-				"se.sics.kompics.p2p.PeerCluster", faultChannel);
+				"se.sics.kompics.p2p.peer.PeerCluster", faultChannel);
 		peerCluster.initialize();
+
+		// create the Application component
+		Component application = boot.createComponent(
+				"se.sics.kompics.p2p.application.Application", faultChannel);
+		application.initialize();
 
 		// peerCluster.initialize(neighbourLinks, new Integer(1));
 		// peerCluster.triggerEvent(new ApplicationStartEvent(command),
@@ -78,5 +96,4 @@ public class P2pMain {
 
 		System.out.println("DONE");
 	}
-
 }
