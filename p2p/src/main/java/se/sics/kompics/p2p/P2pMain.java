@@ -16,6 +16,12 @@ import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
 import se.sics.kompics.timer.events.SetTimerEvent;
 import se.sics.kompics.timer.events.TimerSignalEvent;
 
+/**
+ * The <code>P2pMain</code> class
+ * 
+ * @author Cosmin Arad
+ * @version $Id$
+ */
 public class P2pMain {
 
 	// private static final Logger logger =

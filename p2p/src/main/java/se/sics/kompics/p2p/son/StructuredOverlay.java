@@ -4,6 +4,12 @@ import se.sics.kompics.api.Component;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 
+/**
+ * The <code>StructuredOverlay</code> class
+ * 
+ * @author Cosmin Arad
+ * @version $Id$
+ */
 @ComponentSpecification
 public class StructuredOverlay {
 

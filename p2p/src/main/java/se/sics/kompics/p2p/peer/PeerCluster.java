@@ -1,4 +1,4 @@
-package se.sics.kompics.p2p;
+package se.sics.kompics.p2p.peer;
 
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.FaultEvent;
@@ -7,6 +7,12 @@ import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 
+/**
+ * The <code>PeerCluster</code> class
+ * 
+ * @author Cosmin Arad
+ * @version $Id$
+ */
 @ComponentSpecification
 public class PeerCluster {
 

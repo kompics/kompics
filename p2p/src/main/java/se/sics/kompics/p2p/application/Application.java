@@ -1,21 +1,21 @@
-package se.sics.kompics.p2p.son.router;
+package se.sics.kompics.p2p.application;
 
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 
 /**
- * The <code>ChordRouter</code> class
+ * The <code>Application</code> class
  * 
  * @author Cosmin Arad
  * @version $Id$
  */
 @ComponentSpecification
-public class ChordRouter {
+public class Application {
 
 	private final Component component;
 
-	public ChordRouter(Component component) {
+	public Application(Component component) {
 		this.component = component;
 	}
 
