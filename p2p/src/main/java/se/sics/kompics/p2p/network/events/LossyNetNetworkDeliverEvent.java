@@ -18,16 +18,16 @@ public final class LossyNetNetworkDeliverEvent extends NetworkDeliverEvent {
 	 */
 	private static final long serialVersionUID = -7947782637977816609L;
 
-	private final LossyNetworkDeliverEvent flp2pDeliverEvent;
+	private final LossyNetworkDeliverEvent lossyNetworkDeliverEvent;
 
 	public LossyNetNetworkDeliverEvent(
-			LossyNetworkDeliverEvent flp2pDeliverEvent, Address source,
+			LossyNetworkDeliverEvent lossyNetworkDeliverEvent, Address source,
 			Address destination) {
 		super(source, destination);
-		this.flp2pDeliverEvent = flp2pDeliverEvent;
+		this.lossyNetworkDeliverEvent = lossyNetworkDeliverEvent;
 	}
 
-	public final LossyNetworkDeliverEvent getFlp2pDeliverEvent() {
-		return flp2pDeliverEvent;
+	public final LossyNetworkDeliverEvent getLossyNetworkDeliverEvent() {
+		return lossyNetworkDeliverEvent;
 	}
 }

@@ -82,10 +82,11 @@ public final class LossyNetwork {
 		netDeliverChannel = networkMembrane
 				.getChannel(NetworkDeliverEvent.class);
 
-		component.subscribe(timerSignalChannel, "handleFlp2pTimerSignalEvent");
-		component
-				.subscribe(netDeliverChannel, "handleFlp2pNetworkDeliverEvent");
-		component.subscribe(this.sendChannel, "handleFlp2pSendEvent");
+		component.subscribe(timerSignalChannel,
+				"handleLossyNetworkTimerSignalEvent");
+		component.subscribe(netDeliverChannel,
+				"handleLossyNetNetworkDeliverEvent");
+		component.subscribe(this.sendChannel, "handleLossyNetworkSendEvent");
 	}
 
 	@ComponentShareMethod
@@ -97,7 +98,7 @@ public final class LossyNetwork {
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
-	@ComponentInitializeMethod("flp2p.properties")
+	@ComponentInitializeMethod("lossynetwork.properties")
 	public void init(Properties properties, NeighbourLinks neighbourLinks) {
 		this.neighbourLinks = neighbourLinks;
 		this.localAddress = neighbourLinks.getLocalAddress();
@@ -108,16 +109,16 @@ public final class LossyNetwork {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes( { SetTimerEvent.class, NetworkSendEvent.class })
-	public void handleFlp2pSendEvent(LossyNetworkSendEvent event) {
-		logger.debug("Handling send {} to {}.", event.getFlp2pDeliverEvent(),
-				event.getDestination());
+	public void handleLossyNetworkSendEvent(LossyNetworkSendEvent event) {
+		logger.debug("Handling send {} to {}.", event
+				.getLossyNetworkDeliverEvent(), event.getDestination());
 
 		Address destination = event.getDestination();
 
 		if (destination.equals(localAddress)) {
 			// deliver locally
 			LossyNetworkDeliverEvent deliverEvent = event
-					.getFlp2pDeliverEvent();
+					.getLossyNetworkDeliverEvent();
 			deliverEvent.setSource(localAddress);
 			deliverEvent.setDestination(destination);
 			component.triggerEvent(deliverEvent, deliverChannel);
@@ -133,12 +134,12 @@ public final class LossyNetwork {
 			return;
 		}
 
-		// make a Flp2pNetworkDeliverEvent to be delivered at the destination
-		LossyNetNetworkDeliverEvent flp2pNetworkDeliverEvent = new LossyNetNetworkDeliverEvent(
-				event.getFlp2pDeliverEvent(), localAddress, destination);
+		// make a LossyNetNetworkDeliverEvent to be delivered at the destination
+		LossyNetNetworkDeliverEvent lnNetworkDeliverEvent = new LossyNetNetworkDeliverEvent(
+				event.getLossyNetworkDeliverEvent(), localAddress, destination);
 
-		// create a NetworkSendEvent containing a Flp2pNetworkDeliverEvent
-		NetworkSendEvent nse = new NetworkSendEvent(flp2pNetworkDeliverEvent,
+		// create a NetworkSendEvent containing a LossyNetNetworkDeliverEvent
+		NetworkSendEvent nse = new NetworkSendEvent(lnNetworkDeliverEvent,
 				localAddress, destination, Transport.UDP);
 
 		if (latency > 0) {
@@ -156,22 +157,24 @@ public final class LossyNetwork {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(NetworkSendEvent.class)
-	public void handleFlp2pTimerSignalEvent(LossyNetworkTimerSignalEvent event) {
+	public void handleLossyNetworkTimerSignalEvent(
+			LossyNetworkTimerSignalEvent event) {
 		component.triggerEvent(event.getNetworkSendEvent(), netSendChannel);
 	}
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(LossyNetworkDeliverEvent.class)
-	public void handleFlp2pNetworkDeliverEvent(LossyNetNetworkDeliverEvent event) {
+	public void handleLossyNetNetworkDeliverEvent(
+			LossyNetNetworkDeliverEvent event) {
 		logger.debug("Handling delivery {} from {}.", event
-				.getFlp2pDeliverEvent(), event.getSource());
+				.getLossyNetworkDeliverEvent(), event.getSource());
 
-		LossyNetworkDeliverEvent flp2pDeliverEvent = event
-				.getFlp2pDeliverEvent();
-		flp2pDeliverEvent.setSource(event.getSource());
-		flp2pDeliverEvent.setDestination(event.getDestination());
+		LossyNetworkDeliverEvent lnDeliverEvent = event
+				.getLossyNetworkDeliverEvent();
+		lnDeliverEvent.setSource(event.getSource());
+		lnDeliverEvent.setDestination(event.getDestination());
 
-		// trigger the encapsulated Flp2pDeliverEvent
-		component.triggerEvent(flp2pDeliverEvent, deliverChannel);
+		// trigger the encapsulated LossyNetworkDeliverEvent
+		component.triggerEvent(lnDeliverEvent, deliverChannel);
 	}
 }

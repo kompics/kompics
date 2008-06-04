@@ -15,19 +15,20 @@ public final class PerfectNetworkSendEvent implements Event {
 
 	private final Address destination;
 
-	private final PerfectNetworkDeliverEvent pp2pDeliverEvent;
+	private final PerfectNetworkDeliverEvent perfectNetworkDeliverEvent;
 
-	public PerfectNetworkSendEvent(PerfectNetworkDeliverEvent pp2pDeliverEvent,
+	public PerfectNetworkSendEvent(
+			PerfectNetworkDeliverEvent perfectNetworkDeliverEvent,
 			Address destination) {
 		this.destination = destination;
-		this.pp2pDeliverEvent = pp2pDeliverEvent;
+		this.perfectNetworkDeliverEvent = perfectNetworkDeliverEvent;
 	}
 
 	public final Address getDestination() {
 		return destination;
 	}
 
-	public final PerfectNetworkDeliverEvent getPp2pDeliverEvent() {
-		return pp2pDeliverEvent;
+	public final PerfectNetworkDeliverEvent getPerfectNetworkDeliverEvent() {
+		return perfectNetworkDeliverEvent;
 	}
 }

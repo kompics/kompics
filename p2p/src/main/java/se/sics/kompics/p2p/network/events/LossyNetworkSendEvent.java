@@ -15,19 +15,20 @@ public final class LossyNetworkSendEvent implements Event {
 
 	private final Address destination;
 
-	private final LossyNetworkDeliverEvent flp2pDeliverEvent;
+	private final LossyNetworkDeliverEvent lossyNetworkDeliverEvent;
 
-	public LossyNetworkSendEvent(LossyNetworkDeliverEvent flp2pDeliverEvent,
+	public LossyNetworkSendEvent(
+			LossyNetworkDeliverEvent lossyNetworkDeliverEvent,
 			Address destination) {
 		this.destination = destination;
-		this.flp2pDeliverEvent = flp2pDeliverEvent;
+		this.lossyNetworkDeliverEvent = lossyNetworkDeliverEvent;
 	}
 
 	public final Address getDestination() {
 		return destination;
 	}
 
-	public final LossyNetworkDeliverEvent getFlp2pDeliverEvent() {
-		return flp2pDeliverEvent;
+	public final LossyNetworkDeliverEvent getLossyNetworkDeliverEvent() {
+		return lossyNetworkDeliverEvent;
 	}
 }

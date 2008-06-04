@@ -78,9 +78,11 @@ public final class PerfectNetwork {
 		netDeliverChannel = networkMembrane
 				.getChannel(NetworkDeliverEvent.class);
 
-		component.subscribe(timerSignalChannel, "handlePp2pTimerSignalEvent");
-		component.subscribe(netDeliverChannel, "handlePp2pNetworkDeliverEvent");
-		component.subscribe(this.sendChannel, "handlePp2pSendEvent");
+		component.subscribe(timerSignalChannel,
+				"handlePerfectNetworkTimerSignalEvent");
+		component.subscribe(netDeliverChannel,
+				"handlePerfectNetNetworkDeliverEvent");
+		component.subscribe(this.sendChannel, "handlePerfectNetworkSendEvent");
 	}
 
 	@ComponentShareMethod
@@ -100,28 +102,30 @@ public final class PerfectNetwork {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes( { SetTimerEvent.class, NetworkSendEvent.class })
-	public void handlePp2pSendEvent(PerfectNetworkSendEvent event) {
-		logger.debug("Handling send1 {} to {}.", event.getPp2pDeliverEvent(),
-				event.getDestination());
+	public void handlePerfectNetworkSendEvent(PerfectNetworkSendEvent event) {
+		logger.debug("Handling send1 {} to {}.", event
+				.getPerfectNetworkDeliverEvent(), event.getDestination());
 
 		Address destination = event.getDestination();
 
 		if (destination.equals(localAddress)) {
 			// deliver locally
 			PerfectNetworkDeliverEvent deliverEvent = event
-					.getPp2pDeliverEvent();
+					.getPerfectNetworkDeliverEvent();
 			deliverEvent.setSource(localAddress);
 			deliverEvent.setDestination(destination);
 			component.triggerEvent(deliverEvent, deliverChannel);
 			return;
 		}
 
-		// make a Pp2pNetworkDeliverEvent to be delivered at the destination
-		PerfectNetNetworkDeliverEvent pp2pNetworkDeliverEvent = new PerfectNetNetworkDeliverEvent(
-				event.getPp2pDeliverEvent(), localAddress, destination);
+		// make a PerfectNetNetworkDeliverEvent to be delivered at the
+		// destination
+		PerfectNetNetworkDeliverEvent pnNetworkDeliverEvent = new PerfectNetNetworkDeliverEvent(
+				event.getPerfectNetworkDeliverEvent(), localAddress,
+				destination);
 
-		// create a NetworkSendEvent containing a Pp2pNetworkDeliverEvent
-		NetworkSendEvent nse = new NetworkSendEvent(pp2pNetworkDeliverEvent,
+		// create a NetworkSendEvent containing a PerfectNetNetworkDeliverEvent
+		NetworkSendEvent nse = new NetworkSendEvent(pnNetworkDeliverEvent,
 				localAddress, destination, Transport.TCP);
 
 		LinkDescriptor link = neighbourLinks.getLink(destination.getId());
@@ -141,10 +145,12 @@ public final class PerfectNetwork {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(NetworkSendEvent.class)
-	public void handlePp2pTimerSignalEvent(PerfectNetworkTimerSignalEvent event) {
+	public void handlePerfectNetworkTimerSignalEvent(
+			PerfectNetworkTimerSignalEvent event) {
 		logger.debug("Handling send2 {} to {}.",
 				((PerfectNetNetworkDeliverEvent) event.getNetworkSendEvent()
-						.getNetworkDeliverEvent()).getPp2pDeliverEvent(), event
+						.getNetworkDeliverEvent())
+						.getPerfectNetworkDeliverEvent(), event
 						.getNetworkSendEvent().getDestination());
 
 		component.triggerEvent(event.getNetworkSendEvent(), netSendChannel);
@@ -152,17 +158,17 @@ public final class PerfectNetwork {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(PerfectNetworkDeliverEvent.class)
-	public void handlePp2pNetworkDeliverEvent(
+	public void handlePerfectNetNetworkDeliverEvent(
 			PerfectNetNetworkDeliverEvent event) {
 		logger.debug("Handling delivery {} from {}.", event
-				.getPp2pDeliverEvent(), event.getSource());
+				.getPerfectNetworkDeliverEvent(), event.getSource());
 
-		PerfectNetworkDeliverEvent pp2pDeliverEvent = event
-				.getPp2pDeliverEvent();
-		pp2pDeliverEvent.setSource(event.getSource());
-		pp2pDeliverEvent.setDestination(event.getDestination());
+		PerfectNetworkDeliverEvent pnDeliverEvent = event
+				.getPerfectNetworkDeliverEvent();
+		pnDeliverEvent.setSource(event.getSource());
+		pnDeliverEvent.setDestination(event.getDestination());
 
-		// trigger the encapsulated Pp2pDeliverEvent
-		component.triggerEvent(pp2pDeliverEvent, deliverChannel);
+		// trigger the encapsulated PerfectNetworkDeliverEvent
+		component.triggerEvent(pnDeliverEvent, deliverChannel);
 	}
 }
