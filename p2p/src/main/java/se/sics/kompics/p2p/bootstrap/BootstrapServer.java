@@ -95,7 +95,7 @@ public class BootstrapServer {
 
 	@EventHandlerMethod
 	public void handleStartEvent(StartBootstrapServer event) {
-		logger.info("Started");
+		logger.debug("Started");
 	}
 
 	@EventHandlerMethod
@@ -153,6 +153,8 @@ public class BootstrapServer {
 
 		CacheGetPeersResponse response = new CacheGetPeersResponse(peers);
 		component.triggerEvent(response, pnSendChannel);
+
+		logger.debug("Responded with {} peers", peers.size());
 	}
 
 	private void addPeerToCache(Address address) {
@@ -171,6 +173,8 @@ public class BootstrapServer {
 						new CacheEvictPeer(address, cacheEpoch),
 						timerSignalChannel, evictAfter);
 				entry.setEvictionTimerId(evictionTimerId);
+
+				logger.debug("Added peer {}", address);
 			} else {
 				entry.setRefreshedAt(now);
 
@@ -185,6 +189,8 @@ public class BootstrapServer {
 				// this is slow but not so important in the BootstrapServer
 				mostRecentEntriesFirst.remove(address);
 				mostRecentEntriesFirst.addLast(address);
+
+				logger.debug("Refreshed peer {}", address);
 			}
 		}
 	}
@@ -193,6 +199,8 @@ public class BootstrapServer {
 		if (address != null && epoch == cacheEpoch) {
 			cache.remove(address);
 			mostRecentEntriesFirst.remove(address);
+
+			logger.debug("Removed peer {}", address);
 		}
 	}
 }
