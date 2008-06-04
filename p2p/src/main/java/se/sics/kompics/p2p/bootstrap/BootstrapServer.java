@@ -152,7 +152,9 @@ public class BootstrapServer {
 		}
 
 		CacheGetPeersResponse response = new CacheGetPeersResponse(peers);
-		component.triggerEvent(response, pnSendChannel);
+		PerfectNetworkSendEvent pnSendEvent = new PerfectNetworkSendEvent(
+				response, event.getSource());
+		component.triggerEvent(pnSendEvent, pnSendChannel);
 
 		logger.debug("Responded with {} peers", peers.size());
 	}
