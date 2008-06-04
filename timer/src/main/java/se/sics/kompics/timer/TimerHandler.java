@@ -56,6 +56,14 @@ public class TimerHandler {
 		outstandingTimers.remove(timerId);
 	}
 
+	public void cancelAllOutstandingTimers() {
+		for (long timerId : outstandingTimers) {
+			CancelTimerEvent event = new CancelTimerEvent(component, timerId);
+			component.triggerEvent(event, setTimerChannel, Priority.HIGH);
+		}
+		outstandingTimers.clear();
+	}
+
 	public boolean isOustandingTimer(long timerId) {
 		return outstandingTimers.contains(timerId);
 	}
