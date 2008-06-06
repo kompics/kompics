@@ -129,7 +129,7 @@ public class BootstrapServer {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(CacheGetPeersResponse.class)
+	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
 	public void handleCacheGetPeersRequest(CacheGetPeersRequest event) {
 		int peersMax = event.getPeersMax();
 		HashSet<PeerEntry> peers = new HashSet<PeerEntry>();

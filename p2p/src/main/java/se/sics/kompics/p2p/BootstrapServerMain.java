@@ -30,7 +30,7 @@ import se.sics.kompics.timer.events.SetTimerEvent;
 import se.sics.kompics.timer.events.TimerSignalEvent;
 
 /**
- * The <code>ProtocolsMain</code> class
+ * The <code>BootstrapServerMain</code> class
  * 
  * @author Cosmin Arad
  * @version $Id$

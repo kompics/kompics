@@ -1,15 +1,20 @@
 package se.sics.kompics.p2p;
 
+import java.math.BigInteger;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 
 import org.apache.log4j.PropertyConfigurator;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Kompics;
+import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.NetworkDeliverEvent;
 import se.sics.kompics.network.events.NetworkSendEvent;
+import se.sics.kompics.p2p.network.topology.NeighbourLinks;
 import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
 import se.sics.kompics.timer.events.CancelTimerEvent;
 import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
@@ -31,12 +36,13 @@ public class P2pMain {
 
 	/**
 	 * @param args
+	 * @throws UnknownHostException
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws UnknownHostException {
 		PropertyConfigurator.configureAndWatch(System
 				.getProperty("log4j.properties"), 1000);
 
-		Kompics kompics = new Kompics(1, 0);
+		Kompics kompics = new Kompics(3, 0);
 		Kompics.setGlobalKompics(kompics);
 
 		Component boot = kompics.getBootstrapComponent();
@@ -77,13 +83,17 @@ public class P2pMain {
 		Component webComponent = boot.createComponent(
 				"se.sics.kompics.web.WebComponent", faultChannel,
 				webRequestChannel, webResponseChannel);
-		webComponent.initialize(8080);
+		webComponent.initialize("127.0.0.1", 8080, 5000);
 		webComponent.share("se.sics.kompics.Web");
 
 		// create the PeerCluster component
 		Component peerCluster = boot.createComponent(
 				"se.sics.kompics.p2p.peer.PeerCluster", faultChannel);
-		peerCluster.initialize();
+
+		NeighbourLinks neighbourLinks = new NeighbourLinks(0);
+		neighbourLinks.setLocalAddress(new Address(InetAddress
+				.getByName("127.0.0.1"), 11111, BigInteger.ZERO));
+		peerCluster.initialize(neighbourLinks);
 
 		// create the Application component
 		Component application = boot.createComponent(

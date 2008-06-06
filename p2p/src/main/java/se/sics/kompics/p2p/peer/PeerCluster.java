@@ -9,6 +9,7 @@ import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
+import se.sics.kompics.p2p.network.topology.NeighbourLinks;
 
 /**
  * The <code>PeerCluster</code> class
@@ -31,12 +32,15 @@ public class PeerCluster {
 	@ComponentCreateMethod
 	public void create() {
 		logger.debug("Create");
-		;
 	}
 
 	@ComponentInitializeMethod
-	public void init() {
+	public void init(NeighbourLinks neighbourLinks) {
 		logger.debug("Init");
+		// create a Peer component
+		Component peer = component.createComponent(
+				"se.sics.kompics.p2p.peer.Peer", component.getFaultChannel());
+		peer.initialize(neighbourLinks);
 	}
 
 	@EventHandlerMethod
