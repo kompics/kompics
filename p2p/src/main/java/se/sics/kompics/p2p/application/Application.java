@@ -116,13 +116,26 @@ public class Application {
 	}
 
 	private void doJoinPeer(String op) {
-		BigInteger peerId = new BigInteger(op.substring(1));
+		String[] join = op.substring(1).split("-");
 
-		logger.debug("Sending JoinPeer {}", peerId);
+		if (join.length == 1) {
+			BigInteger peerId = new BigInteger(op.substring(1));
 
-		JoinPeer command = new JoinPeer(peerId);
-		component.triggerEvent(command, peerClusterCommandChannel);
+			logger.debug("Sending JoinPeer {}", peerId);
 
+			JoinPeer command = new JoinPeer(peerId);
+			component.triggerEvent(command, peerClusterCommandChannel);
+		} else {
+			for (int i = Integer.parseInt(join[0]); i <= Integer
+					.parseInt(join[1]); i++) {
+				BigInteger peerId = BigInteger.valueOf(i);
+
+				logger.debug("Sending JoinPeer {}", peerId);
+
+				JoinPeer command = new JoinPeer(peerId);
+				component.triggerEvent(command, peerClusterCommandChannel);
+			}
+		}
 		doNextOperation();
 	}
 
