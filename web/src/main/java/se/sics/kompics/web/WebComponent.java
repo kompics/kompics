@@ -2,7 +2,6 @@ package se.sics.kompics.web;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +24,6 @@ import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
-import se.sics.kompics.network.Address;
 import se.sics.kompics.web.events.WebRequestEvent;
 import se.sics.kompics.web.events.WebResponseEvent;
 
@@ -51,10 +49,6 @@ public final class WebComponent {
 
 	private long requestId;
 
-	private InetAddress localAddress;
-
-	private int localPort;
-
 	public WebComponent(Component component) {
 		this.component = component;
 		activeRequests = new HashMap<WebRequestEvent, LinkedBlockingQueue<WebResponseEvent>>();
@@ -72,13 +66,13 @@ public final class WebComponent {
 	public void init(String host, int port, long requestTimeout)
 			throws Exception {
 
-		localAddress = InetAddress.getByName(host);
-		localPort = port;
 		this.requestTimeout = requestTimeout;
 
 		Server server = new Server();
 		Connector connector = new SelectChannelConnector();
-		connector.setHost(host);
+		if (host != null && !host.equals("")) {
+			connector.setHost(host);
+		}
 		connector.setPort(port);
 		server.setConnectors(new Connector[] { connector });
 
@@ -121,11 +115,10 @@ public final class WebComponent {
 		String[] args = target.split("/");
 
 		String handlerId = args[1];
-		Address handlerAddress = new Address(localAddress, localPort,
-				new BigInteger(handlerId));
 
-		WebRequestEvent requestEvent = new WebRequestEvent(handlerAddress,
-				requestId++, target.substring(target.indexOf('/', 1)));
+		WebRequestEvent requestEvent = new WebRequestEvent(new BigInteger(
+				handlerId), requestId++, target.substring(target
+				.indexOf('/', 1)));
 
 		LinkedBlockingQueue<WebResponseEvent> queue = new LinkedBlockingQueue<WebResponseEvent>();
 

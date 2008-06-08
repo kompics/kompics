@@ -1,8 +1,9 @@
 package se.sics.kompics.web.events;
 
+import java.math.BigInteger;
+
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.EventType;
-import se.sics.kompics.network.Address;
 
 /**
  * The <code>WebRequestEvent</code> class
@@ -15,11 +16,11 @@ public final class WebRequestEvent implements Event {
 
 	private final long id;
 
-	private final Address destination;
+	private final BigInteger destination;
 
 	private final String request;
 
-	public WebRequestEvent(Address destination, long id, String request) {
+	public WebRequestEvent(BigInteger destination, long id, String request) {
 		super();
 		this.destination = destination;
 		this.id = id;
@@ -30,7 +31,7 @@ public final class WebRequestEvent implements Event {
 		return id;
 	}
 
-	public Address getDestination() {
+	public BigInteger destination() {
 		return destination;
 	}
 
