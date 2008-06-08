@@ -1,5 +1,6 @@
 package se.sics.kompics.p2p.network;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 
 import org.slf4j.Logger;
@@ -24,8 +25,7 @@ import se.sics.kompics.p2p.network.events.PerfectNetNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkTimerSignalEvent;
-import se.sics.kompics.p2p.network.topology.LinkDescriptor;
-import se.sics.kompics.p2p.network.topology.NeighbourLinks;
+import se.sics.kompics.p2p.network.topology.KingMatrix;
 import se.sics.kompics.timer.events.SetTimerEvent;
 import se.sics.kompics.timer.events.TimerSignalEvent;
 
@@ -52,9 +52,11 @@ public final class PerfectNetwork {
 	// network channels
 	private Channel netSendChannel, netDeliverChannel;
 
-	private NeighbourLinks neighbourLinks;
-
 	private Address localAddress;
+
+	private int[][] king = KingMatrix.KING;
+
+	private int localKingId;
 
 	public PerfectNetwork(Component component) {
 		this.component = component;
@@ -95,9 +97,13 @@ public final class PerfectNetwork {
 	}
 
 	@ComponentInitializeMethod
-	public void init(NeighbourLinks neighbourLinks) {
-		this.neighbourLinks = neighbourLinks;
-		this.localAddress = neighbourLinks.getLocalAddress();
+	public void init(Address localAddress) {
+		this.localAddress = localAddress;
+
+		BigInteger kingId = localAddress.getId().mod(
+				BigInteger.valueOf(KingMatrix.SIZE));
+
+		this.localKingId = kingId.intValue();
 	}
 
 	@EventHandlerMethod
@@ -128,8 +134,8 @@ public final class PerfectNetwork {
 		NetworkSendEvent nse = new NetworkSendEvent(pnNetworkDeliverEvent,
 				localAddress, destination, Transport.TCP);
 
-		LinkDescriptor link = neighbourLinks.getLink(destination.getId());
-		long latency = link.getLatency();
+		long latency = king[localKingId][destination.getId().mod(
+				BigInteger.valueOf(KingMatrix.SIZE)).intValue()];
 		if (latency > 0) {
 			// delay the sending according to the latency
 			PerfectNetworkTimerSignalEvent tse = new PerfectNetworkTimerSignalEvent(

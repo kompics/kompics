@@ -22,7 +22,6 @@ import se.sics.kompics.p2p.bootstrap.BootstrapServer;
 import se.sics.kompics.p2p.bootstrap.events.StartBootstrapServer;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
-import se.sics.kompics.p2p.network.topology.NeighbourLinks;
 import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
 import se.sics.kompics.timer.events.CancelTimerEvent;
 import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
@@ -64,8 +63,8 @@ public final class BootstrapServerMain {
 		long evictAfterSeconds = Long.parseLong(properties.getProperty(
 				"evict.after", "600"));
 
-		NeighbourLinks neighbourLinks = new NeighbourLinks(0);
-		neighbourLinks.setLocalAddress(new Address(ip, port, BigInteger.ZERO));
+		SocketAddress localSocketAddress = new InetSocketAddress(ip, port);
+		Address localAddress = new Address(ip, port, BigInteger.ZERO);
 
 		Kompics kompics = new Kompics(2, 0);
 		Kompics.setGlobalKompics(kompics);
@@ -94,10 +93,7 @@ public final class BootstrapServerMain {
 		Component networkComponent = boot.createComponent(
 				"se.sics.kompics.network.NetworkComponent", faultChannel,
 				networkSendChannel, networkDeliverChannel);
-		Address localAddress = neighbourLinks.getLocalAddress();
-		SocketAddress socketAddress = new InetSocketAddress(localAddress
-				.getIp(), localAddress.getPort());
-		networkComponent.initialize(socketAddress);
+		networkComponent.initialize(localSocketAddress);
 		networkComponent.share("se.sics.kompics.Network");
 
 		// create channels for the PerfectNetwork component
@@ -110,7 +106,7 @@ public final class BootstrapServerMain {
 		Component pnComponent = boot.createComponent(
 				"se.sics.kompics.p2p.network.PerfectNetwork", faultChannel,
 				pnSendChannel, pnDeliverChannel);
-		pnComponent.initialize(neighbourLinks);
+		pnComponent.initialize(localAddress);
 		pnComponent.share("se.sics.kompics.p2p.network.PerfectNetwork");
 
 		// create channel for the BootstrapServer component

@@ -1,6 +1,7 @@
 package se.sics.kompics.p2p.peer;
 
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 
 import org.slf4j.Logger;
@@ -14,7 +15,7 @@ import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
-import se.sics.kompics.p2p.network.topology.NeighbourLinks;
+import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
 import se.sics.kompics.p2p.peer.events.LeavePeer;
@@ -35,7 +36,7 @@ public class PeerCluster {
 
 	private final HashMap<BigInteger, ComponentMembrane> peers;
 
-	private NeighbourLinks neighbourLinks;
+	private InetSocketAddress localSocketAddress;
 
 	public PeerCluster(Component component) {
 		this.component = component;
@@ -52,9 +53,9 @@ public class PeerCluster {
 	}
 
 	@ComponentInitializeMethod
-	public void init(NeighbourLinks neighbourLinks) {
+	public void init(InetSocketAddress localSocketAddress) {
 		logger.debug("Init");
-		this.neighbourLinks = neighbourLinks;
+		this.localSocketAddress = localSocketAddress;
 	}
 
 	@EventHandlerMethod
@@ -90,7 +91,8 @@ public class PeerCluster {
 		Component peer = component.createComponent(
 				"se.sics.kompics.p2p.peer.Peer", component.getFaultChannel(),
 				peerChannel);
-		peer.initialize(neighbourLinks);
+		peer.initialize(new Address(localSocketAddress.getAddress(),
+				localSocketAddress.getPort(), peerId));
 
 		// create a membrane for the port instance component
 		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();

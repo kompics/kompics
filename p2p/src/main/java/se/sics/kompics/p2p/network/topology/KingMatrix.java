@@ -13,6 +13,8 @@ public final class KingMatrix {
 
 	public static final int KING[][];
 
+	public static final int SIZE = 1740;
+
 	static {
 		int king[][];
 		try {

@@ -1,9 +1,6 @@
 package se.sics.kompics.p2p;
 
-import java.math.BigInteger;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
 import org.apache.log4j.PropertyConfigurator;
@@ -13,11 +10,9 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Kompics;
-import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.NetworkDeliverEvent;
 import se.sics.kompics.network.events.NetworkSendEvent;
 import se.sics.kompics.p2p.application.events.StartApplication;
-import se.sics.kompics.p2p.network.topology.NeighbourLinks;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
 import se.sics.kompics.p2p.peer.events.LeavePeer;
@@ -81,7 +76,8 @@ public class P2pMain {
 				"se.sics.kompics.network.NetworkComponent", faultChannel,
 				networkSendChannel, networkDeliverChannel);
 
-		SocketAddress socketAddress = new InetSocketAddress("127.0.0.1", 9090);
+		InetSocketAddress socketAddress = new InetSocketAddress("127.0.0.1",
+				9090);
 
 		networkComponent.initialize(socketAddress);
 		networkComponent.share("se.sics.kompics.Network");
@@ -106,10 +102,7 @@ public class P2pMain {
 				"se.sics.kompics.p2p.peer.PeerCluster", faultChannel,
 				peerClusterChannel);
 
-		NeighbourLinks neighbourLinks = new NeighbourLinks(0);
-		neighbourLinks.setLocalAddress(new Address(InetAddress
-				.getByName("127.0.0.1"), 11111, BigInteger.ZERO));
-		peerCluster.initialize(neighbourLinks);
+		peerCluster.initialize(socketAddress);
 
 		// create channel for the Application component
 		Channel appStartChannel = boot.createChannel(StartApplication.class);

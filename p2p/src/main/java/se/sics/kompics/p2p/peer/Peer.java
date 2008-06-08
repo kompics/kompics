@@ -18,7 +18,6 @@ import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
-import se.sics.kompics.p2p.network.topology.NeighbourLinks;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
 import se.sics.kompics.p2p.peer.events.LeavePeer;
@@ -50,8 +49,8 @@ public class Peer {
 	}
 
 	@ComponentInitializeMethod
-	public void init(NeighbourLinks neighbourLinks) {
-		peerAddress = neighbourLinks.getLocalAddress();
+	public void init(Address localAddress) {
+		peerAddress = localAddress;
 
 		logger = LoggerFactory.getLogger(Peer.class.getName() + "@"
 				+ peerAddress.getId());
@@ -66,7 +65,7 @@ public class Peer {
 		Component pnComponent = component.createComponent(
 				"se.sics.kompics.p2p.network.PerfectNetwork", component
 						.getFaultChannel(), pnSendChannel, pnDeliverChannel);
-		pnComponent.initialize(neighbourLinks);
+		pnComponent.initialize(peerAddress);
 		pnComponent.share("se.sics.kompics.p2p.network.PerfectNetwork");
 
 		// create channels for the LossyNetwork component
@@ -79,7 +78,7 @@ public class Peer {
 		Component lnComponent = component.createComponent(
 				"se.sics.kompics.p2p.network.LossyNetwork", component
 						.getFaultChannel(), lnSendChannel, lnDeliverChannel);
-		lnComponent.initialize(neighbourLinks);
+		lnComponent.initialize(peerAddress);
 		lnComponent.share("se.sics.kompics.p2p.network.LossyNetwork");
 
 		// create channels for the BootstrapClient component

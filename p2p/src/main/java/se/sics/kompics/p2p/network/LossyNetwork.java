@@ -1,5 +1,6 @@
 package se.sics.kompics.p2p.network;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Random;
@@ -26,8 +27,7 @@ import se.sics.kompics.p2p.network.events.LossyNetNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkTimerSignalEvent;
-import se.sics.kompics.p2p.network.topology.LinkDescriptor;
-import se.sics.kompics.p2p.network.topology.NeighbourLinks;
+import se.sics.kompics.p2p.network.topology.KingMatrix;
 import se.sics.kompics.timer.events.SetTimerEvent;
 import se.sics.kompics.timer.events.TimerSignalEvent;
 
@@ -54,11 +54,15 @@ public final class LossyNetwork {
 	// Network channels
 	private Channel netSendChannel, netDeliverChannel;
 
-	private NeighbourLinks neighbourLinks;
-
 	private Address localAddress;
 
+	private int[][] king = KingMatrix.KING;
+
+	private int localKingId;
+
 	private Random random;
+
+	private double lossRate;
 
 	public LossyNetwork(Component component) {
 		this.component = component;
@@ -99,12 +103,19 @@ public final class LossyNetwork {
 	}
 
 	@ComponentInitializeMethod("lossynetwork.properties")
-	public void init(Properties properties, NeighbourLinks neighbourLinks) {
-		this.neighbourLinks = neighbourLinks;
-		this.localAddress = neighbourLinks.getLocalAddress();
+	public void init(Properties properties, Address localAddress) {
+		this.localAddress = localAddress;
+
+		BigInteger kingId = localAddress.getId().mod(
+				BigInteger.valueOf(KingMatrix.SIZE));
+
+		this.localKingId = kingId.intValue();
 
 		String lossSeed = properties.getProperty("loss.random.seed", "0");
 		random = new Random(Long.parseLong(lossSeed));
+
+		lossRate = Double.parseDouble(properties.getProperty(
+				"global.loss.rate", "0.0"));
 	}
 
 	@EventHandlerMethod
@@ -125,10 +136,6 @@ public final class LossyNetwork {
 			return;
 		}
 
-		LinkDescriptor link = neighbourLinks.getLink(destination.getId());
-		long latency = link.getLatency();
-		double lossRate = link.getLossRate();
-
 		if (random.nextDouble() < lossRate) {
 			// drop the message according to the loss rate
 			return;
@@ -142,6 +149,8 @@ public final class LossyNetwork {
 		NetworkSendEvent nse = new NetworkSendEvent(lnNetworkDeliverEvent,
 				localAddress, destination, Transport.UDP);
 
+		long latency = king[localKingId][destination.getId().mod(
+				BigInteger.valueOf(KingMatrix.SIZE)).intValue()];
 		if (latency > 0) {
 			// delay the sending according to the latency
 			LossyNetworkTimerSignalEvent tse = new LossyNetworkTimerSignalEvent(
