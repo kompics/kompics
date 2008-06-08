@@ -7,6 +7,8 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
 import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
@@ -14,7 +16,11 @@ import se.sics.kompics.api.Kompics;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.NetworkDeliverEvent;
 import se.sics.kompics.network.events.NetworkSendEvent;
+import se.sics.kompics.p2p.application.events.StartApplication;
 import se.sics.kompics.p2p.network.topology.NeighbourLinks;
+import se.sics.kompics.p2p.peer.events.FailPeer;
+import se.sics.kompics.p2p.peer.events.JoinPeer;
+import se.sics.kompics.p2p.peer.events.LeavePeer;
 import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
 import se.sics.kompics.timer.events.CancelTimerEvent;
 import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
@@ -31,8 +37,7 @@ import se.sics.kompics.web.events.WebResponseEvent;
  */
 public class P2pMain {
 
-	// private static final Logger logger =
-	// LoggerFactory.getLogger(P2pMain.class);
+	private static final Logger logger = LoggerFactory.getLogger(P2pMain.class);
 
 	/**
 	 * @param args
@@ -41,6 +46,12 @@ public class P2pMain {
 	public static void main(String[] args) throws UnknownHostException {
 		PropertyConfigurator.configureAndWatch(System
 				.getProperty("log4j.properties"), 1000);
+
+		if (args.length != 1) {
+			logger.error("usage: ProtocolsMain <command>");
+			return;
+		}
+		String command = args[0];
 
 		Kompics kompics = new Kompics(3, 0);
 		Kompics.setGlobalKompics(kompics);
@@ -86,24 +97,29 @@ public class P2pMain {
 		webComponent.initialize("127.0.0.1", 8080, 5000);
 		webComponent.share("se.sics.kompics.Web");
 
+		// create channel for the PeerCluster component
+		Channel peerClusterChannel = boot.createChannel(JoinPeer.class,
+				LeavePeer.class, FailPeer.class);
+
 		// create the PeerCluster component
 		Component peerCluster = boot.createComponent(
-				"se.sics.kompics.p2p.peer.PeerCluster", faultChannel);
+				"se.sics.kompics.p2p.peer.PeerCluster", faultChannel,
+				peerClusterChannel);
 
 		NeighbourLinks neighbourLinks = new NeighbourLinks(0);
 		neighbourLinks.setLocalAddress(new Address(InetAddress
 				.getByName("127.0.0.1"), 11111, BigInteger.ZERO));
 		peerCluster.initialize(neighbourLinks);
 
+		// create channel for the Application component
+		Channel appStartChannel = boot.createChannel(StartApplication.class);
+
 		// create the Application component
 		Component application = boot.createComponent(
-				"se.sics.kompics.p2p.application.Application", faultChannel);
+				"se.sics.kompics.p2p.application.Application", faultChannel,
+				appStartChannel, peerClusterChannel);
 		application.initialize();
 
-		// peerCluster.initialize(neighbourLinks, new Integer(1));
-		// peerCluster.triggerEvent(new ApplicationStartEvent(command),
-		// appStartChannel);
-
-		System.out.println("DONE");
+		boot.triggerEvent(new StartApplication(command), appStartChannel);
 	}
 }

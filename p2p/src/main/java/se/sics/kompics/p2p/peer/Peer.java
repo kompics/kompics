@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
@@ -20,6 +19,9 @@ import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.p2p.network.topology.NeighbourLinks;
+import se.sics.kompics.p2p.peer.events.FailPeer;
+import se.sics.kompics.p2p.peer.events.JoinPeer;
+import se.sics.kompics.p2p.peer.events.LeavePeer;
 
 /**
  * The <code>Peer</code> class
@@ -41,7 +43,10 @@ public class Peer {
 	}
 
 	@ComponentCreateMethod
-	public void create() {
+	public void create(Channel peerCommandChannel) {
+		component.subscribe(peerCommandChannel, "handleJoinPeer");
+		component.subscribe(peerCommandChannel, "handleLeavePeer");
+		component.subscribe(peerCommandChannel, "handleFailPeer");
 	}
 
 	@ComponentInitializeMethod
@@ -101,6 +106,17 @@ public class Peer {
 	}
 
 	@EventHandlerMethod
-	public void handle(Event event) {
+	public void handleJoinPeer(JoinPeer event) {
+		logger.debug("Joined");
+	}
+
+	@EventHandlerMethod
+	public void handleLeavePeer(LeavePeer event) {
+		logger.debug("Leaved");
+	}
+
+	@EventHandlerMethod
+	public void handleFailPeer(FailPeer event) {
+		logger.debug("Failed");
 	}
 }
