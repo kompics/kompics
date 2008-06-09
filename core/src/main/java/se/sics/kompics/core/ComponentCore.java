@@ -1,6 +1,5 @@
 package se.sics.kompics.core;
 
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -545,40 +544,30 @@ public class ComponentCore {
 	public void initialize(Object... args) {
 		// TODO uniform fault handling in share and init
 		Method initializeMethod = factoryCore.getInitializeMethod();
-		String initializeConfigFileName = factoryCore
-				.getConfigurationFileName();
-		Class<?> handlerComponentClass = handlerObject.getClass();
+		Properties initializeConfigProperties = factoryCore
+				.getConfigurationProperties();
 
 		if (initializeMethod != null) {
 			try {
 				// invoke the initialize method ...
 				if (args == null) {
-					if (!initializeConfigFileName.equals("")) {
-						Properties properties = new Properties();
-						InputStream inputStream = handlerComponentClass
-								.getResourceAsStream(initializeConfigFileName);
-						properties.load(inputStream);
-
+					if (initializeConfigProperties != null) {
 						// ... with a properties argument
-						initializeMethod.invoke(handlerObject, properties);
+						initializeMethod.invoke(handlerObject,
+								initializeConfigProperties);
 					} else {
 						// ... with no argument
 						initializeMethod.invoke(handlerObject);
 					}
 				} else {
-					if (!initializeConfigFileName.equals("")) {
-						Properties properties = new Properties();
-						InputStream inputStream = handlerComponentClass
-								.getResourceAsStream(initializeConfigFileName);
-						properties.load(inputStream);
-
+					if (initializeConfigProperties != null) {
 						// ... with a properties and init parameters
 						// arguments
 						Object[] arguments = new Object[args.length + 1];
 						for (int i = 0; i < args.length; i++) {
 							arguments[i + 1] = args[i];
 						}
-						arguments[0] = properties;
+						arguments[0] = initializeConfigProperties;
 						initializeMethod.invoke(handlerObject, arguments);
 					} else {
 						// ... with init parameters arguments

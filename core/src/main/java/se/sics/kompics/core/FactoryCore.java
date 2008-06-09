@@ -1,10 +1,13 @@
 package se.sics.kompics.core;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
@@ -14,9 +17,9 @@ import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
+import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
 import se.sics.kompics.api.annotation.ComponentStopMethod;
-import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventGuardMethod;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
@@ -90,7 +93,8 @@ public class FactoryCore {
 	private Method createMethod;
 
 	/**
-	 * The number of Channel parameters taken by the <code>create</code> method.
+	 * The number of Channel parameters taken by the <code>create</code>
+	 * method.
 	 */
 	private int createParameterCount;
 
@@ -100,7 +104,8 @@ public class FactoryCore {
 	private Method shareMethod;
 
 	/**
-	 * The <code>initialize</code> method of the component implementation class.
+	 * The <code>initialize</code> method of the component implementation
+	 * class.
 	 */
 	private Method initializeMethod;
 
@@ -108,7 +113,7 @@ public class FactoryCore {
 	 * The name of the file containing properties used to initialize the
 	 * component.
 	 */
-	private String initializeConfigFileName;
+	private Properties initializeConfigProperties;
 
 	/**
 	 * The <code>destroy</code> method of the component implementation class.
@@ -157,7 +162,8 @@ public class FactoryCore {
 	 * Reflects the implementation class of the component type.
 	 */
 	private void reflectHandlerComponentClass() {
-		if (!handlerComponentClass.isAnnotationPresent(ComponentSpecification.class)) {
+		if (!handlerComponentClass
+				.isAnnotationPresent(ComponentSpecification.class)) {
 			// Annotation[] annotations =
 			// handlerComponentClass.getAnnotations();
 			throw new RuntimeException("Class " + handlerComponentClassName
@@ -305,7 +311,21 @@ public class FactoryCore {
 
 				ComponentInitializeMethod initializeMethodAnnotation = method
 						.getAnnotation(ComponentInitializeMethod.class);
-				initializeConfigFileName = initializeMethodAnnotation.value();
+
+				String configFileName = initializeMethodAnnotation.value();
+				if (configFileName != null && !configFileName.equals("")) {
+					initializeConfigProperties = new Properties();
+					InputStream inputStream = handlerComponentClass
+							.getResourceAsStream(configFileName);
+					try {
+						initializeConfigProperties.load(inputStream);
+					} catch (IOException e) {
+						throw new RuntimeException(
+								"Cannot read initialization properties file", e);
+					}
+				} else {
+					initializeConfigProperties = null;
+				}
 			}
 			// reflect the component's destroy method
 			if (method.isAnnotationPresent(ComponentDestroyMethod.class)) {
@@ -465,8 +485,8 @@ public class FactoryCore {
 	 * @return the name of the component configuration properties file if
 	 *         annotated in the component class.
 	 */
-	public String getConfigurationFileName() {
-		return initializeConfigFileName;
+	public Properties getConfigurationProperties() {
+		return initializeConfigProperties;
 	}
 
 	/**
