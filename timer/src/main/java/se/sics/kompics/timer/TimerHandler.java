@@ -35,13 +35,6 @@ public class TimerHandler {
 
 	public long setTimer(TimerSignalEvent timerExpiredEvent,
 			Channel timeoutChannel, long delay) {
-
-		if (!timeoutChannel.hasEventType(timerExpiredEvent.getClass())) {
-			throw new RuntimeException("Cannot accept a "
-					+ timerExpiredEvent.getClass().getCanonicalName()
-					+ " on the given channel");
-		}
-
 		SetTimerEvent event = new SetTimerEvent(++nextTimerId,
 				timerExpiredEvent, timeoutChannel, component, delay);
 

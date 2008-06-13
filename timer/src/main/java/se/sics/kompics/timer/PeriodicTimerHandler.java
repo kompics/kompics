@@ -35,13 +35,6 @@ public class PeriodicTimerHandler {
 
 	public long setPeriodicTimer(TimerSignalEvent timerExpiredEvent,
 			Channel timeoutChannel, long delay, long period) {
-
-		if (!timeoutChannel.hasEventType(timerExpiredEvent.getClass())) {
-			throw new RuntimeException("Cannot accept a "
-					+ timerExpiredEvent.getClass().getCanonicalName()
-					+ " on the given channel");
-		}
-
 		SetPeriodicTimerEvent event = new SetPeriodicTimerEvent(
 				++nextPeriodicTimerId, timerExpiredEvent, timeoutChannel,
 				component, delay, period);
