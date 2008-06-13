@@ -73,8 +73,9 @@ public class BootstrapClient {
 	public void init(Properties properties, Address peerAddress)
 			throws UnknownHostException {
 		InetAddress ip = InetAddress.getByName(properties
-				.getProperty("server.ip"));
-		int port = Integer.parseInt(properties.getProperty("server.port"));
+				.getProperty("bootstrap.server.ip"));
+		int port = Integer.parseInt(properties
+				.getProperty("bootstrap.server.port"));
 
 		bootstrapServerAddress = new Address(ip, port, BigInteger.ZERO);
 		localPeerAddress = peerAddress;

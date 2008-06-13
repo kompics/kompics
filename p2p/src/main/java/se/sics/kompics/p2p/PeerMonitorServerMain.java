@@ -18,10 +18,9 @@ import se.sics.kompics.api.Kompics;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.NetworkDeliverEvent;
 import se.sics.kompics.network.events.NetworkSendEvent;
-import se.sics.kompics.p2p.bootstrap.BootstrapServer;
-import se.sics.kompics.p2p.bootstrap.events.StartBootstrapServer;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
+import se.sics.kompics.p2p.monitor.PeerMonitorServer;
+import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
+import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
 import se.sics.kompics.timer.events.CancelTimerEvent;
 import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
@@ -29,15 +28,15 @@ import se.sics.kompics.timer.events.SetTimerEvent;
 import se.sics.kompics.timer.events.TimerSignalEvent;
 
 /**
- * The <code>BootstrapServerMain</code> class
+ * The <code>PeerMonitorServerMain</code> class
  * 
  * @author Cosmin Arad
- * @version $Id$
+ * @version $Id: PeerMonitorServerMain.java 151 2008-06-08 21:42:03Z Cosmin $
  */
-public final class BootstrapServerMain {
+public final class PeerMonitorServerMain {
 
 	private static final Logger logger = LoggerFactory
-			.getLogger(BootstrapServerMain.class);
+			.getLogger(PeerMonitorServerMain.class);
 
 	/**
 	 * @param args
@@ -52,16 +51,16 @@ public final class BootstrapServerMain {
 				.getProperty("log4j.properties"), 1000);
 
 		Properties properties = new Properties();
-		InputStream inputStream = BootstrapServer.class
-				.getResourceAsStream("bootstrap.properties");
+		InputStream inputStream = PeerMonitorServer.class
+				.getResourceAsStream("monitor.properties");
 		properties.load(inputStream);
 
 		InetAddress ip = InetAddress.getByName(properties.getProperty(
-				"bootstrap.server.ip", ""));
+				"monitor.server.ip", ""));
 		int port = Integer.parseInt(properties.getProperty(
-				"bootstrap.server.port", "8181"));
-		long evictAfterSeconds = Long.parseLong(properties.getProperty(
-				"cache.evict.after", "600"));
+				"monitor.server.port", "9191"));
+		long updatePeriod = Long.parseLong(properties.getProperty(
+				"update.period", "60"));
 
 		SocketAddress localSocketAddress = new InetSocketAddress(ip, port);
 		Address localAddress = new Address(ip, port, BigInteger.ZERO);
@@ -96,30 +95,23 @@ public final class BootstrapServerMain {
 		networkComponent.initialize(localSocketAddress);
 		networkComponent.share("se.sics.kompics.Network");
 
-		// create channels for the PerfectNetwork component
-		Channel pnSendChannel = boot
-				.createChannel(PerfectNetworkSendEvent.class);
-		Channel pnDeliverChannel = boot
-				.createChannel(PerfectNetworkDeliverEvent.class);
+		// create channels for the LossyNetwork component
+		Channel lnSendChannel = boot.createChannel(LossyNetworkSendEvent.class);
+		Channel lnDeliverChannel = boot
+				.createChannel(LossyNetworkDeliverEvent.class);
 
-		// create and share the PerfectNetwork component
-		Component pnComponent = boot.createComponent(
-				"se.sics.kompics.p2p.network.PerfectNetwork", faultChannel,
-				pnSendChannel, pnDeliverChannel);
-		pnComponent.initialize(localAddress);
-		pnComponent.share("se.sics.kompics.p2p.network.PerfectNetwork");
+		// create and share the LossyNetwork component
+		Component lnComponent = boot.createComponent(
+				"se.sics.kompics.p2p.network.LossyNetwork", faultChannel,
+				lnSendChannel, lnDeliverChannel);
+		lnComponent.initialize(localAddress);
+		lnComponent.share("se.sics.kompics.p2p.network.LossyNetwork");
 
-		// create channel for the BootstrapServer component
-		Channel bsStartChannel = boot.createChannel(StartBootstrapServer.class);
+		// create the PeerMonitorServer component
+		Component peerMonitorServer = boot.createComponent(
+				"se.sics.kompics.p2p.monitor.PeerMonitorServer", faultChannel);
+		peerMonitorServer.initialize(updatePeriod);
 
-		// create the BootstrapServer component
-		Component bsComponent = boot.createComponent(
-				"se.sics.kompics.p2p.bootstrap.BootstrapServer", faultChannel,
-				bsStartChannel);
-		bsComponent.initialize(evictAfterSeconds);
-
-		bsComponent.triggerEvent(new StartBootstrapServer(), bsStartChannel);
-
-		logger.info("BootstrapServer started");
+		logger.info("PeerMonitorServer initialized");
 	}
 }

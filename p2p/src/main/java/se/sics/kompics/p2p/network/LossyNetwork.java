@@ -40,8 +40,7 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
 @ComponentSpecification
 public final class LossyNetwork {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(LossyNetwork.class);
+	private Logger logger;
 
 	private Component component;
 
@@ -105,6 +104,9 @@ public final class LossyNetwork {
 	@ComponentInitializeMethod("lossynetwork.properties")
 	public void init(Properties properties, Address localAddress) {
 		this.localAddress = localAddress;
+
+		logger = LoggerFactory.getLogger(LossyNetwork.class.getName() + "@"
+				+ localAddress.getId());
 
 		BigInteger kingId = localAddress.getId().mod(
 				BigInteger.valueOf(KingMatrix.SIZE));

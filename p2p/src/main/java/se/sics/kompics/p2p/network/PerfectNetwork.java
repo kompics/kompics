@@ -38,8 +38,7 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
 @ComponentSpecification
 public final class PerfectNetwork {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(PerfectNetwork.class);
+	private Logger logger;
 
 	private Component component;
 
@@ -99,6 +98,9 @@ public final class PerfectNetwork {
 	@ComponentInitializeMethod
 	public void init(Address localAddress) {
 		this.localAddress = localAddress;
+
+		logger = LoggerFactory.getLogger(PerfectNetwork.class.getName() + "@"
+				+ localAddress.getId());
 
 		BigInteger kingId = localAddress.getId().mod(
 				BigInteger.valueOf(KingMatrix.SIZE));

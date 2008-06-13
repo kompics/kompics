@@ -14,6 +14,10 @@ import se.sics.kompics.p2p.bootstrap.events.BootstrapCacheReset;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCompleted;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapRequest;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapResponse;
+import se.sics.kompics.p2p.fd.events.StartProbingPeer;
+import se.sics.kompics.p2p.fd.events.StopProbingPeer;
+import se.sics.kompics.p2p.monitor.events.StartPeerMonitor;
+import se.sics.kompics.p2p.monitor.events.StopPeerMonitor;
 import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
@@ -81,6 +85,12 @@ public class Peer {
 		lnComponent.initialize(peerAddress);
 		lnComponent.share("se.sics.kompics.p2p.network.LossyNetwork");
 
+		// create the WebHandler component
+		Component webHandler = component.createComponent(
+				"se.sics.kompics.p2p.web.WebHandler", component
+						.getFaultChannel());
+		webHandler.initialize(peerAddress);
+
 		// create channels for the BootstrapClient component
 		Channel bootRequestChannel = component.createChannel(
 				BootstrapRequest.class, BootstrapCompleted.class,
@@ -95,11 +105,26 @@ public class Peer {
 				bootResponseChannel);
 		bootstrapClient.initialize(peerAddress);
 
-		// create the WebHandler component
-		Component webHandler = component.createComponent(
-				"se.sics.kompics.p2p.web.WebHandler", component
-						.getFaultChannel());
-		webHandler.initialize(peerAddress);
+		// create channel for the FailureDetector component
+		Channel fdRequestChannel = component.createChannel(
+				StartProbingPeer.class, StopProbingPeer.class);
+
+		// create and share the FailureDetector component
+		Component fdComponent = component.createComponent(
+				"se.sics.kompics.p2p.fd.FailureDetector", component
+						.getFaultChannel(), fdRequestChannel);
+		fdComponent.initialize(peerAddress);
+		fdComponent.share("se.sics.kompics.p2p.fd.FailureDetector");
+
+		// create channel for the PeerMonitorClient component
+		Channel pmcRequestChannel = component.createChannel(
+				StartPeerMonitor.class, StopPeerMonitor.class);
+
+		// create the PeerMonitorClient component
+		Component peerMonitorClient = component.createComponent(
+				"se.sics.kompics.p2p.monitor.PeerMonitorClient", component
+						.getFaultChannel(), pmcRequestChannel);
+		peerMonitorClient.initialize(peerAddress);
 
 		logger.debug("Init");
 	}
