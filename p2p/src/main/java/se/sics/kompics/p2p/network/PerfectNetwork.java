@@ -10,6 +10,7 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
+import se.sics.kompics.api.EventAttributeFilter;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
@@ -27,7 +28,6 @@ import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkTimerSignalEvent;
 import se.sics.kompics.p2p.network.topology.KingMatrix;
 import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
 
 /**
  * The <code>PeerMonitor</code> class
@@ -70,7 +70,10 @@ public final class PerfectNetwork {
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
 		timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane.getChannel(TimerSignalEvent.class);
+
+		// use a private channel for TimerSignal events
+		timerSignalChannel = component
+				.createChannel(PerfectNetworkTimerSignalEvent.class);
 
 		// use shared network component
 		ComponentMembrane networkMembrane = component
@@ -81,8 +84,6 @@ public final class PerfectNetwork {
 
 		component.subscribe(timerSignalChannel,
 				"handlePerfectNetworkTimerSignalEvent");
-		component.subscribe(netDeliverChannel,
-				"handlePerfectNetNetworkDeliverEvent");
 		component.subscribe(this.sendChannel, "handlePerfectNetworkSendEvent");
 	}
 
@@ -106,6 +107,14 @@ public final class PerfectNetwork {
 				BigInteger.valueOf(KingMatrix.SIZE));
 
 		this.localKingId = kingId.intValue();
+
+		EventAttributeFilter destinationFilter = new EventAttributeFilter(
+				"getDestination", localAddress);
+
+		component.subscribe(netDeliverChannel,
+				"handlePerfectNetNetworkDeliverEvent", destinationFilter);
+		logger.debug("Subscribed for PerfectNetNetDeliver with destination {}",
+				localAddress);
 	}
 
 	@EventHandlerMethod

@@ -3,6 +3,9 @@ package se.sics.kompics.p2p.monitor;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
@@ -22,6 +25,9 @@ import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
  */
 @ComponentSpecification
 public class PeerMonitorServer {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(PeerMonitorServer.class);
 
 	private final Component component;
 
@@ -60,5 +66,7 @@ public class PeerMonitorServer {
 		Map<String, Object> peerData = event.getPeerData();
 
 		p2pNetworkData.put(peerAddress, peerData);
+
+		logger.debug("Got notification from peer {}", peerAddress);
 	}
 }

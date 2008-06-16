@@ -39,6 +39,8 @@ public class Peer {
 
 	private final Component component;
 
+	private Channel peerChannel;
+
 	private Address peerAddress;
 
 	public Peer(Component component) {
@@ -46,10 +48,12 @@ public class Peer {
 	}
 
 	@ComponentCreateMethod
-	public void create(Channel peerCommandChannel) {
-		component.subscribe(peerCommandChannel, "handleJoinPeer");
-		component.subscribe(peerCommandChannel, "handleLeavePeer");
-		component.subscribe(peerCommandChannel, "handleFailPeer");
+	public void create(Channel peerChannel) {
+		this.peerChannel = peerChannel;
+
+		component.subscribe(peerChannel, "handleJoinPeer");
+		component.subscribe(peerChannel, "handleLeavePeer");
+		component.subscribe(peerChannel, "handleFailPeer");
 	}
 
 	@ComponentInitializeMethod
@@ -104,6 +108,7 @@ public class Peer {
 						.getFaultChannel(), bootRequestChannel,
 				bootResponseChannel);
 		bootstrapClient.initialize(peerAddress);
+		bootstrapClient.share("se.sics.kompics.p2p.bootstrap.BootstrapClient");
 
 		// create channel for the FailureDetector component
 		Channel fdRequestChannel = component.createChannel(
@@ -125,6 +130,15 @@ public class Peer {
 				"se.sics.kompics.p2p.monitor.PeerMonitorClient", component
 						.getFaultChannel(), pmcRequestChannel);
 		peerMonitorClient.initialize(peerAddress);
+
+		// create the PeerApplication component
+		Component peerApplication = component.createComponent(
+				"se.sics.kompics.p2p.application.PeerApplication", component
+						.getFaultChannel(), peerChannel);
+		peerApplication.initialize(peerAddress);
+
+		// starting PeerMonitor
+		component.triggerEvent(new StartPeerMonitor(), pmcRequestChannel);
 
 		logger.debug("Init");
 	}

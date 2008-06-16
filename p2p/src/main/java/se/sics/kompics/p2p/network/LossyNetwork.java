@@ -12,6 +12,7 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
+import se.sics.kompics.api.EventAttributeFilter;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
@@ -29,7 +30,6 @@ import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkTimerSignalEvent;
 import se.sics.kompics.p2p.network.topology.KingMatrix;
 import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
 
 /**
  * The <code>LossyNetwork</code> class
@@ -76,7 +76,10 @@ public final class LossyNetwork {
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
 		timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane.getChannel(TimerSignalEvent.class);
+
+		// use a private channel for TimerSignal events
+		timerSignalChannel = component
+				.createChannel(LossyNetworkTimerSignalEvent.class);
 
 		// use shared network component
 		ComponentMembrane networkMembrane = component
@@ -87,8 +90,6 @@ public final class LossyNetwork {
 
 		component.subscribe(timerSignalChannel,
 				"handleLossyNetworkTimerSignalEvent");
-		component.subscribe(netDeliverChannel,
-				"handleLossyNetNetworkDeliverEvent");
 		component.subscribe(this.sendChannel, "handleLossyNetworkSendEvent");
 	}
 
@@ -118,6 +119,13 @@ public final class LossyNetwork {
 
 		lossRate = Double.parseDouble(properties.getProperty(
 				"global.loss.rate", "0.0"));
+
+		EventAttributeFilter destinationFilter = new EventAttributeFilter(
+				"getDestination", localAddress);
+		component.subscribe(netDeliverChannel,
+				"handleLossyNetNetworkDeliverEvent", destinationFilter);
+		logger.debug("Subscribed for LossyNetNetDeliver with destination {}",
+				localAddress);
 	}
 
 	@EventHandlerMethod

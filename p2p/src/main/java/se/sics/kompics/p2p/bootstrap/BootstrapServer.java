@@ -96,6 +96,8 @@ public class BootstrapServer {
 	@EventHandlerMethod
 	public void handleStartEvent(StartBootstrapServer event) {
 		logger.debug("Started");
+
+		dumpCacheToLog();
 	}
 
 	@EventHandlerMethod
@@ -111,12 +113,16 @@ public class BootstrapServer {
 
 		logger.debug("Cleared cache");
 		addPeerToCache(event.getPeerAddress());
+
+		dumpCacheToLog();
 	}
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(SetTimerEvent.class)
 	public void handleCacheAddPeerRequest(CacheAddPeerRequest event) {
 		addPeerToCache(event.getPeerAddress());
+
+		dumpCacheToLog();
 	}
 
 	@EventHandlerMethod
@@ -126,6 +132,8 @@ public class BootstrapServer {
 		if (timerHandler.isOustandingTimer(event.getTimerId())) {
 			removePeerFromCache(event.getPeerAddress(), event.getEpoch());
 		}
+
+		dumpCacheToLog();
 	}
 
 	@EventHandlerMethod
@@ -156,7 +164,8 @@ public class BootstrapServer {
 				response, event.getSource());
 		component.triggerEvent(pnSendEvent, pnSendChannel);
 
-		logger.debug("Responded with {} peers", peers.size());
+		logger.debug("Responded with {} peers to peer {}", peers.size(), event
+				.getSource());
 	}
 
 	private void addPeerToCache(Address address) {
@@ -204,5 +213,25 @@ public class BootstrapServer {
 
 			logger.debug("Removed peer {}", address);
 		}
+	}
+
+	private void dumpCacheToLog() {
+		logger.info("Cache now contains:");
+		logger
+				.info("Age(s)==Fresh(s)==Peer address===========================");
+		long now = System.currentTimeMillis();
+
+		// get all peers in most recently added order
+		Iterator<Address> iterator = mostRecentEntriesFirst
+				.descendingIterator();
+		while (iterator.hasNext()) {
+			Address address = iterator.next();
+			CacheEntry cacheEntry = cache.get(address);
+			logger.info("{}\t{}\t  {}", new Object[] {
+					(now - cacheEntry.getAddedAt()) / 1000,
+					(now - cacheEntry.getRefreshedAt()) / 1000, address });
+		}
+
+		logger.info("========================================================");
 	}
 }

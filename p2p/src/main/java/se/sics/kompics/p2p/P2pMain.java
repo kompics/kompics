@@ -42,11 +42,14 @@ public class P2pMain {
 		PropertyConfigurator.configureAndWatch(System
 				.getProperty("log4j.properties"), 1000);
 
-		if (args.length != 1) {
-			logger.error("usage: ProtocolsMain <command>");
+		if (args.length != 3) {
+			logger.error("usage: ProtocolsMain <command> <networkAddress>"
+					+ " <webAddress>");
 			return;
 		}
 		String command = args[0];
+		String networkAddress = args[1];
+		String webAddress = args[2];
 
 		Kompics kompics = new Kompics(3, 0);
 		Kompics.setGlobalKompics(kompics);
@@ -76,8 +79,9 @@ public class P2pMain {
 				"se.sics.kompics.network.NetworkComponent", faultChannel,
 				networkSendChannel, networkDeliverChannel);
 
-		InetSocketAddress socketAddress = new InetSocketAddress("127.0.0.1",
-				9090);
+		String netAddr[] = networkAddress.split(":");
+		InetSocketAddress socketAddress = new InetSocketAddress(netAddr[0],
+				Integer.parseInt(netAddr[1]));
 
 		networkComponent.initialize(socketAddress);
 		networkComponent.share("se.sics.kompics.Network");
@@ -90,7 +94,10 @@ public class P2pMain {
 		Component webComponent = boot.createComponent(
 				"se.sics.kompics.web.WebComponent", faultChannel,
 				webRequestChannel, webResponseChannel);
-		webComponent.initialize("127.0.0.1", 8080, 5000);
+
+		String webAddr[] = webAddress.split(":");
+
+		webComponent.initialize(webAddr[0], Integer.parseInt(webAddr[1]), 5000);
 		webComponent.share("se.sics.kompics.Web");
 
 		// create channel for the PeerCluster component

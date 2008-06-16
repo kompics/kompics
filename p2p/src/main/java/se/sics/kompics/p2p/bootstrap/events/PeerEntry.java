@@ -1,5 +1,7 @@
 package se.sics.kompics.p2p.bootstrap.events;
 
+import java.io.Serializable;
+
 import se.sics.kompics.network.Address;
 
 /**
@@ -8,7 +10,12 @@ import se.sics.kompics.network.Address;
  * @author Cosmin Arad
  * @version $Id$
  */
-public class PeerEntry {
+public class PeerEntry implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4346395477763787788L;
 
 	private final Address address;
 
