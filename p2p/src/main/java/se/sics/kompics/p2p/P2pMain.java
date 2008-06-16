@@ -43,13 +43,13 @@ public class P2pMain {
 				.getProperty("log4j.properties"), 1000);
 
 		if (args.length != 3) {
-			logger.error("usage: ProtocolsMain <command> <networkAddress>"
-					+ " <webAddress>");
+			logger.error("usage: ProtocolsMain <networkAddress>"
+					+ " <webAddress> <command>");
 			return;
 		}
-		String command = args[0];
-		String networkAddress = args[1];
-		String webAddress = args[2];
+		String networkAddress = args[0];
+		String webAddress = args[1];
+		String command = args[2];
 
 		Kompics kompics = new Kompics(3, 0);
 		Kompics.setGlobalKompics(kompics);

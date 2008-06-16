@@ -79,8 +79,8 @@ public final class P2pLauncher {
 			String nodeWebAddress = commands.getProperty(i + ".web");
 			if (nodeCommand != null) {
 				processes[i + 1] = launchProcess("se.sics.kompics.p2p.P2pMain "
-						+ nodeCommand + " " + nodeNetworkAddress + " "
-						+ nodeWebAddress,
+						+ nodeNetworkAddress + " " + nodeWebAddress + " "
+						+ nodeCommand,
 						"-Xmx128m -Dlog4j.properties=log4j.properties", "Node "
 								+ i, i + 1);
 

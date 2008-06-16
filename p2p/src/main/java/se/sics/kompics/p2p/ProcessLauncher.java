@@ -40,7 +40,9 @@ public class ProcessLauncher extends Thread {
 	}
 
 	public void run() {
-		mainFrame = new ProcessOutputFrame(this, command, name, pid);
+		String arguments[] = command.split(" ");
+		mainFrame = new ProcessOutputFrame(this,
+				arguments[arguments.length - 1], name, pid);
 		mainFrame.setVisible(true);
 		JTextArea logArea = mainFrame.getLogArea();
 
@@ -52,7 +54,6 @@ public class ProcessLauncher extends Thread {
 		for (int i = 0; i < switches.length; i++) {
 			commandArgs.add(switches[i]);
 		}
-		String arguments[] = command.split(" ");
 		for (int i = 0; i < arguments.length; i++) {
 			commandArgs.add(arguments[i]);
 		}
