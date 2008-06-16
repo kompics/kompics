@@ -20,11 +20,18 @@ public final class FindSuccessorResponse extends PerfectNetworkDeliverEvent {
 
 	private final Address successor;
 
-	public FindSuccessorResponse(Address successor) {
+	private final boolean nextHop;
+
+	public FindSuccessorResponse(Address successor, boolean nextHop) {
 		this.successor = successor;
+		this.nextHop = nextHop;
 	}
 
 	public Address getSuccessor() {
 		return successor;
+	}
+
+	public boolean isNextHop() {
+		return nextHop;
 	}
 }

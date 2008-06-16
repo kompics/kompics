@@ -1,7 +1,8 @@
 package se.sics.kompics.p2p.son.ps.events;
 
+import java.math.BigInteger;
+
 import se.sics.kompics.api.annotation.EventType;
-import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 
 /**
@@ -16,16 +17,16 @@ public final class FindSuccessorRequest extends PerfectNetworkDeliverEvent {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -5529275130279265974L;
+	private static final long serialVersionUID = -4476609047322811330L;
 
-	private final Address peer;
+	private final BigInteger identifier;
 
-	public FindSuccessorRequest(Address peer) {
+	public FindSuccessorRequest(BigInteger identifier) {
 		super();
-		this.peer = peer;
+		this.identifier = identifier;
 	}
 
-	public Address getPeer() {
-		return peer;
+	public BigInteger getIdentifier() {
+		return identifier;
 	}
 }

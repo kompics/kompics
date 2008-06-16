@@ -1,5 +1,7 @@
 package se.sics.kompics.p2p.application;
 
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,9 +16,13 @@ import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCompleted;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapRequest;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapResponse;
+import se.sics.kompics.p2p.bootstrap.events.PeerEntry;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
 import se.sics.kompics.p2p.peer.events.LeavePeer;
+import se.sics.kompics.p2p.son.ps.events.CreateRing;
+import se.sics.kompics.p2p.son.ps.events.JoinRing;
+import se.sics.kompics.p2p.son.ps.events.JoinRingCompleted;
 
 /**
  * The <code>PeerApplication</code> class
@@ -33,6 +39,9 @@ public class PeerApplication {
 
 	// bootstrap client channels
 	Channel bootstrapRequestChannel, bootstrapResponseChannel;
+
+	// ChordRing channels
+	Channel chordRingRequestChannel, chordRingResponseChannel;
 
 	private Address localAddress;
 
@@ -62,8 +71,18 @@ public class PeerApplication {
 		bootstrapResponseChannel = bootMembrane
 				.getChannel(BootstrapResponse.class);
 
+		// use shared ChordRing component
+		ComponentMembrane ringMembrane = component
+				.getSharedComponentMembrane("se.sics.kompics.p2p.son.ps.ChordRing");
+		chordRingRequestChannel = ringMembrane.getChannel(JoinRing.class);
+		chordRingResponseChannel = ringMembrane
+				.getChannel(JoinRingCompleted.class);
+
 		component
 				.subscribe(bootstrapResponseChannel, "handleBootstrapResponse");
+
+		component
+				.subscribe(chordRingResponseChannel, "handleJoinRingCompleted");
 	}
 
 	@EventHandlerMethod
@@ -86,8 +105,26 @@ public class PeerApplication {
 
 	@EventHandlerMethod
 	public void handleBootstrapResponse(BootstrapResponse event) {
-		logger.debug("Got BoostrapResponse {}, bootstrap complete", event
+		logger.debug("Got BoostrapResponse {}, Bootstrap complete", event
 				.getPeers().size());
+
+		Set<PeerEntry> somePeers = event.getPeers();
+
+		if (somePeers.size() > 0) {
+			// we join though the first peer;
+			PeerEntry peerEntry = somePeers.iterator().next();
+			JoinRing request = new JoinRing(peerEntry.getAddress());
+			component.triggerEvent(request, chordRingRequestChannel);
+		} else {
+			// we create a new ring
+			CreateRing request = new CreateRing();
+			component.triggerEvent(request, chordRingRequestChannel);
+		}
+	}
+
+	@EventHandlerMethod
+	public void handleJoinRingCompleted(JoinRingCompleted event) {
+		logger.debug("JoinRing completed");
 
 		// bootstrap completed
 		component.triggerEvent(new BootstrapCompleted(),

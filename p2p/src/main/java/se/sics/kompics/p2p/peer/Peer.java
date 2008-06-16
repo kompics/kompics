@@ -25,6 +25,11 @@ import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
 import se.sics.kompics.p2p.peer.events.LeavePeer;
+import se.sics.kompics.p2p.son.ps.events.CreateRing;
+import se.sics.kompics.p2p.son.ps.events.JoinRing;
+import se.sics.kompics.p2p.son.ps.events.JoinRingCompleted;
+import se.sics.kompics.p2p.son.ps.events.NewPredecessor;
+import se.sics.kompics.p2p.son.ps.events.NewSuccessor;
 
 /**
  * The <code>Peer</code> class
@@ -130,6 +135,21 @@ public class Peer {
 				"se.sics.kompics.p2p.monitor.PeerMonitorClient", component
 						.getFaultChannel(), pmcRequestChannel);
 		peerMonitorClient.initialize(peerAddress);
+
+		// create channels for the ChordRing component
+		Channel chordRingRequestChannel = component.createChannel(
+				CreateRing.class, JoinRing.class);
+		Channel chordRingNotificationChannel = component.createChannel(
+				NewPredecessor.class, NewSuccessor.class,
+				JoinRingCompleted.class);
+
+		// create the PeerMonitorClient component
+		Component chordRing = component.createComponent(
+				"se.sics.kompics.p2p.son.ps.ChordRing", component
+						.getFaultChannel(), chordRingRequestChannel,
+				chordRingNotificationChannel);
+		chordRing.initialize(peerAddress);
+		chordRing.share("se.sics.kompics.p2p.son.ps.ChordRing");
 
 		// create the PeerApplication component
 		Component peerApplication = component.createComponent(
