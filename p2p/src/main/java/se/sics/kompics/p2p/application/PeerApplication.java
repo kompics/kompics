@@ -89,6 +89,7 @@ public class PeerApplication {
 		logger.debug("Got BoostrapResponse {}, bootstrap complete", event
 				.getPeers().size());
 
+		// bootstrap completed
 		component.triggerEvent(new BootstrapCompleted(),
 				bootstrapRequestChannel);
 	}
