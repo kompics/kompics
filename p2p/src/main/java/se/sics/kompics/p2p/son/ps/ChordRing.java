@@ -3,6 +3,7 @@ package se.sics.kompics.p2p.son.ps;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -19,6 +20,10 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.p2p.fd.events.PeerFailureSuspicion;
+import se.sics.kompics.p2p.fd.events.StartProbingPeer;
+import se.sics.kompics.p2p.fd.events.StopProbingPeer;
+import se.sics.kompics.p2p.fd.events.SuspicionStatus;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.p2p.son.ps.events.CreateRing;
@@ -58,6 +63,9 @@ public class ChordRing {
 	// PerfectNetwork send channel
 	private Channel pnSendChannel;
 
+	// FailureDetector channels
+	private Channel fdRequestChannel, fdNotificationChannel;
+
 	private Channel timerSignalChannel;
 
 	private TimerHandler timerHandler;
@@ -95,6 +103,13 @@ public class ChordRing {
 		Channel pnDeliverChannel = pnMembrane
 				.getChannel(PerfectNetworkDeliverEvent.class);
 
+		// use shared FailureDetector component
+		ComponentMembrane fdMembrane = component
+				.getSharedComponentMembrane("se.sics.kompics.p2p.fd.FailureDetector");
+		fdRequestChannel = fdMembrane.getChannel(StartProbingPeer.class);
+		fdNotificationChannel = component
+				.createChannel(PeerFailureSuspicion.class);
+
 		component.subscribe(this.requestChannel, "handleCreateRing");
 		component.subscribe(this.requestChannel, "handleJoinRing");
 		component.subscribe(this.requestChannel,
@@ -109,6 +124,9 @@ public class ChordRing {
 
 		this.timerHandler = new TimerHandler(component, timerSetChannel);
 		component.subscribe(timerSignalChannel, "handleStabilizeTimerSignal");
+
+		component
+				.subscribe(fdNotificationChannel, "handlePeerFailureSuspicion");
 	}
 
 	@ComponentShareMethod
@@ -249,6 +267,8 @@ public class ChordRing {
 			// we got the real successor
 			successor = event.getSuccessor();
 
+			neighborAdded(successor);
+
 			// trigger GetSuccessorList
 			GetSuccessorListRequest request = new GetSuccessorListRequest(
 					RequestState.JOIN);
@@ -291,7 +311,43 @@ public class ChordRing {
 	@MayTriggerEventTypes( { NewSuccessor.class, PerfectNetworkSendEvent.class })
 	public void handleGetSuccessorListResponse(GetSuccessorListResponse event) {
 		logger.debug("GET_SUCC_LIST_RESP");
+
+		HashSet<Address> oldNeighbors = new HashSet<Address>(successorList
+				.getSuccessors());
+
 		successorList.updateSuccessorList(event.getSuccessorList());
+
+		if (successorList.getSuccessors().size() > 0) {
+			successor = successorList.getSuccessors().get(0);
+		} else {
+			// SUCC = SELF when alone in the ring
+			successor = localPeer;
+		}
+
+		// account for neighbor set change
+		oldNeighbors.add(predecessor);
+		oldNeighbors.add(successor);
+
+		HashSet<Address> newNeighbors = new HashSet<Address>(successorList
+				.getSuccessors());
+		newNeighbors.add(predecessor);
+		newNeighbors.add(successor);
+
+		// start monitoring new neighbors
+		newNeighbors.removeAll(oldNeighbors);
+		for (Address address : newNeighbors) {
+			neighborAdded(address);
+		}
+
+		newNeighbors = new HashSet<Address>(successorList.getSuccessors());
+		newNeighbors.add(predecessor);
+		newNeighbors.add(successor);
+
+		// stop monitoring former neighbors
+		oldNeighbors.removeAll(newNeighbors);
+		for (Address address : oldNeighbors) {
+			neighborRemoved(address);
+		}
 	}
 
 	@EventHandlerMethod
@@ -333,6 +389,8 @@ public class ChordRing {
 					successor, IntervalBounds.OPEN_OPEN)) {
 				successor = predecessorOfMySuccessor;
 
+				neighborAdded(successor);
+
 				// trigger newSuccessor
 				NewSuccessor newSuccessor = new NewSuccessor(localPeer,
 						successor);
@@ -366,24 +424,27 @@ public class ChordRing {
 						localPeer, IntervalBounds.OPEN_OPEN)) {
 			predecessor = potentialNewPredecessor;
 
+			neighborAdded(potentialNewPredecessor);
+
 			// trigger newPredecessor
 			NewPredecessor newPredecessor = new NewPredecessor(localPeer,
 					predecessor);
 			component.triggerEvent(newPredecessor, notificationChannel);
 		}
 
-		if (successor == null) {
-			successor = potentialNewPredecessor;
-
-			// trigger newSuccessor
-			NewSuccessor newSuccessor = new NewSuccessor(localPeer, successor);
-			component.triggerEvent(newSuccessor, notificationChannel);
-
-			// set the stabilization timer
-			StabilizeTimerSignal signal = new StabilizeTimerSignal();
-			timerHandler.setTimer(signal, timerSignalChannel,
-					stabilizationPeriod);
-		}
+		// SUCC = SELF when alone in the ring
+		// if (successor == null) {
+		// successor = potentialNewPredecessor;
+		//
+		// // trigger newSuccessor
+		// NewSuccessor newSuccessor = new NewSuccessor(localPeer, successor);
+		// component.triggerEvent(newSuccessor, notificationChannel);
+		//
+		// // set the stabilization timer
+		// StabilizeTimerSignal signal = new StabilizeTimerSignal();
+		// timerHandler.setTimer(signal, timerSignalChannel,
+		// stabilizationPeriod);
+		// }
 	}
 
 	@EventHandlerMethod
@@ -393,6 +454,51 @@ public class ChordRing {
 				localPeer, successor, predecessor, successorList
 						.getSuccessors());
 		component.triggerEvent(response, notificationChannel);
+	}
+
+	@EventHandlerMethod
+	public void handlePeerFailureSuspicion(PeerFailureSuspicion event) {
+		if (event.getSuspicionStatus().equals(SuspicionStatus.SUSPECTED)) {
+			// peer is suspected
+			Address suspectedPeer = event.getPeerAddress();
+
+			if (suspectedPeer.equals(predecessor)) {
+				// predecessor suspected
+				successorList.successorFailed(suspectedPeer);
+				predecessor = null;
+			}
+			if (suspectedPeer.equals(successor)) {
+				// successor suspected
+				successorList.successorFailed(suspectedPeer);
+				if (successorList.getSuccessors().size() > 0) {
+					successor = successorList.getSuccessors().get(0);
+				} else {
+					// SUCC = SELF when alone in the ring
+					successor = localPeer;
+				}
+			} else if (successorList.getSuccessors().contains(suspectedPeer)) {
+				// secondary successor suspected
+				successorList.successorFailed(suspectedPeer);
+			}
+			neighborRemoved(suspectedPeer);
+		} else {
+			// peer is alive again
+		}
+	}
+
+	private void neighborAdded(Address peer) {
+		if (!peer.equals(localPeer)) {
+			// start failure detection on new neighbor
+			StartProbingPeer request = new StartProbingPeer(peer, component,
+					fdNotificationChannel);
+			component.triggerEvent(request, fdRequestChannel);
+		}
+	}
+
+	private void neighborRemoved(Address peer) {
+		// stop failure detection on neighbor
+		StopProbingPeer request = new StopProbingPeer(peer, component);
+		component.triggerEvent(request, fdRequestChannel);
 	}
 
 	// x belongs to (from, to)

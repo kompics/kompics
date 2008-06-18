@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.p2p.fd.events.PeerFailureNotification;
-import se.sics.kompics.p2p.fd.events.PeerFailureStatus;
+import se.sics.kompics.p2p.fd.events.PeerFailureSuspicion;
+import se.sics.kompics.p2p.fd.events.SuspicionStatus;
 import se.sics.kompics.p2p.fd.events.Ping;
 import se.sics.kompics.p2p.fd.events.PongTimedOut;
 import se.sics.kompics.p2p.fd.events.SendPing;
@@ -182,8 +182,8 @@ public class PeerProber {
 	}
 
 	private void suspect() {
-		PeerFailureNotification commPeerSuspectedEvent = new PeerFailureNotification(
-				probedPeer, PeerFailureStatus.SUSPECTED);
+		PeerFailureSuspicion commPeerSuspectedEvent = new PeerFailureSuspicion(
+				probedPeer, SuspicionStatus.SUSPECTED);
 		logger.debug("Peer {} is suspected", probedPeer);
 
 		/* we raise the event directly to subscriber components' channels */
@@ -197,8 +197,8 @@ public class PeerProber {
 
 	private void reviseSuspicion() {
 		// Revising previous suspicion
-		PeerFailureNotification commRectifyEvent = new PeerFailureNotification(
-				probedPeer, PeerFailureStatus.ALIVE);
+		PeerFailureSuspicion commRectifyEvent = new PeerFailureSuspicion(
+				probedPeer, SuspicionStatus.ALIVE);
 		/* we raise the event directly to subscriber components' channels */
 		for (Component comp : clientComponents) {
 			Channel channel = clientChannels.get(comp);

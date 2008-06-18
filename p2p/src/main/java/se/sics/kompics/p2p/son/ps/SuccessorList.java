@@ -66,16 +66,10 @@ public class SuccessorList implements Serializable {
 		if (i < successors.size()) {
 			successors.remove(i);
 		}
+	}
 
-		// ListIterator<Address> iter = successors.listIterator();
-		// int i = 0;
-		// while (iter.hasNext()) {
-		// if (iter.next().equals(localPeer))
-		// break;
-		// i++;
-		// }
-		// while (successors.size() > i + 1)
-		// successors.remove(successors.size() - 1);
+	public void successorFailed(Address peer) {
+		successors.remove(peer);
 	}
 
 	public int getLength() {
