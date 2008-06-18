@@ -26,6 +26,8 @@ import se.sics.kompics.timer.events.CancelTimerEvent;
 import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
 import se.sics.kompics.timer.events.SetTimerEvent;
 import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.web.events.WebRequestEvent;
+import se.sics.kompics.web.events.WebResponseEvent;
 
 /**
  * The <code>PeerMonitorServerMain</code> class
@@ -58,9 +60,12 @@ public final class PeerMonitorServerMain {
 		InetAddress ip = InetAddress.getByName(properties.getProperty(
 				"monitor.server.ip", ""));
 		int port = Integer.parseInt(properties.getProperty(
-				"monitor.server.port", "9191"));
+				"monitor.server.port", "20001"));
 		long updatePeriod = Long.parseLong(properties.getProperty(
 				"update.period", "60"));
+		String webIp = properties.getProperty("monitor.web.ip", "");
+		int webPort = Integer.parseInt(properties.getProperty(
+				"monitor.web.port", "40001"));
 
 		SocketAddress localSocketAddress = new InetSocketAddress(ip, port);
 		Address localAddress = new Address(ip, port, BigInteger.ZERO);
@@ -106,6 +111,18 @@ public final class PeerMonitorServerMain {
 				lnSendChannel, lnDeliverChannel);
 		lnComponent.initialize(localAddress);
 		lnComponent.share("se.sics.kompics.p2p.network.LossyNetwork");
+
+		// create channels for the web component
+		Channel webRequestChannel = boot.createChannel(WebRequestEvent.class);
+		Channel webResponseChannel = boot.createChannel(WebResponseEvent.class);
+
+		// create and share the web component
+		Component webComponent = boot.createComponent(
+				"se.sics.kompics.web.WebComponent", faultChannel,
+				webRequestChannel, webResponseChannel);
+
+		webComponent.initialize(webIp, webPort, 5000);
+		webComponent.share("se.sics.kompics.Web");
 
 		// create the PeerMonitorServer component
 		Component peerMonitorServer = boot.createComponent(

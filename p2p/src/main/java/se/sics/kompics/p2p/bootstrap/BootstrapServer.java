@@ -29,6 +29,8 @@ import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
 import se.sics.kompics.timer.events.SetTimerEvent;
 import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.web.events.WebRequestEvent;
+import se.sics.kompics.web.events.WebResponseEvent;
 
 /**
  * The <code>BootstrapServer</code> class
@@ -45,6 +47,8 @@ public class BootstrapServer {
 	private final Component component;
 
 	private Channel pnSendChannel, timerSignalChannel;
+
+	private Channel webRequestChannel, webResponseChannel;
 
 	private final HashMap<Address, CacheEntry> cache;
 
@@ -77,6 +81,14 @@ public class BootstrapServer {
 		pnSendChannel = pnMembrane.getChannel(PerfectNetworkSendEvent.class);
 		Channel pnDeliverChannel = pnMembrane
 				.getChannel(PerfectNetworkDeliverEvent.class);
+
+		// use the shared WebComponent
+		ComponentMembrane webMembrane = component
+				.getSharedComponentMembrane("se.sics.kompics.Web");
+		webRequestChannel = webMembrane.getChannel(WebRequestEvent.class);
+		webResponseChannel = webMembrane.getChannel(WebResponseEvent.class);
+
+		component.subscribe(webRequestChannel, "handleWebRequest");
 
 		component.subscribe(startChannel, "handleStartEvent");
 
@@ -168,6 +180,16 @@ public class BootstrapServer {
 				.getSource());
 	}
 
+	@EventHandlerMethod
+	@MayTriggerEventTypes(WebResponseEvent.class)
+	public void handleWebRequest(WebRequestEvent event) {
+		logger.debug("Handling WebRequest");
+
+		WebResponseEvent response = new WebResponseEvent(dumpCacheToHtml(),
+				event, 1, 1);
+		component.triggerEvent(response, webResponseChannel);
+	}
+
 	private void addPeerToCache(Address address) {
 		if (address != null) {
 
@@ -217,8 +239,7 @@ public class BootstrapServer {
 
 	private void dumpCacheToLog() {
 		logger.info("Cache now contains:");
-		logger
-				.info("Age(s)==Fresh(s)==Peer address===========================");
+		logger.info("Age(s)==Fresh(s)==Peer address==========================");
 		long now = System.currentTimeMillis();
 
 		// get all peers in most recently added order
@@ -233,5 +254,49 @@ public class BootstrapServer {
 		}
 
 		logger.info("========================================================");
+	}
+
+	private String dumpCacheToHtml() {
+		StringBuffer sb = new StringBuffer(
+				"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN"
+						+ "\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transiti"
+						+ "onal.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtm"
+						+ "l\"><head><meta http-equiv=\"Content-Type\" content="
+						+ "\"text/html; charset=utf-8\" />"
+						+ "<title>Kompics P2P Bootstrap Server</title>"
+						+ "<style type=\"text/css\"><!--.style2 {font-family: "
+						+ "Arial, Helvetica, sans-serif; color: #0099FF;}-->"
+						+ "</style>"
+						+ "</head><body><h2 align=\"center\" class=\"style2\">"
+						+ "Kompics P2P Bootstrap Cache contents:</h2>"
+						+ "<table width=\"600\" border=\"2\" align=\"center\"><tr>"
+						+ "<th class=\"style2\" width=\"80\" scope=\"col\">Age (s)</th>"
+						+ "<th class=\"style2\" width=\"120\" scope=\"col\">Freshness (s)</th>"
+						+ "<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
+		long now = System.currentTimeMillis();
+
+		// get all peers in most recently added order
+		Iterator<Address> iterator = mostRecentEntriesFirst
+				.descendingIterator();
+		while (iterator.hasNext()) {
+			Address address = iterator.next();
+			CacheEntry cacheEntry = cache.get(address);
+
+			sb.append("<tr>");
+			sb.append("<td><div align=\"right\">");
+			sb.append((now - cacheEntry.getAddedAt()) / 1000);
+			sb.append("</div></td><td><div align=\"right\">");
+			sb.append((now - cacheEntry.getRefreshedAt()) / 1000);
+			sb.append("</div></td><td><div align=\"center\">");
+			String webAddress = address.getIp().toString() + ":"
+					+ (address.getPort() - 21920) + "/" + address.getId();
+			sb.append("<a href=\"http://").append(webAddress).append("/inf\">");
+			sb.append(address).append("</a>");
+			sb.append("</div></td>");
+			sb.append("</tr>");
+		}
+
+		sb.append("</table></body></html>");
+		return sb.toString();
 	}
 }

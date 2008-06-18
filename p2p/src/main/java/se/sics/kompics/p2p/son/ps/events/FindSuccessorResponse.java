@@ -16,7 +16,7 @@ public final class FindSuccessorResponse extends PerfectNetworkDeliverEvent {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 5575533107716792158L;
+	private static final long serialVersionUID = -1891090539812366525L;
 
 	private final Address successor;
 

@@ -27,6 +27,8 @@ import se.sics.kompics.timer.events.CancelTimerEvent;
 import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
 import se.sics.kompics.timer.events.SetTimerEvent;
 import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.web.events.WebRequestEvent;
+import se.sics.kompics.web.events.WebResponseEvent;
 
 /**
  * The <code>BootstrapServerMain</code> class
@@ -59,9 +61,12 @@ public final class BootstrapServerMain {
 		InetAddress ip = InetAddress.getByName(properties.getProperty(
 				"bootstrap.server.ip", ""));
 		int port = Integer.parseInt(properties.getProperty(
-				"bootstrap.server.port", "8181"));
+				"bootstrap.server.port", "20002"));
 		long evictAfterSeconds = Long.parseLong(properties.getProperty(
 				"cache.evict.after", "600"));
+		String webIp = properties.getProperty("bootstrap.web.ip", "");
+		int webPort = Integer.parseInt(properties.getProperty(
+				"bootstrap.web.port", "40002"));
 
 		SocketAddress localSocketAddress = new InetSocketAddress(ip, port);
 		Address localAddress = new Address(ip, port, BigInteger.ZERO);
@@ -108,6 +113,18 @@ public final class BootstrapServerMain {
 				pnSendChannel, pnDeliverChannel);
 		pnComponent.initialize(localAddress);
 		pnComponent.share("se.sics.kompics.p2p.network.PerfectNetwork");
+
+		// create channels for the web component
+		Channel webRequestChannel = boot.createChannel(WebRequestEvent.class);
+		Channel webResponseChannel = boot.createChannel(WebResponseEvent.class);
+
+		// create and share the web component
+		Component webComponent = boot.createComponent(
+				"se.sics.kompics.web.WebComponent", faultChannel,
+				webRequestChannel, webResponseChannel);
+
+		webComponent.initialize(webIp, webPort, 5000);
+		webComponent.share("se.sics.kompics.Web");
 
 		// create channel for the BootstrapServer component
 		Channel bsStartChannel = boot.createChannel(StartBootstrapServer.class);
