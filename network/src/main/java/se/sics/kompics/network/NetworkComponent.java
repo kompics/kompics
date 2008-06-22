@@ -5,14 +5,9 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.mina.common.CloseFuture;
-import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.DefaultIoFilterChainBuilder;
 import org.apache.mina.common.ExceptionMonitor;
-import org.apache.mina.common.IoConnector;
-import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
 import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
@@ -56,13 +51,10 @@ public class NetworkComponent {
 	private NioSocketConnector tcpConnector;
 
 	/* Sessions maps */
-	private ConcurrentHashMap<Address, IoSession> udpSessions;
 
-	private ConcurrentHashMap<Address, IoSession> tcpSessions;
+	private HashMap<InetSocketAddress, Session> tcpSession;
 
-	private ConcurrentHashMap<Address, ConnectListener> udpPendingConnections;
-
-	private ConcurrentHashMap<Address, ConnectListener> tcpPendingConnections;
+	private HashMap<InetSocketAddress, Session> udpSession;
 
 	private NetworkHandler networkHandler;
 
@@ -80,10 +72,8 @@ public class NetworkComponent {
 
 		component.subscribe(sendChannel, "handleNetworkSendEvent");
 
-		udpSessions = new ConcurrentHashMap<Address, IoSession>();
-		tcpSessions = new ConcurrentHashMap<Address, IoSession>();
-		udpPendingConnections = new ConcurrentHashMap<Address, ConnectListener>();
-		tcpPendingConnections = new ConcurrentHashMap<Address, ConnectListener>();
+		tcpSession = new HashMap<InetSocketAddress, Session>();
+		udpSession = new HashMap<InetSocketAddress, Session>();
 
 		networkHandler = new NetworkHandler(this);
 
@@ -149,14 +139,21 @@ public class NetworkComponent {
 
 	@ComponentDestroyMethod
 	public void destroy() {
-		for (Map.Entry<Address, IoSession> entry : udpSessions.entrySet()) {
-			CloseFuture closeFuture = entry.getValue().close();
-			closeFuture.awaitUninterruptibly();
+		for (Map.Entry<InetSocketAddress, Session> entry : tcpSession
+				.entrySet()) {
+			entry.getValue().closeInit();
 		}
-
-		for (Map.Entry<Address, IoSession> entry : tcpSessions.entrySet()) {
-			CloseFuture closeFuture = entry.getValue().close();
-			closeFuture.awaitUninterruptibly();
+		for (Map.Entry<InetSocketAddress, Session> entry : udpSession
+				.entrySet()) {
+			entry.getValue().closeInit();
+		}
+		for (Map.Entry<InetSocketAddress, Session> entry : udpSession
+				.entrySet()) {
+			entry.getValue().closeWait();
+		}
+		for (Map.Entry<InetSocketAddress, Session> entry : tcpSession
+				.entrySet()) {
+			entry.getValue().closeWait();
 		}
 
 		tcpConnector.dispose();
@@ -170,12 +167,15 @@ public class NetworkComponent {
 	@EventHandlerMethod
 	@MayTriggerEventTypes(NetworkDeliverEvent.class)
 	public void handleNetworkSendEvent(NetworkSendEvent event) {
-		logger.debug("Handling NetSendEvent {} from {} to {}", new Object[] {
-				event.getNetworkDeliverEvent(), event.getSource(),
-				event.getDestination() });
+		logger.debug("Handling NetSendEvent {} from {} to {} protocol {}",
+				new Object[] { event.getNetworkDeliverEvent(),
+						event.getSource(), event.getDestination(),
+						event.getProtocol() });
 
 		NetworkDeliverEvent deliverEvent = event.getNetworkDeliverEvent();
-		if (event.getDestination().equals(event.getSource())) {
+		if (event.getDestination().getIp().equals(event.getSource().getIp())
+				&& event.getDestination().getPort() == event.getSource()
+						.getPort()) {
 			// deliver locally
 			component.triggerEvent(deliverEvent, deliverChannel);
 			return;
@@ -184,89 +184,52 @@ public class NetworkComponent {
 		Transport protocol = event.getProtocol();
 		Address destination = event.getDestination();
 
-		// check if connection exists
-		if (alreadyConnected(destination, protocol)) {
-			// send message
-			IoSession session = getSession(destination, protocol);
-			session.write(deliverEvent);
-		} else {
-			// create connection
-			if (((protocol == Transport.TCP) ? tcpPendingConnections
-					: udpPendingConnections).containsKey(destination)) {
-				// add pending message to pending connection
-				((protocol == Transport.TCP) ? tcpPendingConnections
-						: udpPendingConnections).get(destination)
-						.addPendingMessage(deliverEvent);
-			} else {
-				// create pending connection
-				IoConnector connector = (protocol == Transport.UDP ? udpConnector
-						: tcpConnector);
-				ConnectFuture connFuture = connector
-						.connect(new InetSocketAddress(destination.getIp(),
-								destination.getPort()));
+		Session session = protocol.equals(Transport.TCP) ? getTcpSession(destination)
+				: getUdpSession(destination);
 
-				// Create listener for the connection
-				ConnectListener listener = new ConnectListener(this, protocol,
-						destination);
+		session.sendMessage(deliverEvent);
+	}
 
-				// Enqueue the message for later transmission
-				listener.addPendingMessage(deliverEvent);
+	private Session getTcpSession(Address destination) {
+		InetSocketAddress destinationSocket = address2SocketAddress(destination);
+		Session session = tcpSession.get(destinationSocket);
 
-				((protocol == Transport.TCP) ? tcpPendingConnections
-						: udpPendingConnections).put(destination, listener);
-				connFuture.addListener(listener);
-			}
+		if (session == null) {
+			session = new Session(tcpConnector, Transport.TCP,
+					destinationSocket);
+			session.connectInit();
+
+			tcpSession.put(destinationSocket, session);
 		}
+
+		return session;
+	}
+
+	private Session getUdpSession(Address destination) {
+		InetSocketAddress destinationSocket = address2SocketAddress(destination);
+		Session session = udpSession.get(destinationSocket);
+
+		if (session == null) {
+			session = new Session(udpConnector, Transport.UDP,
+					destinationSocket);
+			session.connectInit();
+
+			udpSession.put(destinationSocket, session);
+		}
+
+		return session;
 	}
 
 	void deliverMessage(NetworkDeliverEvent message, Transport protocol) {
-		logger.debug("Delivering message  {} from {} to {}", new Object[] {
-				message.getClass(), message.getSource(),
-				message.getDestination() });
+		logger.debug("Delivering message {} from {} to {} protocol {}",
+				new Object[] { message.toString(), message.getSource(),
+						message.getDestination(), message.getProtocol() });
 
 		message.setProtocol(protocol);
 		component.triggerEvent(message, deliverChannel);
 	}
 
-	boolean alreadyConnected(Address address, Transport protocol) {
-		switch (protocol) {
-		case UDP:
-			return udpSessions.containsKey(address);
-		case TCP:
-			return tcpSessions.containsKey(address);
-		}
-		return false;
-	}
-
-	IoSession getSession(Address address, Transport protocol) {
-		switch (protocol) {
-		case UDP:
-			return udpSessions.get(address);
-		case TCP:
-			return tcpSessions.get(address);
-		}
-		return null;
-	}
-
-	void addSession(Address address, IoSession session, Transport protocol) {
-		switch (protocol) {
-		case UDP:
-			udpSessions.put(address, session);
-			break;
-		case TCP:
-			tcpSessions.put(address, session);
-			break;
-		}
-	}
-
-	void removePendingConnection(Address address, Transport protocol) {
-		switch (protocol) {
-		case UDP:
-			udpPendingConnections.remove(address);
-			break;
-		case TCP:
-			tcpPendingConnections.remove(address);
-			break;
-		}
+	private InetSocketAddress address2SocketAddress(Address address) {
+		return new InetSocketAddress(address.getIp(), address.getPort());
 	}
 }
