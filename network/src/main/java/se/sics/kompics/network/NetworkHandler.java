@@ -1,5 +1,7 @@
 package se.sics.kompics.network;
 
+import java.net.InetSocketAddress;
+
 import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
 import org.slf4j.Logger;
@@ -22,7 +24,8 @@ public class NetworkHandler extends IoHandlerAdapter {
 	@Override
 	public void exceptionCaught(IoSession session, Throwable cause)
 			throws Exception {
-		Address address = (Address) session.getAttribute("address");
+		InetSocketAddress address = (InetSocketAddress) session
+				.getAttribute("address");
 
 		if (address != null)
 			logger.debug("Problems with {} connection to {}",
