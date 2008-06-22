@@ -239,7 +239,8 @@ public class BootstrapServer {
 
 	private void dumpCacheToLog() {
 		logger.info("Cache now contains:");
-		logger.info("Age(s)==Fresh(s)==Peer address==========================");
+		logger
+				.info("Age=====Freshness==Peer address==========================");
 		long now = System.currentTimeMillis();
 
 		// get all peers in most recently added order
@@ -249,8 +250,9 @@ public class BootstrapServer {
 			Address address = iterator.next();
 			CacheEntry cacheEntry = cache.get(address);
 			logger.info("{}\t{}\t  {}", new Object[] {
-					(now - cacheEntry.getAddedAt()) / 1000,
-					(now - cacheEntry.getRefreshedAt()) / 1000, address });
+					durationToString(now - cacheEntry.getAddedAt()),
+					durationToString(now - cacheEntry.getRefreshedAt()),
+					address });
 		}
 
 		logger.info("========================================================");
@@ -270,8 +272,8 @@ public class BootstrapServer {
 						+ "</head><body><h2 align=\"center\" class=\"style2\">"
 						+ "Kompics P2P Bootstrap Cache contents:</h2>"
 						+ "<table width=\"600\" border=\"2\" align=\"center\"><tr>"
-						+ "<th class=\"style2\" width=\"80\" scope=\"col\">Age (s)</th>"
-						+ "<th class=\"style2\" width=\"120\" scope=\"col\">Freshness (s)</th>"
+						+ "<th class=\"style2\" width=\"80\" scope=\"col\">Age</th>"
+						+ "<th class=\"style2\" width=\"120\" scope=\"col\">Freshness</th>"
 						+ "<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
 		long now = System.currentTimeMillis();
 
@@ -284,9 +286,9 @@ public class BootstrapServer {
 
 			sb.append("<tr>");
 			sb.append("<td><div align=\"right\">");
-			sb.append((now - cacheEntry.getAddedAt()) / 1000);
+			sb.append(durationToString(now - cacheEntry.getAddedAt()));
 			sb.append("</div></td><td><div align=\"right\">");
-			sb.append((now - cacheEntry.getRefreshedAt()) / 1000);
+			sb.append(durationToString(now - cacheEntry.getRefreshedAt()));
 			sb.append("</div></td><td><div align=\"center\">");
 			String webAddress = address.getIp().toString() + ":"
 					+ (address.getPort() - 21920) + "/" + address.getId();
@@ -297,6 +299,57 @@ public class BootstrapServer {
 		}
 
 		sb.append("</table></body></html>");
+		return sb.toString();
+	}
+
+	private String durationToString(long duration) {
+		StringBuffer sb = new StringBuffer();
+
+		// get duration in seconds
+		duration /= 1000;
+
+		int s = 0, m = 0, h = 0, d = 0, y = 0;
+		s = (int) (duration % 60);
+		// get duration in minutes
+		duration /= 60;
+		if (duration > 0) {
+			m = (int) (duration % 60);
+			// get duration in hours
+			duration /= 60;
+			if (duration > 0) {
+				h = (int) (duration % 24);
+				// get duration in days
+				duration /= 24;
+				if (duration > 0) {
+					d = (int) (duration % 365);
+					// get duration in years
+					y = (int) (duration / 365);
+				}
+			}
+		}
+
+		boolean printed = false;
+
+		if (y > 0) {
+			sb.append(y).append("y");
+			printed = true;
+		}
+		if (d > 0) {
+			sb.append(d).append("d");
+			printed = true;
+		}
+		if (h > 0) {
+			sb.append(h).append("h");
+			printed = true;
+		}
+		if (m > 0) {
+			sb.append(m).append("m");
+			printed = true;
+		}
+		if (s > 0 || printed == false) {
+			sb.append(s).append("s");
+		}
+
 		return sb.toString();
 	}
 }

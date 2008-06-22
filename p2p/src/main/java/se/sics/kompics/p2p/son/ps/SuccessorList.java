@@ -1,9 +1,6 @@
 package se.sics.kompics.p2p.son.ps;
 
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
@@ -82,40 +79,5 @@ public class SuccessorList implements Serializable {
 
 	public ArrayList<Address> getSuccessors() {
 		return successors;
-	}
-
-	public static void main(String[] args) throws UnknownHostException {
-		Address a1 = new Address(InetAddress.getByName("127.0.0.1"), 1234,
-				new BigInteger("1"));
-		Address a2 = new Address(InetAddress.getByName("127.0.0.1"), 1234,
-				new BigInteger("2"));
-
-		ArrayList<Address> l1 = new ArrayList<Address>();
-		ArrayList<Address> l2 = new ArrayList<Address>();
-
-		l1.add(a1);
-		l1.add(a2);
-
-		l2.add(a1);
-		l2.add(a1);
-
-		System.err.println("l1 is " + l1);
-		System.err.println("l2 is " + l2);
-
-		SuccessorList s1 = new SuccessorList(10, a1, l1);
-		SuccessorList s2 = new SuccessorList(10, a2, l2);
-
-		try {
-			s1.updateSuccessorList(s2);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		System.out.println("s1 is " + s1.getSuccessors());
-		try {
-			s2.updateSuccessorList(s1);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		System.out.println("s2 is " + s2.getSuccessors());
 	}
 }

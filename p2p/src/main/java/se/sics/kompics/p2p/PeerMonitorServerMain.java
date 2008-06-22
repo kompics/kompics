@@ -61,8 +61,10 @@ public final class PeerMonitorServerMain {
 				"monitor.server.ip", ""));
 		int port = Integer.parseInt(properties.getProperty(
 				"monitor.server.port", "20001"));
-		long updatePeriod = Long.parseLong(properties.getProperty(
-				"update.period", "60"));
+		long refreshPeriod = Long.parseLong(properties.getProperty(
+				"client.refresh.period", "60"));
+		long viewEvictAfter = Long.parseLong(properties.getProperty(
+				"view.evict.after", "300"));
 		String webIp = properties.getProperty("monitor.web.ip", "");
 		int webPort = Integer.parseInt(properties.getProperty(
 				"monitor.web.port", "40001"));
@@ -127,7 +129,7 @@ public final class PeerMonitorServerMain {
 		// create the PeerMonitorServer component
 		Component peerMonitorServer = boot.createComponent(
 				"se.sics.kompics.p2p.monitor.PeerMonitorServer", faultChannel);
-		peerMonitorServer.initialize(updatePeriod);
+		peerMonitorServer.initialize(refreshPeriod, viewEvictAfter);
 
 		logger.info("PeerMonitorServer initialized");
 	}
