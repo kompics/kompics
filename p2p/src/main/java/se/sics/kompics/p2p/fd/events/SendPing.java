@@ -1,7 +1,6 @@
 package se.sics.kompics.p2p.fd.events;
 
-import java.math.BigInteger;
-
+import se.sics.kompics.network.Address;
 import se.sics.kompics.timer.events.TimerSignalEvent;
 
 /**
@@ -13,13 +12,13 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
  */
 public final class SendPing extends TimerSignalEvent {
 
-	private final BigInteger peerId;
+	private final Address peer;
 
-	public SendPing(BigInteger peerId) {
-		this.peerId = peerId;
+	public SendPing(Address peer) {
+		this.peer = peer;
 	}
 
-	public BigInteger getPeerId() {
-		return peerId;
+	public Address getPeer() {
+		return peer;
 	}
 }

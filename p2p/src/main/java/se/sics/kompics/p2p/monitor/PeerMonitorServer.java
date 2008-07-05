@@ -163,6 +163,7 @@ public class PeerMonitorServer {
 			long now = System.currentTimeMillis();
 
 			alivePeers.add(address);
+			deadPeers.remove(address);
 
 			ViewEntry entry = view.get(address);
 			if (entry == null) {
@@ -202,28 +203,32 @@ public class PeerMonitorServer {
 	}
 
 	private String dumpViewToHtml() {
-		StringBuffer sb = new StringBuffer(
-				"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN"
-						+ "\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transiti"
-						+ "onal.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtm"
-						+ "l\"><head><meta http-equiv=\"Content-Type\" content="
-						+ "\"text/html; charset=utf-8\" />"
-						+ "<title>Kompics P2P Monitor Server</title>"
-						+ "<style type=\"text/css\"><!--.style2 {font-family: "
-						+ "Arial, Helvetica, sans-serif; color: #0099FF;}-->"
-						+ "</style>"
-						+ "</head><body><h1 align=\"center\" class=\"style2\">"
-						+ "Kompics P2P Monitor</h1>"
-						+ "<h2 align=\"center\" class=\"style2\">"
-						+ "View of Chord SON:</h2>"
-						+ "<table width=\"1100\" border=\"2\" align=\"center\"><tr>"
-						+ "<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>"
-						+ "<th class=\"style2\" width=\"100\" scope=\"col\">Peer Id</th>"
-						+ "<th class=\"style2\" width=\"100\" scope=\"col\">Successor</th>"
-						+ "<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th>"
-						+ "<th class=\"style2\" width=\"300\" scope=\"col\">Finger List</th>"
-						+ "<th class=\"style2\" width=\"100\" scope=\"col\">Age</th>"
-						+ "<th class=\"style2\" width=\"100\" scope=\"col\">Freshness</th></tr>");
+		StringBuffer sb = new StringBuffer("<!DOCTYPE html PUBLIC ");
+		sb.append("\"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3");
+		sb.append(".org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=");
+		sb.append("\"http://www.w3.org/1999/xhtml\"><head><meta http-equiv=\"");
+		sb.append("Content-Type\" content=\"text/html; charset=utf-8\" />");
+		sb.append("<title>Kompics P2P Monitor Server</title>");
+		sb.append("<style type=\"text/css\"><!--.style2 {font-family: ");
+		sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
+		sb.append("</head><body><h1 align=\"center\" class=\"style2\">");
+		sb.append("Kompics P2P Monitor</h1>");
+		sb.append("<h2 align=\"center\" class=\"style2\">");
+		sb.append("View of Chord SON:</h2>");
+		sb.append("<table width=\"1100\" border=\"2\" align=\"center\"><tr>");
+		sb
+				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>");
+		sb
+				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Peer Id</th>");
+		sb
+				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Successor</th>");
+		sb
+				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th>");
+		sb
+				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Finger List</th>");
+		sb.append("<th class=\"style2\" width=\"100\" scope=\"col\">Age</th>");
+		sb
+				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Freshness</th></tr>");
 
 		// LinkedList<Address> peers = new LinkedList<Address>(p2pNetworkData
 		// .keySet());

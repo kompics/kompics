@@ -11,10 +11,10 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.fd.events.PeerFailureSuspicion;
-import se.sics.kompics.p2p.fd.events.SuspicionStatus;
 import se.sics.kompics.p2p.fd.events.Ping;
 import se.sics.kompics.p2p.fd.events.PongTimedOut;
 import se.sics.kompics.p2p.fd.events.SendPing;
+import se.sics.kompics.p2p.fd.events.SuspicionStatus;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 
 /**
@@ -76,9 +76,10 @@ public class PeerProber {
 		switch (state) {
 		case INIT:
 			// Setting timer for the receiving the Pong packet
-			pingTimerId = fd.timerHandler.setTimer(new PongTimedOut(probedPeer
-					.getId()), fd.timerSignalChannel, stats.getRTO()
-					+ fd.pongTimeoutAdd);
+			pingTimerId = fd.timerHandler.setTimer(
+					new PongTimedOut(probedPeer), fd.timerSignalChannel, stats
+							.getRTO()
+							+ fd.pongTimeoutAdd);
 
 			sendPing();
 			pingTimestamp = System.currentTimeMillis();
@@ -172,8 +173,9 @@ public class PeerProber {
 	}
 
 	private void setPingTimer() {
-		intervalPingTimerId = fd.timerHandler.setTimer(new SendPing(probedPeer
-				.getId()), fd.timerSignalChannel, fd.pingInterval);
+		intervalPingTimerId = fd.timerHandler.setTimer(
+				new SendPing(probedPeer), fd.timerSignalChannel,
+				fd.pingInterval);
 	}
 
 	private void sendPing() {

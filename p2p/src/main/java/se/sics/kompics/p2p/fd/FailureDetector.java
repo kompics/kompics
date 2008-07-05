@@ -1,7 +1,7 @@
 package se.sics.kompics.p2p.fd;
 
-import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -16,12 +16,15 @@ import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
+import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.fd.events.Ping;
 import se.sics.kompics.p2p.fd.events.Pong;
 import se.sics.kompics.p2p.fd.events.PongTimedOut;
 import se.sics.kompics.p2p.fd.events.SendPing;
 import se.sics.kompics.p2p.fd.events.StartProbingPeer;
+import se.sics.kompics.p2p.fd.events.StatusRequest;
+import se.sics.kompics.p2p.fd.events.StatusResponse;
 import se.sics.kompics.p2p.fd.events.StopProbingPeer;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
@@ -49,7 +52,7 @@ public final class FailureDetector {
 
 	private Channel requestChannel;
 
-	private HashMap<BigInteger, PeerProber> peerProbers;
+	private HashMap<Address, PeerProber> peerProbers;
 
 	TimerHandler timerHandler;
 
@@ -57,7 +60,7 @@ public final class FailureDetector {
 
 	public FailureDetector(Component component) {
 		this.component = component;
-		peerProbers = new HashMap<BigInteger, PeerProber>();
+		peerProbers = new HashMap<Address, PeerProber>();
 	}
 
 	@ComponentCreateMethod
@@ -87,6 +90,7 @@ public final class FailureDetector {
 
 		component.subscribe(requestChannel, "handleStartProbingPeer");
 		component.subscribe(requestChannel, "handleStopProbingPeer");
+		component.subscribe(requestChannel, "handleStatusRequest");
 	}
 
 	@ComponentShareMethod
@@ -94,6 +98,7 @@ public final class FailureDetector {
 		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
 		map.put(StartProbingPeer.class, requestChannel);
 		map.put(StopProbingPeer.class, requestChannel);
+		map.put(StatusRequest.class, requestChannel);
 		ComponentMembrane membrane = new ComponentMembrane(component, map);
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
@@ -113,16 +118,16 @@ public final class FailureDetector {
 	@EventHandlerMethod
 	public void handleStartProbingPeer(StartProbingPeer event) {
 		Address peerAddress = event.getPeerAddress();
-		if (!peerProbers.containsKey(peerAddress.getId())) {
+		if (!peerProbers.containsKey(peerAddress)) {
 			PeerProber peerProber = new PeerProber(peerAddress, this);
 
 			peerProber.addClientComponent(event.getComponent(), event
 					.getChannel());
-			peerProbers.put(peerAddress.getId(), peerProber);
+			peerProbers.put(peerAddress, peerProber);
 			peerProber.start();
 			logger.debug("Started probing peer {}", peerAddress);
 		} else {
-			peerProbers.get(peerAddress.getId()).addClientComponent(
+			peerProbers.get(peerAddress).addClientComponent(
 					event.getComponent(), event.getChannel());
 			logger.debug("Peer {} is already being probed", peerAddress);
 		}
@@ -131,14 +136,14 @@ public final class FailureDetector {
 	@EventHandlerMethod
 	public void handleStopProbingPeer(StopProbingPeer event) {
 		Address peerAddress = event.getPeerAddress();
-		if (peerProbers.containsKey(peerAddress.getId())) {
-			PeerProber prober = peerProbers.get(peerAddress.getId());
+		if (peerProbers.containsKey(peerAddress)) {
+			PeerProber prober = peerProbers.get(peerAddress);
 			Component requestingComponent = event.getComponent();
 			if (prober.isClientComponent(requestingComponent)) {
 				boolean last = prober
 						.removeClientComponent(requestingComponent);
 				if (last) {
-					peerProbers.remove(peerAddress.getId());
+					peerProbers.remove(peerAddress);
 					prober.stop();
 					logger.debug("Stoped probing peer {}", peerAddress);
 				}
@@ -154,22 +159,22 @@ public final class FailureDetector {
 
 	@EventHandlerMethod
 	public void handleSendPing(SendPing event) {
-		BigInteger peerId = event.getPeerId();
-		if (peerProbers.containsKey(peerId)) {
-			peerProbers.get(peerId).ping();
+		Address peer = event.getPeer();
+		if (peerProbers.containsKey(peer)) {
+			peerProbers.get(peer).ping();
 		} else {
-			logger.debug("Peer {} is not currently being probed", peerId);
+			logger.debug("Peer {} is not currently being probed", peer);
 		}
 	}
 
 	@EventHandlerMethod
 	public void handlePongTimedOut(PongTimedOut event) {
 		if (timerHandler.isOustandingTimer(event.getTimerId())) {
-			BigInteger peerId = event.getPeerId();
-			if (peerProbers.containsKey(peerId)) {
-				peerProbers.get(peerId).pingTimedOut();
+			Address peer = event.getPeer();
+			if (peerProbers.containsKey(peer)) {
+				peerProbers.get(peer).pingTimedOut();
 			} else {
-				logger.debug("Peer {} is not currently being probed", peerId);
+				logger.debug("Peer {} is not currently being probed", peer);
 			}
 		}
 	}
@@ -185,11 +190,25 @@ public final class FailureDetector {
 
 	@EventHandlerMethod
 	public void handlePong(Pong event) {
-		BigInteger peerId = event.getSource().getId();
-		if (peerProbers.containsKey(peerId)) {
-			peerProbers.get(peerId).pong();
+		Address peer = event.getSource();
+		if (peerProbers.containsKey(peer)) {
+			peerProbers.get(peer).pong();
 		} else {
-			logger.debug("Peer {} is not currently being probed", peerId);
+			logger.debug("Peer {} is not currently being probed", peer);
 		}
+	}
+
+	@EventHandlerMethod
+	@MayTriggerEventTypes(StatusResponse.class)
+	public void handleStatusRequest(StatusRequest request) {
+		LinkedList<Address> peers = new LinkedList<Address>();
+
+		for (Address address : peerProbers.keySet()) {
+			peers.add(address);
+		}
+
+		StatusResponse response = new StatusResponse(peers);
+
+		component.triggerEvent(response, request.getChannel());
 	}
 }

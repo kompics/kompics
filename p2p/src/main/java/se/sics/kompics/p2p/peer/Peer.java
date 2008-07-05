@@ -1,5 +1,10 @@
 package se.sics.kompics.p2p.peer;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,12 +15,15 @@ import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.p2p.bootstrap.BootstrapClient;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCacheReset;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCompleted;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapRequest;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapResponse;
 import se.sics.kompics.p2p.fd.events.StartProbingPeer;
+import se.sics.kompics.p2p.fd.events.StatusRequest;
 import se.sics.kompics.p2p.fd.events.StopProbingPeer;
+import se.sics.kompics.p2p.monitor.PeerMonitorClient;
 import se.sics.kompics.p2p.monitor.events.StartPeerMonitor;
 import se.sics.kompics.p2p.monitor.events.StopPeerMonitor;
 import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
@@ -64,7 +72,7 @@ public class Peer {
 	}
 
 	@ComponentInitializeMethod
-	public void init(Address localAddress) {
+	public void init(Address localAddress) throws IOException {
 		peerAddress = localAddress;
 
 		logger = LoggerFactory.getLogger(Peer.class.getName() + "@"
@@ -96,12 +104,6 @@ public class Peer {
 		lnComponent.initialize(peerAddress);
 		lnComponent.share("se.sics.kompics.p2p.network.LossyNetwork");
 
-		// create the WebHandler component
-		Component webHandler = component.createComponent(
-				"se.sics.kompics.p2p.web.WebHandler", component
-						.getFaultChannel());
-		webHandler.initialize(peerAddress);
-
 		// create channels for the BootstrapClient component
 		Channel bootRequestChannel = component.createChannel(
 				BootstrapRequest.class, BootstrapCompleted.class,
@@ -119,7 +121,8 @@ public class Peer {
 
 		// create channel for the FailureDetector component
 		Channel fdRequestChannel = component.createChannel(
-				StartProbingPeer.class, StopProbingPeer.class);
+				StartProbingPeer.class, StopProbingPeer.class,
+				StatusRequest.class);
 
 		// create and share the FailureDetector component
 		Component fdComponent = component.createComponent(
@@ -143,6 +146,29 @@ public class Peer {
 				chordRingNotificationChannel);
 		chordRing.initialize(peerAddress);
 		chordRing.share("se.sics.kompics.p2p.son.ps.ChordRing");
+
+		// create the WebHandler component
+		Component webHandler = component.createComponent(
+				"se.sics.kompics.p2p.web.WebHandler", component
+						.getFaultChannel());
+
+		Properties properties = new Properties();
+		properties.load(BootstrapClient.class
+				.getResourceAsStream("bootstrap.properties"));
+		Address bootstrapWebAddress = new Address(InetAddress
+				.getByName(properties.getProperty("bootstrap.web.ip")), Integer
+				.parseInt(properties.getProperty("bootstrap.web.port")),
+				BigInteger.ZERO);
+		properties = new Properties();
+		properties.load(PeerMonitorClient.class
+				.getResourceAsStream("monitor.properties"));
+		Address monitorWebAddress = new Address(InetAddress
+				.getByName(properties.getProperty("monitor.web.ip")), Integer
+				.parseInt(properties.getProperty("monitor.web.port")),
+				BigInteger.ZERO);
+
+		webHandler.initialize(peerAddress, monitorWebAddress,
+				bootstrapWebAddress);
 
 		// create channel for the PeerMonitorClient component
 		Channel pmcRequestChannel = component.createChannel(

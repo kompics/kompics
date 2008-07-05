@@ -48,6 +48,7 @@ public class ProcessLauncher extends Thread {
 
 		List<String> commandArgs = new LinkedList<String>();
 		commandArgs.add("java");
+		commandArgs.add("-D " + name);
 		commandArgs.add("-classpath");
 		commandArgs.add(classpath);
 		String switches[] = properties.split(" ");
@@ -63,6 +64,7 @@ public class ProcessLauncher extends Thread {
 
 		try {
 			process = processBuilder.start();
+
 			BufferedReader out = new BufferedReader(new InputStreamReader(
 					process.getInputStream()));
 
