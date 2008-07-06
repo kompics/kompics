@@ -165,7 +165,7 @@ public class WebHandler {
 
 	private String dumpFdStatusToHtml(StatusResponse response) {
 		LinkedList<Address> peers = response.getProbedPeers();
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 
 		sb.append("<h2 align=\"center\" class=\"style2\">Failure Detector:");
 		sb.append("</h2><table width=\"500\" border=\"2\" align=\"center\">");
@@ -188,7 +188,7 @@ public class WebHandler {
 	}
 
 	private String dumpRingViewToHtml(GetRingNeighborsResponse response) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("<h2 align=\"center\" class=\"style2\">ChordRing:</h2>");
 		sb.append("<table width=\"500\" border=\"2\" align=\"center\"><tr>");
 		sb
@@ -224,7 +224,7 @@ public class WebHandler {
 	}
 
 	private String navigateDF(Component comp, int level) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		String space = "";
 		String indent = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 		for (int i = 0; i < level; i++) {
@@ -271,7 +271,7 @@ public class WebHandler {
 	}
 
 	private String getHtmlHeader() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transiti");
 		sb.append("onal//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-tr");
 		sb.append("ansitional.dtd\"><html xmlns=\"http://www.w3.org/1999/");
@@ -293,7 +293,7 @@ public class WebHandler {
 		return sb.toString();
 	}
 
-	private void appendWebLink(StringBuffer sb, Address address, String label) {
+	private void appendWebLink(StringBuilder sb, Address address, String label) {
 		if (address == null) {
 			sb.append("NIL");
 			return;

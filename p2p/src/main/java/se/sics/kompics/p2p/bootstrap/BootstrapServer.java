@@ -259,32 +259,39 @@ public class BootstrapServer {
 	}
 
 	private String dumpCacheToHtml() {
-		StringBuffer sb = new StringBuffer(
-				"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN"
-						+ "\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transiti"
-						+ "onal.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtm"
-						+ "l\"><head><meta http-equiv=\"Content-Type\" content="
-						+ "\"text/html; charset=utf-8\" />"
-						+ "<title>Kompics P2P Bootstrap Server</title>"
-						+ "<style type=\"text/css\"><!--.style2 {font-family: "
-						+ "Arial, Helvetica, sans-serif; color: #0099FF;}-->"
-						+ "</style>"
-						+ "</head><body><h2 align=\"center\" class=\"style2\">"
-						+ "Kompics P2P Bootstrap Cache contents:</h2>"
-						+ "<table width=\"600\" border=\"2\" align=\"center\"><tr>"
-						+ "<th class=\"style2\" width=\"80\" scope=\"col\">Age</th>"
-						+ "<th class=\"style2\" width=\"120\" scope=\"col\">Freshness</th>"
-						+ "<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
+		StringBuilder sb = new StringBuilder("<!DOCTYPE html PUBLIC \"-//W3C");
+		sb.append("//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR");
+		sb.append("/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http:");
+		sb.append("//www.w3.org/1999/xhtml\"><head><meta http-equiv=\"Conten");
+		sb.append("t-Type\" content=\"text/html; charset=utf-8\" />");
+		sb.append("<title>Kompics P2P Bootstrap Server</title>");
+		sb.append("<style type=\"text/css\"><!--.style2 {font-family: ");
+		sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
+		sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
+		sb.append("Kompics P2P Bootstrap Cache contents:</h2>");
+		sb.append("<table width=\"600\" border=\"2\" align=\"center\"><tr>");
+		sb
+				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
+		sb.append("<th class=\"style2\" width=\"80\" scope=\"col\">Age</th>");
+		sb
+				.append("<th class=\"style2\" width=\"120\" scope=\"col\">Freshness</th>");
+		sb
+				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
 		long now = System.currentTimeMillis();
 
 		// get all peers in most recently added order
 		Iterator<Address> iterator = mostRecentEntriesFirst
 				.descendingIterator();
+
+		int count = 1;
+
 		while (iterator.hasNext()) {
 			Address address = iterator.next();
 			CacheEntry cacheEntry = cache.get(address);
 
 			sb.append("<tr>");
+			sb.append("<td><div align=\"center\">").append(count++);
+			sb.append("</div></td>");
 			sb.append("<td><div align=\"right\">");
 			sb.append(durationToString(now - cacheEntry.getAddedAt()));
 			sb.append("</div></td><td><div align=\"right\">");
@@ -303,7 +310,7 @@ public class BootstrapServer {
 	}
 
 	private String durationToString(long duration) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 
 		// get duration in seconds
 		duration /= 1000;

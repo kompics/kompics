@@ -203,7 +203,7 @@ public class PeerMonitorServer {
 	}
 
 	private String dumpViewToHtml() {
-		StringBuffer sb = new StringBuffer("<!DOCTYPE html PUBLIC ");
+		StringBuilder sb = new StringBuilder("<!DOCTYPE html PUBLIC ");
 		sb.append("\"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3");
 		sb.append(".org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=");
 		sb.append("\"http://www.w3.org/1999/xhtml\"><head><meta http-equiv=\"");
@@ -216,6 +216,8 @@ public class PeerMonitorServer {
 		sb.append("<h2 align=\"center\" class=\"style2\">");
 		sb.append("View of Chord SON:</h2>");
 		sb.append("<table width=\"1100\" border=\"2\" align=\"center\"><tr>");
+		sb
+				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>");
 		sb
@@ -236,6 +238,9 @@ public class PeerMonitorServer {
 
 		// get all peers in their id order
 		Iterator<Address> iterator = alivePeers.iterator();
+
+		int count = 1;
+
 		while (iterator.hasNext()) {
 			Address address = iterator.next();
 			Map<String, Object> peerData = p2pNetworkData.get(address);
@@ -250,6 +255,8 @@ public class PeerMonitorServer {
 			List<Address> fingerList = null;
 
 			sb.append("<tr>");
+			sb.append("<td><div align=\"center\">").append(count++);
+			sb.append("</div></td>");
 
 			// print predecessor
 			if (pred != null) {
@@ -356,18 +363,29 @@ public class PeerMonitorServer {
 		if (deadPeers.size() > 0) {
 			sb.append("<h2 align=\"center\" class=\"style2\">Dead peers:</h2>");
 			sb
-					.append("<table width=\"1100\" border=\"2\" align=\"center\"><tr>"
-							+ "<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>"
-							+ "<th class=\"style2\" width=\"100\" scope=\"col\">Peer Id</th>"
-							+ "<th class=\"style2\" width=\"100\" scope=\"col\">Successor</th>"
-							+ "<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th>"
-							+ "<th class=\"style2\" width=\"300\" scope=\"col\">Finger List</th>"
-							+ "<th class=\"style2\" width=\"100\" scope=\"col\">Lifetime</th>"
-							+ "<th class=\"style2\" width=\"100\" scope=\"col\">Dead for</th></tr>");
+					.append("<table width=\"1100\" border=\"2\" align=\"center\"><tr>");
+			sb
+					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
+			sb
+					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>");
+			sb
+					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Peer Id</th>");
+			sb
+					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Successor</th>");
+			sb
+					.append("<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th>");
+			sb
+					.append("<th class=\"style2\" width=\"300\" scope=\"col\">Finger List</th>");
+			sb
+					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Lifetime</th>");
+			sb
+					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Dead for</th></tr>");
 
 			LinkedList<Address> peers = new LinkedList<Address>(deadPeers
 					.keySet());
 			Collections.sort(peers);
+
+			count = 1;
 
 			// get all peers in their id order
 			iterator = peers.iterator();
@@ -385,6 +403,10 @@ public class PeerMonitorServer {
 				List<Address> fingerList = null;
 
 				sb.append("<tr>");
+
+				sb.append("<tr>");
+				sb.append("<td><div align=\"center\">").append(count++);
+				sb.append("</div></td>");
 
 				// print predecessor
 				if (pred != null) {
@@ -497,7 +519,7 @@ public class PeerMonitorServer {
 		return sb.toString();
 	}
 
-	private void appendWebLink(StringBuffer sb, Address address) {
+	private void appendWebLink(StringBuilder sb, Address address) {
 		sb.append("<a href=\"http://").append(address.getIp()).append(":");
 		sb.append(address.getPort() - 21920).append("/");
 		sb.append(address.getId()).append("/inf\">").append(address.getId());
@@ -510,7 +532,7 @@ public class PeerMonitorServer {
 	}
 
 	private String durationToString(long duration) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 
 		// get duration in seconds
 		duration /= 1000;
