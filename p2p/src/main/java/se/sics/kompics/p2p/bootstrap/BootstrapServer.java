@@ -269,7 +269,7 @@ public class BootstrapServer {
 		sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
 		sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
 		sb.append("Kompics P2P Bootstrap Cache contents:</h2>");
-		sb.append("<table width=\"600\" border=\"2\" align=\"center\"><tr>");
+		sb.append("<table width=\"600\" border=\"0\" align=\"center\"><tr>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
 		sb.append("<th class=\"style2\" width=\"80\" scope=\"col\">Age</th>");

@@ -1,5 +1,6 @@
 package se.sics.kompics.p2p.web;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -174,6 +175,8 @@ public class WebHandler {
 		sb.append("</tr>");
 
 		if (peers != null) {
+			Collections.sort(peers);
+
 			Iterator<Address> iter = peers.iterator();
 			while (iter.hasNext()) {
 				sb.append("<tr><td><div align=\"center\">");

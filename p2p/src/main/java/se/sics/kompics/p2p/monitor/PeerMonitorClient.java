@@ -101,8 +101,8 @@ public class PeerMonitorClient {
 		int port = Integer.parseInt(properties
 				.getProperty("monitor.server.port"));
 
-		updatePeriod = 1000 * Integer.parseInt(properties.getProperty(
-				"update.period", "1"));
+		updatePeriod = 1000 * Integer.parseInt(properties
+				.getProperty("client.refresh.period"));
 
 		monitorServerAddress = new Address(ip, port, BigInteger.ZERO);
 		localPeerAddress = localAddress;

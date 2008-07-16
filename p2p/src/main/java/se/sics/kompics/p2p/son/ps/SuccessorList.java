@@ -38,6 +38,8 @@ public class SuccessorList implements Serializable {
 	}
 
 	public Address getSuccessor() {
+		// if (successors.size() == 0)
+		// return null;
 		return successors.get(0);
 	}
 
@@ -165,6 +167,11 @@ public class SuccessorList implements Serializable {
 
 	public void successorFailed(Address peer) {
 		successors.remove(peer);
+
+		if (successors.size() == 0) {
+			// last successor died
+			successors.add(localPeer);
+		}
 	}
 
 	public int getLength() {

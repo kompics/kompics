@@ -215,7 +215,7 @@ public class PeerMonitorServer {
 		sb.append("Kompics P2P Monitor</h1>");
 		sb.append("<h2 align=\"center\" class=\"style2\">");
 		sb.append("View of Chord SON:</h2>");
-		sb.append("<table width=\"1100\" border=\"2\" align=\"center\"><tr>");
+		sb.append("<table width=\"1100\" border=\"0\" align=\"center\"><tr>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
 		sb
@@ -363,7 +363,7 @@ public class PeerMonitorServer {
 		if (deadPeers.size() > 0) {
 			sb.append("<h2 align=\"center\" class=\"style2\">Dead peers:</h2>");
 			sb
-					.append("<table width=\"1100\" border=\"2\" align=\"center\"><tr>");
+					.append("<table width=\"1100\" border=\"0\" align=\"center\"><tr>");
 			sb
 					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
 			sb
