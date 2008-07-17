@@ -218,8 +218,8 @@ public class ChordRing {
 
 		BigInteger identifier = event.getIdentifier();
 
-		if (RingMath.belongsTo(identifier, localPeer, successorList
-				.getSuccessor(), IntervalBounds.OPEN_CLOSED, ringSize)) {
+		if (RingMath.belongsTo(identifier, localPeer.getId(), successorList
+				.getSuccessor().getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
 			// return my successor as the real successor
 			FindSuccessorResponse response = new FindSuccessorResponse(
 					successorList.getSuccessor(), false);
@@ -368,9 +368,9 @@ public class ChordRing {
 		Address predecessorOfMySuccessor = event.getPredecessor();
 
 		if (predecessorOfMySuccessor != null) {
-			if (RingMath.belongsTo(predecessorOfMySuccessor.getId(), localPeer,
-					successorList.getSuccessor(), IntervalBounds.OPEN_OPEN,
-					ringSize)) {
+			if (RingMath.belongsTo(predecessorOfMySuccessor.getId(), localPeer
+					.getId(), successorList.getSuccessor().getId(),
+					IntervalBounds.OPEN_OPEN, ringSize)) {
 				successorList.setSuccessor(predecessorOfMySuccessor);
 
 				neighborAdded(successorList.getSuccessor());
@@ -405,8 +405,8 @@ public class ChordRing {
 
 		if (predecessor == null
 				|| RingMath.belongsTo(potentialNewPredecessor.getId(),
-						predecessor, localPeer, IntervalBounds.OPEN_OPEN,
-						ringSize)) {
+						predecessor.getId(), localPeer.getId(),
+						IntervalBounds.OPEN_OPEN, ringSize)) {
 			predecessor = potentialNewPredecessor;
 
 			neighborAdded(potentialNewPredecessor);

@@ -66,18 +66,18 @@ public class SuccessorList implements Serializable {
 			mine = myList.get(m);
 			theirs = theirList.get(t);
 
-			if (RingMath.belongsTo(mine.getId(), last, theirs,
+			if (RingMath.belongsTo(mine.getId(), last.getId(), theirs.getId(),
 					IntervalBounds.OPEN_OPEN, ringSize)) {
-				if (RingMath.belongsTo(mine.getId(), last, localPeer,
-						IntervalBounds.OPEN_OPEN, ringSize)) {
+				if (RingMath.belongsTo(mine.getId(), last.getId(), localPeer
+						.getId(), IntervalBounds.OPEN_OPEN, ringSize)) {
 					successors.add(f++, mine);
 					last = mine;
 				}
 				m++;
-			} else if (RingMath.belongsTo(theirs.getId(), last, mine,
-					IntervalBounds.OPEN_OPEN, ringSize)) {
-				if (RingMath.belongsTo(theirs.getId(), last, localPeer,
-						IntervalBounds.OPEN_OPEN, ringSize)) {
+			} else if (RingMath.belongsTo(theirs.getId(), last.getId(), mine
+					.getId(), IntervalBounds.OPEN_OPEN, ringSize)) {
+				if (RingMath.belongsTo(theirs.getId(), last.getId(), localPeer
+						.getId(), IntervalBounds.OPEN_OPEN, ringSize)) {
 					successors.add(f++, theirs);
 					last = theirs;
 				}
@@ -91,8 +91,8 @@ public class SuccessorList implements Serializable {
 
 		while (f < length && m < myList.size()) {
 			mine = myList.get(m);
-			if (RingMath.belongsTo(mine.getId(), last, localPeer,
-					IntervalBounds.OPEN_OPEN, ringSize)) {
+			if (RingMath.belongsTo(mine.getId(), last.getId(), localPeer
+					.getId(), IntervalBounds.OPEN_OPEN, ringSize)) {
 				successors.add(f++, mine);
 				last = mine;
 			}
@@ -101,8 +101,8 @@ public class SuccessorList implements Serializable {
 
 		while (f < length && t < theirList.size()) {
 			theirs = theirList.get(t);
-			if (RingMath.belongsTo(theirs.getId(), last, localPeer,
-					IntervalBounds.OPEN_OPEN, ringSize)) {
+			if (RingMath.belongsTo(theirs.getId(), last.getId(), localPeer
+					.getId(), IntervalBounds.OPEN_OPEN, ringSize)) {
 				successors.add(f++, theirs);
 				last = theirs;
 			}

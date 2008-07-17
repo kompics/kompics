@@ -2,15 +2,11 @@ package se.sics.kompics.p2p.son.ps;
 
 import java.math.BigInteger;
 
-import se.sics.kompics.network.Address;
-
 public class RingMath {
 
 	// x belongs to (from, to)
-	public static boolean belongsTo(BigInteger x, Address fromAddress,
-			Address toAddress, IntervalBounds bounds, BigInteger ringSize) {
-		BigInteger from = fromAddress.getId();
-		BigInteger to = toAddress.getId();
+	public static boolean belongsTo(BigInteger x, BigInteger from,
+			BigInteger to, IntervalBounds bounds, BigInteger ringSize) {
 
 		BigInteger ny = modMinus(to, from, ringSize);
 		BigInteger nx = modMinus(x, from, ringSize);
@@ -36,5 +32,10 @@ public class RingMath {
 	private static BigInteger modMinus(BigInteger x, BigInteger y,
 			BigInteger ringSize) {
 		return ringSize.add(x).subtract(y).mod(ringSize);
+	}
+
+	public static BigInteger modPlus(BigInteger x, BigInteger y,
+			BigInteger ringSize) {
+		return x.add(y).mod(ringSize);
 	}
 }

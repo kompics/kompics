@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.mortbay.jetty.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,10 +113,11 @@ public class WebHandler {
 
 	@EventHandlerMethod
 	public void handleWebRequest(WebRequestEvent event) {
-		String request = event.getRequest();
-		logger.debug("Handling request {}", request);
+		String target = event.getTarget();
+		Request request = event.getRequest();
+		logger.debug("Handling request {}", target);
 
-		if (request.substring(1).startsWith("nav")) {
+		if (target.substring(1).startsWith("nav")) {
 			Component boot = component;
 			while (boot.getSuperComponent() != null) {
 				boot = boot.getSuperComponent();
@@ -130,7 +132,25 @@ public class WebHandler {
 			GetRingNeighborsRequest ringRequest = new GetRingNeighborsRequest();
 			StatusRequest fdRequest = new StatusRequest(fdResponseChannel);
 
-			parts = 4;
+			parts = 5;
+
+			String chordLookupKey = request.getParameter("chordLookup");
+
+			if (chordLookupKey != null) {
+				// do Chord lookup
+
+				// ChordLookup c;
+				// component.triggerEvent(c, chordRingRequestChannel);
+				WebResponseEvent response = new WebResponseEvent(
+						dumpChordLookupForm(chordLookupKey, localAddress),
+						requestEvent, 2, parts);
+				component.triggerEvent(response, webResponseChannel);
+			} else {
+				// just print lookup form
+				WebResponseEvent response = new WebResponseEvent(
+						dumpChordLookupForm(null, null), requestEvent, 2, parts);
+				component.triggerEvent(response, webResponseChannel);
+			}
 
 			component.triggerEvent(ringRequest, chordRingRequestChannel);
 			component.triggerEvent(fdRequest, fdRequestChannel);
@@ -146,11 +166,21 @@ public class WebHandler {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(WebResponseEvent.class)
+	public void handleChordLookupResponse(StatusResponse response) {
+		String html = dumpFdStatusToHtml(response);
+
+		WebResponseEvent responseEvent = new WebResponseEvent(html,
+				requestEvent, 2, parts);
+		component.triggerEvent(responseEvent, webResponseChannel);
+	}
+
+	@EventHandlerMethod
+	@MayTriggerEventTypes(WebResponseEvent.class)
 	public void handleStatusResponse(StatusResponse response) {
 		String html = dumpFdStatusToHtml(response);
 
 		WebResponseEvent responseEvent = new WebResponseEvent(html,
-				requestEvent, 3, parts);
+				requestEvent, 4, parts);
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 
@@ -160,8 +190,30 @@ public class WebHandler {
 		String html = dumpRingViewToHtml(event);
 
 		WebResponseEvent responseEvent = new WebResponseEvent(html,
-				requestEvent, 2, parts);
+				requestEvent, 3, parts);
 		component.triggerEvent(responseEvent, webResponseChannel);
+	}
+
+	private String dumpChordLookupForm(String key, Address responsible) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("<h2 align=\"center\" class=\"style2\">Chord Lookup:</h2>");
+		sb.append("<table width=\"500\" border=\"0\" align=\"center\"><tr><td");
+		sb.append("><form method=\"get\" name=\"lkpFrm\" id=\"chordLkpFrm\">");
+		sb.append("<fieldset><legend> Chord </legend><label>Lookup key ");
+		sb.append("<input name=\"chordLookup\" type=\"text\" id=\"lookip\" ");
+		sb.append("value=\"").append(key != null ? key : "1");
+		sb.append("\" size=\"6\"/>");
+		sb.append("</label><input type=\"submit\" value=\"Lookup\" />");
+		if (responsible != null && key != null) {
+			sb.append("<label> Peer ");
+			appendWebLink(sb, responsible, null);
+			sb.append(" is responsible for key ").append(key).append(".");
+			sb.append("</label>");
+		}
+		sb.append("</fieldset></form></td></tr></table>");
+
+		return sb.toString();
 	}
 
 	private String dumpFdStatusToHtml(StatusResponse response) {
@@ -187,6 +239,7 @@ public class WebHandler {
 			sb.append("<tr><td bgcolor=\"#FFCCFF\"><div align=\"center\">");
 			sb.append("[empty]</div></td><td>Data</td></tr>");
 		}
+		sb.append("</table>");
 		return sb.toString();
 	}
 
