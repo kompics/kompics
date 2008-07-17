@@ -2,6 +2,8 @@ package se.sics.kompics.web.events;
 
 import java.math.BigInteger;
 
+import org.mortbay.jetty.Request;
+
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.EventType;
 
@@ -18,12 +20,16 @@ public final class WebRequestEvent implements Event {
 
 	private final BigInteger destination;
 
-	private final String request;
+	private final String target;
 
-	public WebRequestEvent(BigInteger destination, long id, String request) {
+	private final Request request;
+
+	public WebRequestEvent(BigInteger destination, long id, String target,
+			Request request) {
 		super();
 		this.destination = destination;
 		this.id = id;
+		this.target = target;
 		this.request = request;
 	}
 
@@ -35,7 +41,11 @@ public final class WebRequestEvent implements Event {
 		return destination;
 	}
 
-	public String getRequest() {
+	public String getTarget() {
+		return target;
+	}
+
+	public Request getRequest() {
 		return request;
 	}
 
@@ -46,7 +56,7 @@ public final class WebRequestEvent implements Event {
 		result = prime * result
 				+ ((destination == null) ? 0 : destination.hashCode());
 		result = prime * result + (int) (id ^ (id >>> 32));
-		result = prime * result + ((request == null) ? 0 : request.hashCode());
+		result = prime * result + ((target == null) ? 0 : target.hashCode());
 		return result;
 	}
 
@@ -66,10 +76,10 @@ public final class WebRequestEvent implements Event {
 			return false;
 		if (id != other.id)
 			return false;
-		if (request == null) {
-			if (other.request != null)
+		if (target == null) {
+			if (other.target != null)
 				return false;
-		} else if (!request.equals(other.request))
+		} else if (!target.equals(other.target))
 			return false;
 		return true;
 	}

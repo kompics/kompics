@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Handler;
+import org.mortbay.jetty.Request;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.slf4j.Logger;
@@ -108,8 +109,8 @@ public final class WebComponent {
 		}
 	}
 
-	void handleRequest(String target, HttpServletResponse response)
-			throws IOException {
+	void handleRequest(String target, Request request,
+			HttpServletResponse response) throws IOException {
 		logger.debug("Handling request {}", target);
 
 		String[] args = target.split("/");
@@ -118,7 +119,7 @@ public final class WebComponent {
 
 		WebRequestEvent requestEvent = new WebRequestEvent(new BigInteger(
 				handlerId), requestId++, target.substring(target
-				.indexOf('/', 1)));
+				.indexOf('/', 1)), request);
 
 		LinkedBlockingQueue<WebResponseEvent> queue = new LinkedBlockingQueue<WebResponseEvent>();
 

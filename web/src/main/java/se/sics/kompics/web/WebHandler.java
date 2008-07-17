@@ -55,7 +55,7 @@ final class WebHandler extends AbstractHandler {
 					"<head><link rel=\"icon\" href=\"/favicon."
 							+ "ico\" type=\"image/x-icon\" /></head>");
 
-			webComponent.handleRequest(target, response);
+			webComponent.handleRequest(target, base_request, response);
 		}
 	}
 }
