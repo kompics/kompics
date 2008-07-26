@@ -21,10 +21,10 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsRequest;
+import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsResponse;
 import se.sics.kompics.p2p.fd.events.StatusRequest;
 import se.sics.kompics.p2p.fd.events.StatusResponse;
-import se.sics.kompics.p2p.son.ps.events.GetRingNeighborsRequest;
-import se.sics.kompics.p2p.son.ps.events.GetRingNeighborsResponse;
 import se.sics.kompics.web.events.WebRequestEvent;
 import se.sics.kompics.web.events.WebResponseEvent;
 

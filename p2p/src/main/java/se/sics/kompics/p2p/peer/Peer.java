@@ -20,6 +20,13 @@ import se.sics.kompics.p2p.bootstrap.events.BootstrapCacheReset;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCompleted;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapRequest;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapResponse;
+import se.sics.kompics.p2p.chord.events.CreateRing;
+import se.sics.kompics.p2p.chord.events.JoinRing;
+import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsRequest;
+import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsResponse;
+import se.sics.kompics.p2p.chord.ring.events.JoinRingCompleted;
+import se.sics.kompics.p2p.chord.ring.events.NewPredecessor;
+import se.sics.kompics.p2p.chord.ring.events.NewSuccessor;
 import se.sics.kompics.p2p.fd.events.StartProbingPeer;
 import se.sics.kompics.p2p.fd.events.StatusRequest;
 import se.sics.kompics.p2p.fd.events.StopProbingPeer;
@@ -33,13 +40,6 @@ import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
 import se.sics.kompics.p2p.peer.events.LeavePeer;
-import se.sics.kompics.p2p.son.ps.events.CreateRing;
-import se.sics.kompics.p2p.son.ps.events.GetRingNeighborsRequest;
-import se.sics.kompics.p2p.son.ps.events.GetRingNeighborsResponse;
-import se.sics.kompics.p2p.son.ps.events.JoinRing;
-import se.sics.kompics.p2p.son.ps.events.JoinRingCompleted;
-import se.sics.kompics.p2p.son.ps.events.NewPredecessor;
-import se.sics.kompics.p2p.son.ps.events.NewSuccessor;
 
 /**
  * The <code>Peer</code> class

@@ -17,12 +17,12 @@ import se.sics.kompics.p2p.bootstrap.events.BootstrapCompleted;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapRequest;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapResponse;
 import se.sics.kompics.p2p.bootstrap.events.PeerEntry;
+import se.sics.kompics.p2p.chord.events.CreateRing;
+import se.sics.kompics.p2p.chord.events.JoinRing;
+import se.sics.kompics.p2p.chord.ring.events.JoinRingCompleted;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
 import se.sics.kompics.p2p.peer.events.LeavePeer;
-import se.sics.kompics.p2p.son.ps.events.CreateRing;
-import se.sics.kompics.p2p.son.ps.events.JoinRing;
-import se.sics.kompics.p2p.son.ps.events.JoinRingCompleted;
 
 /**
  * The <code>PeerApplication</code> class

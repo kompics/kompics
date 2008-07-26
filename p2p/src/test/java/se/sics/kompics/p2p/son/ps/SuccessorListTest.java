@@ -8,6 +8,7 @@ import junit.framework.TestCase;
 import org.junit.Before;
 
 import se.sics.kompics.network.Address;
+import se.sics.kompics.p2p.chord.ring.SuccessorList;
 
 public class SuccessorListTest extends TestCase {
 
