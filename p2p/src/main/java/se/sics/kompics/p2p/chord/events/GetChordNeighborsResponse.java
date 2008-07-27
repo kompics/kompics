@@ -12,8 +12,7 @@ import se.sics.kompics.p2p.chord.router.FingerTableView;
  * The <code>GetChordNeighborsResponse</code> class
  * 
  * @author Cosmin Arad
- * @version $Id: GetChordNeighborsResponse.java 158 2008-06-16 10:42:01Z Cosmin
- *          $
+ * @version $Id: GetChordNeighborsResponse.java 158 2008-06-16 10:42:01Z Cosmin $
  */
 @EventType
 public final class GetChordNeighborsResponse implements Event, Serializable {
@@ -21,7 +20,7 @@ public final class GetChordNeighborsResponse implements Event, Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -28992129362440344L;
+	private static final long serialVersionUID = -2356239993994511579L;
 
 	private final Address localPeer;
 

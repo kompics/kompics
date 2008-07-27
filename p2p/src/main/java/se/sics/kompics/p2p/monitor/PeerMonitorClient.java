@@ -6,6 +6,9 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
@@ -38,6 +41,8 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
  */
 @ComponentSpecification
 public class PeerMonitorClient {
+
+	private Logger logger;
 
 	private final Component component;
 
@@ -85,7 +90,7 @@ public class PeerMonitorClient {
 
 		component.subscribe(lnDeliverChannel, "handleChangeUpdatePeriod");
 		component.subscribe(chordResponseChannel,
-				"handleGetRingNeighborsResponse");
+				"handleGetChordNeighborsResponse");
 
 		component.subscribe(requestChannel, "handleStartPeerMonitor");
 		component.subscribe(requestChannel, "handleStopPeerMonitor");
@@ -95,6 +100,9 @@ public class PeerMonitorClient {
 	public void init(Properties properties, Address localAddress)
 			throws UnknownHostException {
 		this.localPeerAddress = localAddress;
+
+		logger = LoggerFactory.getLogger(getClass().getName() + "@"
+				+ localAddress.getId());
 
 		InetAddress ip = InetAddress.getByName(properties
 				.getProperty("monitor.server.ip"));
@@ -133,8 +141,11 @@ public class PeerMonitorClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { GetChordNeighborsRequest.class, SetTimerEvent.class })
+	@MayTriggerEventTypes( { GetChordNeighborsRequest.class,
+			SetTimerEvent.class })
 	public void handleSendView(SendView event) {
+		logger.debug("SEND_VIEW");
+
 		GetChordNeighborsRequest request = new GetChordNeighborsRequest();
 		component.triggerEvent(request, chordRequestChannel);
 
@@ -144,7 +155,9 @@ public class PeerMonitorClient {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(LossyNetworkSendEvent.class)
-	public void handleGetRingNeighborsResponse(GetChordNeighborsResponse event) {
+	public void handleGetChordNeighborsResponse(GetChordNeighborsResponse event) {
+		logger.debug("GET_CHORD_NEIGHBORS_RESP");
+
 		HashMap<String, Object> map = new HashMap<String, Object>();
 
 		map.put("ChordRing", event);

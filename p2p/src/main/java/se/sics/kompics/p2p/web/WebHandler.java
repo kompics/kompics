@@ -268,7 +268,7 @@ public class WebHandler {
 	private String dumpRingViewToHtml(GetChordNeighborsResponse response) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<h2 align=\"center\" class=\"style2\">ChordRing:</h2>");
-		sb.append("<table width=\"1400\" border=\"2\" align=\"center\"><tr>");
+		sb.append("<table width=\"1500\" border=\"2\" align=\"center\"><tr>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>");
 		sb
@@ -276,7 +276,7 @@ public class WebHandler {
 		sb
 				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th>");
 		sb
-				.append("<th class=\"style2\" width=\"900\" scope=\"col\">Fingers</th></tr>");
+				.append("<th class=\"style2\" width=\"1000\" scope=\"col\">Fingers</th></tr>");
 		sb.append("<tr><td><div align=\"center\">");
 		appendWebLink(sb, response.getPredecessorPeer(), null);
 		sb.append("</div></td><td><div align=\"center\">");

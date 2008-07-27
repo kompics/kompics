@@ -92,7 +92,7 @@ public class FingerTable {
 		boolean changed = false;
 
 		for (int i = 0; i < finger.length; i++) {
-			if (finger[i].equals(peer)) {
+			if (finger[i] != null && finger[i].equals(peer)) {
 				finger[i] = null;
 				changed = true;
 			}

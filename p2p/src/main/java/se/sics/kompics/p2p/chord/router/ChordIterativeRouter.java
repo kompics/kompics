@@ -176,7 +176,7 @@ public class ChordIterativeRouter {
 	@MayTriggerEventTypes( { SetTimerEvent.class,
 			PerfectNetworkSendEvent.class, ChordLookupResponse.class })
 	public void handleChordLookupRequest(ChordLookupRequest event) {
-		logger.debug("CHORD_LOOKUP_REQ, succ={}", successor);
+		logger.debug("CHORD_LOOKUP_REQ({})", event.getKey());
 
 		BigInteger key = event.getKey();
 		Address firstPeer = event.getFirstPeer();
@@ -229,6 +229,14 @@ public class ChordIterativeRouter {
 			// some other peer is responsible for the looked up key
 			Address closest = fingerTable.closestPreceedingPeer(key);
 
+			if (closest.equals(localPeer)) {
+				// we found no closes peer so the lookup should fail
+				ChordLookupFailed failed = new ChordLookupFailed(key, event
+						.getAttachment());
+				component.triggerEvent(failed, event.getResponseChannel());
+				return;
+			}
+
 			RpcTimeout timeout = new RpcTimeout(event, closest);
 			long timerId = timerHandler.setTimer(timeout, timerSignalChannel,
 					rpcTimeout);
@@ -260,6 +268,9 @@ public class ChordIterativeRouter {
 			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
 					response, event.getSource());
 			component.triggerEvent(sendEvent, pnSendChannel);
+
+			logger.error("RETURNED MYSELF {}, {}", key, localPeer);
+
 		} else if (RingMath.belongsTo(key, localPeer.getId(),
 				successor.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
 			// return my successor as the real successor
@@ -396,11 +407,11 @@ public class ChordIterativeRouter {
 		logger.debug("CHORD_LOOKUP_FAILED");
 
 		// retry lookup
-		int fingerIndex = (Integer) event.getAttachment();
-		BigInteger fingerBegin = fingerTable.getFingerBegin(fingerIndex);
-		ChordLookupRequest request = new ChordLookupRequest(fingerBegin,
-				fixFingersLookupChannel, fingerIndex);
-		component.triggerEvent(request, requestChannel);
+		// int fingerIndex = (Integer) event.getAttachment();
+		// BigInteger fingerBegin = fingerTable.getFingerBegin(fingerIndex);
+		// ChordLookupRequest request = new ChordLookupRequest(fingerBegin,
+		// fixFingersLookupChannel, fingerIndex);
+		// component.triggerEvent(request, requestChannel);
 	}
 
 	@EventHandlerMethod
