@@ -40,8 +40,8 @@ public class PeerApplication {
 	// bootstrap client channels
 	Channel bootstrapRequestChannel, bootstrapResponseChannel;
 
-	// ChordRing channels
-	Channel chordRingRequestChannel, chordRingResponseChannel;
+	// Chord channels
+	Channel chordRequestChannel, chordResponseChannel;
 
 	private Address localAddress;
 
@@ -73,16 +73,14 @@ public class PeerApplication {
 
 		// use shared ChordRing component
 		ComponentMembrane ringMembrane = component
-				.getSharedComponentMembrane("se.sics.kompics.p2p.son.ps.ChordRing");
-		chordRingRequestChannel = ringMembrane.getChannel(JoinRing.class);
-		chordRingResponseChannel = ringMembrane
-				.getChannel(JoinRingCompleted.class);
+				.getSharedComponentMembrane("se.sics.kompics.p2p.chord.Chord");
+		chordRequestChannel = ringMembrane.getChannel(JoinRing.class);
+		chordResponseChannel = ringMembrane.getChannel(JoinRingCompleted.class);
 
 		component
 				.subscribe(bootstrapResponseChannel, "handleBootstrapResponse");
 
-		component
-				.subscribe(chordRingResponseChannel, "handleJoinRingCompleted");
+		component.subscribe(chordResponseChannel, "handleJoinRingCompleted");
 	}
 
 	@EventHandlerMethod
@@ -114,11 +112,11 @@ public class PeerApplication {
 			// we join though the first peer;
 			PeerEntry peerEntry = somePeers.iterator().next();
 			JoinRing request = new JoinRing(peerEntry.getAddress());
-			component.triggerEvent(request, chordRingRequestChannel);
+			component.triggerEvent(request, chordRequestChannel);
 		} else {
 			// we create a new ring
 			CreateRing request = new CreateRing();
-			component.triggerEvent(request, chordRingRequestChannel);
+			component.triggerEvent(request, chordRequestChannel);
 		}
 	}
 

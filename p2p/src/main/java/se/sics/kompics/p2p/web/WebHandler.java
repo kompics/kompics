@@ -1,5 +1,6 @@
 package se.sics.kompics.p2p.web;
 
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -21,8 +22,12 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsRequest;
-import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsResponse;
+import se.sics.kompics.p2p.chord.events.ChordLookupFailed;
+import se.sics.kompics.p2p.chord.events.ChordLookupRequest;
+import se.sics.kompics.p2p.chord.events.ChordLookupResponse;
+import se.sics.kompics.p2p.chord.events.GetChordNeighborsRequest;
+import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
+import se.sics.kompics.p2p.chord.router.FingerTableView;
 import se.sics.kompics.p2p.fd.events.StatusRequest;
 import se.sics.kompics.p2p.fd.events.StatusResponse;
 import se.sics.kompics.web.events.WebRequestEvent;
@@ -43,7 +48,9 @@ public class WebHandler {
 
 	private Channel webRequestChannel, webResponseChannel;
 
-	private Channel chordRingRequestChannel, chordRingResponseChannel;
+	// Chord channels
+	private Channel chordRequestChannel, chordResponseChannel,
+			chordLookupResponseChannel;
 
 	// FailureDetector channels
 	private Channel fdRequestChannel, fdResponseChannel;
@@ -79,15 +86,22 @@ public class WebHandler {
 
 		// use shared ChordRing component
 		ComponentMembrane crMembrane = component
-				.getSharedComponentMembrane("se.sics.kompics.p2p.son.ps.ChordRing");
-		chordRingRequestChannel = crMembrane
-				.getChannel(GetRingNeighborsRequest.class);
-		chordRingResponseChannel = crMembrane
-				.getChannel(GetRingNeighborsResponse.class);
+				.getSharedComponentMembrane("se.sics.kompics.p2p.chord.Chord");
+		chordRequestChannel = crMembrane
+				.getChannel(GetChordNeighborsRequest.class);
+		chordResponseChannel = crMembrane
+				.getChannel(GetChordNeighborsResponse.class);
+		chordLookupResponseChannel = component.createChannel(
+				ChordLookupResponse.class, ChordLookupFailed.class);
 
 		component.subscribe(fdResponseChannel, "handleStatusResponse");
-		component.subscribe(chordRingResponseChannel,
-				"handleGetRingNeighborsResponse");
+		component.subscribe(chordResponseChannel,
+				"handleGetChordNeighborsResponse");
+
+		component.subscribe(chordLookupResponseChannel,
+				"handleChordLookupResponse");
+		component.subscribe(chordLookupResponseChannel,
+				"handleChordLookupFailed");
 	}
 
 	@ComponentInitializeMethod
@@ -129,7 +143,7 @@ public class WebHandler {
 		} else {
 			requestEvent = event;
 
-			GetRingNeighborsRequest ringRequest = new GetRingNeighborsRequest();
+			GetChordNeighborsRequest ringRequest = new GetChordNeighborsRequest();
 			StatusRequest fdRequest = new StatusRequest(fdResponseChannel);
 
 			parts = 5;
@@ -138,13 +152,10 @@ public class WebHandler {
 
 			if (chordLookupKey != null) {
 				// do Chord lookup
-
-				// ChordLookup c;
-				// component.triggerEvent(c, chordRingRequestChannel);
-				WebResponseEvent response = new WebResponseEvent(
-						dumpChordLookupForm(chordLookupKey, localAddress),
-						requestEvent, 2, parts);
-				component.triggerEvent(response, webResponseChannel);
+				ChordLookupRequest lookupRequest = new ChordLookupRequest(
+						new BigInteger(chordLookupKey),
+						chordLookupResponseChannel, null);
+				component.triggerEvent(lookupRequest, chordRequestChannel);
 			} else {
 				// just print lookup form
 				WebResponseEvent response = new WebResponseEvent(
@@ -152,7 +163,7 @@ public class WebHandler {
 				component.triggerEvent(response, webResponseChannel);
 			}
 
-			component.triggerEvent(ringRequest, chordRingRequestChannel);
+			component.triggerEvent(ringRequest, chordRequestChannel);
 			component.triggerEvent(fdRequest, fdRequestChannel);
 
 			WebResponseEvent responseEvent = new WebResponseEvent(htmlHeader,
@@ -166,11 +177,19 @@ public class WebHandler {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(WebResponseEvent.class)
-	public void handleChordLookupResponse(StatusResponse response) {
-		String html = dumpFdStatusToHtml(response);
+	public void handleChordLookupResponse(ChordLookupResponse response) {
+		WebResponseEvent responseEvent = new WebResponseEvent(
+				dumpChordLookupForm(response.getKey(), response
+						.getResponsible()), requestEvent, 2, parts);
+		component.triggerEvent(responseEvent, webResponseChannel);
+	}
 
-		WebResponseEvent responseEvent = new WebResponseEvent(html,
-				requestEvent, 2, parts);
+	@EventHandlerMethod
+	@MayTriggerEventTypes(WebResponseEvent.class)
+	public void handleChordLookupFailed(ChordLookupFailed response) {
+		WebResponseEvent responseEvent = new WebResponseEvent(
+				dumpChordLookupForm(response.getKey(), null), requestEvent, 2,
+				parts);
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 
@@ -186,7 +205,7 @@ public class WebHandler {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(WebResponseEvent.class)
-	public void handleGetRingNeighborsResponse(GetRingNeighborsResponse event) {
+	public void handleGetChordNeighborsResponse(GetChordNeighborsResponse event) {
 		String html = dumpRingViewToHtml(event);
 
 		WebResponseEvent responseEvent = new WebResponseEvent(html,
@@ -194,7 +213,7 @@ public class WebHandler {
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 
-	private String dumpChordLookupForm(String key, Address responsible) {
+	private String dumpChordLookupForm(BigInteger key, Address responsible) {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("<h2 align=\"center\" class=\"style2\">Chord Lookup:</h2>");
@@ -209,6 +228,9 @@ public class WebHandler {
 			sb.append("<label> Peer ");
 			appendWebLink(sb, responsible, null);
 			sb.append(" is responsible for key ").append(key).append(".");
+			sb.append("</label>");
+		} else if (responsible == null && key != null) {
+			sb.append("<label> Lookup for key ").append(key).append(" failed.");
 			sb.append("</label>");
 		}
 		sb.append("</fieldset></form></td></tr></table>");
@@ -243,16 +265,18 @@ public class WebHandler {
 		return sb.toString();
 	}
 
-	private String dumpRingViewToHtml(GetRingNeighborsResponse response) {
+	private String dumpRingViewToHtml(GetChordNeighborsResponse response) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<h2 align=\"center\" class=\"style2\">ChordRing:</h2>");
-		sb.append("<table width=\"500\" border=\"2\" align=\"center\"><tr>");
+		sb.append("<table width=\"1400\" border=\"2\" align=\"center\"><tr>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Successor</th>");
 		sb
-				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th></tr>");
+				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th>");
+		sb
+				.append("<th class=\"style2\" width=\"900\" scope=\"col\">Fingers</th></tr>");
 		sb.append("<tr><td><div align=\"center\">");
 		appendWebLink(sb, response.getPredecessorPeer(), null);
 		sb.append("</div></td><td><div align=\"center\">");
@@ -271,6 +295,22 @@ public class WebHandler {
 				}
 			}
 			sb.append("]");
+		} else {
+			sb.append("<td bgcolor=\"#FFCCFF\"><div align=\"left\">");
+			sb.append("[empty]");
+		}
+		// print fingers
+		FingerTableView fingerTable = response.getFingerTable();
+		if (fingerTable != null) {
+			sb.append("</div></td><td><div align=\"left\">");
+			for (int i = 0; i < fingerTable.begin.length; i++) {
+				if (i > 0) {
+					sb.append(", ");
+				}
+				appendWebLink(sb, fingerTable.finger[i], null);
+				sb.append(" [").append(fingerTable.begin[i].toString());
+				sb.append(", ").append(fingerTable.end[i]).append(")");
+			}
 		} else {
 			sb.append("<td bgcolor=\"#FFCCFF\"><div align=\"left\">");
 			sb.append("[empty]");

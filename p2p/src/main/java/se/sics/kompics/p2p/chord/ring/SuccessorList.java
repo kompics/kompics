@@ -49,6 +49,7 @@ public class SuccessorList implements Serializable {
 		if (!successors.get(0).equals(succ)) {
 			successors.add(0, succ);
 			trimToLength();
+			trimSelf();
 		}
 	}
 
@@ -188,9 +189,20 @@ public class SuccessorList implements Serializable {
 		return successors;
 	}
 
+	public ArrayList<Address> getSuccessorListView() {
+		return new ArrayList<Address>(successors);
+	}
+
 	private void trimToLength() {
 		while (successors.size() > length) {
 			successors.remove(length);
+		}
+	}
+
+	private void trimSelf() {
+		if (successors.size() > 1
+				&& successors.get(successors.size() - 1).equals(localPeer)) {
+			successors.remove(successors.size() - 1);
 		}
 	}
 }

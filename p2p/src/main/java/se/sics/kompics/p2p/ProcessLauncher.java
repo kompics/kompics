@@ -1,12 +1,12 @@
 package se.sics.kompics.p2p;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.swing.JTextArea;
 
 /**
  * The <code>ProcessLauncher</code> class
@@ -26,6 +26,8 @@ public class ProcessLauncher extends Thread {
 
 	private Process process;
 
+	private BufferedWriter input;
+
 	private int pid;
 
 	ProcessOutputFrame mainFrame;
@@ -44,7 +46,6 @@ public class ProcessLauncher extends Thread {
 		mainFrame = new ProcessOutputFrame(this,
 				arguments[arguments.length - 1], name, pid);
 		mainFrame.setVisible(true);
-		JTextArea logArea = mainFrame.getLogArea();
 
 		List<String> commandArgs = new LinkedList<String>();
 		commandArgs.add("java");
@@ -82,26 +83,35 @@ public class ProcessLauncher extends Thread {
 
 			BufferedReader out = new BufferedReader(new InputStreamReader(
 					process.getInputStream()));
+			input = new BufferedWriter(new OutputStreamWriter(process
+					.getOutputStream()));
 
 			String line;
 			do {
 				line = out.readLine();
 				if (line != null) {
-					logArea.append(line + "\n");
+					mainFrame.append(line + "\n");
 				}
 			} while (line != null);
 		} catch (IOException e) {
-			logArea.append(e.getMessage());
+			mainFrame.append(e.getMessage());
 		}
 
-		logArea.append("Process has terminated.");
+		mainFrame.append("Process has terminated.");
 	}
 
 	public void kill(boolean dispose) {
 		if (process != null) {
 			process.destroy();
+			process = null;
 			if (dispose)
 				mainFrame.dispose();
 		}
+	}
+
+	public void input(String string) throws IOException {
+		input.write(string);
+		input.write("\n");
+		input.flush();
 	}
 }

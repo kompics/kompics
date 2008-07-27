@@ -5,16 +5,23 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.ScrollPaneConstants;
+import javax.swing.JTextField;
 
 /**
  * The <code>ProcessOutputFrame</code> class
@@ -33,15 +40,19 @@ public class ProcessOutputFrame extends JFrame {
 
 	private JPanel logPanel = null;
 
-	private JPanel commandPanel = null;
+	// private JPanel commandPanel = null;
+	//
+	// private JButton killButton = null;
 
-	private JButton killButton = null;
+	private JMenuBar menuBar = null;
+	private JPanel inputPanel = null;
 
 	private JTextArea logArea = null;
+	private JScrollPane scrollPane;
 
-	private JLabel commandLabel = null;
-
-	private String command;
+	// private JLabel commandLabel = null;
+	//
+	// private String command;
 
 	private String name;
 
@@ -53,7 +64,7 @@ public class ProcessOutputFrame extends JFrame {
 			String name, int pid) {
 		super();
 		this.processLauncher = processLauncher;
-		this.command = command;
+		// this.command = command;
 		this.name = name;
 		this.pid = pid;
 		initialize();
@@ -63,6 +74,8 @@ public class ProcessOutputFrame extends JFrame {
 		this.setSize(WIDTH, HEIGHT);
 		this.setContentPane(getJContentPane());
 		this.setTitle(name);
+
+		this.setJMenuBar(getMyJMenuBar());
 
 		// Center the window
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -100,85 +113,165 @@ public class ProcessOutputFrame extends JFrame {
 		}
 	}
 
-	private javax.swing.JPanel getJContentPane() {
-		if (jContentPane == null) {
-			jContentPane = new javax.swing.JPanel();
-			jContentPane.setLayout(new java.awt.BorderLayout());
-			jContentPane.add(getCommandPanel(), BorderLayout.NORTH);
-			jContentPane.add(getLogPanel(), BorderLayout.CENTER);
-		}
-		return jContentPane;
-	}
+	private javax.swing.JMenuBar getMyJMenuBar() {
+		if (menuBar == null) {
+			menuBar = new JMenuBar();
 
-	private JPanel getCommandPanel() {
-		if (commandPanel == null) {
-			commandPanel = new JPanel();
-			commandPanel.setLayout(new BorderLayout());
-			commandPanel
-					.setBorder(javax.swing.BorderFactory
-							.createTitledBorder(
-									javax.swing.BorderFactory
-											.createEtchedBorder(javax.swing.border.EtchedBorder.LOWERED),
-									" Application component commands ",
-									javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-									javax.swing.border.TitledBorder.DEFAULT_POSITION,
-									new java.awt.Font("Dialog",
-											java.awt.Font.BOLD, 12),
-									java.awt.Color.black));
-			JScrollPane scrollPane = new JScrollPane(getCommandLabel());
-			scrollPane
-					.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-			commandPanel.add(scrollPane, BorderLayout.CENTER);
-			commandPanel.add(getKillButton(), BorderLayout.EAST);
-		}
-		return commandPanel;
-	}
+			JMenu terminal = new JMenu("Terminal");
+			JMenu process = new JMenu("Process");
+			// JMenu test = new JMenu("Test");
 
-	private JButton getKillButton() {
-		if (killButton == null) {
-			killButton = new JButton("Kill all");
-			killButton.addActionListener(new ActionListener() {
+			menuBar.add(terminal);
+			menuBar.add(process);
+			// menuBar.add(Box.createHorizontalGlue());
+			// menuBar.add(test);
+
+			JMenuItem killAll = new JMenuItem("Kill all");
+			killAll.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if (e.getActionCommand().equals("Kill all")) {
 						P2pLauncher.killAll();
 					}
 				}
 			});
+			process.add(killAll);
+
+			JMenuItem copy = new JMenuItem("Copy all to clipboard");
+			copy.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand().equals("Copy all to clipboard")) {
+						Clipboard clipboard = Toolkit.getDefaultToolkit()
+								.getSystemClipboard();
+						clipboard.setContents(new StringSelection(getLogArea()
+								.getText()), new ClipboardOwner() {
+							public void lostOwnership(Clipboard clipboard,
+									Transferable contents) {
+							}
+						});
+					}
+				}
+			});
+
+			JMenuItem interrupt = new JMenuItem("Send interrupt (SIGINT)");
+			interrupt.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand().equals("Send interrupt (SIGINT)")) {
+						processLauncher.kill(false);
+					}
+				}
+			});
+
+			terminal.add(copy);
+			process.addSeparator();
+			process.add(interrupt);
 		}
-		return killButton;
+
+		return menuBar;
 	}
+
+	private javax.swing.JPanel getJContentPane() {
+		if (jContentPane == null) {
+			jContentPane = new javax.swing.JPanel();
+			jContentPane.setLayout(new java.awt.BorderLayout());
+			// jContentPane.add(getCommandPanel(), BorderLayout.NORTH);
+			jContentPane.add(getLogPanel(), BorderLayout.CENTER);
+			jContentPane.add(getInputPanel(), BorderLayout.SOUTH);
+		}
+		return jContentPane;
+	}
+
+	private JPanel getInputPanel() {
+		if (inputPanel == null) {
+			inputPanel = new JPanel();
+			inputPanel.setLayout(new BorderLayout());
+			inputPanel.add(new JLabel(" Input: "), BorderLayout.WEST);
+			JTextField textField = new JTextField();
+			inputPanel.add(textField, BorderLayout.CENTER);
+			textField.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					try {
+						processLauncher.input(e.getActionCommand());
+						append(e.getActionCommand() + "\n");
+					} catch (IOException e1) {
+						// e1.printStackTrace();
+					}
+				}
+			});
+
+		}
+		return inputPanel;
+	}
+
+	// private JPanel getCommandPanel() {
+	// if (commandPanel == null) {
+	// commandPanel = new JPanel();
+	// commandPanel.setLayout(new BorderLayout());
+	// commandPanel
+	// .setBorder(javax.swing.BorderFactory
+	// .createTitledBorder(
+	// javax.swing.BorderFactory
+	// .createEtchedBorder(javax.swing.border.EtchedBorder.LOWERED),
+	// " Application component commands ",
+	// javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+	// javax.swing.border.TitledBorder.DEFAULT_POSITION,
+	// new java.awt.Font("Dialog",
+	// java.awt.Font.BOLD, 12),
+	// java.awt.Color.black));
+	// JScrollPane scrollPane = new JScrollPane(getCommandLabel());
+	// scrollPane
+	// .setHorizontalScrollBarPolicy(ScrollPaneConstants.
+	// HORIZONTAL_SCROLLBAR_ALWAYS);
+	// commandPanel.add(scrollPane, BorderLayout.CENTER);
+	// commandPanel.add(getKillButton(), BorderLayout.EAST);
+	// }
+	// return commandPanel;
+	// }
+	//
+	// private JButton getKillButton() {
+	// if (killButton == null) {
+	// killButton = new JButton("Kill all");
+	// killButton.addActionListener(new ActionListener() {
+	// public void actionPerformed(ActionEvent e) {
+	// if (e.getActionCommand().equals("Kill all")) {
+	// P2pLauncher.killAll();
+	// }
+	// }
+	// });
+	// }
+	// return killButton;
+	// }
 
 	private JPanel getLogPanel() {
 		if (logPanel == null) {
 			logPanel = new JPanel();
 			logPanel.setLayout(new BorderLayout());
-			logPanel
-					.setBorder(javax.swing.BorderFactory
-							.createTitledBorder(
-									javax.swing.BorderFactory
-											.createEtchedBorder(javax.swing.border.EtchedBorder.LOWERED),
-									" Process " + name + " ",
-									javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-									javax.swing.border.TitledBorder.DEFAULT_POSITION,
-									new java.awt.Font("Dialog",
-											java.awt.Font.BOLD, 12),
-									java.awt.Color.black));
-			JScrollPane scrollPane = new JScrollPane(getLogArea());
+			// logPanel
+			// .setBorder(javax.swing.BorderFactory
+			// .createTitledBorder(
+			// javax.swing.BorderFactory
+			// .createEtchedBorder(javax.swing.border.EtchedBorder.LOWERED),
+			// " Process " + name + " ",
+			// javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+			// javax.swing.border.TitledBorder.DEFAULT_POSITION,
+			// new java.awt.Font("Dialog",
+			// java.awt.Font.BOLD, 12),
+			// java.awt.Color.black));
+			scrollPane = new JScrollPane(getLogArea());
 			logPanel.add(scrollPane, BorderLayout.CENTER);
 		}
 		return logPanel;
 	}
 
-	private JLabel getCommandLabel() {
-		if (commandLabel == null) {
-			commandLabel = new JLabel(" " + command);
-			commandLabel.setAutoscrolls(true);
-			commandLabel.setFont(new Font("Courier New", Font.BOLD, 14));
-		}
-		return commandLabel;
-	}
+	// private JLabel getCommandLabel() {
+	// if (commandLabel == null) {
+	// commandLabel = new JLabel(" " + command);
+	// commandLabel.setAutoscrolls(true);
+	// commandLabel.setFont(new Font("Courier New", Font.BOLD, 14));
+	// }
+	// return commandLabel;
+	// }
 
-	public JTextArea getLogArea() {
+	private JTextArea getLogArea() {
 		if (logArea == null) {
 			logArea = new JTextArea(1, 80);
 			logArea.setAutoscrolls(true);
@@ -188,5 +281,12 @@ public class ProcessOutputFrame extends JFrame {
 			logArea.setForeground(Color.WHITE);
 		}
 		return logArea;
+	}
+
+	public void append(String string) {
+		getLogArea().append(string);
+
+		int length = getLogArea().getDocument().getLength();
+		getLogArea().setCaretPosition(length);
 	}
 }

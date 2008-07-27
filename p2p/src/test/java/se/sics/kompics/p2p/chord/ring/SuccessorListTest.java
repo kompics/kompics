@@ -1,4 +1,4 @@
-package se.sics.kompics.p2p.son.ps;
+package se.sics.kompics.p2p.chord.ring;
 
 import java.math.BigInteger;
 import java.net.InetAddress;

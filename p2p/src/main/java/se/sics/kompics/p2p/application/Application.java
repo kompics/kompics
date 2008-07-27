@@ -1,5 +1,7 @@
 package se.sics.kompics.p2p.application;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
@@ -90,28 +92,50 @@ public class Application {
 	private void doNextOperation() {
 		lastOperationIndex++;
 
-		if (lastOperationIndex == operations.length) {
-			logger.info("DONE ALL OPERATIONS");
+		if (lastOperationIndex > operations.length) {
 			return;
 		}
-		String op = operations[lastOperationIndex];
+		if (lastOperationIndex == operations.length) {
+			logger.info("DONE ALL OPERATIONS");
 
-		if (op.startsWith("J")) {
-			doJoinPeer(op);
-		} else if (op.startsWith("F")) {
-			doFailPeer(op);
-		} else if (op.startsWith("L")) {
-			doLeavePeer(op);
-		} else if (op.startsWith("NAVBF")) {
-			doNavigateBF(op);
-		} else if (op.startsWith("NAVDF")) {
-			doNavigateDF(op);
-		} else if (op.startsWith("NOP")) {
-			doNop(op);
-		} else if (op.startsWith("X")) {
+			Thread applicationThread = new Thread() {
+				public void run() {
+					BufferedReader in = new BufferedReader(
+							new InputStreamReader(System.in));
+					while (true) {
+						try {
+							String line = in.readLine();
+							doOperation(line);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			};
+			applicationThread.start();
+			return;
+		}
+		String operation = operations[lastOperationIndex];
+		doOperation(operation);
+	}
+
+	private void doOperation(String operation) {
+		if (operation.startsWith("J")) {
+			doJoinPeer(operation);
+		} else if (operation.startsWith("F")) {
+			doFailPeer(operation);
+		} else if (operation.startsWith("L")) {
+			doLeavePeer(operation);
+		} else if (operation.startsWith("NAVBF")) {
+			doNavigateBF(operation);
+		} else if (operation.startsWith("NAVDF")) {
+			doNavigateDF(operation);
+		} else if (operation.startsWith("NOP")) {
+			doNop(operation);
+		} else if (operation.startsWith("X")) {
 			doShutdown();
 		} else {
-			logger.info("BAD OPEARTION: {}.", op);
+			logger.info("BAD OPEARTION: {}.", operation);
 		}
 	}
 

@@ -16,8 +16,8 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsRequest;
-import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsResponse;
+import se.sics.kompics.p2p.chord.events.GetChordNeighborsRequest;
+import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
 import se.sics.kompics.p2p.monitor.events.ChangeUpdatePeriod;
 import se.sics.kompics.p2p.monitor.events.PeerViewNotification;
 import se.sics.kompics.p2p.monitor.events.SendView;
@@ -43,7 +43,7 @@ public class PeerMonitorClient {
 
 	private Channel timerSignalChannel, lnSendChannel;
 
-	private Channel chordRingRequestChannel, chordRingResponseChannel;
+	private Channel chordRequestChannel, chordResponseChannel;
 
 	private TimerHandler timerHandler;
 
@@ -75,16 +75,16 @@ public class PeerMonitorClient {
 		Channel lnDeliverChannel = lnMembrane
 				.getChannel(LossyNetworkDeliverEvent.class);
 
-		// use shared ChordRing component
+		// use shared Chord component
 		ComponentMembrane crMembrane = component
-				.getSharedComponentMembrane("se.sics.kompics.p2p.son.ps.ChordRing");
-		chordRingRequestChannel = crMembrane
-				.getChannel(GetRingNeighborsRequest.class);
-		chordRingResponseChannel = crMembrane
-				.getChannel(GetRingNeighborsResponse.class);
+				.getSharedComponentMembrane("se.sics.kompics.p2p.chord.Chord");
+		chordRequestChannel = crMembrane
+				.getChannel(GetChordNeighborsRequest.class);
+		chordResponseChannel = crMembrane
+				.getChannel(GetChordNeighborsResponse.class);
 
 		component.subscribe(lnDeliverChannel, "handleChangeUpdatePeriod");
-		component.subscribe(chordRingResponseChannel,
+		component.subscribe(chordResponseChannel,
 				"handleGetRingNeighborsResponse");
 
 		component.subscribe(requestChannel, "handleStartPeerMonitor");
@@ -133,10 +133,10 @@ public class PeerMonitorClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { GetRingNeighborsRequest.class, SetTimerEvent.class })
+	@MayTriggerEventTypes( { GetChordNeighborsRequest.class, SetTimerEvent.class })
 	public void handleSendView(SendView event) {
-		GetRingNeighborsRequest request = new GetRingNeighborsRequest();
-		component.triggerEvent(request, chordRingRequestChannel);
+		GetChordNeighborsRequest request = new GetChordNeighborsRequest();
+		component.triggerEvent(request, chordRequestChannel);
 
 		// reset the timer for sending the next view notification
 		timerHandler.setTimer(event, timerSignalChannel, updatePeriod);
@@ -144,7 +144,7 @@ public class PeerMonitorClient {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes(LossyNetworkSendEvent.class)
-	public void handleGetRingNeighborsResponse(GetRingNeighborsResponse event) {
+	public void handleGetRingNeighborsResponse(GetChordNeighborsResponse event) {
 		HashMap<String, Object> map = new HashMap<String, Object>();
 
 		map.put("ChordRing", event);

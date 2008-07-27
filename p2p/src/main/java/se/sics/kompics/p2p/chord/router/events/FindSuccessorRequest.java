@@ -1,4 +1,4 @@
-package se.sics.kompics.p2p.chord.events;
+package se.sics.kompics.p2p.chord.router.events;
 
 import java.math.BigInteger;
 
@@ -17,16 +17,23 @@ public final class FindSuccessorRequest extends PerfectNetworkDeliverEvent {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -4476609047322811330L;
+	private static final long serialVersionUID = 5718478114531620356L;
 
-	private final BigInteger identifier;
+	private final BigInteger key;
 
-	public FindSuccessorRequest(BigInteger identifier) {
+	private final long lookupId;
+
+	public FindSuccessorRequest(BigInteger key, long lookupId) {
 		super();
-		this.identifier = identifier;
+		this.key = key;
+		this.lookupId = lookupId;
 	}
 
-	public BigInteger getIdentifier() {
-		return identifier;
+	public BigInteger getKey() {
+		return key;
+	}
+
+	public long getLookupId() {
+		return lookupId;
 	}
 }

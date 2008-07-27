@@ -1,7 +1,6 @@
 package se.sics.kompics.p2p.chord.ring;
 
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
 
@@ -11,29 +10,26 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
-import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.chord.IntervalBounds;
 import se.sics.kompics.p2p.chord.RingMath;
+import se.sics.kompics.p2p.chord.events.ChordLookupFailed;
+import se.sics.kompics.p2p.chord.events.ChordLookupRequest;
+import se.sics.kompics.p2p.chord.events.ChordLookupResponse;
 import se.sics.kompics.p2p.chord.events.CreateRing;
-import se.sics.kompics.p2p.chord.events.FindSuccessorRequest;
-import se.sics.kompics.p2p.chord.events.FindSuccessorResponse;
 import se.sics.kompics.p2p.chord.events.JoinRing;
 import se.sics.kompics.p2p.chord.ring.events.GetPredecessorRequest;
 import se.sics.kompics.p2p.chord.ring.events.GetPredecessorResponse;
-import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsRequest;
-import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsResponse;
 import se.sics.kompics.p2p.chord.ring.events.GetSuccessorListRequest;
 import se.sics.kompics.p2p.chord.ring.events.GetSuccessorListResponse;
 import se.sics.kompics.p2p.chord.ring.events.JoinRingCompleted;
 import se.sics.kompics.p2p.chord.ring.events.NewPredecessor;
-import se.sics.kompics.p2p.chord.ring.events.NewSuccessor;
+import se.sics.kompics.p2p.chord.ring.events.NewSuccessorList;
 import se.sics.kompics.p2p.chord.ring.events.Notify;
 import se.sics.kompics.p2p.chord.ring.events.StabilizeTimerSignal;
 import se.sics.kompics.p2p.fd.events.PeerFailureSuspicion;
@@ -67,7 +63,7 @@ public class ChordRing {
 	// FailureDetector channels
 	private Channel fdRequestChannel, fdNotificationChannel;
 
-	private Channel timerSignalChannel;
+	private Channel timerSignalChannel, joinLookupChannel, chordRouterChannel;
 
 	private TimerHandler timerHandler;
 
@@ -86,9 +82,14 @@ public class ChordRing {
 	}
 
 	@ComponentCreateMethod
-	public void create(Channel requestChannel, Channel notificationChannel) {
+	public void create(Channel requestChannel, Channel notificationChannel,
+			Channel chordRouterChannel) {
 		this.requestChannel = requestChannel;
 		this.notificationChannel = notificationChannel;
+		this.chordRouterChannel = chordRouterChannel;
+
+		joinLookupChannel = component.createChannel(ChordLookupResponse.class,
+				ChordLookupFailed.class);
 
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
@@ -113,10 +114,8 @@ public class ChordRing {
 
 		component.subscribe(this.requestChannel, "handleCreateRing");
 		component.subscribe(this.requestChannel, "handleJoinRing");
-		component.subscribe(this.requestChannel,
-				"handleGetRingNeighborsRequest");
-		component.subscribe(pnDeliverChannel, "handleFindSuccessorRequest");
-		component.subscribe(pnDeliverChannel, "handleFindSuccessorResponse");
+		component.subscribe(joinLookupChannel, "handleChordLookupResponse");
+		component.subscribe(joinLookupChannel, "handleChordLookupFailed");
 		component.subscribe(pnDeliverChannel, "handleGetPredecessorRequest");
 		component.subscribe(pnDeliverChannel, "handleGetPredecessorResponse");
 		component.subscribe(pnDeliverChannel, "handleGetSuccessorListRequest");
@@ -128,20 +127,6 @@ public class ChordRing {
 
 		component
 				.subscribe(fdNotificationChannel, "handlePeerFailureSuspicion");
-	}
-
-	@ComponentShareMethod
-	public ComponentMembrane share(String name) {
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(CreateRing.class, requestChannel);
-		map.put(JoinRing.class, requestChannel);
-		map.put(GetRingNeighborsRequest.class, requestChannel);
-		map.put(JoinRingCompleted.class, notificationChannel);
-		map.put(NewSuccessor.class, notificationChannel);
-		map.put(NewPredecessor.class, notificationChannel);
-		map.put(GetRingNeighborsResponse.class, notificationChannel);
-		ComponentMembrane membrane = new ComponentMembrane(component, map);
-		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
 	@ComponentInitializeMethod("chord-ring.properties")
@@ -162,7 +147,7 @@ public class ChordRing {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { NewSuccessor.class, NewPredecessor.class,
+	@MayTriggerEventTypes( { NewSuccessorList.class, NewPredecessor.class,
 			JoinRingCompleted.class })
 	public void handleCreateRing(CreateRing event) {
 		logger.debug("CREATE");
@@ -172,14 +157,16 @@ public class ChordRing {
 		successorList.setSuccessor(localPeer);
 
 		// trigger newSuccessor
-		NewSuccessor newSuccessor = new NewSuccessor(localPeer, successorList
-				.getSuccessor());
+		NewSuccessorList newSuccessor = new NewSuccessorList(localPeer,
+				successorList.getSuccessorListView());
 		component.triggerEvent(newSuccessor, notificationChannel);
+		component.triggerEvent(newSuccessor, chordRouterChannel);
 
 		// trigger newPredecessor
 		NewPredecessor newPredecessor = new NewPredecessor(localPeer,
 				predecessor);
 		component.triggerEvent(newPredecessor, notificationChannel);
+		component.triggerEvent(newPredecessor, chordRouterChannel);
 
 		logger.info("Join Completed");
 
@@ -200,90 +187,68 @@ public class ChordRing {
 
 		predecessor = null;
 
-		FindSuccessorRequest request = new FindSuccessorRequest(localPeer
-				.getId());
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				request, event.getInsidePeer());
+		ChordLookupRequest lookupRequest = new ChordLookupRequest(localPeer
+				.getId(), joinLookupChannel, null, event.getInsidePeer());
 
-		// send find successor request
-		component.triggerEvent(sendEvent, pnSendChannel);
+		component.triggerEvent(lookupRequest, chordRouterChannel);
 
 		// trigger newPredecessor
 		NewPredecessor newPredecessor = new NewPredecessor(localPeer,
 				predecessor);
 		component.triggerEvent(newPredecessor, notificationChannel);
+		component.triggerEvent(newPredecessor, chordRouterChannel);
 	}
 
 	@EventHandlerMethod
-	public void handleFindSuccessorRequest(FindSuccessorRequest event) {
-		logger.debug("FIND_SUCC_REQ");
+	@MayTriggerEventTypes( { NewSuccessorList.class, JoinRingCompleted.class })
+	public void handleChordLookupResponse(ChordLookupResponse event) {
+		logger.debug("CHORD_LOOKUP_RESP R({})={}", event.getKey(), event
+				.getResponsible());
 
-		BigInteger identifier = event.getIdentifier();
+		// TODO try to get our successor for joining in parallel from multiple
+		// peers, or retry joining sequentially to different peers
 
-		if (RingMath.belongsTo(identifier, localPeer.getId(), successorList
-				.getSuccessor().getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
-			// return my successor as the real successor
-			FindSuccessorResponse response = new FindSuccessorResponse(
-					successorList.getSuccessor(), false);
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					response, event.getSource());
-			component.triggerEvent(sendEvent, pnSendChannel);
-		} else {
-			// return an indirection to my successor
-			FindSuccessorResponse response = new FindSuccessorResponse(
-					successorList.getSuccessor(), true);
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					response, event.getSource());
-			component.triggerEvent(sendEvent, pnSendChannel);
-		}
+		// we got the real successor
+		successorList.setSuccessor(event.getResponsible());
+
+		neighborAdded(successorList.getSuccessor());
+
+		// trigger GetSuccessorList
+		GetSuccessorListRequest request = new GetSuccessorListRequest(
+				RequestState.JOIN);
+		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
+				request, successorList.getSuccessor());
+		component.triggerEvent(sendEvent, pnSendChannel);
+
+		// trigger newSuccessor
+		NewSuccessorList newSuccessor = new NewSuccessorList(localPeer,
+				successorList.getSuccessorListView());
+		component.triggerEvent(newSuccessor, notificationChannel);
+		component.triggerEvent(newSuccessor, chordRouterChannel);
+
+		logger.info("Join Completed");
+
+		// trigger JoinRingCompleted
+		JoinRingCompleted joinRingCompleted = new JoinRingCompleted(localPeer);
+		component.triggerEvent(joinRingCompleted, notificationChannel);
+
+		// set the stabilization timer
+		StabilizeTimerSignal signal = new StabilizeTimerSignal();
+		timerHandler.setTimer(signal, timerSignalChannel, stabilizationPeriod);
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { NewSuccessor.class, JoinRingCompleted.class })
-	public void handleFindSuccessorResponse(FindSuccessorResponse event) {
-		logger.debug("FIND_SUCC_RESP");
+	@MayTriggerEventTypes(ChordLookupRequest.class)
+	public void handleChordLookupFailed(ChordLookupFailed event) {
+		logger.debug("CHORD_LOOKUP_FAILED");
 
-		if (event.isNextHop()) {
-			// we got an indirection
-			Address nextHop = event.getSuccessor();
-
-			FindSuccessorRequest request = new FindSuccessorRequest(localPeer
-					.getId());
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					request, nextHop);
-
-			// send find successor request
-			component.triggerEvent(sendEvent, pnSendChannel);
-		} else {
-			// we got the real successor
-			successorList.setSuccessor(event.getSuccessor());
-
-			neighborAdded(successorList.getSuccessor());
-
-			// trigger GetSuccessorList
-			GetSuccessorListRequest request = new GetSuccessorListRequest(
-					RequestState.JOIN);
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					request, successorList.getSuccessor());
-			component.triggerEvent(sendEvent, pnSendChannel);
-
-			// trigger newSuccessor
-			NewSuccessor newSuccessor = new NewSuccessor(localPeer,
-					successorList.getSuccessor());
-			component.triggerEvent(newSuccessor, notificationChannel);
-
-			logger.info("Join Completed");
-
-			// trigger JoinRingCompleted
-			JoinRingCompleted joinRingCompleted = new JoinRingCompleted(
-					localPeer);
-			component.triggerEvent(joinRingCompleted, notificationChannel);
-
-			// set the stabilization timer
-			StabilizeTimerSignal signal = new StabilizeTimerSignal();
-			timerHandler.setTimer(signal, timerSignalChannel,
-					stabilizationPeriod);
-		}
+		// retry lookup
+		ChordLookupRequest request = new ChordLookupRequest(localPeer.getId(),
+				joinLookupChannel, null, null /*
+											 * TODO cycle through other joining
+											 * peers or retry bootstrap
+											 */);
+		component.triggerEvent(request, requestChannel);
 	}
 
 	@EventHandlerMethod
@@ -300,13 +265,15 @@ public class ChordRing {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { NewSuccessor.class, PerfectNetworkSendEvent.class })
+	@MayTriggerEventTypes( { NewSuccessorList.class,
+			PerfectNetworkSendEvent.class })
 	public void handleGetSuccessorListResponse(GetSuccessorListResponse event) {
 		logger.debug("GET_SUCC_LIST_RESP");
 
 		HashSet<Address> oldNeighbors = new HashSet<Address>(successorList
 				.getSuccessors());
 
+		// TODO properly
 		successorList.updateSuccessorList(event.getSuccessorList());
 
 		// account for neighbor set change
@@ -363,7 +330,8 @@ public class ChordRing {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { NewSuccessor.class, PerfectNetworkSendEvent.class })
+	@MayTriggerEventTypes( { NewSuccessorList.class,
+			PerfectNetworkSendEvent.class })
 	public void handleGetPredecessorResponse(GetPredecessorResponse event) {
 		logger.debug("GET_PRED_RESP");
 
@@ -378,9 +346,10 @@ public class ChordRing {
 				neighborAdded(successorList.getSuccessor());
 
 				// trigger newSuccessor
-				NewSuccessor newSuccessor = new NewSuccessor(localPeer,
-						successorList.getSuccessor());
+				NewSuccessorList newSuccessor = new NewSuccessorList(localPeer,
+						successorList.getSuccessorListView());
 				component.triggerEvent(newSuccessor, notificationChannel);
+				component.triggerEvent(newSuccessor, chordRouterChannel);
 			}
 		}
 
@@ -417,20 +386,14 @@ public class ChordRing {
 			NewPredecessor newPredecessor = new NewPredecessor(localPeer,
 					predecessor);
 			component.triggerEvent(newPredecessor, notificationChannel);
+			component.triggerEvent(newPredecessor, chordRouterChannel);
 		}
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(GetRingNeighborsResponse.class)
-	public void handleGetRingNeighborsRequest(GetRingNeighborsRequest event) {
-		GetRingNeighborsResponse response = new GetRingNeighborsResponse(
-				localPeer, successorList.getSuccessor(), predecessor,
-				successorList.getSuccessors());
-		component.triggerEvent(response, notificationChannel);
-	}
-
-	@EventHandlerMethod
 	public void handlePeerFailureSuspicion(PeerFailureSuspicion event) {
+		logger.debug("FAILURE_SUSPICION");
+
 		if (event.getSuspicionStatus().equals(SuspicionStatus.SUSPECTED)) {
 			// peer is suspected
 			Address suspectedPeer = event.getPeerAddress();

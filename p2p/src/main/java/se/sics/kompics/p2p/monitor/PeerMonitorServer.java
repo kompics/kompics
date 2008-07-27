@@ -20,7 +20,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsResponse;
+import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
 import se.sics.kompics.p2p.monitor.events.PeerViewNotification;
 import se.sics.kompics.p2p.monitor.events.ViewEvictPeer;
 import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
@@ -244,7 +244,7 @@ public class PeerMonitorServer {
 		while (iterator.hasNext()) {
 			Address address = iterator.next();
 			Map<String, Object> peerData = p2pNetworkData.get(address);
-			GetRingNeighborsResponse sonData = (GetRingNeighborsResponse) peerData
+			GetChordNeighborsResponse sonData = (GetChordNeighborsResponse) peerData
 					.get("ChordRing");
 
 			Address pred = sonData.getPredecessorPeer();
@@ -392,7 +392,7 @@ public class PeerMonitorServer {
 			while (iterator.hasNext()) {
 				Address address = iterator.next();
 				Map<String, Object> peerData = p2pNetworkData.get(address);
-				GetRingNeighborsResponse sonData = (GetRingNeighborsResponse) peerData
+				GetChordNeighborsResponse sonData = (GetChordNeighborsResponse) peerData
 						.get("ChordRing");
 
 				Address pred = sonData.getPredecessorPeer();

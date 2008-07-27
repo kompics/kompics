@@ -1,4 +1,4 @@
-package se.sics.kompics.p2p.chord.ring.events;
+package se.sics.kompics.p2p.chord.events;
 
 import java.io.Serializable;
 import java.util.List;
@@ -6,15 +6,17 @@ import java.util.List;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.EventType;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.p2p.chord.router.FingerTableView;
 
 /**
- * The <code>GetRingNeighborsResponse</code> class
+ * The <code>GetChordNeighborsResponse</code> class
  * 
  * @author Cosmin Arad
- * @version $Id: GetRingNeighborsResponse.java 158 2008-06-16 10:42:01Z Cosmin $
+ * @version $Id: GetChordNeighborsResponse.java 158 2008-06-16 10:42:01Z Cosmin
+ *          $
  */
 @EventType
-public final class GetRingNeighborsResponse implements Event, Serializable {
+public final class GetChordNeighborsResponse implements Event, Serializable {
 
 	/**
 	 * 
@@ -29,13 +31,17 @@ public final class GetRingNeighborsResponse implements Event, Serializable {
 
 	private final List<Address> successorList;
 
-	public GetRingNeighborsResponse(Address localPeer, Address successor,
-			Address predecessor, List<Address> successorList) {
+	private final FingerTableView fingerTable;
+
+	public GetChordNeighborsResponse(Address localPeer, Address successor,
+			Address predecessor, List<Address> successorList,
+			FingerTableView fingerTable) {
 		super();
 		this.localPeer = localPeer;
 		this.predecessorPeer = predecessor;
 		this.successorPeer = successor;
 		this.successorList = successorList;
+		this.fingerTable = fingerTable;
 	}
 
 	public Address getLocalPeer() {
@@ -52,5 +58,9 @@ public final class GetRingNeighborsResponse implements Event, Serializable {
 
 	public List<Address> getSuccessorList() {
 		return successorList;
+	}
+
+	public FingerTableView getFingerTable() {
+		return fingerTable;
 	}
 }

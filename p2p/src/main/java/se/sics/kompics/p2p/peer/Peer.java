@@ -20,13 +20,18 @@ import se.sics.kompics.p2p.bootstrap.events.BootstrapCacheReset;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCompleted;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapRequest;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapResponse;
+import se.sics.kompics.p2p.chord.events.ChordLookupRequest;
+import se.sics.kompics.p2p.chord.events.ChordResponsibility;
 import se.sics.kompics.p2p.chord.events.CreateRing;
+import se.sics.kompics.p2p.chord.events.GetChordNeighborsRequest;
+import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
+import se.sics.kompics.p2p.chord.events.GetChordResponsibility;
 import se.sics.kompics.p2p.chord.events.JoinRing;
-import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsRequest;
-import se.sics.kompics.p2p.chord.ring.events.GetRingNeighborsResponse;
+import se.sics.kompics.p2p.chord.events.LeaveRing;
 import se.sics.kompics.p2p.chord.ring.events.JoinRingCompleted;
 import se.sics.kompics.p2p.chord.ring.events.NewPredecessor;
-import se.sics.kompics.p2p.chord.ring.events.NewSuccessor;
+import se.sics.kompics.p2p.chord.ring.events.NewSuccessorList;
+import se.sics.kompics.p2p.chord.router.events.NewFingerTable;
 import se.sics.kompics.p2p.fd.events.StartProbingPeer;
 import se.sics.kompics.p2p.fd.events.StatusRequest;
 import se.sics.kompics.p2p.fd.events.StopProbingPeer;
@@ -131,21 +136,21 @@ public class Peer {
 		fdComponent.initialize(peerAddress);
 		fdComponent.share("se.sics.kompics.p2p.fd.FailureDetector");
 
-		// create channels for the ChordRing component
-		Channel chordRingRequestChannel = component
-				.createChannel(CreateRing.class, JoinRing.class,
-						GetRingNeighborsRequest.class);
-		Channel chordRingNotificationChannel = component.createChannel(
-				NewPredecessor.class, NewSuccessor.class,
-				JoinRingCompleted.class, GetRingNeighborsResponse.class);
+		// create channels for the Chord component
+		Channel chordRequestChannel = component.createChannel(CreateRing.class,
+				JoinRing.class, LeaveRing.class, ChordLookupRequest.class,
+				GetChordResponsibility.class, GetChordNeighborsRequest.class);
+		Channel chordNotificationChannel = component.createChannel(
+				NewPredecessor.class, NewSuccessorList.class,
+				NewFingerTable.class, JoinRingCompleted.class,
+				ChordResponsibility.class, GetChordNeighborsResponse.class);
 
-		// create the ChordRing component
-		Component chordRing = component.createComponent(
-				"se.sics.kompics.p2p.son.ps.ChordRing", component
-						.getFaultChannel(), chordRingRequestChannel,
-				chordRingNotificationChannel);
-		chordRing.initialize(peerAddress);
-		chordRing.share("se.sics.kompics.p2p.son.ps.ChordRing");
+		// create the Chord component
+		Component chord = component.createComponent(
+				"se.sics.kompics.p2p.chord.Chord", component.getFaultChannel(),
+				chordRequestChannel, chordNotificationChannel);
+		chord.initialize(peerAddress);
+		chord.share("se.sics.kompics.p2p.chord.Chord");
 
 		// create the WebHandler component
 		Component webHandler = component.createComponent(
