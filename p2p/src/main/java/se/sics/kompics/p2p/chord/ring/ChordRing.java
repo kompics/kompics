@@ -188,7 +188,8 @@ public class ChordRing {
 		predecessor = null;
 
 		ChordLookupRequest lookupRequest = new ChordLookupRequest(localPeer
-				.getId(), joinLookupChannel, null, event.getInsidePeer());
+				.getId(), joinLookupChannel, event.getInsidePeer(), event
+				.getInsidePeer());
 
 		component.triggerEvent(lookupRequest, chordRouterChannel);
 
@@ -244,10 +245,11 @@ public class ChordRing {
 
 		// retry lookup
 		ChordLookupRequest request = new ChordLookupRequest(localPeer.getId(),
-				joinLookupChannel, null, null /*
-											 * TODO cycle through other joining
-											 * peers or retry bootstrap
-											 */);
+				joinLookupChannel, event.getAttachment(), (Address) event
+						.getAttachment() /*
+										 * TODO cycle through other joining
+										 * peers or retry bootstrap
+										 */);
 		component.triggerEvent(request, requestChannel);
 	}
 

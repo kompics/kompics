@@ -255,7 +255,7 @@ public class ChordIterativeRouter {
 	@EventHandlerMethod
 	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
 	public void handleFindSuccessorRequest(FindSuccessorRequest event) {
-		logger.debug("FIND_SUCC_REQ {}", event.getKey());
+		logger.debug("FIND_SUCC_REQ {}, succ={}", event.getKey(), successor);
 
 		BigInteger key = event.getKey();
 
@@ -283,11 +283,15 @@ public class ChordIterativeRouter {
 			// return an indirection to my closest preceding finger
 			Address closest = fingerTable.closestPreceedingPeer(key);
 
-			FindSuccessorResponse response = new FindSuccessorResponse(closest,
-					event.getLookupId(), true);
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					response, event.getSource());
-			component.triggerEvent(sendEvent, pnSendChannel);
+			if (!closest.equals(localPeer)) {
+
+				FindSuccessorResponse response = new FindSuccessorResponse(
+						closest, event.getLookupId(), true);
+				PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
+						response, event.getSource());
+				component.triggerEvent(sendEvent, pnSendChannel);
+			}
+			// else we found no closest peer so the lookup should fail
 		}
 
 		// we try to use the requester as a possible better finger
