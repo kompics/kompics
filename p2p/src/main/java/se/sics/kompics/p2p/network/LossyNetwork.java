@@ -157,7 +157,7 @@ public final class LossyNetwork {
 
 		// create a NetworkSendEvent containing a LossyNetNetworkDeliverEvent
 		NetworkSendEvent nse = new NetworkSendEvent(lnNetworkDeliverEvent,
-				localAddress, destination, Transport.UDP);
+				localAddress, destination, Transport.TCP);
 
 		long latency = king[localKingId][destination.getId().mod(
 				BigInteger.valueOf(KingMatrix.SIZE)).intValue()];

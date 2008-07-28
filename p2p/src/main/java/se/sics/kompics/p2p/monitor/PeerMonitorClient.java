@@ -126,7 +126,8 @@ public class PeerMonitorClient {
 	public void handleStartPeerMonitor(StartPeerMonitor event) {
 		SendView timerEvent = new SendView(localPeerAddress.getId());
 
-		timerHandler.setTimer(timerEvent, timerSignalChannel, updatePeriod);
+		// timerHandler.setTimer(timerEvent, timerSignalChannel, updatePeriod);
+		component.triggerEvent(timerEvent, timerSignalChannel);
 	}
 
 	@EventHandlerMethod

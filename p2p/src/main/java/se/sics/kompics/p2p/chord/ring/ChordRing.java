@@ -270,13 +270,19 @@ public class ChordRing {
 	@MayTriggerEventTypes( { NewSuccessorList.class,
 			PerfectNetworkSendEvent.class })
 	public void handleGetSuccessorListResponse(GetSuccessorListResponse event) {
-		logger.debug("GET_SUCC_LIST_RESP");
+		logger.debug("GET_SUCC_LIST_RESP my={} got={}", successorList
+				.getSuccessors(), event.getSuccessorList().getSuccessors());
 
 		HashSet<Address> oldNeighbors = new HashSet<Address>(successorList
 				.getSuccessors());
 
-		// TODO properly
 		successorList.updateSuccessorList(event.getSuccessorList());
+
+		// trigger newSuccessor
+		NewSuccessorList newSuccessor = new NewSuccessorList(localPeer,
+				successorList.getSuccessorListView());
+		component.triggerEvent(newSuccessor, notificationChannel);
+		component.triggerEvent(newSuccessor, chordRouterChannel);
 
 		// account for neighbor set change
 		oldNeighbors.add(predecessor);
@@ -402,12 +408,23 @@ public class ChordRing {
 
 			if (suspectedPeer.equals(predecessor)) {
 				// predecessor suspected
-				successorList.successorFailed(suspectedPeer);
 				predecessor = null;
+
+				// trigger newPredecessor
+				NewPredecessor newPredecessor = new NewPredecessor(localPeer,
+						predecessor);
+				component.triggerEvent(newPredecessor, notificationChannel);
+				component.triggerEvent(newPredecessor, chordRouterChannel);
 			}
 			if (successorList.getSuccessors().contains(suspectedPeer)) {
 				// secondary successor suspected
 				successorList.successorFailed(suspectedPeer);
+
+				// trigger newSuccessor
+				NewSuccessorList newSuccessor = new NewSuccessorList(localPeer,
+						successorList.getSuccessorListView());
+				component.triggerEvent(newSuccessor, notificationChannel);
+				component.triggerEvent(newSuccessor, chordRouterChannel);
 			}
 			neighborRemoved(suspectedPeer);
 		} else {

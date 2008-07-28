@@ -8,7 +8,6 @@ import junit.framework.TestCase;
 import org.junit.Before;
 
 import se.sics.kompics.network.Address;
-import se.sics.kompics.p2p.chord.ring.SuccessorList;
 
 public class SuccessorListTest extends TestCase {
 
@@ -26,15 +25,15 @@ public class SuccessorListTest extends TestCase {
 		list3 = new SuccessorList(10, addr3, new BigInteger("1024"));
 
 		list1.getSuccessors().set(0, addr2);
-		list1.getSuccessors().add(1, addr3);
-		list1.getSuccessors().add(2, addr1);
+		// list1.getSuccessors().add(1, addr3);
+		// list1.getSuccessors().add(2, addr1);
 
 		list2.getSuccessors().set(0, addr3);
 		list2.getSuccessors().add(1, addr1);
-		list2.getSuccessors().add(2, addr2);
+		// list2.getSuccessors().add(2, addr2);
 
 		list3.getSuccessors().set(0, addr1);
-		list3.getSuccessors().add(1, addr2);
+		// list3.getSuccessors().add(1, addr2);
 	}
 
 	public void testUpdate() {
@@ -42,9 +41,9 @@ public class SuccessorListTest extends TestCase {
 		System.out.println("Before 2: " + list2.getSuccessors());
 		System.out.println("Before 3: " + list3.getSuccessors());
 
-		// list3.updateSuccessorList(list1);
-		list2.updateSuccessorList(list3);
-		list1.updateSuccessorList(list2);
+		list3.updateSuccessorList(list1);
+		// list2.updateSuccessorList(list3);
+		// list1.updateSuccessorList(list2);
 
 		System.out.println("After 1: " + list1.getSuccessors());
 		System.out.println("After 2: " + list2.getSuccessors());

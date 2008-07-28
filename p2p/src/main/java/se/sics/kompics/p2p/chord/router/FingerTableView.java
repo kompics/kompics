@@ -1,5 +1,6 @@
 package se.sics.kompics.p2p.chord.router;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
 import se.sics.kompics.network.Address;
@@ -10,7 +11,12 @@ import se.sics.kompics.network.Address;
  * @author Cosmin Arad
  * @version $Id: FingerTableView.java 139 2008-06-04 10:55:59Z cosmin $
  */
-public class FingerTableView {
+public class FingerTableView implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8271842452601891861L;
 
 	public final Address ownerPeer;
 

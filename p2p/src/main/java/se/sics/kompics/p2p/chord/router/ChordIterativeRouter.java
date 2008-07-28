@@ -147,7 +147,7 @@ public class ChordIterativeRouter {
 
 		fingerTable = new FingerTable(log2RingSize, localPeer, this);
 		fingerTableChanged();
-		nextFingerToFix = 0;
+		nextFingerToFix = 1;
 	}
 
 	@EventHandlerMethod
@@ -163,6 +163,7 @@ public class ChordIterativeRouter {
 		}
 
 		successor = event.getSuccessorListView().get(0);
+		fingerTable.learnedAboutPeer(successor);
 	}
 
 	@EventHandlerMethod
@@ -202,11 +203,11 @@ public class ChordIterativeRouter {
 		}
 
 		// special case for when we are alone in the ring
-		if (successor.equals(localPeer.getId())) {
-			// to avoid an infinite loop, we return ourselves.
-			ChordLookupResponse response = new ChordLookupResponse(key,
-					localPeer, event.getAttachment());
-			component.triggerEvent(response, event.getResponseChannel());
+		if (successor == null || successor.equals(localPeer.getId())) {
+			// to avoid an infinite loop, we fail the lookup
+			ChordLookupFailed failed = new ChordLookupFailed(key, event
+					.getAttachment());
+			component.triggerEvent(failed, event.getResponseChannel());
 		}
 
 		// normal case
@@ -381,7 +382,7 @@ public class ChordIterativeRouter {
 
 		nextFingerToFix++;
 		if (nextFingerToFix > log2RingSize) {
-			nextFingerToFix = 1;
+			nextFingerToFix = 2;
 		}
 
 		timerHandler.setTimer(event, timerSignalChannel,

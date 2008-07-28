@@ -21,6 +21,7 @@ import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
+import se.sics.kompics.p2p.chord.router.FingerTableView;
 import se.sics.kompics.p2p.monitor.events.PeerViewNotification;
 import se.sics.kompics.p2p.monitor.events.ViewEvictPeer;
 import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
@@ -110,6 +111,8 @@ public class PeerMonitorServer {
 	public void init(long updatePeriod, long evictAfterSeconds) {
 		// this.updatePeriod = updatePeriod;
 		evictAfter = 1000 * evictAfterSeconds;
+
+		logger.debug("INIT");
 	}
 
 	@EventHandlerMethod
@@ -215,9 +218,8 @@ public class PeerMonitorServer {
 		sb.append("Kompics P2P Monitor</h1>");
 		sb.append("<h2 align=\"center\" class=\"style2\">");
 		sb.append("View of Chord SON:</h2>");
-		sb.append("<table width=\"1100\" border=\"0\" align=\"center\"><tr>");
-		sb
-				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
+		sb.append("<table width=\"1300\" border=\"1\" align=\"center\"><tr>");
+		sb.append("<th class=\"style2\" width=\"50\" scope=\"col\">Count</th>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>");
 		sb
@@ -225,9 +227,9 @@ public class PeerMonitorServer {
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Successor</th>");
 		sb
-				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th>");
+				.append("<th class=\"style2\" width=\"350\" scope=\"col\">Successor List</th>");
 		sb
-				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Finger List</th>");
+				.append("<th class=\"style2\" width=\"400\" scope=\"col\">Finger List</th>");
 		sb.append("<th class=\"style2\" width=\"100\" scope=\"col\">Age</th>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Freshness</th></tr>");
@@ -252,7 +254,7 @@ public class PeerMonitorServer {
 			Address realPred = predecessor.get(address);
 			Address realSucc = successor.get(address);
 			List<Address> succList = sonData.getSuccessorList();
-			List<Address> fingerList = null;
+			FingerTableView fingerTableView = sonData.getFingerTable();
 
 			sb.append("<tr>");
 			sb.append("<td><div align=\"center\">").append(count++);
@@ -325,14 +327,15 @@ public class PeerMonitorServer {
 			sb.append("</div></td>");
 
 			// print finger list
-			if (fingerList != null) {
+			if (fingerTableView != null) {
 				sb.append("<td><div align=\"left\">");
 				sb.append("[");
-				Iterator<Address> iter = fingerList.iterator();
-				while (iter.hasNext()) {
-					appendWebLink(sb, iter.next());
-					if (iter.hasNext()) {
-						sb.append(", ");
+				for (int i = 0; i < fingerTableView.finger.length; i++) {
+					if (fingerTableView.finger[i] != null) {
+						if (i > 0) {
+							sb.append(", ");
+						}
+						appendWebLink(sb, fingerTableView.finger[i]);
 					}
 				}
 				sb.append("]");
@@ -363,9 +366,9 @@ public class PeerMonitorServer {
 		if (deadPeers.size() > 0) {
 			sb.append("<h2 align=\"center\" class=\"style2\">Dead peers:</h2>");
 			sb
-					.append("<table width=\"1100\" border=\"0\" align=\"center\"><tr>");
+					.append("<table width=\"1300\" border=\"0\" align=\"center\"><tr>");
 			sb
-					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
+					.append("<th class=\"style2\" width=\"50\" scope=\"col\">Count</th>");
 			sb
 					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>");
 			sb
@@ -373,9 +376,9 @@ public class PeerMonitorServer {
 			sb
 					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Successor</th>");
 			sb
-					.append("<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th>");
+					.append("<th class=\"style2\" width=\"350\" scope=\"col\">Successor List</th>");
 			sb
-					.append("<th class=\"style2\" width=\"300\" scope=\"col\">Finger List</th>");
+					.append("<th class=\"style2\" width=\"400\" scope=\"col\">Finger List</th>");
 			sb
 					.append("<th class=\"style2\" width=\"100\" scope=\"col\">Lifetime</th>");
 			sb
@@ -400,7 +403,7 @@ public class PeerMonitorServer {
 				Address realPred = predecessor.get(address);
 				Address realSucc = successor.get(address);
 				List<Address> succList = sonData.getSuccessorList();
-				List<Address> fingerList = null;
+				FingerTableView fingerTableView = sonData.getFingerTable();
 
 				sb.append("<tr>");
 
@@ -478,15 +481,15 @@ public class PeerMonitorServer {
 				}
 				sb.append("</div></td>");
 
-				// print finger list
-				if (fingerList != null) {
+				if (fingerTableView != null) {
 					sb.append("<td><div align=\"left\">");
 					sb.append("[");
-					Iterator<Address> iter = fingerList.iterator();
-					while (iter.hasNext()) {
-						appendWebLink(sb, iter.next());
-						if (iter.hasNext()) {
-							sb.append(", ");
+					for (int i = 0; i < fingerTableView.finger.length; i++) {
+						if (fingerTableView.finger[i] != null) {
+							if (i > 0) {
+								sb.append(", ");
+							}
+							appendWebLink(sb, fingerTableView.finger[i]);
 						}
 					}
 					sb.append("]");
@@ -519,11 +522,26 @@ public class PeerMonitorServer {
 		return sb.toString();
 	}
 
-	private void appendWebLink(StringBuilder sb, Address address) {
+	private void appendWebLink(StringBuilder sb, Address address, String label) {
+		if (address == null) {
+			sb.append("NIL");
+			return;
+		}
 		sb.append("<a href=\"http://").append(address.getIp()).append(":");
-		sb.append(address.getPort() - 21920).append("/");
-		sb.append(address.getId()).append("/inf\">").append(address.getId());
+		if (label == null) {
+			sb.append(address.getPort() - 21920).append("/");
+			sb.append(address.getId()).append("/inf\">");
+			sb.append(address.getId());
+		} else {
+			sb.append(address.getPort()).append("/");
+			sb.append(address.getId()).append("/inf\">");
+			sb.append(label);
+		}
 		sb.append("</a>");
+	}
+
+	private void appendWebLink(StringBuilder sb, Address address) {
+		appendWebLink(sb, address, null);
 	}
 
 	private String getWebAddress(Address address) {
