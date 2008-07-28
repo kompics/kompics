@@ -30,7 +30,7 @@ public class NetworkHandler extends IoHandlerAdapter {
 		if (address != null)
 			logger.debug("Problems with {} connection to {}",
 					(Transport) session.getAttribute("protocol"), address);
-		logger.debug("Exception caught:", cause);
+		logger.error("Exception caught:", cause);
 	}
 
 	@Override
