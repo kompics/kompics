@@ -77,15 +77,27 @@ public class FingerTable {
 		}
 	}
 
-	void learnedAboutPeer(Address newPeer) {
-		// TODO we have learned about this new peer so we check whether it is a
+	boolean learnedAboutPeer(Address newPeer) {
+		return learnedAboutPeer(newPeer, true);
+	}
+
+	boolean learnedAboutPeer(Address newPeer, boolean update) {
+		// we have learned about this new peer so we check whether it is a
 		// better alternative for one of our fingers
 
-		;
+		boolean changed = false;
+		for (int i = 0; i < log2RingSize; i++) {
+			if (RingMath.belongsTo(newPeer.getId(), begin[i], end[i],
+					IntervalBounds.CLOSED_OPEN, ringSize)) {
+				finger[i] = newPeer;
+				changed = true;
+			}
+		}
 
-		// not self
-
-		// router.fingerTableChanged();
+		if (changed && update) {
+			router.fingerTableChanged();
+		}
+		return changed;
 	}
 
 	void fingerSuspected(Address peer) {

@@ -300,21 +300,39 @@ public class WebHandler {
 			sb.append("[empty]");
 		}
 		// print fingers
-		FingerTableView fingerTable = response.getFingerTable();
-		if (fingerTable != null) {
-			sb.append("</div></td><td><div align=\"left\">");
-			for (int i = 0; i < fingerTable.begin.length; i++) {
-				if (i > 0) {
-					sb.append(", ");
+		FingerTableView fingerTableView = response.getFingerTable();
+		if (fingerTableView != null) {
+			sb.append("<td><div align=\"left\">");
+			sb.append("[");
+			boolean first = true;
+			for (int i = 0; i < fingerTableView.finger.length; i++) {
+				if (fingerTableView.finger[i] != null) {
+					if (!first) {
+						sb.append(", ");
+					}
+					appendWebLink(sb, fingerTableView.finger[i], null);
+					first = false;
 				}
-				appendWebLink(sb, fingerTable.finger[i], null);
-				sb.append(" [").append(fingerTable.begin[i].toString());
-				sb.append(", ").append(fingerTable.end[i]).append(")");
 			}
+			sb.append("]");
 		} else {
 			sb.append("<td bgcolor=\"#FFCCFF\"><div align=\"left\">");
 			sb.append("[empty]");
 		}
+		// if (fingerTable != null) {
+		// sb.append("</div></td><td><div align=\"left\">");
+		// for (int i = 0; i < fingerTable.begin.length; i++) {
+		// if (i > 0) {
+		// sb.append(", ");
+		// }
+		// appendWebLink(sb, fingerTable.finger[i], null);
+		// sb.append(" [").append(fingerTable.begin[i].toString());
+		// sb.append(", ").append(fingerTable.end[i]).append(")");
+		// }
+		// } else {
+		// sb.append("<td bgcolor=\"#FFCCFF\"><div align=\"left\">");
+		// sb.append("[empty]");
+		// }
 		sb.append("</div></td></tr></table>");
 		return sb.toString();
 	}

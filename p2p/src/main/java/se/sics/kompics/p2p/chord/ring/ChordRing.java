@@ -137,9 +137,12 @@ public class ChordRing {
 				.getProperty("log2.ring.size"));
 		ringSize = new BigInteger("2").pow(log2RingSize);
 
+		int successorListLength = Integer.parseInt(properties
+				.getProperty("successor.list.length"));
+
 		this.localPeer = localPeer;
 
-		this.successorList = new SuccessorList(log2RingSize, localPeer,
+		this.successorList = new SuccessorList(successorListLength, localPeer,
 				ringSize);
 
 		logger = LoggerFactory.getLogger(getClass().getName() + "@"

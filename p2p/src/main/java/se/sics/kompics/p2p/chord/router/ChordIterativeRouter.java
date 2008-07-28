@@ -163,7 +163,17 @@ public class ChordIterativeRouter {
 		}
 
 		successor = event.getSuccessorListView().get(0);
-		fingerTable.learnedAboutPeer(successor);
+
+		boolean changed = false;
+		// try to use the successors
+		for (Address address : event.getSuccessorListView()) {
+			if (fingerTable.learnedAboutPeer(address, false)) {
+				changed = true;
+			}
+		}
+		if (changed) {
+			fingerTableChanged();
+		}
 	}
 
 	@EventHandlerMethod
@@ -184,6 +194,9 @@ public class ChordIterativeRouter {
 
 		// special case for Ring join, we don't have a successor yet.
 		if (firstPeer != null) {
+
+			logger.debug("FIRST_PEER is {}", firstPeer);
+
 			RpcTimeout timeout = new RpcTimeout(event, firstPeer);
 			long timerId = timerHandler.setTimer(timeout, timerSignalChannel,
 					rpcTimeout);
@@ -204,10 +217,10 @@ public class ChordIterativeRouter {
 
 		// special case for when we are alone in the ring
 		if (successor == null || successor.equals(localPeer.getId())) {
-			// to avoid an infinite loop, we fail the lookup
-			ChordLookupFailed failed = new ChordLookupFailed(key, event
-					.getAttachment());
-			component.triggerEvent(failed, event.getResponseChannel());
+			// to avoid an infinite loop, we return ourselves
+			ChordLookupResponse response = new ChordLookupResponse(key,
+					localPeer, event.getAttachment());
+			component.triggerEvent(response, event.getResponseChannel());
 		}
 
 		// normal case
@@ -285,7 +298,6 @@ public class ChordIterativeRouter {
 			Address closest = fingerTable.closestPreceedingPeer(key);
 
 			if (!closest.equals(localPeer)) {
-
 				FindSuccessorResponse response = new FindSuccessorResponse(
 						closest, event.getLookupId(), true);
 				PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(

@@ -330,12 +330,14 @@ public class PeerMonitorServer {
 			if (fingerTableView != null) {
 				sb.append("<td><div align=\"left\">");
 				sb.append("[");
+				boolean first = true;
 				for (int i = 0; i < fingerTableView.finger.length; i++) {
 					if (fingerTableView.finger[i] != null) {
-						if (i > 0) {
+						if (!first) {
 							sb.append(", ");
 						}
 						appendWebLink(sb, fingerTableView.finger[i]);
+						first = false;
 					}
 				}
 				sb.append("]");
@@ -481,15 +483,18 @@ public class PeerMonitorServer {
 				}
 				sb.append("</div></td>");
 
+				// print fingers
 				if (fingerTableView != null) {
 					sb.append("<td><div align=\"left\">");
 					sb.append("[");
+					boolean first = true;
 					for (int i = 0; i < fingerTableView.finger.length; i++) {
 						if (fingerTableView.finger[i] != null) {
-							if (i > 0) {
+							if (!first) {
 								sb.append(", ");
 							}
 							appendWebLink(sb, fingerTableView.finger[i]);
+							first = false;
 						}
 					}
 					sb.append("]");
