@@ -28,6 +28,7 @@ import se.sics.kompics.p2p.chord.events.ChordLookupResponse;
 import se.sics.kompics.p2p.chord.events.GetChordNeighborsRequest;
 import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
 import se.sics.kompics.p2p.chord.router.FingerTableView;
+import se.sics.kompics.p2p.chord.router.LookupInfo;
 import se.sics.kompics.p2p.fd.events.StatusRequest;
 import se.sics.kompics.p2p.fd.events.StatusResponse;
 import se.sics.kompics.web.events.WebRequestEvent;
@@ -179,8 +180,8 @@ public class WebHandler {
 	@MayTriggerEventTypes(WebResponseEvent.class)
 	public void handleChordLookupResponse(ChordLookupResponse response) {
 		WebResponseEvent responseEvent = new WebResponseEvent(
-				dumpChordLookupForm(response.getKey(), response
-						.getResponsible()), requestEvent, 2, parts);
+				dumpChordLookupForm(response.getKey(), response), requestEvent,
+				2, parts);
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 
@@ -188,8 +189,8 @@ public class WebHandler {
 	@MayTriggerEventTypes(WebResponseEvent.class)
 	public void handleChordLookupFailed(ChordLookupFailed response) {
 		WebResponseEvent responseEvent = new WebResponseEvent(
-				dumpChordLookupForm(response.getKey(), null), requestEvent, 2,
-				parts);
+				dumpChordLookupForm(response.getKey(), response), requestEvent,
+				2, parts);
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 
@@ -213,25 +214,39 @@ public class WebHandler {
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 
-	private String dumpChordLookupForm(BigInteger key, Address responsible) {
+	private String dumpChordLookupForm(BigInteger key, Event event) {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("<h2 align=\"center\" class=\"style2\">Chord Lookup:</h2>");
-		sb.append("<table width=\"500\" border=\"0\" align=\"center\"><tr><td");
+		sb.append("<table width=\"800\" border=\"0\" align=\"center\"><tr><td");
 		sb.append("><form method=\"get\" name=\"lkpFrm\" id=\"chordLkpFrm\">");
 		sb.append("<fieldset><legend> Chord </legend><label>Lookup key ");
 		sb.append("<input name=\"chordLookup\" type=\"text\" id=\"lookip\" ");
 		sb.append("value=\"").append(key != null ? key : "1");
 		sb.append("\" size=\"6\"/>");
 		sb.append("</label><input type=\"submit\" value=\"Lookup\" />");
-		if (responsible != null && key != null) {
-			sb.append("<label> Peer ");
-			appendWebLink(sb, responsible, null);
-			sb.append(" is responsible for key ").append(key).append(".");
-			sb.append("</label>");
-		} else if (responsible == null && key != null) {
-			sb.append("<label> Lookup for key ").append(key).append(" failed.");
-			sb.append("</label>");
+		if (key != null) {
+			if (event instanceof ChordLookupResponse) {
+				ChordLookupResponse response = (ChordLookupResponse) event;
+				LookupInfo info = response.getLookupInfo();
+				sb.append("<label> Peer ");
+				appendWebLink(sb, response.getResponsible(), null);
+				sb.append(" is responsible for key ").append(key).append(".");
+				sb.append("<br>Lookup took ").append(info.getduration());
+				sb.append(" milliseconds and traversed ");
+				sb.append(info.getHopCount()).append(" hops [");
+				for (Address hop : info.getHops()) {
+					sb.append(" ");
+					appendWebLink(sb, hop, null);
+				}
+				sb.append(" ].</label>");
+			} else if (event instanceof ChordLookupFailed) {
+				ChordLookupFailed failed = (ChordLookupFailed) event;
+				sb.append("<label> Lookup for key ").append(key);
+				sb.append(" failed because of peer ");
+				sb.append(failed.getSuspectedPeer());
+				sb.append(".</label>");
+			}
 		}
 		sb.append("</fieldset></form></td></tr></table>");
 
@@ -268,7 +283,7 @@ public class WebHandler {
 	private String dumpRingViewToHtml(GetChordNeighborsResponse response) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<h2 align=\"center\" class=\"style2\">ChordRing:</h2>");
-		sb.append("<table width=\"1500\" border=\"2\" align=\"center\"><tr>");
+		sb.append("<table width=\"800\" border=\"2\" align=\"center\"><tr>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Predecessor</th>");
 		sb
@@ -276,7 +291,7 @@ public class WebHandler {
 		sb
 				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Successor List</th>");
 		sb
-				.append("<th class=\"style2\" width=\"1000\" scope=\"col\">Fingers</th></tr>");
+				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Fingers</th></tr>");
 		sb.append("<tr><td><div align=\"center\">");
 		appendWebLink(sb, response.getPredecessorPeer(), null);
 		sb.append("</div></td><td><div align=\"center\">");

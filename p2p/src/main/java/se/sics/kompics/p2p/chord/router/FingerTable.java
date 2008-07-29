@@ -26,6 +26,8 @@ public class FingerTable {
 
 	private Address[] finger;
 
+	private boolean[] skip;
+
 	private ChordIterativeRouter router;
 
 	public FingerTable(int log2RingSize, Address localPeer,
@@ -39,6 +41,7 @@ public class FingerTable {
 		begin = new BigInteger[log2RingSize];
 		end = new BigInteger[log2RingSize];
 		finger = new Address[log2RingSize];
+		skip = new boolean[log2RingSize];
 
 		initFingerTable();
 	}
@@ -47,50 +50,105 @@ public class FingerTable {
 		for (int i = 0; i < log2RingSize; i++) {
 			begin[i] = new BigInteger("2").pow(i).add(localPeer.getId()).mod(
 					ringSize);
-		}
-
-		for (int i = 0; i < log2RingSize; i++) {
 			end[i] = new BigInteger("2").pow(i + 1).add(localPeer.getId()).mod(
 					ringSize);
-		}
-
-		for (int i = 0; i < log2RingSize; i++) {
 			finger[i] = null;
-			// try {
-			// finger[i] = new Address(InetAddress.getLocalHost(), 1234,
-			// begin[i]);
-			// } catch (UnknownHostException e) {
-			// e.printStackTrace();
-			// }
+			skip[i] = false;
 		}
+		// try {
+		// finger[i] = new Address(InetAddress.getLocalHost(), 1234,
+		// begin[i]);
+		// } catch (UnknownHostException e) {
+		// e.printStackTrace();
+		// }
 	}
 
-	void fingerFixed(int fingerIndex, Address fingerPeer) {
-		fingerIndex--;
-		// finger peers have to either null or inside the finger interval
-		if (fingerPeer != null
-				&& RingMath.belongsTo(fingerPeer.getId(), begin[fingerIndex],
-						end[fingerIndex], IntervalBounds.CLOSED_OPEN, ringSize)) {
-			finger[fingerIndex] = fingerPeer;
+	int fingerFixed(int supposedFinger, Address fingerPeer) {
+		if (fingerPeer == null)
+			return supposedFinger;
 
+		supposedFinger--;
+
+		// we find the actual finger being fixed
+		int actualFinger = supposedFinger;
+		for (int i = 0; i < log2RingSize; i++) {
+			if (RingMath.belongsTo(fingerPeer.getId(), begin[i], end[i],
+					IntervalBounds.CLOSED_OPEN, ringSize)) {
+				// we got finger i
+				actualFinger = i;
+				break;
+			}
+		}
+
+		// we have now fixed all fingers between the one that was supposed to
+		// be fixed and the one actually fixed since there is no node in between
+		// thus we mark the fact that they should not be skipped in the next
+		// round
+		int i = supposedFinger;
+		while (i != actualFinger) {
+			skip[i] = false;
+			i++;
+			if (i >= log2RingSize) {
+				i = 0;
+			}
+		}
+		skip[actualFinger] = false;
+
+		// we actually fix the finger now
+		if (finger[actualFinger] == null
+				|| !finger[actualFinger].equals(fingerPeer)) {
+			finger[actualFinger] = fingerPeer;
 			router.fingerTableChanged();
 		}
+
+		return actualFinger + 1;
+	}
+
+	int tryToFixFinger(int i) {
+		i--;
+		while (skip[i]) {
+			i++;
+			if (i >= log2RingSize) {
+				i = 0;
+			}
+		}
+		return i + 1;
+	}
+
+	boolean learnedAboutFreshPeer(Address newPeer) {
+		return learnedAboutPeer(newPeer, true, true);
 	}
 
 	boolean learnedAboutPeer(Address newPeer) {
-		return learnedAboutPeer(newPeer, true);
+		return learnedAboutPeer(newPeer, true, false);
 	}
 
-	boolean learnedAboutPeer(Address newPeer, boolean update) {
+	boolean learnedAboutPeer(Address newPeer, boolean update, boolean fresh) {
 		// we have learned about this new peer so we check whether it is a
 		// better alternative for one of our fingers
+
+		if (newPeer == null || newPeer.equals(localPeer)) {
+			return false;
+		}
 
 		boolean changed = false;
 		for (int i = 0; i < log2RingSize; i++) {
 			if (RingMath.belongsTo(newPeer.getId(), begin[i], end[i],
 					IntervalBounds.CLOSED_OPEN, ringSize)) {
-				finger[i] = newPeer;
-				changed = true;
+				// it belongs to this interval
+				// we update no matter what
+				if (finger[i] == null
+						|| RingMath.belongsTo(newPeer.getId(), begin[i],
+								finger[i].getId(), IntervalBounds.CLOSED_OPEN,
+								ringSize)) {
+					// it is closer to the beginning of the interval than
+					// the current finger
+					finger[i] = newPeer;
+					// we skip this finger in the next Fixfingers attempt
+					skip[i] = true;
+					changed = true;
+				}
+				break;
 			}
 		}
 

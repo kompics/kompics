@@ -50,6 +50,9 @@ public class ProcessLauncher extends Thread {
 		List<String> commandArgs = new LinkedList<String>();
 		commandArgs.add("java");
 		commandArgs.add("-D " + name);
+
+		commandArgs.add("-Xmx1g");
+
 		// commandArgs.add("-Dcom.sun.management.jmxremote");
 		// commandArgs.add("-Xrunjmeter");
 		// commandArgs.add("-Xbootclasspath/a:$JMETER_HOME/lib/HPjmeter.jar");

@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.EventType;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.p2p.chord.router.LookupInfo;
 
 /**
  * The <code>ChordLookupResponse</code> class
@@ -21,12 +22,15 @@ public final class ChordLookupResponse implements Event {
 
 	private final Object attachment;
 
+	private final LookupInfo lookupInfo;
+
 	public ChordLookupResponse(BigInteger key, Address responsible,
-			Object attachment) {
+			Object attachment, LookupInfo lookupInfo) {
 		super();
 		this.key = key;
 		this.responsible = responsible;
 		this.attachment = attachment;
+		this.lookupInfo = lookupInfo;
 	}
 
 	public BigInteger getKey() {
@@ -39,5 +43,9 @@ public final class ChordLookupResponse implements Event {
 
 	public Object getAttachment() {
 		return attachment;
+	}
+
+	public LookupInfo getLookupInfo() {
+		return lookupInfo;
 	}
 }
