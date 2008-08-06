@@ -253,7 +253,7 @@ public class ChordRing {
 										 * TODO cycle through other joining
 										 * peers or retry bootstrap
 										 */);
-		component.triggerEvent(request, requestChannel);
+		component.triggerEvent(request, chordRouterChannel);
 	}
 
 	@EventHandlerMethod
