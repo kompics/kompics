@@ -67,11 +67,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<configuration>
-					<excludePackageNames>
-						se.sics.kompics.p2p
-					</excludePackageNames>
-				</configuration>
 			</plugin>
 		</plugins>
 	</reporting>

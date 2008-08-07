@@ -137,12 +137,12 @@
 		<module>timer</module>
 		<module>network</module>
 		<module>protocols</module>
+		<module>p2p</module>
+		<module>web</module>
 		<!--
 			
 			<module>failure-detector</module>
 			<module>inspector</module>
-			<module>timer</module>
-			<module>web</module>
 			<module>example</module>
 		-->
 	</modules>
