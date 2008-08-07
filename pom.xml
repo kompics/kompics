@@ -1,22 +1,16 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>build</artifactId>
 	<packaging>pom</packaging>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.1</version>
 	<name>Kompics Parent POM</name>
 	<url>http://kompics.sics.se</url>
 
 	<scm>
-		<connection>
-			scm:svn:svn://small.sics.se/kompics/trunk
-		</connection>
-		<url>http://small.sics.se/viewvc/kompics/trunk</url>
-		<developerConnection>
-			scm:svn:svn://small.sics.se/kompics/trunk
-		</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/tags/build-0.1</connection>
+		<url>http://small.sics.se/viewvc/kompics/tags/build-0.1</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/tags/build-0.1</developerConnection>
 	</scm>
 
 	<distributionManagement>
