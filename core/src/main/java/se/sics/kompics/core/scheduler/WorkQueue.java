@@ -42,17 +42,17 @@ public class WorkQueue {
 	/* called by the publisher thread */
 	public synchronized void add(Work work) {
 		workQueue.add(work);
-		incrementCounter(work.getPriority());
+		Priority wp = work.getPriority();
+		incrementCounter(wp);
 		if (priority == null) {
-			priority = work.getPriority();
+			priority = wp;
 			componentCore.moveWorkQueueToPriorityPool(this, null, priority);
 			return;
 		}
 
-		if (priority.compareTo(work.getPriority()) < 0) {
-			componentCore.moveWorkQueueToPriorityPool(this, priority, work
-					.getPriority());
-			priority = work.getPriority();
+		if (priority.compareTo(wp) < 0) {
+			componentCore.moveWorkQueueToPriorityPool(this, priority, wp);
+			priority = wp;
 		}
 	}
 

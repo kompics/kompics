@@ -171,19 +171,18 @@ public class ComponentCore {
 		WorkQueue workQueue = channelWorkQueues.get(work.getChannelCore());
 		workQueue.add(work);
 
+		Priority wp = work.getPriority();
+
 		// we make the component ready, if passive
 		synchronized (componentStateLock) {
 			allWorkCounter++;
-			switch (work.getPriority()) {
-			case HIGH:
+
+			if (wp == Priority.HIGH) {
 				highWorkCounter++;
-				break;
-			case MEDIUM:
+			} else if (wp == Priority.MEDIUM) {
 				mediumWorkCounter++;
-				break;
-			case LOW:
+			} else if (wp == Priority.LOW) {
 				lowWorkCounter++;
-				break;
 			}
 
 			if (componentState == ComponentState.ASLEEP) {
@@ -195,15 +194,15 @@ public class ComponentCore {
 				// + lowPoolCounter);
 
 				scheduler.componentReady(new ReadyComponent(this,
-						highWorkCounter, mediumWorkCounter, lowWorkCounter,
-						work.getPriority(), null, work.getPriority()));
+						highWorkCounter, mediumWorkCounter, lowWorkCounter, wp,
+						null, wp));
 			} else {
 				// System.out.println("HPE:" + highWorkCounter + ":"
 				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
 				// + highPoolCounter + ":" + mediumPoolCounter + ":"
 				// + lowPoolCounter);
 
-				scheduler.publishedEvent(work.getPriority());
+				scheduler.publishedEvent(wp);
 			}
 		}
 	}
@@ -252,19 +251,17 @@ public class ComponentCore {
 			handleFault(throwable);
 		}
 
+		Priority wp = work.getPriority();
+
 		// make the component passive or ready
 		synchronized (componentStateLock) {
 			allWorkCounter--;
-			switch (work.getPriority()) {
-			case HIGH:
+			if (wp == Priority.HIGH) {
 				highWorkCounter--;
-				break;
-			case MEDIUM:
+			} else if (wp == Priority.MEDIUM) {
 				mediumWorkCounter--;
-				break;
-			case LOW:
+			} else if (wp == Priority.LOW) {
 				lowWorkCounter--;
-				break;
 			}
 
 			if (allWorkCounter == 0) {
@@ -274,22 +271,22 @@ public class ComponentCore {
 				// + lowPoolCounter);
 
 				componentState = ComponentState.ASLEEP;
-				scheduler.executedEvent(work.getPriority());
+				scheduler.executedEvent(wp);
 			} else if (highWorkCounter > 0) {
 				componentState = ComponentState.AWAKE;
 				scheduler.componentReady(new ReadyComponent(this,
 						highWorkCounter, mediumWorkCounter, lowWorkCounter,
-						null, work.getPriority(), Priority.HIGH));
+						null, wp, Priority.HIGH));
 			} else if (mediumWorkCounter > 0) {
 				componentState = ComponentState.AWAKE;
 				scheduler.componentReady(new ReadyComponent(this,
 						highWorkCounter, mediumWorkCounter, lowWorkCounter,
-						null, work.getPriority(), Priority.MEDIUM));
+						null, wp, Priority.MEDIUM));
 			} else if (lowWorkCounter > 0) {
 				componentState = ComponentState.AWAKE;
 				scheduler.componentReady(new ReadyComponent(this,
 						highWorkCounter, mediumWorkCounter, lowWorkCounter,
-						null, work.getPriority(), Priority.LOW));
+						null, wp, Priority.LOW));
 			} else {
 				throw new RuntimeException("Negative work counter");
 			}
@@ -300,8 +297,8 @@ public class ComponentCore {
 	 * Tries to execute one guarded event handler.
 	 * 
 	 * @return <code>true</code> if one blocked event was executed from any
-	 *         guarded event handler and <code>false</code> if no blocked
-	 *         event could be executed due to no satisfied guard
+	 *         guarded event handler and <code>false</code> if no blocked event
+	 *         could be executed due to no satisfied guard
 	 */
 	private boolean handleOneBlockedEvent() throws Throwable {
 		Iterator<EventHandler> iterator = guardedHandlersWithBlockedEvents

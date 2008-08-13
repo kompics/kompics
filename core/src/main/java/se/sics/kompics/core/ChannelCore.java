@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.FaultEvent;
@@ -13,7 +14,7 @@ import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.scheduler.Work;
 
 public class ChannelCore {
-
+	//
 	// private static final Logger logger = LoggerFactory
 	// .getLogger(ChannelCore.class);
 
@@ -203,19 +204,28 @@ public class ChannelCore {
 				.allOf(ChannelCapabilityFlags.class));
 	}
 
+	private static ConcurrentHashMap<Class<? extends Event>, HashSet<Class<? extends Event>>> eventSuperTypes = new ConcurrentHashMap<Class<? extends Event>, HashSet<Class<? extends Event>>>();
+
 	@SuppressWarnings("unchecked")
 	private HashSet<Class<? extends Event>> getAllSupertypes(
 			Class<? extends Event> eventType) {
 
-		HashSet<Class<? extends Event>> supertypes = new HashSet<Class<? extends Event>>();
+		Class<? extends Event> eType = eventType;
+		HashSet<Class<? extends Event>> supertypes = eventSuperTypes.get(eType);
 
-		while (!eventType.equals(Object.class)
-				&& Event.class.isAssignableFrom(eventType)) {
+		if (supertypes == null) {
+			supertypes = new HashSet<Class<? extends Event>>();
 
-			supertypes.add(eventType);
-			eventType = (Class<? extends Event>) eventType.getSuperclass();
+			while (!eventType.equals(Object.class)
+					&& Event.class.isAssignableFrom(eventType)) {
+
+				supertypes.add(eventType);
+				eventType = (Class<? extends Event>) eventType.getSuperclass();
+			}
+			eventSuperTypes.putIfAbsent(eType, supertypes);
 		}
-		return supertypes;
+
+		return (HashSet<Class<? extends Event>>) supertypes.clone();
 	}
 
 	@SuppressWarnings("unchecked")
