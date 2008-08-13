@@ -71,8 +71,6 @@ public class ChordIterativeRouter {
 
 	private FingerTable fingerTable;
 
-	private int nextFingerToFix;
-
 	private long rpcTimeout;
 
 	private HashMap<Long, LookupInfo> outstandingLookups;
@@ -147,7 +145,6 @@ public class ChordIterativeRouter {
 
 		fingerTable = new FingerTable(log2RingSize, localPeer, this);
 		fingerTableChanged();
-		nextFingerToFix = 0;
 	}
 
 	@EventHandlerMethod
@@ -229,7 +226,7 @@ public class ChordIterativeRouter {
 		}
 
 		// special case for when we are alone in the ring
-		if (successor == null || successor.equals(localPeer.getId())) {
+		if (successor == null || successor.equals(localPeer)) {
 			// to avoid an infinite loop, we return ourselves
 			ChordLookupResponse response = new ChordLookupResponse(key,
 					localPeer, event.getAttachment(), new LookupInfo(event));
@@ -413,13 +410,7 @@ public class ChordIterativeRouter {
 	public void handleFixFingers(FixFingers event) {
 		logger.debug("FIX_FINGER");
 
-		nextFingerToFix++;
-		if (nextFingerToFix > log2RingSize) {
-			nextFingerToFix = 1;
-		}
-
-		// returns the first finger not to be skipped
-		nextFingerToFix = fingerTable.tryToFixFinger(nextFingerToFix);
+		int nextFingerToFix = fingerTable.nextFingerToFix();
 
 		timerHandler.setTimer(event, timerSignalChannel,
 				fingerStabilizationPeriod);
@@ -439,7 +430,7 @@ public class ChordIterativeRouter {
 		Address fingerPeer = event.getResponsible();
 		int fingerIndex = (Integer) event.getAttachment();
 
-		nextFingerToFix = fingerTable.fingerFixed(fingerIndex, fingerPeer);
+		fingerTable.fingerFixed(fingerIndex, fingerPeer);
 	}
 
 	@EventHandlerMethod

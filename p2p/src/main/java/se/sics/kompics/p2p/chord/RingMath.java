@@ -2,7 +2,6 @@ package se.sics.kompics.p2p.chord;
 
 import java.math.BigInteger;
 
-
 public class RingMath {
 
 	// x belongs to (from, to)
@@ -30,7 +29,7 @@ public class RingMath {
 				.compareTo(ny) <= 0));
 	}
 
-	private static BigInteger modMinus(BigInteger x, BigInteger y,
+	public static BigInteger modMinus(BigInteger x, BigInteger y,
 			BigInteger ringSize) {
 		return ringSize.add(x).subtract(y).mod(ringSize);
 	}

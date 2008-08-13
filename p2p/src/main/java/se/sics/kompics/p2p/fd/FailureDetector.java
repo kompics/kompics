@@ -160,8 +160,9 @@ public final class FailureDetector {
 	@EventHandlerMethod
 	public void handleSendPing(SendPing event) {
 		Address peer = event.getPeer();
-		if (peerProbers.containsKey(peer)) {
-			peerProbers.get(peer).ping();
+		PeerProber prober = peerProbers.get(peer);
+		if (prober != null) {
+			prober.ping();
 		} else {
 			logger.debug("Peer {} is not currently being probed", peer);
 		}

@@ -30,6 +30,8 @@ public class FingerTable {
 
 	private ChordIterativeRouter router;
 
+	private int nextFingerToFix;
+
 	public FingerTable(int log2RingSize, Address localPeer,
 			ChordIterativeRouter router) {
 		this.router = router;
@@ -43,6 +45,8 @@ public class FingerTable {
 		finger = new Address[log2RingSize];
 		skip = new boolean[log2RingSize];
 
+		nextFingerToFix = -1;
+
 		initFingerTable();
 	}
 
@@ -55,64 +59,74 @@ public class FingerTable {
 			finger[i] = null;
 			skip[i] = false;
 		}
-		// try {
-		// finger[i] = new Address(InetAddress.getLocalHost(), 1234,
-		// begin[i]);
-		// } catch (UnknownHostException e) {
-		// e.printStackTrace();
+	}
+
+	int nextFingerToFix() {
+		do {
+			if (nextFingerToFix > 0) {
+				skip[nextFingerToFix] = false;
+			}
+			nextFingerToFix++;
+			if (nextFingerToFix >= log2RingSize) {
+				nextFingerToFix = 0;
+			}
+		} while (skip[nextFingerToFix]);
+		return nextFingerToFix;
+	}
+
+	void fingerFixed(int f, Address fingerPeer) {
+		if (fingerPeer == null || fingerPeer.equals(localPeer)) {
+			skip[f] = false;
+			return;
+		}
+
+		while (!RingMath.belongsTo(fingerPeer.getId(), begin[f], end[f],
+				IntervalBounds.CLOSED_OPEN, ringSize)) {
+			skip[f] = false;
+			f++;
+			if (f >= log2RingSize) {
+				f = 0;
+			}
+		}
+		skip[f] = false;
+		finger[f] = fingerPeer;
+
+		nextFingerToFix = f;
+
+		// // we find the actual finger being fixed
+		// int actualFinger = f;
+		// for (int i = 0; i < log2RingSize; i++) {
+		// if (RingMath.belongsTo(fingerPeer.getId(), begin[i], end[i],
+		// IntervalBounds.CLOSED_OPEN, ringSize)) {
+		// // we got finger i
+		// actualFinger = i;
+		// break;
 		// }
-	}
-
-	int fingerFixed(int supposedFinger, Address fingerPeer) {
-		if (fingerPeer == null)
-			return supposedFinger;
-
-		supposedFinger--;
-
-		// we find the actual finger being fixed
-		int actualFinger = supposedFinger;
-		for (int i = 0; i < log2RingSize; i++) {
-			if (RingMath.belongsTo(fingerPeer.getId(), begin[i], end[i],
-					IntervalBounds.CLOSED_OPEN, ringSize)) {
-				// we got finger i
-				actualFinger = i;
-				break;
-			}
-		}
-
-		// we have now fixed all fingers between the one that was supposed to
-		// be fixed and the one actually fixed since there is no node in between
-		// thus we mark the fact that they should not be skipped in the next
-		// round
-		int i = supposedFinger;
-		while (i != actualFinger) {
-			skip[i] = false;
-			i++;
-			if (i >= log2RingSize) {
-				i = 0;
-			}
-		}
-		skip[actualFinger] = false;
-
-		// we actually fix the finger now
-		if (finger[actualFinger] == null
-				|| !finger[actualFinger].equals(fingerPeer)) {
-			finger[actualFinger] = fingerPeer;
-			router.fingerTableChanged();
-		}
-
-		return actualFinger + 1;
-	}
-
-	int tryToFixFinger(int i) {
-		i--;
-		while (skip[i]) {
-			i++;
-			if (i >= log2RingSize) {
-				i = 0;
-			}
-		}
-		return i + 1;
+		// }
+		//
+		// // we have now fixed all fingers between the one that was supposed to
+		// // be fixed and the one actually fixed since there is no node in
+		// between
+		// // thus we mark the fact that they should not be skipped in the next
+		// // round
+		// int i = f;
+		// while (i != actualFinger) {
+		// skip[i] = false;
+		// i++;
+		// if (i >= log2RingSize) {
+		// i = 0;
+		// }
+		// }
+		// skip[actualFinger] = false;
+		//
+		// // we actually fix the finger now
+		// if (finger[actualFinger] == null
+		// || !finger[actualFinger].equals(fingerPeer)) {
+		// finger[actualFinger] = fingerPeer;
+		// router.fingerTableChanged();
+		// }
+		//
+		// nextFingerToFix = actualFinger;
 	}
 
 	boolean learnedAboutFreshPeer(Address newPeer) {
@@ -131,26 +145,31 @@ public class FingerTable {
 			return false;
 		}
 
+		BigInteger distance = RingMath.modMinus(newPeer.getId(), localPeer
+				.getId(), ringSize);
+		int i = distance.bitLength() - 1;
+
 		boolean changed = false;
-		for (int i = 0; i < log2RingSize; i++) {
-			if (RingMath.belongsTo(newPeer.getId(), begin[i], end[i],
-					IntervalBounds.CLOSED_OPEN, ringSize)) {
-				// it belongs to this interval
-				// we update no matter what
-				if (finger[i] == null
-						|| RingMath.belongsTo(newPeer.getId(), begin[i],
-								finger[i].getId(), IntervalBounds.CLOSED_OPEN,
-								ringSize)) {
-					// it is closer to the beginning of the interval than
-					// the current finger
-					finger[i] = newPeer;
-					// we skip this finger in the next Fixfingers attempt
-					skip[i] = true;
-					changed = true;
-				}
-				break;
+
+		// for (int i = 0; i < log2RingSize; i++) {
+		if (RingMath.belongsTo(newPeer.getId(), begin[i], end[i],
+				IntervalBounds.CLOSED_OPEN, ringSize)) {
+			// it belongs to this interval
+			// we update no matter what
+			if (finger[i] == null
+					|| (fresh && RingMath.belongsTo(newPeer.getId(), begin[i],
+							finger[i].getId(), IntervalBounds.CLOSED_OPEN,
+							ringSize))) {
+				// it is closer to the beginning of the interval than
+				// the current finger
+				finger[i] = newPeer;
+				// we skip this finger in the next Fixfingers attempt
+				skip[i] = true;
+				changed = true;
 			}
+			// break;
 		}
+		// }
 
 		if (changed && update) {
 			router.fingerTableChanged();
@@ -190,22 +209,6 @@ public class FingerTable {
 	}
 
 	public BigInteger getFingerBegin(int fingerIndex) {
-		return begin[fingerIndex - 1];
+		return begin[fingerIndex];
 	}
-
-	// public void dump() {
-	// for (int i = 0; i < log2RingSize; i++) {
-	// System.err.println((i + 1) + "[" + begin[i] + ", " + end[i]
-	// + ") -> " + finger[i]);
-	// }
-	// }
-	//
-	// public static void main(String args[]) throws UnknownHostException {
-	// FingerTable ft = new FingerTable(8, new Address(InetAddress
-	// .getLocalHost(), 1234, BigInteger.ZERO));
-	//
-	// ft.dump();
-	//
-	// System.out.println(ft.closestPreceedingPeer(new BigInteger("5")));
-	// }
 }
