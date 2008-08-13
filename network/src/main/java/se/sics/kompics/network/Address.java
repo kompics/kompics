@@ -9,19 +9,26 @@ public class Address implements Comparable<Address>, Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 226803467944970895L;
+	private static final long serialVersionUID = 6782338837235531468L;
 
-	private InetAddress ip;
+	private final InetAddress ip;
 
-	private int port;
+	private final int port;
 
-	private BigInteger id;
+	private final BigInteger id;
+
+	private final int hashCode;
 
 	public Address(InetAddress ip, int port, BigInteger id) {
-		super();
 		this.ip = ip;
 		this.port = port;
 		this.id = id;
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((ip == null) ? 0 : ip.hashCode());
+		result = prime * result + port;
+		this.hashCode = result;
 	}
 
 	public InetAddress getIp() {
@@ -47,12 +54,7 @@ public class Address implements Comparable<Address>, Serializable {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((ip == null) ? 0 : ip.hashCode());
-		result = prime * result + port;
-		return result;
+		return hashCode;
 	}
 
 	@Override
@@ -61,18 +63,12 @@ public class Address implements Comparable<Address>, Serializable {
 			return true;
 		if (obj == null)
 			return false;
-		if (getClass() != obj.getClass())
+		Address other = (Address) obj;
+		if (hashCode != other.hashCode)
 			return false;
-		final Address other = (Address) obj;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
+		if (!id.equals(other.id))
 			return false;
-		if (ip == null) {
-			if (other.ip != null)
-				return false;
-		} else if (!ip.equals(other.ip))
+		if (!ip.equals(other.ip))
 			return false;
 		if (port != other.port)
 			return false;
