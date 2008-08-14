@@ -35,6 +35,8 @@ public interface Component {
 	public void subscribe(Channel channel, String eventHandlerName,
 			EventAttributeFilter... filters);
 
+	public void unsubscribe(Channel channel, String eventHandlerName);
+
 	public void start();
 
 	public void stop();

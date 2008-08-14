@@ -121,7 +121,7 @@ public final class LossyNetwork {
 				"global.loss.rate", "0.0"));
 
 		EventAttributeFilter destinationFilter = new EventAttributeFilter(
-				"getDestination", localAddress);
+				"destination", localAddress);
 		component.subscribe(netDeliverChannel,
 				"handleLossyNetNetworkDeliverEvent", destinationFilter);
 		logger.debug("Subscribed for LossyNetNetDeliver with destination {}",

@@ -41,6 +41,8 @@ public final class P2pLauncher {
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException {
 
+		System.out.println(classPath);
+
 		Properties commands = new Properties();
 		commands.load(P2pLauncher.class
 				.getResourceAsStream("p2p-launcher.properties"));

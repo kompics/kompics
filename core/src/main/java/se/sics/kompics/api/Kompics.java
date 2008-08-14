@@ -58,9 +58,9 @@ public class Kompics {
 	public Component getBootstrapComponent() {
 		if (bootstrapComponent == null) {
 			Scheduler scheduler = new Scheduler(workers, fairnessRate);
-			ChannelCore bootFaultChannelCore = new ChannelCore(
-					new HashSet<Class<? extends Event>>());
-			bootFaultChannelCore.addEventType(FaultEvent.class);
+			HashSet<Class<? extends Event>> eventTypes = new HashSet<Class<? extends Event>>();
+			eventTypes.add(FaultEvent.class);
+			ChannelCore bootFaultChannelCore = new ChannelCore(eventTypes);
 
 			FactoryRegistry factoryRegistry = new FactoryRegistry();
 

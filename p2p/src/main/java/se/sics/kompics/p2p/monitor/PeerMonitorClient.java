@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.EventAttributeFilter;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
@@ -69,7 +68,7 @@ public class PeerMonitorClient {
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
 		Channel timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane.getChannel(TimerSignalEvent.class);
+		timerSignalChannel = component.createChannel(TimerSignalEvent.class);
 
 		this.timerHandler = new TimerHandler(component, timerSetChannel);
 
@@ -115,10 +114,7 @@ public class PeerMonitorClient {
 		monitorServerAddress = new Address(ip, port, BigInteger.ZERO);
 		localPeerAddress = localAddress;
 
-		EventAttributeFilter filter = new EventAttributeFilter("peerId",
-				localPeerAddress.getId());
-		component.subscribe(timerSignalChannel, "handleSendView", filter);
-
+		component.subscribe(timerSignalChannel, "handleSendView");
 	}
 
 	@EventHandlerMethod

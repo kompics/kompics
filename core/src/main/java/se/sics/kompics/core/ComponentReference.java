@@ -153,6 +153,17 @@ public class ComponentReference implements Component {
 				ComponentCapabilityFlags.SUBSCRIBE);
 	}
 
+	public void unsubscribe(Channel channel, String eventHandlerName) {
+		if (componentCapabilities
+				.contains(ComponentCapabilityFlags.UNSUBSCRIBE)
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
+			componentCore.unsubscribe(this, channel, eventHandlerName);
+			return;
+		}
+		throw new CapabilityNotSupportedException(
+				ComponentCapabilityFlags.UNSUBSCRIBE);
+	}
+
 	public void triggerEvent(Event event, Channel channel) {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.TRIGGER)
 				&& (capable == null || capable.equals(ComponentUUID.get()))) {
@@ -182,32 +193,6 @@ public class ComponentReference implements Component {
 		}
 		throw new CapabilityNotSupportedException(
 				ComponentCapabilityFlags.HANDLE_EVENTS);
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((componentUUID == null) ? 0 : componentUUID.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		final ComponentReference other = (ComponentReference) obj;
-		if (componentUUID == null) {
-			if (other.componentUUID != null)
-				return false;
-		} else if (!componentUUID.equals(other.componentUUID))
-			return false;
-		return true;
 	}
 
 	public ComponentUUID getComponentUUID() {
@@ -320,5 +305,31 @@ public class ComponentReference implements Component {
 
 	public String getName() {
 		return componentCore.getName();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((componentCore == null) ? 0 : componentCore.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ComponentReference other = (ComponentReference) obj;
+		if (componentCore == null) {
+			if (other.componentCore != null)
+				return false;
+		} else if (componentCore != other.componentCore)
+			return false;
+		return true;
 	}
 }

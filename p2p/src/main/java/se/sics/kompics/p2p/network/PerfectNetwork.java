@@ -109,7 +109,7 @@ public final class PerfectNetwork {
 		this.localKingId = kingId.intValue();
 
 		EventAttributeFilter destinationFilter = new EventAttributeFilter(
-				"getDestination", localAddress);
+				"destination", localAddress);
 
 		component.subscribe(netDeliverChannel,
 				"handlePerfectNetNetworkDeliverEvent", destinationFilter);

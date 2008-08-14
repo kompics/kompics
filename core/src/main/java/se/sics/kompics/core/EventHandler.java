@@ -100,8 +100,8 @@ public class EventHandler {
 	}
 
 	/**
-	 * @return <code>true</code> if one event was handled, <code>false</code>
-	 *         if no blocked event could be executed.
+	 * @return <code>true</code> if one event was handled, <code>false</code> if
+	 *         no blocked event could be executed.
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 * @throws InvocationTargetException
@@ -123,5 +123,48 @@ public class EventHandler {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((guardMethod == null) ? 0 : guardMethod.hashCode());
+		result = prime * result + (guarded ? 1231 : 1237);
+		result = prime * result
+				+ ((handlerMethod == null) ? 0 : handlerMethod.hashCode());
+		result = prime * result
+				+ ((handlerObject == null) ? 0 : handlerObject.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		EventHandler other = (EventHandler) obj;
+		if (guardMethod == null) {
+			if (other.guardMethod != null)
+				return false;
+		} else if (!guardMethod.equals(other.guardMethod))
+			return false;
+		if (guarded != other.guarded)
+			return false;
+		if (handlerMethod == null) {
+			if (other.handlerMethod != null)
+				return false;
+		} else if (!handlerMethod.equals(other.handlerMethod))
+			return false;
+		if (handlerObject == null) {
+			if (other.handlerObject != null)
+				return false;
+		} else if (!handlerObject.equals(other.handlerObject))
+			return false;
+		return true;
 	}
 }

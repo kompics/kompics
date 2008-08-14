@@ -18,7 +18,7 @@ public final class WebRequestEvent implements Event {
 
 	private final long id;
 
-	private final BigInteger destination;
+	public final BigInteger destination;
 
 	private final String target;
 
@@ -35,10 +35,6 @@ public final class WebRequestEvent implements Event {
 
 	public long getId() {
 		return id;
-	}
-
-	public BigInteger destination() {
-		return destination;
 	}
 
 	public String getTarget() {

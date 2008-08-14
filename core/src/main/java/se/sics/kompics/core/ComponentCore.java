@@ -1,5 +1,6 @@
 package se.sics.kompics.core;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -218,7 +219,7 @@ public class ComponentCore {
 		// set the thread local component identifier. The thread executes now on
 		// behalf of this component.
 		ComponentUUID.set(componentIdentifier);
-		Thread.currentThread().setName(componentName);
+		// Thread.currentThread().setName(componentName);
 
 		// pick a work queue, if possible from the given priority pool
 		WorkQueue workQueue = pickWorkQueue(priority);
@@ -494,8 +495,8 @@ public class ComponentCore {
 				filterCores = new EventAttributeFilterCore[filters.length];
 				for (int i = 0; i < filterCores.length; i++) {
 					try {
-						Method attribute = eventType.getMethod(filters[i]
-								.getAttribute(), new Class<?>[0]);
+						Field attribute = eventType.getField(filters[i]
+								.getAttribute());
 						filterCores[i] = new EventAttributeFilterCore(
 								attribute, filters[i].getValue());
 					} catch (SecurityException e) {
@@ -503,7 +504,7 @@ public class ComponentCore {
 								+ "failed: no attribute "
 								+ filters[i].getAttribute() + " in event type "
 								+ eventType);
-					} catch (NoSuchMethodException e) {
+					} catch (NoSuchFieldException e) {
 						throw new RuntimeException("Subscription by attribute "
 								+ "failed: no attribute "
 								+ filters[i].getAttribute() + " in event type "
@@ -532,8 +533,35 @@ public class ComponentCore {
 		}
 	}
 
-	public void unsubscribe(Channel channel, String eventHandlerName) {
-		// TODO unsubscribe
+	public void unsubscribe(ComponentReference componentReference,
+			Channel channel, String eventHandlerName) {
+		ChannelReference channelReference = (ChannelReference) channel;
+		EventHandler eventHandler = eventHandlers.get(eventHandlerName);
+		if (eventHandler != null) {
+			Subscription subscription = null;
+			for (Subscription sub : subscriptions) {
+				if (sub.getComponent().equals(componentReference)
+						&& sub.getChannel().equals(channelReference)
+						&& sub.getEventHandler().equals(eventHandler)) {
+					subscription = sub;
+					break;
+				}
+			}
+
+			if (subscription != null) {
+				// ChannelCore channelCore =
+				channelReference.removeSubscription(subscription);
+				subscriptions.remove(subscription);
+				// TODO refcount work queues and remove them on unsubscription
+			} else {
+				throw new RuntimeException("I have no subscription of "
+						+ "eventHandler " + eventHandlerName
+						+ " to this channel");
+			}
+		} else {
+			throw new RuntimeException("I have no eventHandler named "
+					+ eventHandlerName);
+		}
 	}
 
 	/* =============== COMPONENT LIFE-CYCLE =============== */

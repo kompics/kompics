@@ -31,7 +31,17 @@ public class Scheduler {
 		}
 
 		threadPoolExecutor = new ThreadPoolExecutor(workers, workers, 0L,
-				TimeUnit.SECONDS, readyQueue);
+				TimeUnit.SECONDS, readyQueue
+		// , new ThreadFactory() {
+		// private ThreadGroup group = new ThreadGroup(
+		// "Kompics workers");
+		//
+		// public Thread newThread(Runnable r) {
+		// Thread t = new Thread(group, r);
+		// return t;
+		// }
+		// }
+		);
 	}
 
 	public boolean isFair() {

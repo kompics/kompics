@@ -14,13 +14,9 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
 @EventType
 public final class SendView extends TimerSignalEvent {
 
-	private final BigInteger peerId;
+	public final BigInteger peerId;
 
 	public SendView(BigInteger peerId) {
 		this.peerId = peerId;
-	}
-
-	public BigInteger peerId() {
-		return peerId;
 	}
 }

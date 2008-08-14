@@ -39,6 +39,9 @@ public class P2pMain {
 	 * @throws UnknownHostException
 	 */
 	public static void main(String[] args) throws UnknownHostException {
+
+		System.out.println(System.getProperty("java.class.path"));
+
 		PropertyConfigurator.configureAndWatch(System
 				.getProperty("log4j.properties"), 1000);
 

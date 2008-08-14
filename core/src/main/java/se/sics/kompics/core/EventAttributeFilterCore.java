@@ -1,23 +1,22 @@
 package se.sics.kompics.core;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 
 import se.sics.kompics.api.Event;
 
 public class EventAttributeFilterCore {
 
-	private final Method attribute;
+	private final Field attribute;
 
 	private final Object value;
 
-	public EventAttributeFilterCore(Method attribute, Object value) {
+	public EventAttributeFilterCore(Field attribute, Object value) {
 		super();
 		this.attribute = attribute;
 		this.value = value;
 	}
 
-	public Method getAttribute() {
+	public Field getAttribute() {
 		return attribute;
 	}
 
@@ -26,8 +25,8 @@ public class EventAttributeFilterCore {
 	}
 
 	public boolean checkFilter(Event event) throws IllegalArgumentException,
-			IllegalAccessException, InvocationTargetException {
-		Object eventValue = attribute.invoke(event);
+			IllegalAccessException {
+		Object eventValue = attribute.get(event);
 		return eventValue.equals(value);
 	}
 }

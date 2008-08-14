@@ -75,29 +75,8 @@ public class ChannelReference implements Channel {
 		return channelCore;
 	}
 
-	public void addEventType(Class<? extends Event> eventType) {
-		if (channelCapabilities.contains(ChannelCapabilityFlags.ADD_EVENT_TYPE)
-				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			channelCore.addEventType(eventType);
-			return;
-		}
-		throw new CapabilityNotSupportedException(
-				ChannelCapabilityFlags.ADD_EVENT_TYPE);
-	}
-
 	public boolean hasEventType(Class<? extends Event> eventType) {
 		return channelCore.hasEventType(eventType);
-	}
-
-	public void removeEventType(Class<? extends Event> eventType) {
-		if (channelCapabilities
-				.contains(ChannelCapabilityFlags.REMOVE_EVENT_TYPE)
-				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			channelCore.removeEventType(eventType);
-			return;
-		}
-		throw new CapabilityNotSupportedException(
-				ChannelCapabilityFlags.REMOVE_EVENT_TYPE);
 	}
 
 	public Set<Class<? extends Event>> getEventTypes() {
@@ -114,6 +93,16 @@ public class ChannelReference implements Channel {
 				ChannelCapabilityFlags.SUBSCRIBE);
 	}
 
+	ChannelCore removeSubscription(Subscription subscription) {
+		if (channelCapabilities.contains(ChannelCapabilityFlags.UNSUBSCRIBE)
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
+			channelCore.removeSubscription(subscription);
+			return channelCore;
+		}
+		throw new CapabilityNotSupportedException(
+				ChannelCapabilityFlags.UNSUBSCRIBE);
+	}
+
 	void publishEventCore(EventCore eventCore) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.PUBLISH)
 				&& (capable == null || capable.equals(ComponentUUID.get()))) {
@@ -122,6 +111,32 @@ public class ChannelReference implements Channel {
 		}
 		throw new CapabilityNotSupportedException(
 				ChannelCapabilityFlags.PUBLISH);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((channelCore == null) ? 0 : channelCore.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ChannelReference other = (ChannelReference) obj;
+		if (channelCore == null) {
+			if (other.channelCore != null)
+				return false;
+		} else if (channelCore != other.channelCore)
+			return false;
+		return true;
 	}
 
 }

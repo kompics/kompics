@@ -1,5 +1,6 @@
 package se.sics.kompics.core;
 
+import java.lang.reflect.Field;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,14 +30,14 @@ public class ChannelCore {
 	private HashSet<Class<? extends Event>> subscribedTypes;
 
 	/**
-	 * the event superTypes of the subscribed event types
-	 */
-	private HashSet<Class<? extends Event>> subscribedSuperTypes;
-
-	/**
 	 * subscriptions registered by event type
 	 */
 	private HashMap<Class<? extends Event>, LinkedList<Subscription>> subscriptions;
+
+	/**
+	 * subscriptions indexed by actual event type and attributes
+	 */
+	private HashMap<Class<? extends Event>, SubscriptionSet> lookup;
 
 	private Object channelLock;
 
@@ -45,8 +46,8 @@ public class ChannelCore {
 		super();
 		this.eventTypes = eventTypes;
 		subscribedTypes = new HashSet<Class<? extends Event>>();
-		subscribedSuperTypes = new HashSet<Class<? extends Event>>();
 		subscriptions = new HashMap<Class<? extends Event>, LinkedList<Subscription>>();
+		lookup = new HashMap<Class<? extends Event>, SubscriptionSet>();
 		channelLock = new Object();
 	}
 
@@ -54,54 +55,43 @@ public class ChannelCore {
 
 	@SuppressWarnings("unchecked")
 	public Set<Class<? extends Event>> getEventTypes() {
-		synchronized (channelLock) {
-			return (Set<Class<? extends Event>>) eventTypes.clone();
-		}
-	}
-
-	public void addEventType(Class<? extends Event> eventType) {
-		synchronized (channelLock) {
-			if (!eventTypes.contains(eventType)) {
-				eventTypes.add(eventType);
-			}
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	public void removeEventType(Class<? extends Event> eventType) {
-		synchronized (channelLock) {
-			if (!eventTypes.contains(eventType)) {
-				return;
-			}
-
-			HashSet<Class<? extends Event>> localSubscribedSuperTypes = (HashSet<Class<? extends Event>>) subscribedSuperTypes
-					.clone();
-
-			// check that the event type to be removed is not a super type of a
-			// type for which a subscription exists
-			if (localSubscribedSuperTypes.contains(eventType)) {
-				throw new ConfigurationException("Cannot remove event type "
-						+ eventType.getCanonicalName()
-						+ ". Subscription present");
-			}
-
-			eventTypes.remove(eventType);
-		}
+		return (Set<Class<? extends Event>>) eventTypes.clone();
 	}
 
 	public boolean hasEventType(Class<? extends Event> eventType) {
+		return eventTypes.contains(eventType);
+	}
+
+	public void removeSubscription(Subscription subscription) {
+		Class<? extends Event> eventType = subscription.getEventHandler()
+				.getEventType();
 		synchronized (channelLock) {
-			return eventTypes.contains(eventType);
+			lookup.clear(); // TODO safe removal of sub data
+			if (subscribedTypes.contains(eventType)) {
+				LinkedList<Subscription> subs = subscriptions.get(eventType);
+				boolean removed = subs.remove(subscription);
+				if (!removed) {
+					throw new ConfigurationException(
+							"There was no subscription for handler "
+									+ subscription.getEventHandler().getName()
+									+ " at this channel");
+				}
+				if (subs.size() == 0) {
+					subscribedTypes.remove(eventType);
+				}
+			} else {
+				throw new ConfigurationException(
+						"There is no subscription for " + eventType
+								+ " to this channel");
+			}
 		}
 	}
 
-	// TODO removeSubscription
-
 	public void addSubscription(Subscription subscription) {
+		Class<? extends Event> eventType = subscription.getEventHandler()
+				.getEventType();
 		synchronized (channelLock) {
-			Class<? extends Event> eventType = subscription.getEventHandler()
-					.getEventType();
-
+			lookup.clear();
 			if (subscribedTypes.contains(eventType)) {
 				// there exists already a subscription for this type
 				// we just add another one
@@ -124,13 +114,6 @@ public class ChannelCore {
 				if (superTypes.size() > 0) {
 					// subscribing for a sub-type
 					subscribedTypes.add(eventType);
-
-					// we keep all the super-types of the subscribed type so
-					// that we can prevent the removal of one of them from the
-					// channel
-					subscribedSuperTypes
-							.addAll(getAllSupertypesTillLocalType(eventType));
-
 					LinkedList<Subscription> subs = new LinkedList<Subscription>();
 					subs.add(subscription);
 					subscriptions.put(eventType, subs);
@@ -147,54 +130,117 @@ public class ChannelCore {
 
 	/* =============== EVENT TRIGGERING =============== */
 	public void publishEventCore(EventCore eventCore) {
-		Class<? extends Event> eventType = eventCore.getEvent().getClass();
-
-		HashSet<Class<? extends Event>> eventSuperTypes = getAllSupertypes(eventType);
+		Event event = eventCore.getEvent();
+		Class<? extends Event> eventType = event.getClass();
+		boolean typeMatch = false;
 
 		synchronized (channelLock) {
+			SubscriptionSet matchingSet = lookup.get(eventType);
+
+			if (matchingSet == null) {
+				matchingSet = new SubscriptionSet(eventType);
+
+				for (Class<? extends Event> type : subscribedTypes) {
+					// if the published event is a sub-type of this subscribed
+					// type
+					if (type.isAssignableFrom(eventType)) {
+						LinkedList<Subscription> subs = subscriptions.get(type);
+						for (Subscription s : subs) {
+							matchingSet.addSubscription(s);
+							typeMatch = true;
+						}
+					}
+				}
+				lookup.put(eventType, matchingSet);
+			}
+			if (typeMatch) {
+				if (matchingSet.noFilterSubs != null) {
+					deliverToSubscribers(eventCore, event,
+							matchingSet.noFilterSubs);
+				}
+				if (matchingSet.oneFilterSubs != null) {
+					deliverToOneFilteredSubscribers(eventCore, event,
+							matchingSet);
+				}
+				if (matchingSet.manyFilterSubs != null) {
+					deliverToManyFilteredSubscribers(eventCore, event,
+							matchingSet.manyFilterSubs);
+				}
+			}
+		}
+		if (!typeMatch) {
 			// check that the event can be published in this channel, i.e., any
 			// of its super-types belongs to the channel
-			eventSuperTypes.retainAll(eventTypes);
-
-			if (eventSuperTypes.size() == 0) {
+			boolean match = false;
+			for (Class<? extends Event> type : eventTypes) {
+				if (type.isAssignableFrom(eventType))
+					match = true;
+			}
+			if (!match)
 				throw new ConfigurationException("Cannot publish event "
 						+ eventType + " in channel");
-			}
+		}
+	}
 
-			// we get all super-types of the event for which subscriptions exist
-			eventSuperTypes = getAllSupertypes(eventType);
-			eventSuperTypes.retainAll(subscribedTypes);
+	private void deliverToSubscribers(EventCore eventCore, Event event,
+			LinkedList<Subscription> subs) {
+		for (Subscription sub : subs) {
+			Work work = new Work(this, eventCore, sub.getEventHandler(),
+					eventCore.getPriority());
+			sub.getComponent().handleWork(work);
+		}
+	}
 
-			for (Class<? extends Event> eType : eventSuperTypes) {
-				LinkedList<Subscription> subs = subscriptions.get(eType);
+	private void deliverToOneFilteredSubscribers(EventCore eventCore,
+			Event event, SubscriptionSet set) {
 
-				for (Subscription sub : subs) {
-					boolean match = true;
-
-					ComponentReference component = sub.getComponent();
-
-					try {
-						// for each filter
-						for (EventAttributeFilterCore filter : sub.getFilters()) {
-							if (!filter.checkFilter(eventCore.getEvent())) {
-								match = false;
-								break;
-							}
-						}
-					} catch (Exception e) {
-						// make the subscriber component trigger a fault event
-						// since its subscription by event attribute generated
-						// an exception
+		for (Field f : set.oneFilterSubs.keySet()) {
+			LinkedList<Subscription> subs;
+			try {
+				subs = set.getSubscriptions(f, f.get(event));
+				if (subs != null) {
+					deliverToSubscribers(eventCore, event, subs);
+				}
+			} catch (Throwable e) {
+				// exception in f.get
+				for (LinkedList<Subscription> list : set.oneFilterSubs.get(f)
+						.values())
+					for (Subscription s : list) {
+						// make the subscriber component trigger a fault
+						// event since its subscription by event attribute
+						// generated an exception
+						ComponentReference component = s.getComponent();
 						component.triggerEvent(new FaultEvent(e), component
 								.getFaultChannel());
 					}
+			}
+		}
+	}
 
-					if (match) {
-						Work work = new Work(this, eventCore, sub
-								.getEventHandler(), eventCore.getPriority());
-						component.handleWork(work);
+	private void deliverToManyFilteredSubscribers(EventCore eventCore,
+			Event event, LinkedList<Subscription> subs) {
+		for (Subscription sub : subs) {
+			boolean match = true;
+			try {
+				// for each filter
+				for (EventAttributeFilterCore filter : sub.getFilters()) {
+					if (!filter.checkFilter(event)) {
+						match = false;
+						break;
 					}
 				}
+			} catch (Throwable e) {
+				// make the subscriber component trigger a fault
+				// event since its subscription by event attribute
+				// generated an exception
+				ComponentReference component = sub.getComponent();
+				component.triggerEvent(new FaultEvent(e), component
+						.getFaultChannel());
+			}
+			if (match) {
+				Work work = new Work(this, eventCore, sub.getEventHandler(),
+						eventCore.getPriority());
+				sub.getComponent().handleWork(work);
 			}
 		}
 	}
@@ -226,21 +272,5 @@ public class ChannelCore {
 		}
 
 		return (HashSet<Class<? extends Event>>) supertypes.clone();
-	}
-
-	@SuppressWarnings("unchecked")
-	private HashSet<Class<? extends Event>> getAllSupertypesTillLocalType(
-			Class<? extends Event> eventType) {
-
-		HashSet<Class<? extends Event>> supertypes = new HashSet<Class<? extends Event>>();
-
-		while (!eventType.equals(Object.class)
-				&& eventTypes.contains(eventType)
-				&& Event.class.isAssignableFrom(eventType)) {
-
-			supertypes.add(eventType);
-			eventType = (Class<? extends Event>) eventType.getSuperclass();
-		}
-		return supertypes;
 	}
 }

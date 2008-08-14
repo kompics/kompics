@@ -98,7 +98,8 @@ public class Application {
 		if (lastOperationIndex == operations.length) {
 			logger.info("DONE ALL OPERATIONS");
 
-			Thread applicationThread = new Thread() {
+			Thread applicationThread = new Thread(new ThreadGroup(
+					"Blocking threads"), "Application[P2P]") {
 				public void run() {
 					BufferedReader in = new BufferedReader(
 							new InputStreamReader(System.in));

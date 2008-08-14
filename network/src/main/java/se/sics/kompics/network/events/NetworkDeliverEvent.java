@@ -19,7 +19,7 @@ public abstract class NetworkDeliverEvent implements Event, Serializable {
 
 	private final Address source;
 
-	private final Address destination;
+	public final Address destination;
 
 	private transient Transport protocol;
 
