@@ -6,8 +6,8 @@ import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.mina.common.DefaultIoFilterChainBuilder;
-import org.apache.mina.common.ExceptionMonitor;
+import org.apache.mina.core.ExceptionMonitor;
+import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
 import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
