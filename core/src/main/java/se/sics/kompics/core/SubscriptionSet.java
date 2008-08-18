@@ -2,7 +2,6 @@ package se.sics.kompics.core;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.LinkedList;
 
 import se.sics.kompics.api.Event;
 
@@ -16,11 +15,11 @@ public class SubscriptionSet {
 
 	final Class<? extends Event> eventType;
 
-	LinkedList<Subscription> noFilterSubs;
+	Subscription[] noFilterSubs;
 
-	LinkedList<Subscription> manyFilterSubs;
+	Subscription[] manyFilterSubs;
 
-	HashMap<Field, HashMap<Object, LinkedList<Subscription>>> oneFilterSubs;
+	HashMap<Field, HashMap<Object, Subscription[]>> oneFilterSubs;
 
 	public SubscriptionSet(Class<? extends Event> eventType) {
 		this.eventType = eventType;
@@ -30,91 +29,110 @@ public class SubscriptionSet {
 	}
 
 	/* called only for one filter subs */
-	public LinkedList<Subscription> getSubscriptions(Field field, Object value) {
-		HashMap<Object, LinkedList<Subscription>> valueSubs = oneFilterSubs
-				.get(field);
+	public Subscription[] getSubscriptions(Field field, Object value) {
+		HashMap<Object, Subscription[]> valueSubs = oneFilterSubs.get(field);
 		if (valueSubs == null) {
 			return null;
 		}
-		LinkedList<Subscription> subs = valueSubs.get(value);
+		Subscription[] subs = valueSubs.get(value);
 		return subs;
 	}
 
 	public void addSubscription(Subscription sub) {
 		if (sub.getFilters().length == 0) {
 			// no filters
-			if (noFilterSubs == null) {
-				noFilterSubs = new LinkedList<Subscription>();
-			}
-			noFilterSubs.add(sub);
+			noFilterSubs = addToArray(noFilterSubs, sub);
 		} else if (sub.getFilters().length > 1) {
 			// more than one filter
-			if (manyFilterSubs == null) {
-				manyFilterSubs = new LinkedList<Subscription>();
-			}
-			manyFilterSubs.add(sub);
+			manyFilterSubs = addToArray(manyFilterSubs, sub);
 		} else {
 			// exactly one filter
 			if (oneFilterSubs == null) {
-				oneFilterSubs = new HashMap<Field, HashMap<Object, LinkedList<Subscription>>>();
+				oneFilterSubs = new HashMap<Field, HashMap<Object, Subscription[]>>();
 			}
 			Field field = sub.getFilters()[0].getAttribute();
-			HashMap<Object, LinkedList<Subscription>> valueSubs = oneFilterSubs
+			HashMap<Object, Subscription[]> valueSubs = oneFilterSubs
 					.get(field);
 			if (valueSubs == null) {
-				valueSubs = new HashMap<Object, LinkedList<Subscription>>();
+				valueSubs = new HashMap<Object, Subscription[]>();
 				oneFilterSubs.put(field, valueSubs);
 			}
 			Object value = sub.getFilters()[0].getValue();
-			LinkedList<Subscription> subs = valueSubs.get(value);
-			if (subs == null) {
-				subs = new LinkedList<Subscription>();
-				valueSubs.put(value, subs);
-			}
-			subs.add(sub);
+			Subscription[] subs = valueSubs.get(value);
+			subs = addToArray(subs, sub);
+			valueSubs.put(value, subs);
 		}
 	}
 
 	public void removeSubscription(Subscription sub) {
 		if (sub.getFilters().length == 0) {
 			// no filters
-			if (noFilterSubs != null) {
-				noFilterSubs.remove(sub);
-				if (noFilterSubs.isEmpty()) {
-					noFilterSubs = null;
-				}
-			}
+			noFilterSubs = removeFromArray(noFilterSubs, sub);
 		} else if (sub.getFilters().length > 1) {
 			// more than one filter
-			if (manyFilterSubs != null) {
-				manyFilterSubs.remove(sub);
-				if (manyFilterSubs.isEmpty()) {
-					manyFilterSubs = null;
-				}
-			}
+			manyFilterSubs = removeFromArray(manyFilterSubs, sub);
 		} else {
 			// exactly one filter
 			if (oneFilterSubs != null) {
 				Field field = sub.getFilters()[0].getAttribute();
-				HashMap<Object, LinkedList<Subscription>> valueSubs = oneFilterSubs
+				HashMap<Object, Subscription[]> valueSubs = oneFilterSubs
 						.get(field);
 				if (valueSubs != null) {
 					Object value = sub.getFilters()[0].getValue();
-					LinkedList<Subscription> subs = valueSubs.get(value);
-					if (subs != null) {
-						subs.remove(sub);
-						if (subs.size() == 0) {
-							valueSubs.remove(value);
-							if (valueSubs.size() == 0) {
-								oneFilterSubs.remove(field);
-								if (oneFilterSubs.size() == 0) {
-									oneFilterSubs = null;
-								}
+					Subscription[] subs = valueSubs.get(value);
+					subs = removeFromArray(subs, sub);
+					if (subs == null) {
+						valueSubs.remove(value);
+						if (valueSubs.size() == 0) {
+							oneFilterSubs.remove(field);
+							if (oneFilterSubs.size() == 0) {
+								oneFilterSubs = null;
 							}
 						}
+					} else {
+						valueSubs.put(value, subs);
 					}
 				}
 			}
 		}
+	}
+
+	private Subscription[] addToArray(Subscription[] array, Subscription s) {
+		if (array == null) {
+			array = new Subscription[1];
+			array[0] = s;
+		} else {
+			Subscription[] temp = array;
+			array = new Subscription[temp.length + 1];
+			for (int i = 0; i < temp.length; i++) {
+				array[i] = temp[i];
+			}
+			array[array.length - 1] = s;
+		}
+		return array;
+	}
+
+	private Subscription[] removeFromArray(Subscription[] array, Subscription s) {
+		if (array != null) {
+			int rem = Integer.MAX_VALUE;
+			for (int i = 0; i < array.length; i++) {
+				if (array[i].equals(s)) {
+					rem = i;
+					break;
+				}
+			}
+			if (array.length == 1 && rem == 0) {
+				return null;
+			}
+			Subscription[] temp = array;
+			array = new Subscription[temp.length - 1];
+			for (int i = 0; i < rem; i++) {
+				array[i] = temp[i];
+			}
+			for (int i = rem; i < temp.length - 1; i++) {
+				array[i] = temp[i + 1];
+			}
+		}
+		return array;
 	}
 }

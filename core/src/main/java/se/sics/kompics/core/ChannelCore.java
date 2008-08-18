@@ -179,11 +179,10 @@ public class ChannelCore {
 	}
 
 	private void deliverToSubscribers(EventCore eventCore, Event event,
-			LinkedList<Subscription> subs) {
-		for (Subscription sub : subs) {
-			Work work = new Work(this, eventCore, sub.getEventHandler(),
-					eventCore.getPriority());
-			sub.getComponent().handleWork(work);
+			Subscription[] subs) {
+		for (int i = 0; i < subs.length; i++) {
+			Work work = Work.aquire(this, eventCore, subs[i].getEventHandler());
+			subs[i].getComponent().handleWork(work);
 		}
 	}
 
@@ -191,7 +190,7 @@ public class ChannelCore {
 			Event event, SubscriptionSet set) {
 
 		for (Field f : set.oneFilterSubs.keySet()) {
-			LinkedList<Subscription> subs;
+			Subscription[] subs;
 			try {
 				subs = set.getSubscriptions(f, f.get(event));
 				if (subs != null) {
@@ -201,8 +200,7 @@ public class ChannelCore {
 				// exception in f.get
 				e.printStackTrace(System.err);
 
-				for (LinkedList<Subscription> list : set.oneFilterSubs.get(f)
-						.values())
+				for (Subscription[] list : set.oneFilterSubs.get(f).values())
 					for (Subscription s : list) {
 						// make the subscriber component trigger a fault
 						// event since its subscription by event attribute
@@ -216,12 +214,12 @@ public class ChannelCore {
 	}
 
 	private void deliverToManyFilteredSubscribers(EventCore eventCore,
-			Event event, LinkedList<Subscription> subs) {
-		for (Subscription sub : subs) {
+			Event event, Subscription[] subs) {
+		for (int i = 0; i < subs.length; i++) {
 			boolean match = true;
 			try {
 				// for each filter
-				for (EventAttributeFilterCore filter : sub.getFilters()) {
+				for (EventAttributeFilterCore filter : subs[i].getFilters()) {
 					if (!filter.checkFilter(event)) {
 						match = false;
 						break;
@@ -231,14 +229,14 @@ public class ChannelCore {
 				// make the subscriber component trigger a fault
 				// event since its subscription by event attribute
 				// generated an exception
-				ComponentReference component = sub.getComponent();
+				ComponentReference component = subs[i].getComponent();
 				component.triggerEvent(new FaultEvent(e), component
 						.getFaultChannel());
 			}
 			if (match) {
-				Work work = new Work(this, eventCore, sub.getEventHandler(),
-						eventCore.getPriority());
-				sub.getComponent().handleWork(work);
+				Work work = Work.aquire(this, eventCore, subs[i]
+						.getEventHandler());
+				subs[i].getComponent().handleWork(work);
 			}
 		}
 	}

@@ -3,7 +3,7 @@ package se.sics.kompics.core;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Priority;
 
-public class EventCore implements Event {
+public class EventCore {
 
 	private Event event;
 
@@ -13,7 +13,6 @@ public class EventCore implements Event {
 
 	public EventCore(Event event, ChannelReference channelReference,
 			Priority priority) {
-		super();
 		this.event = event;
 		this.channelReference = channelReference;
 		this.priority = priority;

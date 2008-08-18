@@ -2,73 +2,25 @@ package se.sics.kompics.core.scheduler;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import se.sics.kompics.api.Priority;
+import se.sics.kompics.core.ComponentCore;
 
 public class Scheduler {
-
-	private FairPriorityReadyQueue fairPriorityReadyQueue;
 
 	private BlockingQueue<Runnable> readyQueue;
 
 	private ThreadPoolExecutor threadPoolExecutor;
 
-	private boolean fair;
-
 	public Scheduler(int workers, int fairnessRate) {
-		super();
-
-		this.fair = (fairnessRate > 0);
-
-		if (fair) {
-			fairPriorityReadyQueue = new FairPriorityReadyQueue(fairnessRate);
-			readyQueue = new LinkedBlockingQueue<Runnable>();
-		} else {
-			readyQueue = new PriorityBlockingQueue<Runnable>();
-		}
+		readyQueue = new LinkedBlockingQueue<Runnable>();
 
 		threadPoolExecutor = new ThreadPoolExecutor(workers, workers, 0L,
-				TimeUnit.SECONDS, readyQueue
-		// , new ThreadFactory() {
-		// private ThreadGroup group = new ThreadGroup(
-		// "Kompics workers");
-		//
-		// public Thread newThread(Runnable r) {
-		// Thread t = new Thread(group, r);
-		// return t;
-		// }
-		// }
-		);
+				TimeUnit.SECONDS, readyQueue);
 	}
 
-	public boolean isFair() {
-		return fair;
-	}
-
-	public void componentReady(ReadyComponent readyComponent) {
-		if (fair) {
-			fairPriorityReadyQueue.put(readyComponent);
-			FairPriorityReadyComponent fprc = new FairPriorityReadyComponent(
-					fairPriorityReadyQueue);
-
-			threadPoolExecutor.execute(fprc);
-		} else {
-			threadPoolExecutor.execute(readyComponent);
-		}
-	}
-
-	public void publishedEvent(Priority priority) {
-		if (fair) {
-			fairPriorityReadyQueue.publishedEvent(priority);
-		}
-	}
-
-	public void executedEvent(Priority priority) {
-		if (fair) {
-			fairPriorityReadyQueue.executedEvent(priority);
-		}
+	public void componentReady(ComponentCore readyComponent) {
+		threadPoolExecutor.execute(readyComponent);
 	}
 }

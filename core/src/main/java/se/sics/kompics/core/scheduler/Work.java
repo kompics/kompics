@@ -1,11 +1,29 @@
 package se.sics.kompics.core.scheduler;
 
-import se.sics.kompics.api.Priority;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import se.sics.kompics.core.ChannelCore;
 import se.sics.kompics.core.EventCore;
 import se.sics.kompics.core.EventHandler;
 
 public class Work {
+
+	private static ConcurrentLinkedQueue<Work> free = new ConcurrentLinkedQueue<Work>();
+
+	public static Work aquire(ChannelCore channelCore, EventCore eventCore,
+			EventHandler eventHandler) {
+		Work work = free.poll();
+		if (work != null) {
+			work.recycle(channelCore, eventCore, eventHandler);
+			return work;
+		} else {
+			return new Work(channelCore, eventCore, eventHandler);
+		}
+	}
+
+	public static void release(Work work) {
+		free.add(work);
+	}
 
 	private ChannelCore channelCore;
 
@@ -13,15 +31,18 @@ public class Work {
 
 	private EventHandler eventHandler;
 
-	private Priority priority;
-
 	public Work(ChannelCore channelCore, EventCore eventCore,
-			EventHandler eventHandler, Priority priority) {
-		super();
+			EventHandler eventHandler) {
 		this.channelCore = channelCore;
 		this.eventCore = eventCore;
 		this.eventHandler = eventHandler;
-		this.priority = priority;
+	}
+
+	public void recycle(ChannelCore channelCore, EventCore eventCore,
+			EventHandler eventHandler) {
+		this.channelCore = channelCore;
+		this.eventCore = eventCore;
+		this.eventHandler = eventHandler;
 	}
 
 	public ChannelCore getChannelCore() {
@@ -34,9 +55,5 @@ public class Work {
 
 	public EventHandler getEventHandler() {
 		return eventHandler;
-	}
-
-	public Priority getPriority() {
-		return priority;
 	}
 }

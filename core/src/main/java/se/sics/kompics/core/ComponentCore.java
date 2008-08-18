@@ -6,9 +6,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
@@ -19,8 +20,6 @@ import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
-import se.sics.kompics.core.scheduler.ComponentState;
-import se.sics.kompics.core.scheduler.ReadyComponent;
 import se.sics.kompics.core.scheduler.Scheduler;
 import se.sics.kompics.core.scheduler.Work;
 import se.sics.kompics.core.scheduler.WorkQueue;
@@ -34,7 +33,7 @@ import se.sics.kompics.core.scheduler.WorkQueue;
  * @since Kompics 0.1
  * @version $Id$
  */
-public class ComponentCore {
+public class ComponentCore implements Runnable {
 
 	private ComponentUUID componentIdentifier;
 
@@ -53,6 +52,7 @@ public class ComponentCore {
 	private HashSet<EventHandler> guardedHandlersWithBlockedEvents;
 
 	private int blockedEventsCount;
+
 	/* =============== COMPONENT COMPOSITION =============== */
 
 	private Component superComponent;
@@ -69,23 +69,11 @@ public class ComponentCore {
 
 	private Scheduler scheduler;
 
-	private ComponentState componentState;
-	private int allWorkCounter;
-	private int highWorkCounter;
-	private int mediumWorkCounter;
-	private int lowWorkCounter;
-	private Object componentStateLock;
+	private AtomicInteger workCounter;
 
 	private HashMap<ChannelCore, WorkQueue> channelWorkQueues;
 
-	private LinkedHashSet<WorkQueue> highWorkQueuePool;
-	private LinkedHashSet<WorkQueue> mediumWorkQueuePool;
-	private LinkedHashSet<WorkQueue> lowWorkQueuePool;
-
-	// to sync executing thread with publishing thread for pool selection
-	private int highPoolCounter;
-	private int mediumPoolCounter;
-	private int lowPoolCounter;
+	private ConcurrentLinkedQueue<WorkQueue> workQueuePool;
 
 	public ComponentCore(Scheduler scheduler, FactoryRegistry factoryRegistry,
 			FactoryCore factoryCore, ComponentReference parent,
@@ -109,22 +97,11 @@ public class ComponentCore {
 
 		this.subscriptions = new LinkedList<Subscription>();
 
-		this.componentState = ComponentState.ASLEEP;
-		this.allWorkCounter = 0;
-		this.highWorkCounter = 0;
-		this.mediumWorkCounter = 0;
-		this.lowWorkCounter = 0;
-		this.componentStateLock = new Object();
+		this.workCounter = new AtomicInteger(0);
 
 		this.channelWorkQueues = new HashMap<ChannelCore, WorkQueue>();
 
-		this.highWorkQueuePool = new LinkedHashSet<WorkQueue>();
-		this.mediumWorkQueuePool = new LinkedHashSet<WorkQueue>();
-		this.lowWorkQueuePool = new LinkedHashSet<WorkQueue>();
-
-		this.highPoolCounter = 0;
-		this.mediumPoolCounter = 0;
-		this.lowPoolCounter = 0;
+		this.workQueuePool = new ConcurrentLinkedQueue<WorkQueue>();
 	}
 
 	public void setHandlerObject(Object handlerObject) {
@@ -166,45 +143,15 @@ public class ComponentCore {
 
 	/* =============== EVENT SCHEDULING =============== */
 
-	// many publisher threads can call this method but they shall synchronize on
-	// the work queue and on the component state lock
 	public void handleWork(Work work) {
 		WorkQueue workQueue = channelWorkQueues.get(work.getChannelCore());
 		workQueue.add(work);
-
-		Priority wp = work.getPriority();
+		workQueuePool.add(workQueue);
 
 		// we make the component ready, if passive
-		synchronized (componentStateLock) {
-			allWorkCounter++;
-
-			if (wp == Priority.HIGH) {
-				highWorkCounter++;
-			} else if (wp == Priority.MEDIUM) {
-				mediumWorkCounter++;
-			} else if (wp == Priority.LOW) {
-				lowWorkCounter++;
-			}
-
-			if (componentState == ComponentState.ASLEEP) {
-				componentState = ComponentState.AWAKE;
-
-				// System.out.println("HCR:" + highWorkCounter + ":"
-				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
-				// + highPoolCounter + ":" + mediumPoolCounter + ":"
-				// + lowPoolCounter);
-
-				scheduler.componentReady(new ReadyComponent(this,
-						highWorkCounter, mediumWorkCounter, lowWorkCounter, wp,
-						null, wp));
-			} else {
-				// System.out.println("HPE:" + highWorkCounter + ":"
-				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
-				// + highPoolCounter + ":" + mediumPoolCounter + ":"
-				// + lowPoolCounter);
-
-				scheduler.publishedEvent(wp);
-			}
+		int oldWorkCounter = workCounter.getAndIncrement();
+		if (oldWorkCounter == 0) {
+			scheduler.componentReady(this);
 		}
 	}
 
@@ -215,14 +162,14 @@ public class ComponentCore {
 	 * found at the head of a channel queue, a lower priority event is executed,
 	 * if one is available, otherwise a higher priority one.
 	 */
-	public void schedule(Priority priority) {
+	public void run() {
 		// set the thread local component identifier. The thread executes now on
 		// behalf of this component.
 		ComponentUUID.set(componentIdentifier);
 		// Thread.currentThread().setName(componentName);
 
-		// pick a work queue, if possible from the given priority pool
-		WorkQueue workQueue = pickWorkQueue(priority);
+		// pick a work queue, round-robin
+		WorkQueue workQueue = workQueuePool.poll();
 
 		// take from it
 		Work work = workQueue.take();
@@ -230,12 +177,13 @@ public class ComponentCore {
 		// execute the taken work
 		EventHandler eventHandler = work.getEventHandler();
 		Event event = work.getEventCore().getEvent();
-		boolean handled = false;
+
+		Work.release(work);
 
 		// isolate any possible errors or exceptions while executing event
 		// handlers and guard methods
 		try {
-			handled = eventHandler.handleEvent(event);
+			boolean handled = eventHandler.handleEvent(event);
 
 			if (!handled) {
 				// the event handler was guarded and the guard was not satisfied
@@ -247,50 +195,14 @@ public class ComponentCore {
 			while (handled && hasBlockedEvents()) {
 				handled = handleOneBlockedEvent();
 			}
-
 		} catch (Throwable throwable) {
 			handleFault(throwable);
 		}
 
-		Priority wp = work.getPriority();
-
 		// make the component passive or ready
-		synchronized (componentStateLock) {
-			allWorkCounter--;
-			if (wp == Priority.HIGH) {
-				highWorkCounter--;
-			} else if (wp == Priority.MEDIUM) {
-				mediumWorkCounter--;
-			} else if (wp == Priority.LOW) {
-				lowWorkCounter--;
-			}
-
-			if (allWorkCounter == 0) {
-				// System.out.println("SEE:" + highWorkCounter + ":"
-				// + mediumWorkCounter + ":" + lowWorkCounter + "=="
-				// + highPoolCounter + ":" + mediumPoolCounter + ":"
-				// + lowPoolCounter);
-
-				componentState = ComponentState.ASLEEP;
-				scheduler.executedEvent(wp);
-			} else if (highWorkCounter > 0) {
-				componentState = ComponentState.AWAKE;
-				scheduler.componentReady(new ReadyComponent(this,
-						highWorkCounter, mediumWorkCounter, lowWorkCounter,
-						null, wp, Priority.HIGH));
-			} else if (mediumWorkCounter > 0) {
-				componentState = ComponentState.AWAKE;
-				scheduler.componentReady(new ReadyComponent(this,
-						highWorkCounter, mediumWorkCounter, lowWorkCounter,
-						null, wp, Priority.MEDIUM));
-			} else if (lowWorkCounter > 0) {
-				componentState = ComponentState.AWAKE;
-				scheduler.componentReady(new ReadyComponent(this,
-						highWorkCounter, mediumWorkCounter, lowWorkCounter,
-						null, wp, Priority.LOW));
-			} else {
-				throw new RuntimeException("Negative work counter");
-			}
+		int newWorkCounter = workCounter.decrementAndGet();
+		if (newWorkCounter > 0) {
+			scheduler.componentReady(this);
 		}
 	}
 
@@ -326,96 +238,16 @@ public class ComponentCore {
 	}
 
 	/*
-	 * synchronized with moveWorkQueue between executing thread (calling
-	 * pickWorkQueue) and publisher thread (calling move...)
-	 */
-	private synchronized WorkQueue pickWorkQueue(Priority priority) {
-		if (priority == Priority.MEDIUM) {
-			// this component has been scheduled to execute a MEDIUM event, so
-			// it must have a MEDIUM event, in a channel that can only be in the
-			// MEDIUM or HIGH pools.
-			if (mediumPoolCounter > 0) {
-				Iterator<WorkQueue> iterator = mediumWorkQueuePool.iterator();
-				return iterator.next();
-			} else if (highPoolCounter > 0) {
-				Iterator<WorkQueue> iterator = highWorkQueuePool.iterator();
-				return iterator.next();
-			} else {
-				throw new RuntimeException(
-						"scheduled MEDIUM but both MEDIUM and HIGH pools empty");
-			}
-		} else if (priority == Priority.HIGH) {
-			// this component has been scheduled to execute a HIGH event, so it
-			// must have a HIGH event in a channel that can only be in the HIGH
-			// pool.
-			if (highPoolCounter > 0) {
-				Iterator<WorkQueue> iterator = highWorkQueuePool.iterator();
-				return iterator.next();
-			} else {
-				throw new RuntimeException("scheduled HIGH but HIGH pool empty");
-			}
-		} else if (priority == Priority.LOW) {
-			// this component has been scheduled to execute a LOW event, so it
-			// must have a LOW event in a channel that can be in the LOW, MEDIUM
-			// or HIGH pools.
-			if (lowPoolCounter > 0) {
-				Iterator<WorkQueue> iterator = lowWorkQueuePool.iterator();
-				return iterator.next();
-			} else if (highPoolCounter > 0) {
-				Iterator<WorkQueue> iterator = highWorkQueuePool.iterator();
-				return iterator.next();
-			} else if (mediumPoolCounter > 0) {
-				Iterator<WorkQueue> iterator = mediumWorkQueuePool.iterator();
-				return iterator.next();
-			} else {
-				throw new RuntimeException("scheduled LOW but all pools empty");
-			}
-		} else {
-			throw new RuntimeException("Bad priority");
-		}
-	}
-
-	/*
 	 * called by the WorkQueue to move itself to the end of the priority pool,
 	 * maybe to a different priority pool. Both from and to can be null.
 	 */
-	public synchronized void moveWorkQueueToPriorityPool(WorkQueue workQueue,
-			Priority from, Priority to) {
-
-		if (from != null) {
+	public void moveWorkQueueToPool(WorkQueue workQueue, boolean remove) {
+		if (remove) {
 			// constant-time removal
-			switch (from) {
-			case LOW:
-				lowWorkQueuePool.remove(workQueue);
-				lowPoolCounter--;
-				break;
-			case MEDIUM:
-				mediumWorkQueuePool.remove(workQueue);
-				mediumPoolCounter--;
-				break;
-			case HIGH:
-				highWorkQueuePool.remove(workQueue);
-				highPoolCounter--;
-				break;
-			}
-		}
-
-		if (to != null) {
+			workQueuePool.remove(workQueue);
+		} else {
 			// constant-time addition
-			switch (to) {
-			case LOW:
-				lowWorkQueuePool.add(workQueue);
-				lowPoolCounter++;
-				break;
-			case MEDIUM:
-				mediumWorkQueuePool.add(workQueue);
-				mediumPoolCounter++;
-				break;
-			case HIGH:
-				highWorkQueuePool.add(workQueue);
-				highPoolCounter++;
-				break;
-			}
+			workQueuePool.add(workQueue);
 		}
 	}
 
@@ -524,7 +356,7 @@ public class ComponentCore {
 
 			// create a local work queue if one does not already exist
 			if (!channelWorkQueues.containsKey(channelCore)) {
-				WorkQueue workQueue = new WorkQueue(this);
+				WorkQueue workQueue = new WorkQueue();
 				channelWorkQueues.put(channelCore, workQueue);
 			}
 		} else {
