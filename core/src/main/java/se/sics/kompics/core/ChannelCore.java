@@ -15,9 +15,6 @@ import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.scheduler.Work;
 
 public class ChannelCore {
-	//
-	// private static final Logger logger = LoggerFactory
-	// .getLogger(ChannelCore.class);
 
 	/**
 	 * the event types carried by the channel
@@ -152,20 +149,19 @@ public class ChannelCore {
 					}
 				}
 				lookup.put(eventType, matchingSet);
+			} else {
+				typeMatch = true;
 			}
-			if (typeMatch) {
-				if (matchingSet.noFilterSubs != null) {
-					deliverToSubscribers(eventCore, event,
-							matchingSet.noFilterSubs);
-				}
-				if (matchingSet.oneFilterSubs != null) {
-					deliverToOneFilteredSubscribers(eventCore, event,
-							matchingSet);
-				}
-				if (matchingSet.manyFilterSubs != null) {
-					deliverToManyFilteredSubscribers(eventCore, event,
-							matchingSet.manyFilterSubs);
-				}
+
+			if (matchingSet.noFilterSubs != null) {
+				deliverToSubscribers(eventCore, event, matchingSet.noFilterSubs);
+			}
+			if (matchingSet.oneFilterSubs != null) {
+				deliverToOneFilteredSubscribers(eventCore, event, matchingSet);
+			}
+			if (matchingSet.manyFilterSubs != null) {
+				deliverToManyFilteredSubscribers(eventCore, event,
+						matchingSet.manyFilterSubs);
 			}
 		}
 		if (!typeMatch) {
@@ -203,6 +199,8 @@ public class ChannelCore {
 				}
 			} catch (Throwable e) {
 				// exception in f.get
+				e.printStackTrace(System.err);
+
 				for (LinkedList<Subscription> list : set.oneFilterSubs.get(f)
 						.values())
 					for (Subscription s : list) {

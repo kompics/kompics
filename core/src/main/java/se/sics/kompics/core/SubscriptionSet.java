@@ -36,7 +36,8 @@ public class SubscriptionSet {
 		if (valueSubs == null) {
 			return null;
 		}
-		return valueSubs.get(value);
+		LinkedList<Subscription> subs = valueSubs.get(value);
+		return subs;
 	}
 
 	public void addSubscription(Subscription sub) {

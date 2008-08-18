@@ -1,6 +1,5 @@
 package se.sics.kompics.core;
 
-
 public class Subscription {
 
 	private final ComponentReference componentReference;
@@ -38,6 +37,7 @@ public class Subscription {
 	}
 
 	public String toString() {
-		return "Subscription for handler " + eventHandler.getName();
+		return "Subscription for handler " + eventHandler.getName() + " ("
+				+ filters.length + ")";
 	}
 }
