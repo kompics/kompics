@@ -110,7 +110,6 @@ public class Chord {
 		map.put(GetChordNeighborsRequest.class, requestChannel);
 		map.put(JoinRingCompleted.class, notificationChannel);
 		map.put(ChordResponsibility.class, notificationChannel);
-		map.put(GetChordNeighborsResponse.class, notificationChannel);
 		ComponentMembrane membrane = new ComponentMembrane(component, map);
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
@@ -122,7 +121,7 @@ public class Chord {
 				localPeer, (successorListView == null ? localPeer
 						: successorListView.get(0)), predecessor,
 				successorListView, fingerTableView);
-		component.triggerEvent(response, notificationChannel);
+		component.triggerEvent(response, event.getResponseChannel());
 	}
 
 	@EventHandlerMethod

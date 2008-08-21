@@ -108,53 +108,52 @@ public final class FailureDetector {
 		logger = LoggerFactory.getLogger(FailureDetector.class.getName() + "@"
 				+ localAddress.getId());
 
-		rtoMin = Long.parseLong(properties.getProperty("rto.min", "100"));
-		pingInterval = Long.parseLong(properties.getProperty("ping.interval",
-				"3000"));
-		pongTimeoutAdd = Long.parseLong(properties.getProperty(
-				"pong.timeout.add", "10"));
+		rtoMin = Long.parseLong(properties.getProperty("rto.min"));
+		pingInterval = Long.parseLong(properties.getProperty("ping.interval"));
+		pongTimeoutAdd = Long.parseLong(properties
+				.getProperty("pong.timeout.add"));
 	}
 
 	@EventHandlerMethod
 	public void handleStartProbingPeer(StartProbingPeer event) {
-		Address peerAddress = event.getPeerAddress();
-		if (!peerProbers.containsKey(peerAddress)) {
-			PeerProber peerProber = new PeerProber(peerAddress, this);
-
-			peerProber.addClientComponent(event.getComponent(), event
-					.getChannel());
-			peerProbers.put(peerAddress, peerProber);
-			peerProber.start();
-			logger.debug("Started probing peer {}", peerAddress);
-		} else {
-			peerProbers.get(peerAddress).addClientComponent(
-					event.getComponent(), event.getChannel());
-			logger.debug("Peer {} is already being probed", peerAddress);
-		}
+		// Address peerAddress = event.getPeerAddress();
+		// if (!peerProbers.containsKey(peerAddress)) {
+		// PeerProber peerProber = new PeerProber(peerAddress, this);
+		//
+		// peerProber.addClientComponent(event.getComponent(), event
+		// .getChannel());
+		// peerProbers.put(peerAddress, peerProber);
+		// peerProber.start();
+		// logger.debug("Started probing peer {}", peerAddress);
+		// } else {
+		// peerProbers.get(peerAddress).addClientComponent(
+		// event.getComponent(), event.getChannel());
+		// logger.debug("Peer {} is already being probed", peerAddress);
+		// }
 	}
 
 	@EventHandlerMethod
 	public void handleStopProbingPeer(StopProbingPeer event) {
-		Address peerAddress = event.getPeerAddress();
-		if (peerProbers.containsKey(peerAddress)) {
-			PeerProber prober = peerProbers.get(peerAddress);
-			Component requestingComponent = event.getComponent();
-			if (prober.isClientComponent(requestingComponent)) {
-				boolean last = prober
-						.removeClientComponent(requestingComponent);
-				if (last) {
-					peerProbers.remove(peerAddress);
-					prober.stop();
-					logger.debug("Stoped probing peer {}", peerAddress);
-				}
-			} else {
-				logger.debug(
-						"Component {} didn't request the probing of peer {}",
-						requestingComponent.getName(), peerAddress);
-			}
-		} else {
-			logger.debug("Peer {} is not currently being probed", peerAddress);
-		}
+		// Address peerAddress = event.getPeerAddress();
+		// if (peerProbers.containsKey(peerAddress)) {
+		// PeerProber prober = peerProbers.get(peerAddress);
+		// Component requestingComponent = event.getComponent();
+		// if (prober.isClientComponent(requestingComponent)) {
+		// boolean last = prober
+		// .removeClientComponent(requestingComponent);
+		// if (last) {
+		// peerProbers.remove(peerAddress);
+		// prober.stop();
+		// logger.debug("Stoped probing peer {}", peerAddress);
+		// }
+		// } else {
+		// logger.debug(
+		// "Component {} didn't request the probing of peer {}",
+		// requestingComponent.getName(), peerAddress);
+		// }
+		// } else {
+		// logger.debug("Peer {} is not currently being probed", peerAddress);
+		// }
 	}
 
 	@EventHandlerMethod

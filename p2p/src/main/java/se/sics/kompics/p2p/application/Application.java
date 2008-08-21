@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -144,12 +145,38 @@ public class Application {
 		String[] join = op.substring(1).split("-");
 
 		if (join.length == 1) {
-			BigInteger peerId = new BigInteger(op.substring(1));
+			op = op.substring(1);
+			String j[] = op.split("#");
+			if (j.length == 3) {
+				BigInteger add = new BigInteger(j[1]);
+				int count = Integer.parseInt(j[2]);
 
-			logger.debug("Sending JoinPeer {}", peerId);
+				Random random = new Random(0);
+				BigInteger peerId = new BigInteger(j[0]);
+				for (int i = 0; i < count; i++) {
+					logger.debug("Sending JoinPeer {}", peerId);
 
-			JoinPeer command = new JoinPeer(peerId);
-			component.triggerEvent(command, peerClusterCommandChannel);
+					JoinPeer command = new JoinPeer(peerId);
+					component.triggerEvent(command, peerClusterCommandChannel);
+
+					peerId = peerId.add(add);
+
+					try {
+						long sleep = random.nextLong();
+						sleep = sleep > 0 ? sleep : -sleep;
+						Thread.sleep(sleep % 1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			} else {
+				BigInteger peerId = new BigInteger(op);
+
+				logger.debug("Sending JoinPeer {}", peerId);
+
+				JoinPeer command = new JoinPeer(peerId);
+				component.triggerEvent(command, peerClusterCommandChannel);
+			}
 		} else {
 			for (int i = Integer.parseInt(join[0]); i <= Integer
 					.parseInt(join[1]); i++) {

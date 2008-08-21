@@ -84,8 +84,8 @@ public class PeerMonitorClient {
 				.getSharedComponentMembrane("se.sics.kompics.p2p.chord.Chord");
 		chordRequestChannel = crMembrane
 				.getChannel(GetChordNeighborsRequest.class);
-		chordResponseChannel = crMembrane
-				.getChannel(GetChordNeighborsResponse.class);
+		chordResponseChannel = component
+				.createChannel(GetChordNeighborsResponse.class);
 
 		component.subscribe(lnDeliverChannel, "handleChangeUpdatePeriod");
 		component.subscribe(chordResponseChannel,
@@ -143,7 +143,8 @@ public class PeerMonitorClient {
 	public void handleSendView(SendView event) {
 		logger.debug("SEND_VIEW");
 
-		GetChordNeighborsRequest request = new GetChordNeighborsRequest();
+		GetChordNeighborsRequest request = new GetChordNeighborsRequest(
+				chordResponseChannel);
 		component.triggerEvent(request, chordRequestChannel);
 
 		// reset the timer for sending the next view notification

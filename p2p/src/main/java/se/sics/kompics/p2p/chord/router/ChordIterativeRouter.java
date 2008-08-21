@@ -299,26 +299,28 @@ public class ChordIterativeRouter {
 
 			logger.error("RETURNED MYSELF {}, {}", key, localPeer);
 
-		} else if (RingMath.belongsTo(key, localPeer.getId(),
-				successor.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
-			// return my successor as the real successor
-			FindSuccessorResponse response = new FindSuccessorResponse(
-					successor, event.getLookupId(), false);
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					response, event.getSource());
-			component.triggerEvent(sendEvent, pnSendChannel);
-		} else {
-			// return an indirection to my closest preceding finger
-			Address closest = fingerTable.closestPreceedingPeer(key);
-
-			if (!closest.equals(localPeer)) {
+		} else if (successor != null) {
+			if (RingMath.belongsTo(key, localPeer.getId(), successor.getId(),
+					IntervalBounds.OPEN_CLOSED, ringSize)) {
+				// return my successor as the real successor
 				FindSuccessorResponse response = new FindSuccessorResponse(
-						closest, event.getLookupId(), true);
+						successor, event.getLookupId(), false);
 				PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
 						response, event.getSource());
 				component.triggerEvent(sendEvent, pnSendChannel);
+			} else {
+				// return an indirection to my closest preceding finger
+				Address closest = fingerTable.closestPreceedingPeer(key);
+
+				if (!closest.equals(localPeer)) {
+					FindSuccessorResponse response = new FindSuccessorResponse(
+							closest, event.getLookupId(), true);
+					PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
+							response, event.getSource());
+					component.triggerEvent(sendEvent, pnSendChannel);
+				}
+				// else we found no closest peer so the lookup should fail
 			}
-			// else we found no closest peer so the lookup should fail
 		}
 
 		// we try to use the requester as a possible better finger

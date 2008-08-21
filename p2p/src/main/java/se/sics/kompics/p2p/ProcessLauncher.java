@@ -53,20 +53,7 @@ public class ProcessLauncher extends Thread {
 
 		commandArgs.add("-Xmx1g");
 
-		// commandArgs.add("-Dcom.sun.management.jmxremote");
-		// commandArgs.add("-Xrunjmeter");
-		// commandArgs.add("-Xbootclasspath/a:$JMETER_HOME/lib/HPjmeter.jar");
-		// commandArgs.add("-agentlib:jmeter");
-		// if (name.equals("Node 1")) {
-		// commandArgs.add("-Xrunhprof:cpu=samples");
-		// }
-
-		// if (name.equals("Node 1")) {
-		// commandArgs.add("-agentlib:jprofilerti=port=8849,nowait,id=105,"
-		// + "config=C:\\Users\\Cosmin\\.jprofiler5\\config.xml");
-		// commandArgs.add("\"-Xbootclasspath/a:"
-		// + "C:\\Program Files (x86)\\jprofiler5\\bin\\agent.jar\"");
-		// }
+		commandArgs.add("-Dcom.sun.management.jmxremote");
 
 		commandArgs.add("-classpath");
 		commandArgs.add(classpath);

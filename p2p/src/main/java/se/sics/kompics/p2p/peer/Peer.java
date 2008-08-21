@@ -24,7 +24,6 @@ import se.sics.kompics.p2p.chord.events.ChordLookupRequest;
 import se.sics.kompics.p2p.chord.events.ChordResponsibility;
 import se.sics.kompics.p2p.chord.events.CreateRing;
 import se.sics.kompics.p2p.chord.events.GetChordNeighborsRequest;
-import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
 import se.sics.kompics.p2p.chord.events.GetChordResponsibility;
 import se.sics.kompics.p2p.chord.events.JoinRing;
 import se.sics.kompics.p2p.chord.events.LeaveRing;
@@ -143,7 +142,7 @@ public class Peer {
 		Channel chordNotificationChannel = component.createChannel(
 				NewPredecessor.class, NewSuccessorList.class,
 				NewFingerTable.class, JoinRingCompleted.class,
-				ChordResponsibility.class, GetChordNeighborsResponse.class);
+				ChordResponsibility.class);
 
 		// create the Chord component
 		Component chord = component.createComponent(
@@ -193,6 +192,7 @@ public class Peer {
 
 		// starting PeerMonitor
 		component.triggerEvent(new StartPeerMonitor(), pmcRequestChannel);
+		logger.info("PUB START PEER MONITOR");
 
 		logger.debug("Init");
 	}

@@ -1,5 +1,6 @@
 package se.sics.kompics.p2p.chord.events;
 
+import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.EventType;
 
@@ -12,4 +13,13 @@ import se.sics.kompics.api.annotation.EventType;
 @EventType
 public final class GetChordNeighborsRequest implements Event {
 
+	private final Channel responseChannel;
+
+	public GetChordNeighborsRequest(Channel responseChannel) {
+		this.responseChannel = responseChannel;
+	}
+
+	public Channel getResponseChannel() {
+		return responseChannel;
+	}
 }

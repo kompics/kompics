@@ -211,6 +211,9 @@ public class PeerMonitorServer {
 		sb.append(".org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=");
 		sb.append("\"http://www.w3.org/1999/xhtml\"><head><meta http-equiv=\"");
 		sb.append("Content-Type\" content=\"text/html; charset=utf-8\" />");
+
+		// page refresh
+		// sb.append("<meta http-equiv=\"refresh\" content=\"10\">");
 		sb.append("<title>Kompics P2P Monitor Server</title>");
 		sb.append("<style type=\"text/css\"><!--.style2 {font-family: ");
 		sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");

@@ -90,8 +90,8 @@ public class WebHandler {
 				.getSharedComponentMembrane("se.sics.kompics.p2p.chord.Chord");
 		chordRequestChannel = crMembrane
 				.getChannel(GetChordNeighborsRequest.class);
-		chordResponseChannel = crMembrane
-				.getChannel(GetChordNeighborsResponse.class);
+		chordResponseChannel = component
+				.createChannel(GetChordNeighborsResponse.class);
 		chordLookupResponseChannel = component.createChannel(
 				ChordLookupResponse.class, ChordLookupFailed.class);
 
@@ -144,7 +144,8 @@ public class WebHandler {
 		} else {
 			requestEvent = event;
 
-			GetChordNeighborsRequest ringRequest = new GetChordNeighborsRequest();
+			GetChordNeighborsRequest ringRequest = new GetChordNeighborsRequest(
+					chordResponseChannel);
 			StatusRequest fdRequest = new StatusRequest(fdResponseChannel);
 
 			parts = 5;
