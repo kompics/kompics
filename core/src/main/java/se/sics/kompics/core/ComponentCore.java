@@ -139,6 +139,7 @@ public class ComponentCore implements Runnable {
 	private void triggerEventCore(EventCore eventCore) {
 		ChannelReference channelReference = eventCore.getChannel();
 		channelReference.publishEventCore(eventCore);
+		Kompics.mbean.publishedEvent(eventCore.getEvent());
 	}
 
 	/* =============== EVENT SCHEDULING =============== */
@@ -198,6 +199,8 @@ public class ComponentCore implements Runnable {
 		} catch (Throwable throwable) {
 			handleFault(throwable);
 		}
+
+		Kompics.mbean.handledEvent(event);
 
 		// make the component passive or ready
 		int newWorkCounter = workCounter.decrementAndGet();

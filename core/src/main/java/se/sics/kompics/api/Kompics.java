@@ -1,6 +1,14 @@
 package se.sics.kompics.api;
 
+import java.lang.management.ManagementFactory;
 import java.util.HashSet;
+
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 
 import se.sics.kompics.core.ChannelCore;
 import se.sics.kompics.core.ComponentReference;
@@ -21,13 +29,15 @@ public class Kompics {
 
 	private int workers;
 
-	private int fairnessRate;
-
 	private ComponentReference bootstrapComponent;
 
 	private ComponentRegistry componentRegistry;
 
 	private static Kompics globalKompics = null;
+
+	public static se.sics.kompics.management.Kompics mbean;
+
+	private Scheduler scheduler;
 
 	/**
 	 * Creates a Kompics system or virtual node.
@@ -40,13 +50,39 @@ public class Kompics {
 	 *            for example, means that under contention the scheduler tries
 	 *            to execute a lower priority event between every <i>k</i>
 	 *            higher priority events.
+	 * @throws NullPointerException
+	 * @throws MalformedObjectNameException
+	 * @throws NotCompliantMBeanException
+	 * @throws MBeanRegistrationException
+	 * @throws InstanceAlreadyExistsException
 	 */
 	public Kompics(int workers, int fairnessRate) {
 		super();
 		this.workers = workers;
-		this.fairnessRate = fairnessRate;
 		this.bootstrapComponent = null;
 		this.componentRegistry = new ComponentRegistry();
+		this.scheduler = new Scheduler(workers, fairnessRate);
+
+		try {
+			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+			// Construct the ObjectName for the MBean we will register
+			ObjectName name = new ObjectName("se.sics.kompics:type=Kompics");
+
+			// Create the Hello World MBean
+			mbean = new se.sics.kompics.management.Kompics(this);
+			// Register the Hello World MBean
+			mbs.registerMBean(mbean, name);
+		} catch (Exception e) {
+			throw new RuntimeException("Management exception", e);
+		}
+	}
+
+	public int getWorkerCount() {
+		return workers;
+	}
+
+	public void setWorkerCount(int workerCount) {
+		this.workers = scheduler.setWorkerCount(workerCount);
 	}
 
 	/**
@@ -57,7 +93,6 @@ public class Kompics {
 	 */
 	public Component getBootstrapComponent() {
 		if (bootstrapComponent == null) {
-			Scheduler scheduler = new Scheduler(workers, fairnessRate);
 			HashSet<Class<? extends Event>> eventTypes = new HashSet<Class<? extends Event>>();
 			eventTypes.add(FaultEvent.class);
 			ChannelCore bootFaultChannelCore = new ChannelCore(eventTypes);

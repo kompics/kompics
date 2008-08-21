@@ -1,5 +1,10 @@
 package se.sics.kompics.example;
 
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.FaultEvent;
@@ -9,8 +14,16 @@ public class HelloMain {
 
 	/**
 	 * @param args
+	 * @throws NullPointerException
+	 * @throws NotCompliantMBeanException
+	 * @throws MBeanRegistrationException
+	 * @throws InstanceAlreadyExistsException
+	 * @throws MalformedObjectNameException
 	 */
-	public static void main(String[] args) throws ClassNotFoundException {
+	public static void main(String[] args) throws ClassNotFoundException,
+			MalformedObjectNameException, InstanceAlreadyExistsException,
+			MBeanRegistrationException, NotCompliantMBeanException,
+			NullPointerException {
 		// get the bootstrap Kompics component
 		Kompics kompics = new Kompics(3, 3);
 		Component boot = kompics.getBootstrapComponent();
