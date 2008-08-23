@@ -1,0 +1,21 @@
+<assembly>
+  <id>jconsole</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <baseDirectory></baseDirectory>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <includeSiteDirectory>false</includeSiteDirectory>  <fileSets>
+    <fileSet>
+      <directory>target/classes/se/sics/kompics/management/jconsole/META-INF</directory>
+	  <outputDirectory>META-INF</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>target/classes/se/sics/kompics/management/jconsole</directory>
+	  <outputDirectory>se/sics/kompics/management/jconsole</outputDirectory>
+      <includes>
+        <include>*.class</include>
+      </includes>
+    </fileSet>
+  </fileSets> 
+</assembly>
