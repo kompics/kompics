@@ -29,7 +29,10 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.events.NetworkDeliverEvent;
+import se.sics.kompics.network.events.NetworkException;
 import se.sics.kompics.network.events.NetworkSendEvent;
+import se.sics.kompics.network.events.NetworkSessionClosed;
+import se.sics.kompics.network.events.NetworkSessionOpened;
 
 @ComponentSpecification
 public class NetworkComponent {
@@ -227,6 +230,18 @@ public class NetworkComponent {
 
 		message.setProtocol(protocol);
 		component.triggerEvent(message, deliverChannel);
+	}
+
+	void networkException(NetworkException event) {
+		component.triggerEvent(event, deliverChannel);
+	}
+
+	void networkSessionClosed(NetworkSessionClosed event) {
+		component.triggerEvent(event, deliverChannel);
+	}
+
+	void networkSessionOpened(NetworkSessionOpened event) {
+		component.triggerEvent(event, deliverChannel);
 	}
 
 	private InetSocketAddress address2SocketAddress(Address address) {

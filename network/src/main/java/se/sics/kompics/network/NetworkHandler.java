@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.network.events.NetworkDeliverEvent;
+import se.sics.kompics.network.events.NetworkException;
+import se.sics.kompics.network.events.NetworkSessionClosed;
+import se.sics.kompics.network.events.NetworkSessionOpened;
 
 public class NetworkHandler extends IoHandlerAdapter {
 
@@ -31,6 +34,8 @@ public class NetworkHandler extends IoHandlerAdapter {
 			logger.debug("Problems with {} connection to {}",
 					(Transport) session.getAttribute("protocol"), address);
 		logger.error("Exception caught:", cause);
+
+		networkComponent.networkException(new NetworkException(address));
 	}
 
 	@Override
@@ -53,11 +58,15 @@ public class NetworkHandler extends IoHandlerAdapter {
 	public void sessionClosed(IoSession session) throws Exception {
 		super.sessionClosed(session);
 		logger.debug("Connection closed to {}", session.getRemoteAddress());
+		networkComponent.networkSessionClosed(new NetworkSessionClosed(session
+				.getRemoteAddress()));
 	}
 
 	@Override
 	public void sessionOpened(IoSession session) throws Exception {
 		super.sessionOpened(session);
 		logger.debug("Connection opened to {}", session.getRemoteAddress());
+		networkComponent.networkSessionOpened(new NetworkSessionOpened(session
+				.getRemoteAddress()));
 	}
 }
