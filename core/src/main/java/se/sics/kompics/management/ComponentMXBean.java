@@ -2,11 +2,7 @@ package se.sics.kompics.management;
 
 import java.util.SortedMap;
 
-public interface KompicsMXBean {
-
-	public int getWorkerCount();
-
-	public void setWorkerCount(int workerCount);
+public interface ComponentMXBean {
 
 	public long getPublishedEventCount();
 
@@ -24,5 +20,13 @@ public interface KompicsMXBean {
 
 	public SortedMap<Long, String> getPublishedEvents();
 
-	public ComponentMXBean getBootstrapComponent();
+	public ComponentMXBean getParent();
+
+	public ComponentMXBean[] getChildren();
+
+	public ChannelMXBean[] getChannels();
+
+	public String getName();
+
+	public ComponentEventCounter[] getCounters();
 }

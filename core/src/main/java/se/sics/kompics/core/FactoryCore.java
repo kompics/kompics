@@ -93,8 +93,7 @@ public class FactoryCore {
 	private Method createMethod;
 
 	/**
-	 * The number of Channel parameters taken by the <code>create</code>
-	 * method.
+	 * The number of Channel parameters taken by the <code>create</code> method.
 	 */
 	private int createParameterCount;
 
@@ -104,8 +103,7 @@ public class FactoryCore {
 	private Method shareMethod;
 
 	/**
-	 * The <code>initialize</code> method of the component implementation
-	 * class.
+	 * The <code>initialize</code> method of the component implementation class.
 	 */
 	private Method initializeMethod;
 
@@ -387,7 +385,8 @@ public class FactoryCore {
 
 	public ComponentCore createComponent(Scheduler scheduler,
 			FactoryRegistry factoryRegistry, ComponentReference parent,
-			Channel faultChannel, Channel... channelParameters) {
+			ComponentCore parentCore, Channel faultChannel,
+			Channel... channelParameters) {
 
 		try {
 			if (faultChannel == null)
@@ -395,7 +394,7 @@ public class FactoryCore {
 
 			// create a component core
 			ComponentCore componentCore = new ComponentCore(scheduler,
-					factoryRegistry, this, parent, faultChannel);
+					factoryRegistry, this, parent, parentCore, faultChannel);
 			ComponentReference componentReference = componentCore
 					.createReference();
 

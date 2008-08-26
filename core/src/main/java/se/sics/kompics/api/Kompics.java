@@ -11,10 +11,12 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 
 import se.sics.kompics.core.ChannelCore;
+import se.sics.kompics.core.ComponentCore;
 import se.sics.kompics.core.ComponentReference;
 import se.sics.kompics.core.FactoryCore;
 import se.sics.kompics.core.FactoryRegistry;
 import se.sics.kompics.core.scheduler.Scheduler;
+import se.sics.kompics.management.ComponentMXBean;
 
 /**
  * A Kompics system with a scheduler and an associated set of worker threads.
@@ -36,6 +38,7 @@ public class Kompics {
 	private static Kompics globalKompics = null;
 
 	public static se.sics.kompics.management.Kompics mbean;
+	public static se.sics.kompics.management.Component bootMbean;
 
 	private Scheduler scheduler;
 
@@ -104,11 +107,18 @@ public class Kompics {
 
 			Channel faultChannel = bootFaultChannelCore.createReference();
 
-			bootstrapComponent = factoryCore.createComponent(scheduler,
-					factoryRegistry, null, faultChannel, faultChannel)
-					.createReference();
+			ComponentCore bootstrapCore = factoryCore.createComponent(
+					scheduler, factoryRegistry, null, null, faultChannel,
+					faultChannel);
+			bootMbean = bootstrapCore.mbean;
+
+			bootstrapComponent = bootstrapCore.createReference();
 		}
 		return bootstrapComponent;
+	}
+
+	public ComponentMXBean getBootstrapMbean() {
+		return bootMbean;
 	}
 
 	/**

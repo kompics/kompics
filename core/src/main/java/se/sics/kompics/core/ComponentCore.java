@@ -1,5 +1,6 @@
 package se.sics.kompics.core;
 
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.EnumSet;
@@ -10,6 +11,9 @@ import java.util.LinkedList;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
@@ -57,9 +61,15 @@ public class ComponentCore implements Runnable {
 
 	private Component superComponent;
 
+	private ComponentCore superComponentCore;
+
 	private LinkedList<Component> subComponents;
 
+	private LinkedList<ComponentCore> subComponentCores;
+
 	private LinkedList<Channel> localChannels;
+
+	private LinkedList<ChannelCore> localChannelCores;
 
 	/* =============== COMPONENT CONFIGURATION =============== */
 
@@ -75,17 +85,22 @@ public class ComponentCore implements Runnable {
 
 	private ConcurrentLinkedQueue<WorkQueue> workQueuePool;
 
+	public se.sics.kompics.management.Component mbean;
+
 	public ComponentCore(Scheduler scheduler, FactoryRegistry factoryRegistry,
 			FactoryCore factoryCore, ComponentReference parent,
-			Channel faultChannel) {
+			ComponentCore parentCore, Channel faultChannel) {
 		super();
 		this.scheduler = scheduler;
 		this.factoryRegistry = factoryRegistry;
 		this.factoryCore = factoryCore;
 
 		this.superComponent = parent;
+		this.superComponentCore = parentCore;
 		this.subComponents = new LinkedList<Component>();
 		this.localChannels = new LinkedList<Channel>();
+		this.subComponentCores = new LinkedList<ComponentCore>();
+		this.localChannelCores = new LinkedList<ChannelCore>();
 
 		// check fault channel
 		if (!faultChannel.hasEventType(FaultEvent.class)) {
@@ -108,6 +123,21 @@ public class ComponentCore implements Runnable {
 		this.handlerObject = handlerObject;
 		this.componentName = handlerObject.getClass().getSimpleName() + "@"
 				+ Integer.toHexString(this.hashCode());
+
+		try {
+			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+			// Construct the ObjectName for the MBean we will register
+			ObjectName name = new ObjectName(
+					"se.sics.kompics:type=Component,name=" + componentName);
+
+			// Create the Hello World MBean
+			mbean = new se.sics.kompics.management.Component(this,
+					componentName);
+			// Register the Hello World MBean
+			mbs.registerMBean(mbean, name);
+		} catch (Exception e) {
+			throw new RuntimeException("Management exception", e);
+		}
 	}
 
 	public void setEventHandlers(HashMap<String, EventHandler> eventHandlers,
@@ -139,7 +169,9 @@ public class ComponentCore implements Runnable {
 	private void triggerEventCore(EventCore eventCore) {
 		ChannelReference channelReference = eventCore.getChannel();
 		channelReference.publishEventCore(eventCore);
+
 		Kompics.mbean.publishedEvent(eventCore.getEvent());
+		mbean.publishedEvent(eventCore.getEvent());
 	}
 
 	/* =============== EVENT SCHEDULING =============== */
@@ -201,6 +233,7 @@ public class ComponentCore implements Runnable {
 		}
 
 		Kompics.mbean.handledEvent(event);
+		mbean.handledEvent(event);
 
 		// make the component passive or ready
 		int newWorkCounter = workCounter.decrementAndGet();
@@ -272,6 +305,10 @@ public class ComponentCore implements Runnable {
 
 		ChannelCore channelCore = new ChannelCore(types);
 
+		synchronized (localChannelCores) {
+			localChannelCores.add(channelCore);
+		}
+
 		synchronized (localChannels) {
 			localChannels.add(channelCore.createReference());
 		}
@@ -288,8 +325,12 @@ public class ComponentCore implements Runnable {
 		FactoryCore factoryCore = factoryRegistry
 				.getFactory(componentClassName);
 		ComponentCore newComponentCore = factoryCore.createComponent(scheduler,
-				factoryRegistry, createReference(), faultChannel,
+				factoryRegistry, createReference(), this, faultChannel,
 				channelParameters);
+
+		synchronized (subComponentCores) {
+			subComponentCores.add(newComponentCore);
+		}
 
 		synchronized (subComponents) {
 			subComponents.add(newComponentCore.createReference());
@@ -302,12 +343,24 @@ public class ComponentCore implements Runnable {
 		return subComponents;
 	}
 
+	public LinkedList<ComponentCore> getSubComponentCores() {
+		return subComponentCores;
+	}
+
 	LinkedList<Channel> getLocalChannels() {
 		return localChannels;
 	}
 
+	public LinkedList<ChannelCore> getLocalChannelCores() {
+		return localChannelCores;
+	}
+
 	Component getSuperComponent() {
 		return superComponent;
+	}
+
+	public ComponentCore getParentCore() {
+		return superComponentCore;
 	}
 
 	public String getName() {

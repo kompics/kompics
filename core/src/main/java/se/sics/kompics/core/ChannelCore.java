@@ -1,5 +1,6 @@
 package se.sics.kompics.core;
 
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -7,6 +8,9 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.FaultEvent;
@@ -38,6 +42,8 @@ public class ChannelCore {
 
 	private Object channelLock;
 
+	public se.sics.kompics.management.Channel mbean;
+
 	// TODO fix core visibility
 	public ChannelCore(HashSet<Class<? extends Event>> eventTypes) {
 		super();
@@ -46,6 +52,20 @@ public class ChannelCore {
 		subscriptions = new HashMap<Class<? extends Event>, LinkedList<Subscription>>();
 		lookup = new HashMap<Class<? extends Event>, SubscriptionSet>();
 		channelLock = new Object();
+
+		try {
+			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+			// Construct the ObjectName for the MBean we will register
+			ObjectName name = new ObjectName(
+					"se.sics.kompics:type=Channel,name=Channel@" + hashCode());
+
+			// Create the Hello World MBean
+			mbean = new se.sics.kompics.management.Channel(this);
+			// Register the Hello World MBean
+			mbs.registerMBean(mbean, name);
+		} catch (Exception e) {
+			throw new RuntimeException("Management exception", e);
+		}
 	}
 
 	/* =============== CONFIGURATION =============== */
@@ -163,6 +183,8 @@ public class ChannelCore {
 				deliverToManyFilteredSubscribers(eventCore, event,
 						matchingSet.manyFilterSubs);
 			}
+
+			mbean.publishedEvent(event);
 		}
 		if (!typeMatch) {
 			// check that the event can be published in this channel, i.e., any
