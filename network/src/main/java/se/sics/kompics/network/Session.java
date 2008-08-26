@@ -38,14 +38,19 @@ public class Session implements IoFutureListener<IoFuture> {
 
 	private boolean connected;
 
+	private NetworkComponent component;
+	private int retries;
+
 	public Session(IoConnector ioConnector, Transport protocol,
-			InetSocketAddress address) {
+			InetSocketAddress address, NetworkComponent component) {
 		super();
 		this.ioConnector = ioConnector;
 		this.protocol = protocol;
 		this.remoteAddress = address;
 		this.pendingMessages = new LinkedList<NetworkDeliverEvent>();
 
+		this.component = component;
+		this.retries = 0;
 		lock = new ReentrantLock();
 		connected = false;
 	}
@@ -76,8 +81,17 @@ public class Session implements IoFutureListener<IoFuture> {
 				lock.unlock();
 			}
 		} else {
-			logger.debug("Failed to connect to {}", connFuture.getSession()
-					.getRemoteAddress());
+			if (retries < component.connectRetries) {
+				retries++;
+				logger.debug("Retrying {} connection to {}", protocol,
+						remoteAddress);
+				connectInit();
+			} else {
+				logger.debug("Dropping {} connection to {}", protocol,
+						remoteAddress);
+				// drop this session
+				component.dropSession(this);
+			}
 		}
 	}
 
@@ -96,7 +110,6 @@ public class Session implements IoFutureListener<IoFuture> {
 
 	public void connectInit() {
 		connectFuture = ioConnector.connect(remoteAddress);
-		// TODO can this be too late and lose the operationComplete call?
 		connectFuture.addListener(this);
 	}
 
@@ -106,5 +119,13 @@ public class Session implements IoFutureListener<IoFuture> {
 
 	public void closeWait() {
 		closeFuture.awaitUninterruptibly();
+	}
+
+	public InetSocketAddress getRemoteAddress() {
+		return remoteAddress;
+	}
+
+	public Transport getProtocol() {
+		return protocol;
 	}
 }

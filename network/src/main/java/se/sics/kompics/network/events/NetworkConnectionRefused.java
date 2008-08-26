@@ -6,13 +6,13 @@ import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.EventType;
 
 /**
- * The <code>NetworkException</code> class.
+ * The <code>NetworkConnectionRefused</code> class.
  * 
  * @author Cosmin Arad
- * @version $Id: NetworkException.java 188 2008-08-14 20:40:48Z Cosmin $
+ * @version $Id: NetworkConnectionRefused.java 188 2008-08-14 20:40:48Z Cosmin $
  */
 @EventType
-public class NetworkException implements Event {
+public class NetworkConnectionRefused implements Event {
 
 	private final SocketAddress remoteAddress;
 
@@ -20,7 +20,7 @@ public class NetworkException implements Event {
 		return remoteAddress;
 	}
 
-	public NetworkException(SocketAddress remoteAddress) {
+	public NetworkConnectionRefused(SocketAddress remoteAddress) {
 		super();
 		this.remoteAddress = remoteAddress;
 	}

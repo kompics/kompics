@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.mina.core.ExceptionMonitor;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
@@ -28,6 +29,7 @@ import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
+import se.sics.kompics.network.events.NetworkConnectionRefused;
 import se.sics.kompics.network.events.NetworkDeliverEvent;
 import se.sics.kompics.network.events.NetworkException;
 import se.sics.kompics.network.events.NetworkSendEvent;
@@ -63,6 +65,8 @@ public class NetworkComponent {
 
 	private SocketAddress localSocketAddress;
 
+	int connectRetries;
+
 	public NetworkComponent(Component component) {
 		super();
 		this.component = component;
@@ -91,8 +95,13 @@ public class NetworkComponent {
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
-	@ComponentInitializeMethod
-	public void init(SocketAddress socketAddress) throws IOException {
+	@ComponentInitializeMethod("network.properties")
+	public void init(Properties properties, SocketAddress socketAddress)
+			throws IOException {
+
+		connectRetries = Integer.parseInt(properties
+				.getProperty("connect.retries"));
+
 		// local address
 		localSocketAddress = socketAddress;
 
@@ -195,32 +204,50 @@ public class NetworkComponent {
 
 	private Session getTcpSession(Address destination) {
 		InetSocketAddress destinationSocket = address2SocketAddress(destination);
-		Session session = tcpSession.get(destinationSocket);
+		synchronized (tcpSession) {
+			Session session = tcpSession.get(destinationSocket);
 
-		if (session == null) {
-			session = new Session(tcpConnector, Transport.TCP,
-					destinationSocket);
-			session.connectInit();
+			if (session == null) {
+				session = new Session(tcpConnector, Transport.TCP,
+						destinationSocket, this);
+				session.connectInit();
 
-			tcpSession.put(destinationSocket, session);
+				tcpSession.put(destinationSocket, session);
+			}
+			return session;
 		}
-
-		return session;
 	}
 
 	private Session getUdpSession(Address destination) {
 		InetSocketAddress destinationSocket = address2SocketAddress(destination);
 		Session session = udpSession.get(destinationSocket);
+		synchronized (udpSession) {
+			if (session == null) {
+				session = new Session(udpConnector, Transport.UDP,
+						destinationSocket, this);
+				session.connectInit();
 
-		if (session == null) {
-			session = new Session(udpConnector, Transport.UDP,
-					destinationSocket);
-			session.connectInit();
-
-			udpSession.put(destinationSocket, session);
+				udpSession.put(destinationSocket, session);
+			}
+			return session;
 		}
+	}
 
-		return session;
+	void dropSession(Session s) {
+		if (s.getProtocol() == Transport.TCP) {
+			synchronized (tcpSession) {
+				tcpSession.remove(s.getRemoteAddress());
+			}
+		}
+		if (s.getProtocol() == Transport.UDP) {
+			synchronized (udpSession) {
+				udpSession.remove(s.getRemoteAddress());
+			}
+		}
+		// save dropped session?
+
+		component.triggerEvent(new NetworkConnectionRefused(s
+				.getRemoteAddress()), deliverChannel);
 	}
 
 	void deliverMessage(NetworkDeliverEvent message, Transport protocol) {
