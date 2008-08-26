@@ -42,7 +42,8 @@ public class KompicsPlugin extends JConsolePlugin implements
 	 * Returns a SwingWorker which is responsible for updating the Kompics tab.
 	 */
 	public SwingWorker<?, ?> newSwingWorker() {
-		return kompicsTab.newSwingWorker();
+		// return kompicsTab.newSwingWorker();
+		return null;
 	}
 
 	// You can implement the dispose() method if you need to release
@@ -51,7 +52,6 @@ public class KompicsPlugin extends JConsolePlugin implements
 	//
 	// public void dispose() {
 	// }
-
 	/*
 	 * Property listener to reset the MBeanServerConnection at reconnection
 	 * time.

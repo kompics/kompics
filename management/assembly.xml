@@ -18,4 +18,13 @@
       </includes>
     </fileSet>
   </fileSets> 
+  <dependencySets>
+    <dependencySet>
+      <scope>compile</scope>
+      <includes>
+        <include>se.sics.kompics:kompics-core</include>
+      </includes>
+      <unpack>true</unpack>
+    </dependencySet>
+  </dependencySets>
 </assembly>
