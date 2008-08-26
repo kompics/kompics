@@ -171,7 +171,8 @@ public class BootstrapServer {
 				break;
 		}
 
-		CacheGetPeersResponse response = new CacheGetPeersResponse(peers);
+		CacheGetPeersResponse response = new CacheGetPeersResponse(peers, event
+				.getRequestId());
 		PerfectNetworkSendEvent pnSendEvent = new PerfectNetworkSendEvent(
 				response, event.getSource());
 		component.triggerEvent(pnSendEvent, pnSendChannel);

@@ -11,6 +11,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -22,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 
 /**
  * The <code>ProcessOutputFrame</code> class
@@ -134,6 +136,8 @@ public class ProcessOutputFrame extends JFrame {
 					}
 				}
 			});
+			killAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K,
+					ActionEvent.CTRL_MASK));
 			process.add(killAll);
 
 			JMenuItem copy = new JMenuItem("Copy all to clipboard");
@@ -151,6 +155,8 @@ public class ProcessOutputFrame extends JFrame {
 					}
 				}
 			});
+			copy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,
+					ActionEvent.CTRL_MASK | ActionEvent.SHIFT_MASK));
 
 			JMenuItem interrupt = new JMenuItem("Send interrupt (SIGINT)");
 			interrupt.addActionListener(new ActionListener() {
@@ -160,6 +166,8 @@ public class ProcessOutputFrame extends JFrame {
 					}
 				}
 			});
+			interrupt.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C,
+					ActionEvent.CTRL_MASK));
 
 			terminal.add(copy);
 			process.addSeparator();

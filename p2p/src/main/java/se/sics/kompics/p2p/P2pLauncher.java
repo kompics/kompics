@@ -56,6 +56,15 @@ public final class P2pLauncher {
 		processes = new ProcessLauncher[nodes + 2];
 
 		if (launchBootrapServer) {
+			// start Bootstrap server
+			processes[1] = launchProcess(
+					"se.sics.kompics.p2p.BootstrapServerMain",
+					"-Dlog4j.properties=log4j.properties", "Bootstrap Server",
+					1);
+
+			logger.debug("Launched Bootrap Server");
+		}
+		if (launchMonitorServer) {
 			// start PeerMonitorServer
 			processes[0] = launchProcess(
 					"se.sics.kompics.p2p.PeerMonitorServerMain",
@@ -65,14 +74,10 @@ public final class P2pLauncher {
 			logger.debug("Launched P2P Monitor Server");
 		}
 
-		if (launchMonitorServer) {
-			// start Bootstrap server
-			processes[1] = launchProcess(
-					"se.sics.kompics.p2p.BootstrapServerMain",
-					"-Dlog4j.properties=log4j.properties", "Bootstrap Server",
-					1);
-
-			logger.debug("Launched Bootrap Server");
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 
 		for (int i = 1; i <= nodes; i++) {

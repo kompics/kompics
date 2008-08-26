@@ -45,6 +45,8 @@ public class PeerApplication {
 
 	private Address localAddress;
 
+	private boolean bootstraped;
+
 	public PeerApplication(Component component) {
 		this.component = component;
 	}
@@ -59,6 +61,7 @@ public class PeerApplication {
 	@ComponentInitializeMethod
 	public void create(Address localAddress) {
 		this.localAddress = localAddress;
+		this.bootstraped = false;
 
 		logger = LoggerFactory.getLogger(PeerApplication.class.getName() + "@"
 				+ this.localAddress.getId());
@@ -103,20 +106,23 @@ public class PeerApplication {
 
 	@EventHandlerMethod
 	public void handleBootstrapResponse(BootstrapResponse event) {
-		logger.debug("Got BoostrapResponse {}, Bootstrap complete", event
-				.getPeers().size());
+		if (!bootstraped) {
+			logger.debug("Got BoostrapResponse {}, Bootstrap complete", event
+					.getPeers().size());
 
-		Set<PeerEntry> somePeers = event.getPeers();
+			Set<PeerEntry> somePeers = event.getPeers();
 
-		if (somePeers.size() > 0) {
-			// we join though the first peer;
-			PeerEntry peerEntry = somePeers.iterator().next();
-			JoinRing request = new JoinRing(peerEntry.getAddress());
-			component.triggerEvent(request, chordRequestChannel);
-		} else {
-			// we create a new ring
-			CreateRing request = new CreateRing();
-			component.triggerEvent(request, chordRequestChannel);
+			if (somePeers.size() > 0) {
+				// we join though the first peer;
+				PeerEntry peerEntry = somePeers.iterator().next();
+				JoinRing request = new JoinRing(peerEntry.getAddress());
+				component.triggerEvent(request, chordRequestChannel);
+			} else {
+				// we create a new ring
+				CreateRing request = new CreateRing();
+				component.triggerEvent(request, chordRequestChannel);
+			}
+			bootstraped = true;
 		}
 	}
 

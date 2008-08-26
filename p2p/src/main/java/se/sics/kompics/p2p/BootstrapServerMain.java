@@ -16,8 +16,12 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Kompics;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.NetworkConnectionRefused;
 import se.sics.kompics.network.events.NetworkDeliverEvent;
+import se.sics.kompics.network.events.NetworkException;
 import se.sics.kompics.network.events.NetworkSendEvent;
+import se.sics.kompics.network.events.NetworkSessionClosed;
+import se.sics.kompics.network.events.NetworkSessionOpened;
 import se.sics.kompics.p2p.bootstrap.BootstrapServer;
 import se.sics.kompics.p2p.bootstrap.events.StartBootstrapServer;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
@@ -91,8 +95,10 @@ public final class BootstrapServerMain {
 
 		// create channels for the network component
 		Channel networkSendChannel = boot.createChannel(NetworkSendEvent.class);
-		Channel networkDeliverChannel = boot
-				.createChannel(NetworkDeliverEvent.class);
+		Channel networkDeliverChannel = boot.createChannel(
+				NetworkDeliverEvent.class, NetworkException.class,
+				NetworkSessionClosed.class, NetworkSessionOpened.class,
+				NetworkConnectionRefused.class);
 
 		// create and share the network component
 		Component networkComponent = boot.createComponent(

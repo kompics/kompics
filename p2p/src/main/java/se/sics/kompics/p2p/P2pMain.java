@@ -10,8 +10,12 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Kompics;
+import se.sics.kompics.network.events.NetworkConnectionRefused;
 import se.sics.kompics.network.events.NetworkDeliverEvent;
+import se.sics.kompics.network.events.NetworkException;
 import se.sics.kompics.network.events.NetworkSendEvent;
+import se.sics.kompics.network.events.NetworkSessionClosed;
+import se.sics.kompics.network.events.NetworkSessionOpened;
 import se.sics.kompics.p2p.application.events.StartApplication;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
@@ -54,7 +58,7 @@ public class P2pMain {
 		String webAddress = args[1];
 		String command = args[2];
 
-		Kompics kompics = new Kompics(1, 0);
+		Kompics kompics = new Kompics(2, 0);
 		Kompics.setGlobalKompics(kompics);
 
 		Component boot = kompics.getBootstrapComponent();
@@ -74,8 +78,10 @@ public class P2pMain {
 
 		// create channels for the network component
 		Channel networkSendChannel = boot.createChannel(NetworkSendEvent.class);
-		Channel networkDeliverChannel = boot
-				.createChannel(NetworkDeliverEvent.class);
+		Channel networkDeliverChannel = boot.createChannel(
+				NetworkDeliverEvent.class, NetworkException.class,
+				NetworkSessionClosed.class, NetworkSessionOpened.class,
+				NetworkConnectionRefused.class);
 
 		// create and share the network component
 		Component networkComponent = boot.createComponent(

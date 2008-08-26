@@ -10,7 +10,8 @@ import se.sics.kompics.network.Address;
  * The <code>PerfectNetworkDeliverEvent</code> class.
  * 
  * @author Cosmin Arad
- * @version $Id$
+ * @version $Id: PerfectNetworkDeliverEvent.java 139 2008-06-04 10:55:59Z cosmin
+ *          $
  */
 @SuppressWarnings("serial")
 @EventType
@@ -19,6 +20,8 @@ public abstract class PerfectNetworkDeliverEvent implements Event, Serializable 
 	private transient Address source;
 
 	private transient Address destination;
+
+	// TODO constructor
 
 	public final Address getSource() {
 		return source;

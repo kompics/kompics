@@ -17,15 +17,22 @@ public final class CacheGetPeersResponse extends PerfectNetworkDeliverEvent {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 5849399496812824557L;
+	private static final long serialVersionUID = -4244511822228360931L;
 
 	private final Set<PeerEntry> peers;
 
-	public CacheGetPeersResponse(Set<PeerEntry> peers) {
+	private final long reqestId;
+
+	public CacheGetPeersResponse(Set<PeerEntry> peers, long id) {
 		this.peers = peers;
+		this.reqestId = id;
 	}
 
 	public Set<PeerEntry> getPeers() {
 		return peers;
+	}
+
+	public long getReqestId() {
+		return reqestId;
 	}
 }
