@@ -10,4 +10,11 @@
   <name>Kompics P2P Bootstrap</name>
   <version>0.2-SNAPSHOT</version>
   <description>Kompics P2P Bootstrap</description>
+  <dependencies>
+  	<dependency>
+  		<groupId>se.sics.kompics</groupId>
+  		<artifactId>delay-network</artifactId>
+  		<version>0.2-SNAPSHOT</version>
+  	</dependency>
+  </dependencies>
 </project>
