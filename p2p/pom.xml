@@ -7,7 +7,7 @@
 	</parent>
 	<artifactId>kompics-p2p</artifactId>
 	<name>Kompics Peer2Peer Protocols</name>
-	<packaging>jar</packaging>
+	<packaging>pom</packaging>
 	<properties>
 		<symbolicName>${pom.groupId}.p2p</symbolicName>
 		<exportedPackage>${pom.groupId}</exportedPackage>
