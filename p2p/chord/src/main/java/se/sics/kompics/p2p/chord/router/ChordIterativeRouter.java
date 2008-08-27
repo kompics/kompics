@@ -34,8 +34,8 @@ import se.sics.kompics.p2p.chord.router.events.RpcTimeout;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.CancelTimerEvent;
-import se.sics.kompics.timer.events.SetTimerEvent;
+import se.sics.kompics.timer.events.CancelAlarm;
+import se.sics.kompics.timer.events.SetAlarm;
 
 /**
  * The <code>ChordIterativeRouter</code> class
@@ -91,8 +91,7 @@ public class ChordIterativeRouter {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane
-				.getChannelIn(SetTimerEvent.class);
+		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
 		timerSignalChannel = component.createChannel(FixFingers.class,
 				RpcTimeout.class);
 
@@ -192,8 +191,8 @@ public class ChordIterativeRouter {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetTimerEvent.class,
-			PerfectNetworkSendEvent.class, ChordLookupResponse.class })
+	@MayTriggerEventTypes( { SetAlarm.class, PerfectNetworkSendEvent.class,
+			ChordLookupResponse.class })
 	public void handleChordLookupRequest(ChordLookupRequest event) {
 		logger.debug("CHORD_LOOKUP_REQ({})", event.getKey());
 
@@ -329,7 +328,7 @@ public class ChordIterativeRouter {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetTimerEvent.class, CancelTimerEvent.class,
+	@MayTriggerEventTypes( { SetAlarm.class, CancelAlarm.class,
 			PerfectNetworkSendEvent.class, ChordLookupResponse.class })
 	public void handleFindSuccessorResponse(FindSuccessorResponse event) {
 
@@ -409,7 +408,7 @@ public class ChordIterativeRouter {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { ChordLookupRequest.class, SetTimerEvent.class })
+	@MayTriggerEventTypes( { ChordLookupRequest.class, SetAlarm.class })
 	public void handleFixFingers(FixFingers event) {
 		logger.debug("FIX_FINGER");
 

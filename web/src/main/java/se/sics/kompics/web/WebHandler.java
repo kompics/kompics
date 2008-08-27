@@ -19,16 +19,16 @@ import org.mortbay.jetty.handler.AbstractHandler;
  */
 final class WebHandler extends AbstractHandler {
 
-	private final WebComponent webComponent;
+	private final WebServer webComponent;
 
 	private static final int FAVICON_LENGTH = 4286;
 
 	private final byte[] favicon;
 
-	public WebHandler(WebComponent webComponent) throws IOException {
+	public WebHandler(WebServer webComponent) throws IOException {
 		super();
 		this.webComponent = webComponent;
-		InputStream iconStrem = WebComponent.class
+		InputStream iconStrem = WebServer.class
 				.getResourceAsStream("favicon.ico");
 
 		favicon = new byte[FAVICON_LENGTH];

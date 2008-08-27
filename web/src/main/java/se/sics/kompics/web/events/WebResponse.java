@@ -4,31 +4,31 @@ import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.EventType;
 
 /**
- * The <code>WebResponseEvent</code> class
+ * The <code>WebResponse</code> class
  * 
  * @author Cosmin Arad
  * @version $Id$
  */
 @EventType
-public final class WebResponseEvent implements Event {
+public final class WebResponse implements Event {
 
 	private final String html;
 
-	private final WebRequestEvent requestEvent;
+	private final WebRequest requestEvent;
 
 	private final int partIndex;
 
 	private final int partsTotal;
 
-	public WebResponseEvent(String html, WebRequestEvent requestEvent,
-			int index, int total) {
+	public WebResponse(String html, WebRequest requestEvent, int index,
+			int total) {
 		this.html = html;
 		this.requestEvent = requestEvent;
 		this.partIndex = index;
 		this.partsTotal = total;
 	}
 
-	public WebRequestEvent getRequestEvent() {
+	public WebRequest getRequestEvent() {
 		return requestEvent;
 	}
 

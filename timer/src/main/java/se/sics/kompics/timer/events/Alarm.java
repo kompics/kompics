@@ -9,7 +9,7 @@ import se.sics.kompics.api.annotation.EventType;
  * @version $Id$
  */
 @EventType
-public abstract class TimerSignalEvent implements Event {
+public abstract class Alarm implements Event {
 
 	private long timerId;
 

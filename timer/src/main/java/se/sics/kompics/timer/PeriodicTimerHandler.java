@@ -5,9 +5,9 @@ import java.util.HashSet;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Priority;
-import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
-import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.timer.events.CancelPeriodicAlarm;
+import se.sics.kompics.timer.events.SetPeriodicAlarm;
+import se.sics.kompics.timer.events.Alarm;
 
 /**
  * The <code>PeriodicTimerHandler</code> class
@@ -33,9 +33,9 @@ public class PeriodicTimerHandler {
 		this.outstandingPeriodicTimers = new HashSet<Long>();
 	}
 
-	public long setPeriodicTimer(TimerSignalEvent timerExpiredEvent,
+	public long setPeriodicTimer(Alarm timerExpiredEvent,
 			Channel timeoutChannel, long delay, long period) {
-		SetPeriodicTimerEvent event = new SetPeriodicTimerEvent(
+		SetPeriodicAlarm event = new SetPeriodicAlarm(
 				++nextPeriodicTimerId, timerExpiredEvent, timeoutChannel,
 				component, delay, period);
 
@@ -45,7 +45,7 @@ public class PeriodicTimerHandler {
 	}
 
 	public void cancelPeriodicTimer(long timerId) {
-		CancelPeriodicTimerEvent event = new CancelPeriodicTimerEvent(
+		CancelPeriodicAlarm event = new CancelPeriodicAlarm(
 				component, timerId);
 		component.triggerEvent(event, setTimerChannel, Priority.HIGH);
 		outstandingPeriodicTimers.remove(timerId);

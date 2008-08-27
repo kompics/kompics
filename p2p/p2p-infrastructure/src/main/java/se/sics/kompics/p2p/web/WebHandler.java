@@ -31,8 +31,8 @@ import se.sics.kompics.p2p.chord.router.FingerTableView;
 import se.sics.kompics.p2p.chord.router.LookupInfo;
 import se.sics.kompics.p2p.fd.events.StatusRequest;
 import se.sics.kompics.p2p.fd.events.StatusResponse;
-import se.sics.kompics.web.events.WebRequestEvent;
-import se.sics.kompics.web.events.WebResponseEvent;
+import se.sics.kompics.web.events.WebRequest;
+import se.sics.kompics.web.events.WebResponse;
 
 /**
  * The <code>WebHandler</code> class
@@ -60,7 +60,7 @@ public class WebHandler {
 
 	private int parts;
 
-	private WebRequestEvent requestEvent;
+	private WebRequest requestEvent;
 
 	private String htmlHeader, htmlFooter;
 
@@ -76,8 +76,8 @@ public class WebHandler {
 		// use the shared WebComponent
 		ComponentMembrane webMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Web");
-		webRequestChannel = webMembrane.getChannelOut(WebRequestEvent.class);
-		webResponseChannel = webMembrane.getChannelIn(WebResponseEvent.class);
+		webRequestChannel = webMembrane.getChannelOut(WebRequest.class);
+		webResponseChannel = webMembrane.getChannelIn(WebResponse.class);
 
 		// use shared FailureDetector component
 		ComponentMembrane fdMembrane = component
@@ -127,7 +127,7 @@ public class WebHandler {
 	}
 
 	@EventHandlerMethod
-	public void handleWebRequest(WebRequestEvent event) {
+	public void handleWebRequest(WebRequest event) {
 		String target = event.getTarget();
 		Request request = event.getRequest();
 		logger.debug("Handling request {}", target);
@@ -138,8 +138,8 @@ public class WebHandler {
 				boot = boot.getSuperComponent();
 			}
 
-			WebResponseEvent responseEvent = new WebResponseEvent(navigateDF(
-					boot, 0), event, 1, 1);
+			WebResponse responseEvent = new WebResponse(navigateDF(boot, 0),
+					event, 1, 1);
 			component.triggerEvent(responseEvent, webResponseChannel);
 		} else {
 			requestEvent = event;
@@ -160,58 +160,56 @@ public class WebHandler {
 				component.triggerEvent(lookupRequest, chordRequestChannel);
 			} else {
 				// just print lookup form
-				WebResponseEvent response = new WebResponseEvent(
-						dumpChordLookupForm(null, null), requestEvent, 2, parts);
+				WebResponse response = new WebResponse(dumpChordLookupForm(
+						null, null), requestEvent, 2, parts);
 				component.triggerEvent(response, webResponseChannel);
 			}
 
 			component.triggerEvent(ringRequest, chordRequestChannel);
 			component.triggerEvent(fdRequest, fdRequestChannel);
 
-			WebResponseEvent responseEvent = new WebResponseEvent(htmlHeader,
+			WebResponse responseEvent = new WebResponse(htmlHeader,
 					requestEvent, 1, parts);
 			component.triggerEvent(responseEvent, webResponseChannel);
-			responseEvent = new WebResponseEvent(htmlFooter, requestEvent,
-					parts, parts);
+			responseEvent = new WebResponse(htmlFooter, requestEvent, parts,
+					parts);
 			component.triggerEvent(responseEvent, webResponseChannel);
 		}
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(WebResponseEvent.class)
+	@MayTriggerEventTypes(WebResponse.class)
 	public void handleChordLookupResponse(ChordLookupResponse response) {
-		WebResponseEvent responseEvent = new WebResponseEvent(
-				dumpChordLookupForm(response.getKey(), response), requestEvent,
-				2, parts);
+		WebResponse responseEvent = new WebResponse(dumpChordLookupForm(
+				response.getKey(), response), requestEvent, 2, parts);
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(WebResponseEvent.class)
+	@MayTriggerEventTypes(WebResponse.class)
 	public void handleChordLookupFailed(ChordLookupFailed response) {
-		WebResponseEvent responseEvent = new WebResponseEvent(
-				dumpChordLookupForm(response.getKey(), response), requestEvent,
-				2, parts);
+		WebResponse responseEvent = new WebResponse(dumpChordLookupForm(
+				response.getKey(), response), requestEvent, 2, parts);
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(WebResponseEvent.class)
+	@MayTriggerEventTypes(WebResponse.class)
 	public void handleStatusResponse(StatusResponse response) {
 		String html = dumpFdStatusToHtml(response);
 
-		WebResponseEvent responseEvent = new WebResponseEvent(html,
-				requestEvent, 4, parts);
+		WebResponse responseEvent = new WebResponse(html, requestEvent, 4,
+				parts);
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(WebResponseEvent.class)
+	@MayTriggerEventTypes(WebResponse.class)
 	public void handleGetChordNeighborsResponse(GetChordNeighborsResponse event) {
 		String html = dumpRingViewToHtml(event);
 
-		WebResponseEvent responseEvent = new WebResponseEvent(html,
-				requestEvent, 3, parts);
+		WebResponse responseEvent = new WebResponse(html, requestEvent, 3,
+				parts);
 		component.triggerEvent(responseEvent, webResponseChannel);
 	}
 

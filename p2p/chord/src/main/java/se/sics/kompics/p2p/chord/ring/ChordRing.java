@@ -39,7 +39,7 @@ import se.sics.kompics.p2p.fd.events.SuspicionStatus;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.SetTimerEvent;
+import se.sics.kompics.timer.events.SetAlarm;
 
 /**
  * The <code>ChordRing</code> class
@@ -94,8 +94,7 @@ public class ChordRing {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane
-				.getChannelIn(SetTimerEvent.class);
+		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
 		timerSignalChannel = component
 				.createChannel(StabilizeTimerSignal.class);
 
@@ -315,7 +314,7 @@ public class ChordRing {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class, SetTimerEvent.class })
+	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class, SetAlarm.class })
 	public void handleStabilizeTimerSignal(StabilizeTimerSignal event) {
 		logger.debug("STABILIZATION");
 

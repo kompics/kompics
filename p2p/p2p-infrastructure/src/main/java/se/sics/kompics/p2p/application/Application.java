@@ -25,8 +25,8 @@ import se.sics.kompics.p2p.application.events.StartApplication;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
 import se.sics.kompics.p2p.peer.events.LeavePeer;
-import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.SetAlarm;
 
 /**
  * The <code>Application</code> class
@@ -62,9 +62,8 @@ public class Application {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		timerSetChannel = timerMembrane.getChannelIn(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane
-				.getChannelOut(TimerSignalEvent.class);
+		timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
+		timerSignalChannel = timerMembrane.getChannelOut(Alarm.class);
 
 		this.peerClusterCommandChannel = peerClusterCommandChannel;
 
@@ -85,7 +84,7 @@ public class Application {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(SetTimerEvent.class)
+	@MayTriggerEventTypes(SetAlarm.class)
 	public void handleDoNextOperation(DoNextOperation event) {
 		logger.info("DONE WAITING");
 		doNextOperation();
@@ -244,8 +243,8 @@ public class Application {
 		int delay = Integer.parseInt(op.substring(3));
 		logger.info("WAITING {} milliseconds...", delay);
 
-		SetTimerEvent setTimerEvent = new SetTimerEvent(0,
-				new DoNextOperation(), timerSignalChannel, component, delay);
+		SetAlarm setTimerEvent = new SetAlarm(0, new DoNextOperation(),
+				timerSignalChannel, component, delay);
 
 		component.triggerEvent(setTimerEvent, timerSetChannel, Priority.HIGH);
 	}

@@ -11,7 +11,7 @@ import se.sics.kompics.api.annotation.EventType;
  * @version $Id$
  */
 @EventType
-public class SetTimerEvent implements Event {
+public class SetAlarm implements Event {
 
 	private Component clientComponent;
 
@@ -19,12 +19,12 @@ public class SetTimerEvent implements Event {
 
 	private long timerId;
 
-	private TimerSignalEvent timerExpiredEvent;
+	private Alarm timerExpiredEvent;
 
 	private Channel clientChannel;
 
-	public SetTimerEvent(long timerId, TimerSignalEvent timerExpiredEvent,
-			Channel channel, Component component, long delay) {
+	public SetAlarm(long timerId, Alarm timerExpiredEvent, Channel channel,
+			Component component, long delay) {
 		this.clientChannel = channel;
 		this.timerId = timerId;
 		this.timerExpiredEvent = timerExpiredEvent;
@@ -32,7 +32,7 @@ public class SetTimerEvent implements Event {
 		this.delay = delay;
 	}
 
-	public TimerSignalEvent getTimerExpiredEvent() {
+	public Alarm getTimerExpiredEvent() {
 		return timerExpiredEvent;
 	}
 

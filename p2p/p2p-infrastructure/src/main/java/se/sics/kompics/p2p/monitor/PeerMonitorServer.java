@@ -26,10 +26,10 @@ import se.sics.kompics.p2p.monitor.events.PeerViewNotification;
 import se.sics.kompics.p2p.monitor.events.ViewEvictPeer;
 import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
-import se.sics.kompics.web.events.WebRequestEvent;
-import se.sics.kompics.web.events.WebResponseEvent;
+import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.web.events.WebRequest;
+import se.sics.kompics.web.events.WebResponse;
 
 /**
  * The <code>PeerMonitorServer</code> class
@@ -83,10 +83,8 @@ public class PeerMonitorServer {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane
-				.getChannelIn(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane
-				.getChannelOut(TimerSignalEvent.class);
+		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
+		timerSignalChannel = timerMembrane.getChannelOut(Alarm.class);
 
 		// use shared LossyNetwork component
 		ComponentMembrane lnMembrane = component
@@ -98,8 +96,8 @@ public class PeerMonitorServer {
 		// use the shared WebComponent
 		ComponentMembrane webMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Web");
-		webRequestChannel = webMembrane.getChannelOut(WebRequestEvent.class);
-		webResponseChannel = webMembrane.getChannelIn(WebResponseEvent.class);
+		webRequestChannel = webMembrane.getChannelOut(WebRequest.class);
+		webResponseChannel = webMembrane.getChannelIn(WebResponse.class);
 
 		component.subscribe(webRequestChannel, "handleWebRequest");
 
@@ -153,12 +151,11 @@ public class PeerMonitorServer {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(WebResponseEvent.class)
-	public void handleWebRequest(WebRequestEvent event) {
+	@MayTriggerEventTypes(WebResponse.class)
+	public void handleWebRequest(WebRequest event) {
 		logger.debug("Handling WebRequest");
 
-		WebResponseEvent response = new WebResponseEvent(dumpViewToHtml(),
-				event, 1, 1);
+		WebResponse response = new WebResponse(dumpViewToHtml(), event, 1, 1);
 		component.triggerEvent(response, webResponseChannel);
 	}
 

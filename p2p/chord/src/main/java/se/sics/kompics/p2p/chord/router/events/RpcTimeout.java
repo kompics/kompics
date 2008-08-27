@@ -3,7 +3,7 @@ package se.sics.kompics.p2p.chord.router.events;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.EventType;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.timer.events.Alarm;
 
 /**
  * The <code>RpcTimeout</code> class
@@ -12,7 +12,7 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
  * @version $Id: RpcTimeout.java 158 2008-06-16 10:42:01Z Cosmin $
  */
 @EventType
-public final class RpcTimeout extends TimerSignalEvent {
+public final class RpcTimeout extends Alarm {
 
 	private final Event rpcRequest;
 

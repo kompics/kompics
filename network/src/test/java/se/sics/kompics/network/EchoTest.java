@@ -59,10 +59,10 @@ public class EchoTest {
 
 		// create and share the network component
 		Component serverNetworkComponent = boot.createComponent(
-				"se.sics.kompics.network.NetworkComponent", faultChannel,
+				"se.sics.kompics.network.Network", faultChannel,
 				serverNetworkSendChannel, serverNetworkDeliverChannel);
 		Component networkComponent1 = boot.createComponent(
-				"se.sics.kompics.network.NetworkComponent", faultChannel,
+				"se.sics.kompics.network.Network", faultChannel,
 				clientNetworkSendChannel, clientNetworkDeliverChannel);
 
 		serverNetworkComponent.initialize(serverSocketAddress);

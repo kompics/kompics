@@ -24,34 +24,34 @@ import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
-import se.sics.kompics.web.events.WebRequestEvent;
-import se.sics.kompics.web.events.WebResponseEvent;
+import se.sics.kompics.web.events.WebRequest;
+import se.sics.kompics.web.events.WebResponse;
 
 /**
- * The <code>WebComponent</code> class
+ * The <code>WebServer</code> class
  * 
  * @author Cosmin Arad
  * @version $Id$
  */
 @ComponentSpecification
-public final class WebComponent {
+public final class WebServer {
 
 	private static final Logger logger = LoggerFactory
-			.getLogger(WebComponent.class);
+			.getLogger(WebServer.class);
 
 	private final Component component;
 
 	private Channel requestChannel, responseChannel;
 
-	private final HashMap<WebRequestEvent, LinkedBlockingQueue<WebResponseEvent>> activeRequests;
+	private final HashMap<WebRequest, LinkedBlockingQueue<WebResponse>> activeRequests;
 
 	private long requestTimeout;
 
 	private long requestId;
 
-	public WebComponent(Component component) {
+	public WebServer(Component component) {
 		this.component = component;
-		activeRequests = new HashMap<WebRequestEvent, LinkedBlockingQueue<WebResponseEvent>>();
+		activeRequests = new HashMap<WebRequest, LinkedBlockingQueue<WebResponse>>();
 	}
 
 	@ComponentCreateMethod
@@ -85,17 +85,17 @@ public final class WebComponent {
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
 		ComponentMembrane membrane = new ComponentMembrane(component);
-		membrane.outChannel(WebRequestEvent.class, requestChannel);
-		membrane.inChannel(WebResponseEvent.class, responseChannel);
+		membrane.outChannel(WebRequest.class, requestChannel);
+		membrane.inChannel(WebResponse.class, responseChannel);
 		membrane.seal();
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
 	@EventHandlerMethod
-	public void handleWebResponseEvent(WebResponseEvent event) {
-		WebRequestEvent requestEvent = event.getRequestEvent();
+	public void handleWebResponseEvent(WebResponse event) {
+		WebRequest requestEvent = event.getRequestEvent();
 
-		LinkedBlockingQueue<WebResponseEvent> queue;
+		LinkedBlockingQueue<WebResponse> queue;
 
 		synchronized (activeRequests) {
 			queue = activeRequests.get(requestEvent);
@@ -116,11 +116,11 @@ public final class WebComponent {
 
 		String handlerId = args[1];
 
-		WebRequestEvent requestEvent = new WebRequestEvent(new BigInteger(
+		WebRequest requestEvent = new WebRequest(new BigInteger(
 				handlerId), requestId++, target.substring(target
 				.indexOf('/', 1)), request);
 
-		LinkedBlockingQueue<WebResponseEvent> queue = new LinkedBlockingQueue<WebResponseEvent>();
+		LinkedBlockingQueue<WebResponse> queue = new LinkedBlockingQueue<WebResponse>();
 
 		synchronized (activeRequests) {
 			activeRequests.put(requestEvent, queue);
@@ -130,9 +130,9 @@ public final class WebComponent {
 		component.triggerEvent(requestEvent, requestChannel);
 
 		int expectedPart = 1;
-		HashMap<Integer, WebResponseEvent> earlyResponses = new HashMap<Integer, WebResponseEvent>();
+		HashMap<Integer, WebResponse> earlyResponses = new HashMap<Integer, WebResponse>();
 		do {
-			WebResponseEvent responseEvent;
+			WebResponse responseEvent;
 			while (true) {
 				try {
 					// wait for response event

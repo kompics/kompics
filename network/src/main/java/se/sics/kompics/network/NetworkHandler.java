@@ -17,9 +17,9 @@ public class NetworkHandler extends IoHandlerAdapter {
 	private static final Logger logger = LoggerFactory
 			.getLogger(NetworkHandler.class);
 
-	private NetworkComponent networkComponent;
+	private Network networkComponent;
 
-	public NetworkHandler(NetworkComponent networkComponent) {
+	public NetworkHandler(Network networkComponent) {
 		super();
 		this.networkComponent = networkComponent;
 	}

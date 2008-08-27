@@ -28,8 +28,8 @@ import se.sics.kompics.p2p.fd.events.StopProbingPeer;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.SetAlarm;
 
 /**
  * The <code>FailureDetector</code> class
@@ -69,10 +69,8 @@ public final class FailureDetector {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane
-				.getChannelIn(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane
-				.getChannelOut(TimerSignalEvent.class);
+		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
+		timerSignalChannel = timerMembrane.getChannelOut(Alarm.class);
 
 		timerHandler = new TimerHandler(component, timerSetChannel);
 

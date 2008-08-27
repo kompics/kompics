@@ -3,7 +3,7 @@ package se.sics.kompics.timer;
 import java.util.TimerTask;
 
 import se.sics.kompics.api.Channel;
-import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.timer.events.Alarm;
 
 /**
  * 
@@ -12,16 +12,16 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
  */
 class TimerSignalTask extends TimerTask {
 
-	private TimerSignalEvent timerExpiredEvent;
+	private Alarm timerExpiredEvent;
 
 	private TimerId timerId;
 
-	private TimerComponent timerComponent;
+	private Timer timerComponent;
 
 	private Channel clientChannel;
 
-	TimerSignalTask(TimerComponent timerComponent,
-			TimerSignalEvent timerExpiredEvent, Channel clientChannel,
+	TimerSignalTask(Timer timerComponent,
+			Alarm timerExpiredEvent, Channel clientChannel,
 			TimerId timerId) {
 		super();
 		this.timerComponent = timerComponent;

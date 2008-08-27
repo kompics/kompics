@@ -35,10 +35,10 @@ import se.sics.kompics.network.events.NetworkSessionClosed;
 import se.sics.kompics.network.events.NetworkSessionOpened;
 
 @ComponentSpecification
-public class NetworkComponent {
+public class Network {
 
 	private static final Logger logger = LoggerFactory
-			.getLogger(NetworkComponent.class);
+			.getLogger(Network.class);
 
 	private Component component;
 
@@ -65,7 +65,7 @@ public class NetworkComponent {
 
 	int connectRetries;
 
-	public NetworkComponent(Component component) {
+	public Network(Component component) {
 		super();
 		this.component = component;
 	}

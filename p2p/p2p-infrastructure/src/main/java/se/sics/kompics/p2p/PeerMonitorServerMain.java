@@ -24,13 +24,13 @@ import se.sics.kompics.network.events.NetworkSessionOpened;
 import se.sics.kompics.p2p.monitor.PeerMonitorServer;
 import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
-import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
-import se.sics.kompics.timer.events.CancelTimerEvent;
-import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
-import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
-import se.sics.kompics.web.events.WebRequestEvent;
-import se.sics.kompics.web.events.WebResponseEvent;
+import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.CancelAlarm;
+import se.sics.kompics.timer.events.CancelPeriodicAlarm;
+import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.SetPeriodicAlarm;
+import se.sics.kompics.web.events.WebRequest;
+import se.sics.kompics.web.events.WebResponse;
 
 /**
  * The <code>PeerMonitorServerMain</code> class
@@ -82,15 +82,15 @@ public final class PeerMonitorServerMain {
 		Channel faultChannel = boot.getFaultChannel();
 
 		// create channels for the timer component
-		Channel timerSetChannel = boot.createChannel(SetTimerEvent.class,
-				SetPeriodicTimerEvent.class, CancelTimerEvent.class,
-				CancelPeriodicTimerEvent.class);
-		Channel timerSignalChannel = boot.createChannel(TimerSignalEvent.class);
+		Channel timerSetChannel = boot.createChannel(SetAlarm.class,
+				SetPeriodicAlarm.class, CancelAlarm.class,
+				CancelPeriodicAlarm.class);
+		Channel timerSignalChannel = boot.createChannel(Alarm.class);
 
 		// create and share the timer component
 		Component timerComponent = boot.createComponent(
-				"se.sics.kompics.timer.TimerComponent", faultChannel,
-				timerSetChannel, timerSignalChannel);
+				"se.sics.kompics.timer.Timer", faultChannel, timerSetChannel,
+				timerSignalChannel);
 		timerComponent.share("se.sics.kompics.Timer");
 
 		// create channels for the network component
@@ -101,7 +101,7 @@ public final class PeerMonitorServerMain {
 
 		// create and share the network component
 		Component networkComponent = boot.createComponent(
-				"se.sics.kompics.network.NetworkComponent", faultChannel,
+				"se.sics.kompics.network.Network", faultChannel,
 				networkSendChannel, networkDeliverChannel);
 		networkComponent.initialize(localSocketAddress);
 		networkComponent.share("se.sics.kompics.Network");
@@ -119,12 +119,12 @@ public final class PeerMonitorServerMain {
 		lnComponent.share("se.sics.kompics.p2p.network.LossyNetwork");
 
 		// create channels for the web component
-		Channel webRequestChannel = boot.createChannel(WebRequestEvent.class);
-		Channel webResponseChannel = boot.createChannel(WebResponseEvent.class);
+		Channel webRequestChannel = boot.createChannel(WebRequest.class);
+		Channel webResponseChannel = boot.createChannel(WebResponse.class);
 
 		// create and share the web component
 		Component webComponent = boot.createComponent(
-				"se.sics.kompics.web.WebComponent", faultChannel,
+				"se.sics.kompics.web.WebServer", faultChannel,
 				webRequestChannel, webResponseChannel);
 
 		webComponent.initialize(webIp, webPort, 5000);

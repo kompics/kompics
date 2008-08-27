@@ -31,7 +31,7 @@ import se.sics.kompics.p2p.bootstrap.events.ClientRetryRequest;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.SetTimerEvent;
+import se.sics.kompics.timer.events.SetAlarm;
 
 /**
  * The <code>BootstrapClient</code> class
@@ -77,8 +77,7 @@ public class BootstrapClient {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane
-				.getChannelIn(SetTimerEvent.class);
+		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
 		timerSignalChannel = component.createChannel(ClientRefreshPeer.class,
 				ClientRetryRequest.class);
 
@@ -181,7 +180,7 @@ public class BootstrapClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class, SetTimerEvent.class })
+	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class, SetAlarm.class })
 	public void handleBootstrapCompleted(BootstrapCompleted event) {
 		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress);
 
@@ -195,7 +194,7 @@ public class BootstrapClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class, SetTimerEvent.class })
+	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class, SetAlarm.class })
 	public void handleClientRefreshPeer(ClientRefreshPeer event) {
 		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress);
 

@@ -27,10 +27,10 @@ import se.sics.kompics.p2p.bootstrap.events.StartBootstrapServer;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
-import se.sics.kompics.web.events.WebRequestEvent;
-import se.sics.kompics.web.events.WebResponseEvent;
+import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.web.events.WebRequest;
+import se.sics.kompics.web.events.WebResponse;
 
 /**
  * The <code>BootstrapServer</code> class
@@ -72,10 +72,8 @@ public class BootstrapServer {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane
-				.getChannelIn(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane
-				.getChannelOut(TimerSignalEvent.class);
+		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
+		timerSignalChannel = timerMembrane.getChannelOut(Alarm.class);
 
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
@@ -87,8 +85,8 @@ public class BootstrapServer {
 		// use the shared WebComponent
 		ComponentMembrane webMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Web");
-		webRequestChannel = webMembrane.getChannelOut(WebRequestEvent.class);
-		webResponseChannel = webMembrane.getChannelIn(WebResponseEvent.class);
+		webRequestChannel = webMembrane.getChannelOut(WebRequest.class);
+		webResponseChannel = webMembrane.getChannelIn(WebResponse.class);
 
 		component.subscribe(webRequestChannel, "handleWebRequest");
 
@@ -115,7 +113,7 @@ public class BootstrapServer {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(SetTimerEvent.class)
+	@MayTriggerEventTypes(SetAlarm.class)
 	public void handleCacheResetRequest(CacheResetRequest event) {
 		// cancel all eviction timers
 		timerHandler.cancelAllOutstandingTimers();
@@ -132,7 +130,7 @@ public class BootstrapServer {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(SetTimerEvent.class)
+	@MayTriggerEventTypes(SetAlarm.class)
 	public void handleCacheAddPeerRequest(CacheAddPeerRequest event) {
 		addPeerToCache(event.getPeerAddress());
 
@@ -184,12 +182,11 @@ public class BootstrapServer {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(WebResponseEvent.class)
-	public void handleWebRequest(WebRequestEvent event) {
+	@MayTriggerEventTypes(WebResponse.class)
+	public void handleWebRequest(WebRequest event) {
 		logger.debug("Handling WebRequest");
 
-		WebResponseEvent response = new WebResponseEvent(dumpCacheToHtml(),
-				event, 1, 1);
+		WebResponse response = new WebResponse(dumpCacheToHtml(), event, 1, 1);
 		component.triggerEvent(response, webResponseChannel);
 	}
 

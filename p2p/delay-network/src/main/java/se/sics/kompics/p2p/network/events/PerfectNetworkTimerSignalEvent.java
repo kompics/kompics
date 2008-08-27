@@ -2,7 +2,7 @@ package se.sics.kompics.p2p.network.events;
 
 import se.sics.kompics.api.annotation.EventType;
 import se.sics.kompics.network.events.Message;
-import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.timer.events.Alarm;
 
 /**
  * The <code>PerfectNetworkTimerSignalEvent</code> class.
@@ -12,7 +12,7 @@ import se.sics.kompics.timer.events.TimerSignalEvent;
  *          cosmin $
  */
 @EventType
-public final class PerfectNetworkTimerSignalEvent extends TimerSignalEvent {
+public final class PerfectNetworkTimerSignalEvent extends Alarm {
 
 	private final Message networkSendEvent;
 

@@ -5,9 +5,9 @@ import java.util.HashSet;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Priority;
-import se.sics.kompics.timer.events.CancelTimerEvent;
-import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.timer.events.CancelAlarm;
+import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.Alarm;
 
 /**
  * The <code>TimerHandler</code> class
@@ -33,9 +33,9 @@ public class TimerHandler {
 		this.outstandingTimers = new HashSet<Long>();
 	}
 
-	public long setTimer(TimerSignalEvent timerExpiredEvent,
+	public long setTimer(Alarm timerExpiredEvent,
 			Channel timeoutChannel, long delay) {
-		SetTimerEvent event = new SetTimerEvent(++nextTimerId,
+		SetAlarm event = new SetAlarm(++nextTimerId,
 				timerExpiredEvent, timeoutChannel, component, delay);
 
 		outstandingTimers.add(nextTimerId);
@@ -44,14 +44,14 @@ public class TimerHandler {
 	}
 
 	public void cancelTimer(long timerId) {
-		CancelTimerEvent event = new CancelTimerEvent(component, timerId);
+		CancelAlarm event = new CancelAlarm(component, timerId);
 		component.triggerEvent(event, setTimerChannel, Priority.HIGH);
 		outstandingTimers.remove(timerId);
 	}
 
 	public void cancelAllOutstandingTimers() {
 		for (long timerId : outstandingTimers) {
-			CancelTimerEvent event = new CancelTimerEvent(component, timerId);
+			CancelAlarm event = new CancelAlarm(component, timerId);
 			component.triggerEvent(event, setTimerChannel, Priority.HIGH);
 		}
 		outstandingTimers.clear();

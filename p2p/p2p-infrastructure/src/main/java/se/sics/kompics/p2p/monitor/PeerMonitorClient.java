@@ -28,9 +28,9 @@ import se.sics.kompics.p2p.monitor.events.StopPeerMonitor;
 import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.CancelTimerEvent;
-import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.CancelAlarm;
+import se.sics.kompics.timer.events.SetAlarm;
 
 /**
  * The <code>PeerMonitorClient</code> class
@@ -67,9 +67,8 @@ public class PeerMonitorClient {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane
-				.getChannelIn(SetTimerEvent.class);
-		timerSignalChannel = component.createChannel(TimerSignalEvent.class);
+		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
+		timerSignalChannel = component.createChannel(Alarm.class);
 
 		this.timerHandler = new TimerHandler(component, timerSetChannel);
 
@@ -119,7 +118,7 @@ public class PeerMonitorClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(SetTimerEvent.class)
+	@MayTriggerEventTypes(SetAlarm.class)
 	public void handleStartPeerMonitor(StartPeerMonitor event) {
 		SendView timerEvent = new SendView(localPeerAddress.getId());
 
@@ -128,7 +127,7 @@ public class PeerMonitorClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(CancelTimerEvent.class)
+	@MayTriggerEventTypes(CancelAlarm.class)
 	public void handleStopPeerMonitor(StopPeerMonitor event) {
 		timerHandler.cancelAllOutstandingTimers();
 	}
@@ -139,8 +138,7 @@ public class PeerMonitorClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { GetChordNeighborsRequest.class,
-			SetTimerEvent.class })
+	@MayTriggerEventTypes( { GetChordNeighborsRequest.class, SetAlarm.class })
 	public void handleSendView(SendView event) {
 		logger.debug("SEND_VIEW");
 

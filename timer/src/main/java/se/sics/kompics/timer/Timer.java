@@ -1,7 +1,6 @@
 package se.sics.kompics.timer;
 
 import java.util.HashMap;
-import java.util.Timer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,23 +14,22 @@ import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
-import se.sics.kompics.timer.events.CancelPeriodicTimerEvent;
-import se.sics.kompics.timer.events.CancelTimerEvent;
-import se.sics.kompics.timer.events.SetPeriodicTimerEvent;
-import se.sics.kompics.timer.events.SetTimerEvent;
-import se.sics.kompics.timer.events.TimerSignalEvent;
+import se.sics.kompics.timer.events.CancelPeriodicAlarm;
+import se.sics.kompics.timer.events.CancelAlarm;
+import se.sics.kompics.timer.events.SetPeriodicAlarm;
+import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.Alarm;
 
 /**
- * The <code>TimerComponent</code> class
+ * The <code>Timer</code> class
  * 
  * @author Cosmin Arad
  * @version $Id$
  */
 @ComponentSpecification
-public class TimerComponent {
+public class Timer {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(TimerComponent.class);
+	private static final Logger logger = LoggerFactory.getLogger(Timer.class);
 
 	// set of active timers
 	private HashMap<TimerId, TimerSignalTask> activeTimers;
@@ -39,7 +37,7 @@ public class TimerComponent {
 	// set of active periodic timers
 	private HashMap<TimerId, PeriodicTimerSignalTask> activePeriodicTimers;
 
-	private Timer timer;
+	private java.util.Timer timer;
 
 	private final Component component;
 
@@ -48,7 +46,7 @@ public class TimerComponent {
 	/**
 	 * Generates a timer component
 	 */
-	public TimerComponent(Component component) {
+	public Timer(Component component) {
 		this.component = component;
 		this.activeTimers = new HashMap<TimerId, TimerSignalTask>();
 		this.activePeriodicTimers = new HashMap<TimerId, PeriodicTimerSignalTask>();
@@ -65,18 +63,18 @@ public class TimerComponent {
 		component.subscribe(requestChannel, "handleCancelTimerEvent");
 		component.subscribe(requestChannel, "handleCancelPeriodicTimerEvent");
 
-		this.timer = new Timer("TimerComponent@"
+		this.timer = new java.util.Timer("TimerComponent@"
 				+ Integer.toHexString(this.hashCode()));
 	}
 
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
 		ComponentMembrane membrane = new ComponentMembrane(component);
-		membrane.inChannel(SetTimerEvent.class, requestChannel);
-		membrane.inChannel(SetPeriodicTimerEvent.class, requestChannel);
-		membrane.inChannel(CancelTimerEvent.class, requestChannel);
-		membrane.inChannel(CancelPeriodicTimerEvent.class, requestChannel);
-		membrane.outChannel(TimerSignalEvent.class, signalChannel);
+		membrane.inChannel(SetAlarm.class, requestChannel);
+		membrane.inChannel(SetPeriodicAlarm.class, requestChannel);
+		membrane.inChannel(CancelAlarm.class, requestChannel);
+		membrane.inChannel(CancelPeriodicAlarm.class, requestChannel);
+		membrane.outChannel(Alarm.class, signalChannel);
 		membrane.seal();
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
@@ -88,7 +86,7 @@ public class TimerComponent {
 	}
 
 	@EventHandlerMethod
-	public void handleSetPeriodicTimerEvent(SetPeriodicTimerEvent event) {
+	public void handleSetPeriodicTimerEvent(SetPeriodicAlarm event) {
 		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
 				event.getTimerId());
 
@@ -102,7 +100,7 @@ public class TimerComponent {
 	}
 
 	@EventHandlerMethod
-	public void handleCancelPeriodicTimerEvent(CancelPeriodicTimerEvent event) {
+	public void handleCancelPeriodicTimerEvent(CancelPeriodicAlarm event) {
 		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
 				event.getTimerId());
 		if (activePeriodicTimers.containsKey(id)) {
@@ -112,7 +110,7 @@ public class TimerComponent {
 	}
 
 	@EventHandlerMethod
-	public void handleSetTimerEvent(SetTimerEvent event) {
+	public void handleSetTimerEvent(SetAlarm event) {
 
 		logger.debug("Handling SET TIMER: ", event);
 
@@ -127,7 +125,7 @@ public class TimerComponent {
 	}
 
 	@EventHandlerMethod
-	public void handleCancelTimerEvent(CancelTimerEvent event) {
+	public void handleCancelTimerEvent(CancelAlarm event) {
 		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
 				event.getTimerId());
 
@@ -138,7 +136,7 @@ public class TimerComponent {
 	}
 
 	// called by the timeout task
-	void timeout(TimerId timerId, TimerSignalEvent timerExpiredEvent,
+	void timeout(TimerId timerId, Alarm timerExpiredEvent,
 			Channel clientChannel) {
 		activeTimers.remove(timerId);
 

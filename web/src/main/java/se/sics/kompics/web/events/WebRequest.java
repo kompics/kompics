@@ -8,13 +8,13 @@ import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.EventType;
 
 /**
- * The <code>WebRequestEvent</code> class
+ * The <code>WebRequest</code> class
  * 
  * @author Cosmin Arad
  * @version $Id$
  */
 @EventType
-public final class WebRequestEvent implements Event {
+public final class WebRequest implements Event {
 
 	private final long id;
 
@@ -24,7 +24,7 @@ public final class WebRequestEvent implements Event {
 
 	private final Request request;
 
-	public WebRequestEvent(BigInteger destination, long id, String target,
+	public WebRequest(BigInteger destination, long id, String target,
 			Request request) {
 		super();
 		this.destination = destination;
@@ -64,7 +64,7 @@ public final class WebRequestEvent implements Event {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		WebRequestEvent other = (WebRequestEvent) obj;
+		WebRequest other = (WebRequest) obj;
 		if (destination == null) {
 			if (other.destination != null)
 				return false;

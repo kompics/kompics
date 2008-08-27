@@ -23,7 +23,7 @@ import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkTimerSignalEvent;
 import se.sics.kompics.p2p.network.topology.KingMatrix;
-import se.sics.kompics.timer.events.SetTimerEvent;
+import se.sics.kompics.timer.events.SetAlarm;
 
 /**
  * The <code>PeerMonitor</code> class
@@ -65,7 +65,7 @@ public final class PerfectNetwork {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		timerSetChannel = timerMembrane.getChannelIn(SetTimerEvent.class);
+		timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
 
 		// use a private channel for TimerSignal events
 		timerSignalChannel = component
@@ -112,7 +112,7 @@ public final class PerfectNetwork {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetTimerEvent.class, Message.class })
+	@MayTriggerEventTypes( { SetAlarm.class, Message.class })
 	public void handlePerfectNetworkSendEvent(PerfectNetworkSendEvent event) {
 		logger.debug("Handling send1 {} to {}.", event
 				.getPerfectNetworkDeliverEvent(), event.getDestination());
@@ -141,8 +141,8 @@ public final class PerfectNetwork {
 			// delay the sending according to the latency
 			PerfectNetworkTimerSignalEvent tse = new PerfectNetworkTimerSignalEvent(
 					pnMessage);
-			SetTimerEvent ste = new SetTimerEvent(0, tse, timerSignalChannel,
-					component, latency);
+			SetAlarm ste = new SetAlarm(0, tse, timerSignalChannel, component,
+					latency);
 			component.triggerEvent(ste, timerSetChannel, Priority.HIGH);
 		} else {
 			// send immediately

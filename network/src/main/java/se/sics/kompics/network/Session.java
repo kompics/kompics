@@ -38,11 +38,11 @@ public class Session implements IoFutureListener<IoFuture> {
 
 	private boolean connected;
 
-	private NetworkComponent component;
+	private Network component;
 	private int retries;
 
 	public Session(IoConnector ioConnector, Transport protocol,
-			InetSocketAddress address, NetworkComponent component) {
+			InetSocketAddress address, Network component) {
 		super();
 		this.ioConnector = ioConnector;
 		this.protocol = protocol;
