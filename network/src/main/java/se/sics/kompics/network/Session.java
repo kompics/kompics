@@ -14,7 +14,7 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.kompics.network.events.NetworkDeliverEvent;
+import se.sics.kompics.network.events.Message;
 
 public class Session implements IoFutureListener<IoFuture> {
 
@@ -32,7 +32,7 @@ public class Session implements IoFutureListener<IoFuture> {
 
 	private InetSocketAddress remoteAddress;
 
-	private LinkedList<NetworkDeliverEvent> pendingMessages;
+	private LinkedList<Message> pendingMessages;
 
 	private Lock lock;
 
@@ -47,7 +47,7 @@ public class Session implements IoFutureListener<IoFuture> {
 		this.ioConnector = ioConnector;
 		this.protocol = protocol;
 		this.remoteAddress = address;
-		this.pendingMessages = new LinkedList<NetworkDeliverEvent>();
+		this.pendingMessages = new LinkedList<Message>();
 
 		this.component = component;
 		this.retries = 0;
@@ -70,7 +70,7 @@ public class Session implements IoFutureListener<IoFuture> {
 			// send pending messages
 			lock.lock();
 			try {
-				for (NetworkDeliverEvent deliverEvent : pendingMessages) {
+				for (Message deliverEvent : pendingMessages) {
 					logger.debug("Sending message {} to {}", deliverEvent
 							.toString(), deliverEvent.getDestination());
 
@@ -95,7 +95,7 @@ public class Session implements IoFutureListener<IoFuture> {
 		}
 	}
 
-	public void sendMessage(NetworkDeliverEvent deliverEvent) {
+	public void sendMessage(Message deliverEvent) {
 		lock.lock();
 		try {
 			if (connected) {

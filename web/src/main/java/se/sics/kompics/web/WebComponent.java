@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
@@ -85,10 +84,10 @@ public final class WebComponent {
 
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(WebRequestEvent.class, requestChannel);
-		map.put(WebResponseEvent.class, responseChannel);
-		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		ComponentMembrane membrane = new ComponentMembrane(component);
+		membrane.outChannel(WebRequestEvent.class, requestChannel);
+		membrane.inChannel(WebResponseEvent.class, responseChannel);
+		membrane.seal();
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 

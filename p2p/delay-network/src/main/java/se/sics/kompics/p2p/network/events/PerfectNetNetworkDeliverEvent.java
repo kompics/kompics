@@ -2,16 +2,17 @@ package se.sics.kompics.p2p.network.events;
 
 import se.sics.kompics.api.annotation.EventType;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.network.events.NetworkDeliverEvent;
+import se.sics.kompics.network.events.Message;
 
 /**
  * The <code>PerfectNetNetworkDeliverEvent</code> class.
  * 
  * @author Cosmin Arad
- * @version $Id$
+ * @version $Id: PerfectNetNetworkDeliverEvent.java 144 2008-06-04 15:27:08Z
+ *          cosmin $
  */
 @EventType
-public final class PerfectNetNetworkDeliverEvent extends NetworkDeliverEvent {
+public final class PerfectNetNetworkDeliverEvent extends Message {
 
 	/**
 	 * 

@@ -91,16 +91,17 @@ public class ChordIterativeRouter {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(SetTimerEvent.class);
 		timerSignalChannel = component.createChannel(FixFingers.class,
 				RpcTimeout.class);
 
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannel(PerfectNetworkSendEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
 		Channel pnDeliverChannel = pnMembrane
-				.getChannel(PerfectNetworkDeliverEvent.class);
+				.getChannelOut(PerfectNetworkDeliverEvent.class);
 
 		fixFingersLookupChannel = component.createChannel(
 				ChordLookupResponse.class, ChordLookupFailed.class);

@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
@@ -29,10 +28,9 @@ import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.network.events.NetworkConnectionRefused;
-import se.sics.kompics.network.events.NetworkDeliverEvent;
 import se.sics.kompics.network.events.NetworkException;
-import se.sics.kompics.network.events.NetworkSendEvent;
 import se.sics.kompics.network.events.NetworkSessionClosed;
 import se.sics.kompics.network.events.NetworkSessionOpened;
 
@@ -77,7 +75,7 @@ public class NetworkComponent {
 		this.sendChannel = sendChannel;
 		this.deliverChannel = deliverChannel;
 
-		component.subscribe(sendChannel, "handleNetworkSendEvent");
+		component.subscribe(sendChannel, "handleMessage");
 
 		tcpSession = new HashMap<InetSocketAddress, Session>();
 		udpSession = new HashMap<InetSocketAddress, Session>();
@@ -88,10 +86,14 @@ public class NetworkComponent {
 
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(NetworkSendEvent.class, sendChannel);
-		map.put(NetworkDeliverEvent.class, deliverChannel);
-		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		ComponentMembrane membrane = new ComponentMembrane(component);
+		membrane.inChannel(Message.class, sendChannel);
+		membrane.outChannel(Message.class, deliverChannel);
+		membrane.outChannel(NetworkException.class, deliverChannel);
+		membrane.outChannel(NetworkSessionOpened.class, deliverChannel);
+		membrane.outChannel(NetworkSessionClosed.class, deliverChannel);
+		membrane.outChannel(NetworkConnectionRefused.class, deliverChannel);
+		membrane.seal();
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
@@ -177,29 +179,28 @@ public class NetworkComponent {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(NetworkDeliverEvent.class)
-	public void handleNetworkSendEvent(NetworkSendEvent event) {
-		logger.debug("Handling NetSendEvent {} from {} to {} protocol {}",
-				new Object[] { event.getNetworkDeliverEvent(),
-						event.getSource(), event.getDestination(),
-						event.getProtocol() });
+	@MayTriggerEventTypes(Message.class)
+	public void handleMessage(Message message) {
+		logger.debug("Handling Message {} from {} to {} protocol {}",
+				new Object[] { message, message.getSource(),
+						message.getDestination(), message.getProtocol() });
 
-		NetworkDeliverEvent deliverEvent = event.getNetworkDeliverEvent();
-		if (event.getDestination().getIp().equals(event.getSource().getIp())
-				&& event.getDestination().getPort() == event.getSource()
+		if (message.getDestination().getIp()
+				.equals(message.getSource().getIp())
+				&& message.getDestination().getPort() == message.getSource()
 						.getPort()) {
 			// deliver locally
-			component.triggerEvent(deliverEvent, deliverChannel);
+			component.triggerEvent(message, deliverChannel);
 			return;
 		}
 
-		Transport protocol = event.getProtocol();
-		Address destination = event.getDestination();
+		Transport protocol = message.getProtocol();
+		Address destination = message.getDestination();
 
 		Session session = protocol.equals(Transport.TCP) ? getTcpSession(destination)
 				: getUdpSession(destination);
 
-		session.sendMessage(deliverEvent);
+		session.sendMessage(message);
 	}
 
 	private Session getTcpSession(Address destination) {
@@ -250,7 +251,7 @@ public class NetworkComponent {
 				.getRemoteAddress()), deliverChannel);
 	}
 
-	void deliverMessage(NetworkDeliverEvent message, Transport protocol) {
+	void deliverMessage(Message message, Transport protocol) {
 		logger.debug("Delivering message {} from {} to {} protocol {}",
 				new Object[] { message.toString(), message.getSource(),
 						message.getDestination(), message.getProtocol() });

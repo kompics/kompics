@@ -6,7 +6,6 @@ import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
-import se.sics.kompics.network.events.NetworkSendEvent;
 
 @ComponentSpecification
 public class EchoClient {
@@ -40,10 +39,8 @@ public class EchoClient {
 		for (int i = 0; i < count; i++) {
 			Thread.sleep(sleep);
 
-			EchoMessage message = new EchoMessage(client, server, i);
-			NetworkSendEvent sendEvent = new NetworkSendEvent(message, client,
-					server, Transport.TCP);
-			component.triggerEvent(sendEvent, sendChannel);
+			EchoMessage echoMessage = new EchoMessage(client, server, i);
+			component.triggerEvent(echoMessage, sendChannel);
 
 			messagesInfo[i] = 0;
 		}

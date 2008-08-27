@@ -1,7 +1,6 @@
 package se.sics.kompics.p2p.network;
 
 import java.math.BigInteger;
-import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.EventAttributeFilter;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
@@ -19,9 +17,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.network.Transport;
-import se.sics.kompics.network.events.NetworkDeliverEvent;
-import se.sics.kompics.network.events.NetworkSendEvent;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.network.events.PerfectNetNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
@@ -69,7 +65,7 @@ public final class PerfectNetwork {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
+		timerSetChannel = timerMembrane.getChannelIn(SetTimerEvent.class);
 
 		// use a private channel for TimerSignal events
 		timerSignalChannel = component
@@ -78,9 +74,8 @@ public final class PerfectNetwork {
 		// use shared network component
 		ComponentMembrane networkMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Network");
-		netSendChannel = networkMembrane.getChannel(NetworkSendEvent.class);
-		netDeliverChannel = networkMembrane
-				.getChannel(NetworkDeliverEvent.class);
+		netSendChannel = networkMembrane.getChannelIn(Message.class);
+		netDeliverChannel = networkMembrane.getChannelOut(Message.class);
 
 		component.subscribe(timerSignalChannel,
 				"handlePerfectNetworkTimerSignalEvent");
@@ -89,10 +84,9 @@ public final class PerfectNetwork {
 
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(PerfectNetworkSendEvent.class, sendChannel);
-		map.put(PerfectNetworkDeliverEvent.class, deliverChannel);
-		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		ComponentMembrane membrane = new ComponentMembrane(component);
+		membrane.inChannel(PerfectNetworkSendEvent.class, sendChannel);
+		membrane.outChannel(PerfectNetworkDeliverEvent.class, deliverChannel);
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
@@ -118,7 +112,7 @@ public final class PerfectNetwork {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetTimerEvent.class, NetworkSendEvent.class })
+	@MayTriggerEventTypes( { SetTimerEvent.class, Message.class })
 	public void handlePerfectNetworkSendEvent(PerfectNetworkSendEvent event) {
 		logger.debug("Handling send1 {} to {}.", event
 				.getPerfectNetworkDeliverEvent(), event.getDestination());
@@ -137,36 +131,31 @@ public final class PerfectNetwork {
 
 		// make a PerfectNetNetworkDeliverEvent to be delivered at the
 		// destination
-		PerfectNetNetworkDeliverEvent pnNetworkDeliverEvent = new PerfectNetNetworkDeliverEvent(
+		PerfectNetNetworkDeliverEvent pnMessage = new PerfectNetNetworkDeliverEvent(
 				event.getPerfectNetworkDeliverEvent(), localAddress,
 				destination);
-
-		// create a NetworkSendEvent containing a PerfectNetNetworkDeliverEvent
-		NetworkSendEvent nse = new NetworkSendEvent(pnNetworkDeliverEvent,
-				localAddress, destination, Transport.TCP);
 
 		long latency = king[localKingId][destination.getId().mod(
 				BigInteger.valueOf(KingMatrix.SIZE)).intValue()];
 		if (latency > 0) {
 			// delay the sending according to the latency
 			PerfectNetworkTimerSignalEvent tse = new PerfectNetworkTimerSignalEvent(
-					nse);
+					pnMessage);
 			SetTimerEvent ste = new SetTimerEvent(0, tse, timerSignalChannel,
 					component, latency);
 			component.triggerEvent(ste, timerSetChannel, Priority.HIGH);
 		} else {
 			// send immediately
-			component.triggerEvent(nse, netSendChannel);
+			component.triggerEvent(pnMessage, netSendChannel);
 		}
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(NetworkSendEvent.class)
+	@MayTriggerEventTypes(Message.class)
 	public void handlePerfectNetworkTimerSignalEvent(
 			PerfectNetworkTimerSignalEvent event) {
 		logger.debug("Handling send2 {} to {}.",
-				((PerfectNetNetworkDeliverEvent) event.getNetworkSendEvent()
-						.getNetworkDeliverEvent())
+				((PerfectNetNetworkDeliverEvent) event.getNetworkSendEvent())
 						.getPerfectNetworkDeliverEvent(), event
 						.getNetworkSendEvent().getDestination());
 

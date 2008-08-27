@@ -70,15 +70,16 @@ public class PeerApplication {
 		ComponentMembrane bootMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.bootstrap.BootstrapClient");
 		bootstrapRequestChannel = bootMembrane
-				.getChannel(BootstrapRequest.class);
+				.getChannelIn(BootstrapRequest.class);
 		bootstrapResponseChannel = bootMembrane
-				.getChannel(BootstrapResponse.class);
+				.getChannelOut(BootstrapResponse.class);
 
 		// use shared ChordRing component
 		ComponentMembrane ringMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.chord.Chord");
-		chordRequestChannel = ringMembrane.getChannel(JoinRing.class);
-		chordResponseChannel = ringMembrane.getChannel(JoinRingCompleted.class);
+		chordRequestChannel = ringMembrane.getChannelIn(JoinRing.class);
+		chordResponseChannel = ringMembrane
+				.getChannelOut(JoinRingCompleted.class);
 
 		component
 				.subscribe(bootstrapResponseChannel, "handleBootstrapResponse");

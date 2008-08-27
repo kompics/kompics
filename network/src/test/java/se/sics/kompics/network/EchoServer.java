@@ -5,7 +5,6 @@ import se.sics.kompics.api.Component;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
-import se.sics.kompics.network.events.NetworkSendEvent;
 
 @ComponentSpecification
 public class EchoServer {
@@ -39,9 +38,7 @@ public class EchoServer {
 		// send echo reply
 		EchoMessage message = new EchoMessage(event.getDestination(), event
 				.getSource(), seq);
-		NetworkSendEvent sendEvent = new NetworkSendEvent(message, event
-				.getDestination(), event.getSource(), Transport.TCP);
-		component.triggerEvent(sendEvent, sendChannel);
+		component.triggerEvent(message, sendChannel);
 
 		EchoTest.echoed++;
 

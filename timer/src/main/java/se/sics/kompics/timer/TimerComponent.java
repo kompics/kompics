@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
@@ -72,13 +71,13 @@ public class TimerComponent {
 
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(SetTimerEvent.class, requestChannel);
-		map.put(SetPeriodicTimerEvent.class, requestChannel);
-		map.put(CancelTimerEvent.class, requestChannel);
-		map.put(CancelPeriodicTimerEvent.class, requestChannel);
-		map.put(TimerSignalEvent.class, signalChannel);
-		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		ComponentMembrane membrane = new ComponentMembrane(component);
+		membrane.inChannel(SetTimerEvent.class, requestChannel);
+		membrane.inChannel(SetPeriodicTimerEvent.class, requestChannel);
+		membrane.inChannel(CancelTimerEvent.class, requestChannel);
+		membrane.inChannel(CancelPeriodicTimerEvent.class, requestChannel);
+		membrane.outChannel(TimerSignalEvent.class, signalChannel);
+		membrane.seal();
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 

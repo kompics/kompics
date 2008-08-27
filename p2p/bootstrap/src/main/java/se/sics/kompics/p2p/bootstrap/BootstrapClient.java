@@ -3,7 +3,6 @@ package se.sics.kompics.p2p.bootstrap;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
@@ -79,16 +77,17 @@ public class BootstrapClient {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(SetTimerEvent.class);
 		timerSignalChannel = component.createChannel(ClientRefreshPeer.class,
 				ClientRetryRequest.class);
 
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannel(PerfectNetworkSendEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
 		Channel pnDeliverChannel = pnMembrane
-				.getChannel(PerfectNetworkDeliverEvent.class);
+				.getChannelOut(PerfectNetworkDeliverEvent.class);
 
 		component.subscribe(this.requestChannel, "handleBootstrapRequest");
 		component.subscribe(this.requestChannel, "handleBootstrapCompleted");
@@ -102,10 +101,10 @@ public class BootstrapClient {
 
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(BootstrapRequest.class, requestChannel);
-		map.put(BootstrapResponse.class, responseChannel);
-		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		ComponentMembrane membrane = new ComponentMembrane(component);
+		membrane.inChannel(BootstrapRequest.class, requestChannel);
+		membrane.outChannel(BootstrapResponse.class, responseChannel);
+		membrane.seal();
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 

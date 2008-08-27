@@ -1,8 +1,8 @@
 package se.sics.kompics.network;
 
-import se.sics.kompics.network.events.NetworkDeliverEvent;
+import se.sics.kompics.network.events.Message;
 
-public class EchoMessage extends NetworkDeliverEvent {
+public class EchoMessage extends Message {
 
 	/**
 	 * 

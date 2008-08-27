@@ -94,21 +94,22 @@ public class ChordRing {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(SetTimerEvent.class);
 		timerSignalChannel = component
 				.createChannel(StabilizeTimerSignal.class);
 
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannel(PerfectNetworkSendEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
 		Channel pnDeliverChannel = pnMembrane
-				.getChannel(PerfectNetworkDeliverEvent.class);
+				.getChannelOut(PerfectNetworkDeliverEvent.class);
 
 		// use shared FailureDetector component
 		ComponentMembrane fdMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.fd.FailureDetector");
-		fdRequestChannel = fdMembrane.getChannel(StartProbingPeer.class);
+		fdRequestChannel = fdMembrane.getChannelIn(StartProbingPeer.class);
 		fdNotificationChannel = component
 				.createChannel(PeerFailureSuspicion.class);
 

@@ -62,8 +62,9 @@ public class Application {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane.getChannel(TimerSignalEvent.class);
+		timerSetChannel = timerMembrane.getChannelIn(SetTimerEvent.class);
+		timerSignalChannel = timerMembrane
+				.getChannelOut(TimerSignalEvent.class);
 
 		this.peerClusterCommandChannel = peerClusterCommandChannel;
 

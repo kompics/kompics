@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
@@ -61,7 +60,7 @@ public class PeerCluster {
 	@EventHandlerMethod
 	public void handleJoinPeer(JoinPeer event) {
 		ComponentMembrane membrane = createPeer(event.getPeerId());
-		Channel peerChannel = membrane.getChannel(JoinPeer.class);
+		Channel peerChannel = membrane.getChannelIn(JoinPeer.class);
 
 		component.triggerEvent(event, peerChannel);
 	}
@@ -69,7 +68,7 @@ public class PeerCluster {
 	@EventHandlerMethod
 	public void handleLeavePeer(LeavePeer event) {
 		ComponentMembrane membrane = peers.get(event.getPeerId());
-		Channel peerChannel = membrane.getChannel(LeavePeer.class);
+		Channel peerChannel = membrane.getChannelIn(LeavePeer.class);
 
 		component.triggerEvent(event, peerChannel);
 	}
@@ -77,7 +76,7 @@ public class PeerCluster {
 	@EventHandlerMethod
 	public void handleFailPeer(FailPeer event) {
 		ComponentMembrane membrane = peers.get(event.getPeerId());
-		Channel peerChannel = membrane.getChannel(FailPeer.class);
+		Channel peerChannel = membrane.getChannelIn(FailPeer.class);
 
 		component.triggerEvent(event, peerChannel);
 	}
@@ -94,12 +93,11 @@ public class PeerCluster {
 		peer.initialize(new Address(localSocketAddress.getAddress(),
 				localSocketAddress.getPort(), peerId));
 
-		// create a membrane for the port instance component
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(JoinPeer.class, peerChannel);
-		map.put(LeavePeer.class, peerChannel);
-		map.put(FailPeer.class, peerChannel);
-		ComponentMembrane membrane = new ComponentMembrane(peer, map);
+		ComponentMembrane membrane = new ComponentMembrane(peer);
+		membrane.inChannel(JoinPeer.class, peerChannel);
+		membrane.inChannel(LeavePeer.class, peerChannel);
+		membrane.inChannel(FailPeer.class, peerChannel);
+		membrane.seal();
 		peers.put(peerId, membrane);
 
 		logger.debug("Created Peer {}", peerId);

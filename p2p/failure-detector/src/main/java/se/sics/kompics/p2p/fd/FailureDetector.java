@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
@@ -70,17 +69,19 @@ public final class FailureDetector {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane.getChannel(TimerSignalEvent.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(SetTimerEvent.class);
+		timerSignalChannel = timerMembrane
+				.getChannelOut(TimerSignalEvent.class);
 
 		timerHandler = new TimerHandler(component, timerSetChannel);
 
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannel(PerfectNetworkSendEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
 		Channel pnDeliverChannel = pnMembrane
-				.getChannel(PerfectNetworkDeliverEvent.class);
+				.getChannelOut(PerfectNetworkDeliverEvent.class);
 
 		component.subscribe(timerSignalChannel, "handleSendPing");
 		component.subscribe(timerSignalChannel, "handlePongTimedOut");
@@ -95,11 +96,11 @@ public final class FailureDetector {
 
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(StartProbingPeer.class, requestChannel);
-		map.put(StopProbingPeer.class, requestChannel);
-		map.put(StatusRequest.class, requestChannel);
-		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		ComponentMembrane membrane = new ComponentMembrane(component);
+		membrane.inChannel(StartProbingPeer.class, requestChannel);
+		membrane.inChannel(StopProbingPeer.class, requestChannel);
+		membrane.inChannel(StatusRequest.class, requestChannel);
+		membrane.seal();
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 

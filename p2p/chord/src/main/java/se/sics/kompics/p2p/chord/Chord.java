@@ -1,7 +1,6 @@
 package se.sics.kompics.p2p.chord;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
@@ -101,16 +99,16 @@ public class Chord {
 
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(CreateRing.class, requestChannel);
-		map.put(JoinRing.class, requestChannel);
-		map.put(LeaveRing.class, requestChannel);
-		map.put(ChordLookupRequest.class, requestChannel);
-		map.put(GetChordResponsibility.class, requestChannel);
-		map.put(GetChordNeighborsRequest.class, requestChannel);
-		map.put(JoinRingCompleted.class, notificationChannel);
-		map.put(ChordResponsibility.class, notificationChannel);
-		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		ComponentMembrane membrane = new ComponentMembrane(component);
+		membrane.inChannel(CreateRing.class, requestChannel);
+		membrane.inChannel(JoinRing.class, requestChannel);
+		membrane.inChannel(LeaveRing.class, requestChannel);
+		membrane.inChannel(ChordLookupRequest.class, requestChannel);
+		membrane.inChannel(GetChordResponsibility.class, requestChannel);
+		membrane.inChannel(GetChordNeighborsRequest.class, requestChannel);
+		membrane.outChannel(JoinRingCompleted.class, notificationChannel);
+		membrane.outChannel(ChordResponsibility.class, notificationChannel);
+		membrane.seal();
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 

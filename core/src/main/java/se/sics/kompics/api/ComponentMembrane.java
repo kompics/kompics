@@ -1,28 +1,50 @@
 package se.sics.kompics.api;
 
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 public class ComponentMembrane {
 
 	private final Component component;
 
-	private final HashMap<Class<? extends Event>, Channel> channels;
+	private final HashMap<Class<? extends Event>, Channel> inboundChannels;
 
-	public ComponentMembrane(Component component,
-			Map<Class<? extends Event>, Channel> map) {
+	private final HashMap<Class<? extends Event>, Channel> outboundChannels;
+
+	private boolean sealed;
+
+	public ComponentMembrane(Component component) {
 		this.component = component;
-		channels = new HashMap<Class<? extends Event>, Channel>();
+		this.sealed = false;
+		this.inboundChannels = new HashMap<Class<? extends Event>, Channel>();
+		this.outboundChannels = new HashMap<Class<? extends Event>, Channel>();
+	}
 
-		Set<Map.Entry<Class<? extends Event>, Channel>> set = map.entrySet();
-		for (Map.Entry<Class<? extends Event>, Channel> entry : set) {
-			channels.put(entry.getKey(), entry.getValue());
+	public void inChannel(Class<? extends Event> eventType, Channel channel) {
+		if (!sealed) {
+			inboundChannels.put(eventType, channel);
+		} else {
+			throw new RuntimeException("ComponentMembrane already sealed.");
 		}
 	}
 
-	public Channel getChannel(Class<? extends Event> eventType) {
-		return channels.get(eventType);
+	public void outChannel(Class<? extends Event> eventType, Channel channel) {
+		if (!sealed) {
+			outboundChannels.put(eventType, channel);
+		} else {
+			throw new RuntimeException("ComponentMembrane already sealed.");
+		}
+	}
+
+	public void seal() {
+		sealed = true;
+	}
+
+	public Channel getChannelIn(Class<? extends Event> eventType) {
+		return inboundChannels.get(eventType);
+	}
+
+	public Channel getChannelOut(Class<? extends Event> eventType) {
+		return outboundChannels.get(eventType);
 	}
 
 	public Component getComponent() {

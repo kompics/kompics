@@ -11,10 +11,9 @@ import org.junit.Test;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Kompics;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.network.events.NetworkConnectionRefused;
-import se.sics.kompics.network.events.NetworkDeliverEvent;
 import se.sics.kompics.network.events.NetworkException;
-import se.sics.kompics.network.events.NetworkSendEvent;
 import se.sics.kompics.network.events.NetworkSessionClosed;
 import se.sics.kompics.network.events.NetworkSessionOpened;
 
@@ -50,17 +49,13 @@ public class EchoTest {
 		Channel faultChannel = boot.getFaultChannel();
 
 		// create channels for the network component
-		Channel serverNetworkSendChannel = boot
-				.createChannel(NetworkSendEvent.class);
-		Channel serverNetworkDeliverChannel = boot.createChannel(
-				NetworkDeliverEvent.class, NetworkConnectionRefused.class,
-				NetworkSessionClosed.class, NetworkSessionOpened.class,
-				NetworkException.class);
+		Channel serverNetworkSendChannel = boot.createChannel(Message.class);
+		Channel serverNetworkDeliverChannel = boot.createChannel(Message.class,
+				NetworkConnectionRefused.class, NetworkSessionClosed.class,
+				NetworkSessionOpened.class, NetworkException.class);
 
-		Channel clientNetworkSendChannel = boot
-				.createChannel(NetworkSendEvent.class);
-		Channel clientNetworkDeliverChannel = boot
-				.createChannel(NetworkDeliverEvent.class);
+		Channel clientNetworkSendChannel = boot.createChannel(Message.class);
+		Channel clientNetworkDeliverChannel = boot.createChannel(Message.class);
 
 		// create and share the network component
 		Component serverNetworkComponent = boot.createComponent(

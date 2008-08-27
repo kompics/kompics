@@ -1,7 +1,6 @@
 package se.sics.kompics.p2p.network;
 
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.Properties;
 import java.util.Random;
 
@@ -11,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.EventAttributeFilter;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
@@ -21,9 +19,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.network.Transport;
-import se.sics.kompics.network.events.NetworkDeliverEvent;
-import se.sics.kompics.network.events.NetworkSendEvent;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.network.events.LossyNetNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
@@ -75,7 +71,7 @@ public final class LossyNetwork {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
+		timerSetChannel = timerMembrane.getChannelIn(SetTimerEvent.class);
 
 		// use a private channel for TimerSignal events
 		timerSignalChannel = component
@@ -84,9 +80,8 @@ public final class LossyNetwork {
 		// use shared network component
 		ComponentMembrane networkMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Network");
-		netSendChannel = networkMembrane.getChannel(NetworkSendEvent.class);
-		netDeliverChannel = networkMembrane
-				.getChannel(NetworkDeliverEvent.class);
+		netSendChannel = networkMembrane.getChannelIn(Message.class);
+		netDeliverChannel = networkMembrane.getChannelOut(Message.class);
 
 		component.subscribe(timerSignalChannel,
 				"handleLossyNetworkTimerSignalEvent");
@@ -95,10 +90,9 @@ public final class LossyNetwork {
 
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
-		HashMap<Class<? extends Event>, Channel> map = new HashMap<Class<? extends Event>, Channel>();
-		map.put(LossyNetworkSendEvent.class, sendChannel);
-		map.put(LossyNetworkDeliverEvent.class, deliverChannel);
-		ComponentMembrane membrane = new ComponentMembrane(component, map);
+		ComponentMembrane membrane = new ComponentMembrane(component);
+		membrane.inChannel(LossyNetworkSendEvent.class, sendChannel);
+		membrane.outChannel(LossyNetworkDeliverEvent.class, deliverChannel);
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
@@ -129,7 +123,7 @@ public final class LossyNetwork {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetTimerEvent.class, NetworkSendEvent.class })
+	@MayTriggerEventTypes( { SetTimerEvent.class, Message.class })
 	public void handleLossyNetworkSendEvent(LossyNetworkSendEvent event) {
 		logger.debug("Handling send {} to {}.", event
 				.getLossyNetworkDeliverEvent(), event.getDestination());
@@ -152,30 +146,26 @@ public final class LossyNetwork {
 		}
 
 		// make a LossyNetNetworkDeliverEvent to be delivered at the destination
-		LossyNetNetworkDeliverEvent lnNetworkDeliverEvent = new LossyNetNetworkDeliverEvent(
+		LossyNetNetworkDeliverEvent lnMessage = new LossyNetNetworkDeliverEvent(
 				event.getLossyNetworkDeliverEvent(), localAddress, destination);
-
-		// create a NetworkSendEvent containing a LossyNetNetworkDeliverEvent
-		NetworkSendEvent nse = new NetworkSendEvent(lnNetworkDeliverEvent,
-				localAddress, destination, Transport.TCP);
 
 		long latency = king[localKingId][destination.getId().mod(
 				BigInteger.valueOf(KingMatrix.SIZE)).intValue()];
 		if (latency > 0) {
 			// delay the sending according to the latency
 			LossyNetworkTimerSignalEvent tse = new LossyNetworkTimerSignalEvent(
-					nse);
+					lnMessage);
 			SetTimerEvent ste = new SetTimerEvent(0, tse, timerSignalChannel,
 					component, latency);
 			component.triggerEvent(ste, timerSetChannel, Priority.HIGH);
 		} else {
 			// send immediately
-			component.triggerEvent(nse, netSendChannel);
+			component.triggerEvent(lnMessage, netSendChannel);
 		}
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(NetworkSendEvent.class)
+	@MayTriggerEventTypes(Message.class)
 	public void handleLossyNetworkTimerSignalEvent(
 			LossyNetworkTimerSignalEvent event) {
 		component.triggerEvent(event.getNetworkSendEvent(), netSendChannel);

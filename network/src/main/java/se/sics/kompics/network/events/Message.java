@@ -8,14 +8,14 @@ import se.sics.kompics.network.Address;
 import se.sics.kompics.network.Transport;
 
 /**
- * The <code>NetworkDeliverEvent</code> class.
+ * The <code>Message</code> class.
  * 
  * @author Cosmin Arad
  * @version $Id$
  */
 @SuppressWarnings("serial")
 @EventType
-public abstract class NetworkDeliverEvent implements Event, Serializable {
+public abstract class Message implements Event, Serializable {
 
 	private final Address source;
 
@@ -23,9 +23,16 @@ public abstract class NetworkDeliverEvent implements Event, Serializable {
 
 	private transient Transport protocol;
 
-	protected NetworkDeliverEvent(Address source, Address destination) {
+	protected Message(Address source, Address destination) {
 		this.source = source;
 		this.destination = destination;
+		this.protocol = Transport.TCP;
+	}
+
+	protected Message(Address source, Address destination, Transport protocol) {
+		this.source = source;
+		this.destination = destination;
+		this.protocol = protocol;
 	}
 
 	public final Address getSource() {

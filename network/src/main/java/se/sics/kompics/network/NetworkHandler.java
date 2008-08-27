@@ -7,7 +7,7 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.kompics.network.events.NetworkDeliverEvent;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.network.events.NetworkException;
 import se.sics.kompics.network.events.NetworkSessionClosed;
 import se.sics.kompics.network.events.NetworkSessionOpened;
@@ -46,7 +46,7 @@ public class NetworkHandler extends IoHandlerAdapter {
 
 		logger.debug("Message received from {}", session.getRemoteAddress());
 		networkComponent
-				.deliverMessage((NetworkDeliverEvent) message, protocol);
+				.deliverMessage((Message) message, protocol);
 	}
 
 	@Override

@@ -67,7 +67,8 @@ public class PeerMonitorClient {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(SetTimerEvent.class);
 		timerSignalChannel = component.createChannel(TimerSignalEvent.class);
 
 		this.timerHandler = new TimerHandler(component, timerSetChannel);
@@ -75,15 +76,15 @@ public class PeerMonitorClient {
 		// use shared LossyNetwork component
 		ComponentMembrane lnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.LossyNetwork");
-		lnSendChannel = lnMembrane.getChannel(LossyNetworkSendEvent.class);
+		lnSendChannel = lnMembrane.getChannelIn(LossyNetworkSendEvent.class);
 		Channel lnDeliverChannel = lnMembrane
-				.getChannel(LossyNetworkDeliverEvent.class);
+				.getChannelOut(LossyNetworkDeliverEvent.class);
 
 		// use shared Chord component
 		ComponentMembrane crMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.chord.Chord");
 		chordRequestChannel = crMembrane
-				.getChannel(GetChordNeighborsRequest.class);
+				.getChannelIn(GetChordNeighborsRequest.class);
 		chordResponseChannel = component
 				.createChannel(GetChordNeighborsResponse.class);
 

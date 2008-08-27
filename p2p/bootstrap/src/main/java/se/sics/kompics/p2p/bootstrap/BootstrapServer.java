@@ -72,21 +72,23 @@ public class BootstrapServer {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane.getChannel(TimerSignalEvent.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(SetTimerEvent.class);
+		timerSignalChannel = timerMembrane
+				.getChannelOut(TimerSignalEvent.class);
 
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannel(PerfectNetworkSendEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
 		Channel pnDeliverChannel = pnMembrane
-				.getChannel(PerfectNetworkDeliverEvent.class);
+				.getChannelOut(PerfectNetworkDeliverEvent.class);
 
 		// use the shared WebComponent
 		ComponentMembrane webMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Web");
-		webRequestChannel = webMembrane.getChannel(WebRequestEvent.class);
-		webResponseChannel = webMembrane.getChannel(WebResponseEvent.class);
+		webRequestChannel = webMembrane.getChannelOut(WebRequestEvent.class);
+		webResponseChannel = webMembrane.getChannelIn(WebResponseEvent.class);
 
 		component.subscribe(webRequestChannel, "handleWebRequest");
 

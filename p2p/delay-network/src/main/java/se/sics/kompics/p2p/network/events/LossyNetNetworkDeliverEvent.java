@@ -2,16 +2,17 @@ package se.sics.kompics.p2p.network.events;
 
 import se.sics.kompics.api.annotation.EventType;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.network.events.NetworkDeliverEvent;
+import se.sics.kompics.network.events.Message;
 
 /**
  * The <code>LossyNetNetworkDeliverEvent</code> class.
  * 
  * @author Cosmin Arad
- * @version $Id$
+ * @version $Id: LossyNetNetworkDeliverEvent.java 144 2008-06-04 15:27:08Z
+ *          cosmin $
  */
 @EventType
-public final class LossyNetNetworkDeliverEvent extends NetworkDeliverEvent {
+public final class LossyNetNetworkDeliverEvent extends Message {
 
 	/**
 	 * 

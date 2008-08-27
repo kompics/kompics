@@ -83,21 +83,23 @@ public class PeerMonitorServer {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannel(SetTimerEvent.class);
-		timerSignalChannel = timerMembrane.getChannel(TimerSignalEvent.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(SetTimerEvent.class);
+		timerSignalChannel = timerMembrane
+				.getChannelOut(TimerSignalEvent.class);
 
 		// use shared LossyNetwork component
 		ComponentMembrane lnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.LossyNetwork");
 		// lnSendChannel = lnMembrane.getChannel(LossyNetworkSendEvent.class);
 		Channel lnDeliverChannel = lnMembrane
-				.getChannel(LossyNetworkDeliverEvent.class);
+				.getChannelOut(LossyNetworkDeliverEvent.class);
 
 		// use the shared WebComponent
 		ComponentMembrane webMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Web");
-		webRequestChannel = webMembrane.getChannel(WebRequestEvent.class);
-		webResponseChannel = webMembrane.getChannel(WebResponseEvent.class);
+		webRequestChannel = webMembrane.getChannelOut(WebRequestEvent.class);
+		webResponseChannel = webMembrane.getChannelIn(WebResponseEvent.class);
 
 		component.subscribe(webRequestChannel, "handleWebRequest");
 

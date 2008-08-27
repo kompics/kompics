@@ -76,20 +76,20 @@ public class WebHandler {
 		// use the shared WebComponent
 		ComponentMembrane webMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Web");
-		webRequestChannel = webMembrane.getChannel(WebRequestEvent.class);
-		webResponseChannel = webMembrane.getChannel(WebResponseEvent.class);
+		webRequestChannel = webMembrane.getChannelOut(WebRequestEvent.class);
+		webResponseChannel = webMembrane.getChannelIn(WebResponseEvent.class);
 
 		// use shared FailureDetector component
 		ComponentMembrane fdMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.fd.FailureDetector");
-		fdRequestChannel = fdMembrane.getChannel(StatusRequest.class);
+		fdRequestChannel = fdMembrane.getChannelIn(StatusRequest.class);
 		fdResponseChannel = component.createChannel(StatusResponse.class);
 
 		// use shared ChordRing component
 		ComponentMembrane crMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.chord.Chord");
 		chordRequestChannel = crMembrane
-				.getChannel(GetChordNeighborsRequest.class);
+				.getChannelIn(GetChordNeighborsRequest.class);
 		chordResponseChannel = component
 				.createChannel(GetChordNeighborsResponse.class);
 		chordLookupResponseChannel = component.createChannel(

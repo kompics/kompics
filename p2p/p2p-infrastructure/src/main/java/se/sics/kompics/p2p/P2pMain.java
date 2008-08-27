@@ -10,10 +10,9 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Kompics;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.network.events.NetworkConnectionRefused;
-import se.sics.kompics.network.events.NetworkDeliverEvent;
 import se.sics.kompics.network.events.NetworkException;
-import se.sics.kompics.network.events.NetworkSendEvent;
 import se.sics.kompics.network.events.NetworkSessionClosed;
 import se.sics.kompics.network.events.NetworkSessionOpened;
 import se.sics.kompics.p2p.application.events.StartApplication;
@@ -77,11 +76,10 @@ public class P2pMain {
 		timerComponent.share("se.sics.kompics.Timer");
 
 		// create channels for the network component
-		Channel networkSendChannel = boot.createChannel(NetworkSendEvent.class);
-		Channel networkDeliverChannel = boot.createChannel(
-				NetworkDeliverEvent.class, NetworkException.class,
-				NetworkSessionClosed.class, NetworkSessionOpened.class,
-				NetworkConnectionRefused.class);
+		Channel networkSendChannel = boot.createChannel(Message.class);
+		Channel networkDeliverChannel = boot.createChannel(Message.class,
+				NetworkException.class, NetworkSessionClosed.class,
+				NetworkSessionOpened.class, NetworkConnectionRefused.class);
 
 		// create and share the network component
 		Component networkComponent = boot.createComponent(
