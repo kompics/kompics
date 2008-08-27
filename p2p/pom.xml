@@ -12,6 +12,13 @@
 		<symbolicName>${pom.groupId}.p2p</symbolicName>
 		<exportedPackage>${pom.groupId}</exportedPackage>
 	</properties>
+	<modules>
+		<module>p2p-infrastructure</module>
+		<module>chord</module>
+		<module>bootstrap</module>
+		<module>failure-detector</module>
+		<module>delay-network</module>
+	</modules>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
