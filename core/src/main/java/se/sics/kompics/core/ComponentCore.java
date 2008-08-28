@@ -124,19 +124,21 @@ public class ComponentCore implements Runnable {
 		this.componentName = handlerObject.getClass().getSimpleName() + "@"
 				+ Integer.toHexString(this.hashCode());
 
-		try {
-			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			// Construct the ObjectName for the MBean we will register
-			ObjectName name = new ObjectName(
-					"se.sics.kompics:type=Component,name=" + componentName);
+		if (Kompics.jmxEnabled) {
+			try {
+				MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+				// // Construct the ObjectName for the MBean we will register
+				ObjectName name = new ObjectName(
+						"se.sics.kompics:type=Component,name=" + componentName);
 
-			// Create the Hello World MBean
-			mbean = new se.sics.kompics.management.Component(this,
-					componentName);
-			// Register the Hello World MBean
-			mbs.registerMBean(mbean, name);
-		} catch (Exception e) {
-			throw new RuntimeException("Management exception", e);
+				// Create the Hello World MBean
+				mbean = new se.sics.kompics.management.Component(this,
+						componentName);
+				// Register the Hello World MBean
+				mbs.registerMBean(mbean, name);
+			} catch (Exception e) {
+				throw new RuntimeException("Management exception", e);
+			}
 		}
 	}
 
@@ -170,8 +172,10 @@ public class ComponentCore implements Runnable {
 		ChannelReference channelReference = eventCore.getChannel();
 		channelReference.publishEventCore(eventCore);
 
-		Kompics.mbean.publishedEvent(eventCore.getEvent());
-		mbean.publishedEvent(eventCore.getEvent());
+		if (Kompics.jmxEnabled) {
+			Kompics.mbean.publishedEvent(eventCore.getEvent());
+			mbean.publishedEvent(eventCore.getEvent());
+		}
 	}
 
 	/* =============== EVENT SCHEDULING =============== */
@@ -232,8 +236,10 @@ public class ComponentCore implements Runnable {
 			handleFault(throwable);
 		}
 
-		Kompics.mbean.handledEvent(event);
-		mbean.handledEvent(event);
+		if (Kompics.jmxEnabled) {
+			Kompics.mbean.handledEvent(event);
+			mbean.handledEvent(event);
+		}
 
 		// make the component passive or ready
 		int newWorkCounter = workCounter.decrementAndGet();

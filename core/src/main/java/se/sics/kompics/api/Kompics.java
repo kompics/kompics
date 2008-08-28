@@ -37,6 +37,8 @@ public class Kompics {
 
 	private static Kompics globalKompics = null;
 
+	public static boolean jmxEnabled;
+
 	public static se.sics.kompics.management.Kompics mbean;
 	public static se.sics.kompics.management.Component bootMbean;
 
@@ -66,17 +68,22 @@ public class Kompics {
 		this.componentRegistry = new ComponentRegistry();
 		this.scheduler = new Scheduler(workers, fairnessRate);
 
-		try {
-			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			// Construct the ObjectName for the MBean we will register
-			ObjectName name = new ObjectName("se.sics.kompics:type=Kompics");
+		if (null != System.getProperty("com.sun.management.jmxremote")) {
+			jmxEnabled = true;
+			try {
+				MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+				// Construct the ObjectName for the MBean we will register
+				ObjectName name = new ObjectName("se.sics.kompics:type=Kompics");
 
-			// Create the Hello World MBean
-			mbean = new se.sics.kompics.management.Kompics(this);
-			// Register the Hello World MBean
-			mbs.registerMBean(mbean, name);
-		} catch (Exception e) {
-			throw new RuntimeException("Management exception", e);
+				// Create the Hello World MBean
+				mbean = new se.sics.kompics.management.Kompics(this);
+				// Register the Hello World MBean
+				mbs.registerMBean(mbean, name);
+			} catch (Exception e) {
+				throw new RuntimeException("Management exception", e);
+			}
+		} else {
+			jmxEnabled = false;
 		}
 	}
 

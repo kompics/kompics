@@ -8,12 +8,14 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.FaultEvent;
+import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.capability.ChannelCapabilityFlags;
 import se.sics.kompics.core.config.ConfigurationException;
 import se.sics.kompics.core.scheduler.Work;
@@ -43,6 +45,7 @@ public class ChannelCore {
 	private Object channelLock;
 
 	public se.sics.kompics.management.Channel mbean;
+	private static AtomicLong id = new AtomicLong(0);
 
 	// TODO fix core visibility
 	public ChannelCore(HashSet<Class<? extends Event>> eventTypes) {
@@ -53,18 +56,21 @@ public class ChannelCore {
 		lookup = new HashMap<Class<? extends Event>, SubscriptionSet>();
 		channelLock = new Object();
 
-		try {
-			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			// Construct the ObjectName for the MBean we will register
-			ObjectName name = new ObjectName(
-					"se.sics.kompics:type=Channel,name=Channel@" + hashCode());
+		if (Kompics.jmxEnabled) {
+			try {
+				MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+				// // Construct the ObjectName for the MBean we will register
+				ObjectName name = new ObjectName(
+						"se.sics.kompics:type=Channel,name=Channel@"
+								+ id.incrementAndGet());
 
-			// Create the Hello World MBean
-			mbean = new se.sics.kompics.management.Channel(this);
-			// Register the Hello World MBean
-			mbs.registerMBean(mbean, name);
-		} catch (Exception e) {
-			throw new RuntimeException("Management exception", e);
+				// Create the Hello World MBean
+				mbean = new se.sics.kompics.management.Channel(this);
+				// Register the Hello World MBean
+				mbs.registerMBean(mbean, name);
+			} catch (Exception e) {
+				throw new RuntimeException("Management exception", e);
+			}
 		}
 	}
 
@@ -184,7 +190,9 @@ public class ChannelCore {
 						matchingSet.manyFilterSubs);
 			}
 
-			mbean.publishedEvent(event);
+			if (Kompics.jmxEnabled) {
+				mbean.publishedEvent(event);
+			}
 		}
 		if (!typeMatch) {
 			// check that the event can be published in this channel, i.e., any
