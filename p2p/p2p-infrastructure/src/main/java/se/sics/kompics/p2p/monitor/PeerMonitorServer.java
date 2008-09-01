@@ -20,11 +20,11 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
 import se.sics.kompics.p2p.chord.router.FingerTableView;
 import se.sics.kompics.p2p.monitor.events.PeerViewNotification;
 import se.sics.kompics.p2p.monitor.events.ViewEvictPeer;
-import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
 import se.sics.kompics.timer.TimerHandler;
 import se.sics.kompics.timer.events.Alarm;
 import se.sics.kompics.timer.events.SetAlarm;
@@ -90,8 +90,7 @@ public class PeerMonitorServer {
 		ComponentMembrane lnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.LossyNetwork");
 		// lnSendChannel = lnMembrane.getChannel(LossyNetworkSendEvent.class);
-		Channel lnDeliverChannel = lnMembrane
-				.getChannelOut(LossyNetworkDeliverEvent.class);
+		Channel lnDeliverChannel = lnMembrane.getChannelOut(Message.class);
 
 		// use the shared WebComponent
 		ComponentMembrane webMembrane = component

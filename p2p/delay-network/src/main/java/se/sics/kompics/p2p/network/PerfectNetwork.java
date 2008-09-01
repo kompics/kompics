@@ -19,8 +19,6 @@ import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.network.events.PerfectNetNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.PerfectNetworkTimerSignalEvent;
 import se.sics.kompics.p2p.network.topology.KingMatrix;
 import se.sics.kompics.timer.events.SetAlarm;
@@ -85,8 +83,8 @@ public final class PerfectNetwork {
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
 		ComponentMembrane membrane = new ComponentMembrane(component);
-		membrane.inChannel(PerfectNetworkSendEvent.class, sendChannel);
-		membrane.outChannel(PerfectNetworkDeliverEvent.class, deliverChannel);
+		membrane.inChannel(Message.class, sendChannel);
+		membrane.outChannel(Message.class, deliverChannel);
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
@@ -113,27 +111,26 @@ public final class PerfectNetwork {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes( { SetAlarm.class, Message.class })
-	public void handlePerfectNetworkSendEvent(PerfectNetworkSendEvent event) {
-		logger.debug("Handling send1 {} to {}.", event
-				.getPerfectNetworkDeliverEvent(), event.getDestination());
+	public void handlePerfectNetworkSendEvent(Message event) {
+		logger.debug("Handling send1 {} to {}.", event, event.getDestination());
 
+		event.setSource(localAddress);
 		Address destination = event.getDestination();
 
 		if (destination.equals(localAddress)) {
 			// deliver locally
-			PerfectNetworkDeliverEvent deliverEvent = event
-					.getPerfectNetworkDeliverEvent();
-			deliverEvent.setSource(localAddress);
-			deliverEvent.setDestination(destination);
-			component.triggerEvent(deliverEvent, deliverChannel);
+			// PerfectNetworkDeliverEvent deliverEvent = event
+			// .getPerfectNetworkDeliverEvent();
+			// deliverEvent.setSource(localAddress);
+			// deliverEvent.setDestination(destination);
+			component.triggerEvent(event, deliverChannel);
 			return;
 		}
 
 		// make a PerfectNetNetworkDeliverEvent to be delivered at the
 		// destination
 		PerfectNetNetworkDeliverEvent pnMessage = new PerfectNetNetworkDeliverEvent(
-				event.getPerfectNetworkDeliverEvent(), localAddress,
-				destination);
+				event, localAddress, destination);
 
 		long latency = king[localKingId][destination.getId().mod(
 				BigInteger.valueOf(KingMatrix.SIZE)).intValue()];
@@ -163,16 +160,15 @@ public final class PerfectNetwork {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(PerfectNetworkDeliverEvent.class)
+	@MayTriggerEventTypes(Message.class)
 	public void handlePerfectNetNetworkDeliverEvent(
 			PerfectNetNetworkDeliverEvent event) {
 		logger.debug("Handling delivery {} from {}.", event
 				.getPerfectNetworkDeliverEvent(), event.getSource());
 
-		PerfectNetworkDeliverEvent pnDeliverEvent = event
-				.getPerfectNetworkDeliverEvent();
-		pnDeliverEvent.setSource(event.getSource());
-		pnDeliverEvent.setDestination(event.getDestination());
+		Message pnDeliverEvent = event.getPerfectNetworkDeliverEvent();
+		// pnDeliverEvent.setSource(event.getSource());
+		// pnDeliverEvent.setDestination(event.getDestination());
 
 		// trigger the encapsulated PerfectNetworkDeliverEvent
 		component.triggerEvent(pnDeliverEvent, deliverChannel);

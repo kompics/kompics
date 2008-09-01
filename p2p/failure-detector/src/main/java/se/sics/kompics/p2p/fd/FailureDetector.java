@@ -17,6 +17,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.fd.events.Ping;
 import se.sics.kompics.p2p.fd.events.Pong;
 import se.sics.kompics.p2p.fd.events.PongTimedOut;
@@ -25,8 +26,6 @@ import se.sics.kompics.p2p.fd.events.StartProbingPeer;
 import se.sics.kompics.p2p.fd.events.StatusRequest;
 import se.sics.kompics.p2p.fd.events.StatusResponse;
 import se.sics.kompics.p2p.fd.events.StopProbingPeer;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
 import se.sics.kompics.timer.events.Alarm;
 import se.sics.kompics.timer.events.SetAlarm;
@@ -57,6 +56,8 @@ public final class FailureDetector {
 
 	long rtoMin, pingInterval, pongTimeoutAdd;
 
+	Address localAddress;
+
 	public FailureDetector(Component component) {
 		this.component = component;
 		peerProbers = new HashMap<Address, PeerProber>();
@@ -77,9 +78,8 @@ public final class FailureDetector {
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
-		Channel pnDeliverChannel = pnMembrane
-				.getChannelOut(PerfectNetworkDeliverEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(Message.class);
+		Channel pnDeliverChannel = pnMembrane.getChannelOut(Message.class);
 
 		component.subscribe(timerSignalChannel, "handleSendPing");
 		component.subscribe(timerSignalChannel, "handlePongTimedOut");
@@ -104,6 +104,7 @@ public final class FailureDetector {
 
 	@ComponentInitializeMethod("fd.properties")
 	public void init(Properties properties, Address localAddress) {
+		this.localAddress = localAddress;
 		logger = LoggerFactory.getLogger(FailureDetector.class.getName() + "@"
 				+ localAddress.getId());
 
@@ -182,9 +183,8 @@ public final class FailureDetector {
 	public void handlePing(Ping event) {
 		logger.debug("Received Ping from {}. Sending Pong.", event.getSource());
 
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				new Pong(), event.getSource());
-		component.triggerEvent(sendEvent, pnSendChannel);
+		component.triggerEvent(new Pong(localAddress, event.getSource()),
+				pnSendChannel);
 	}
 
 	@EventHandlerMethod

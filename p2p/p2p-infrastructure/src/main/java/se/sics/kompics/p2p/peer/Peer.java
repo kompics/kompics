@@ -15,6 +15,7 @@ import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.bootstrap.BootstrapClient;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCacheReset;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCompleted;
@@ -37,10 +38,6 @@ import se.sics.kompics.p2p.fd.events.StopProbingPeer;
 import se.sics.kompics.p2p.monitor.PeerMonitorClient;
 import se.sics.kompics.p2p.monitor.events.StartPeerMonitor;
 import se.sics.kompics.p2p.monitor.events.StopPeerMonitor;
-import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
 import se.sics.kompics.p2p.peer.events.LeavePeer;
@@ -83,10 +80,8 @@ public class Peer {
 				+ peerAddress.getId());
 
 		// create channels for the PerfectNetwork component
-		Channel pnSendChannel = component
-				.createChannel(PerfectNetworkSendEvent.class);
-		Channel pnDeliverChannel = component
-				.createChannel(PerfectNetworkDeliverEvent.class);
+		Channel pnSendChannel = component.createChannel(Message.class);
+		Channel pnDeliverChannel = component.createChannel(Message.class);
 
 		// create and share the PerfectNetwork component
 		Component pnComponent = component.createComponent(
@@ -96,10 +91,8 @@ public class Peer {
 		pnComponent.share("se.sics.kompics.p2p.network.PerfectNetwork");
 
 		// create channels for the LossyNetwork component
-		Channel lnSendChannel = component
-				.createChannel(LossyNetworkSendEvent.class);
-		Channel lnDeliverChannel = component
-				.createChannel(LossyNetworkDeliverEvent.class);
+		Channel lnSendChannel = component.createChannel(Message.class);
+		Channel lnDeliverChannel = component.createChannel(Message.class);
 
 		// create and share the LossyNetwork component
 		Component lnComponent = component.createComponent(

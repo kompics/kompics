@@ -18,6 +18,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.chord.events.GetChordNeighborsRequest;
 import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
 import se.sics.kompics.p2p.monitor.events.ChangeUpdatePeriod;
@@ -25,8 +26,6 @@ import se.sics.kompics.p2p.monitor.events.PeerViewNotification;
 import se.sics.kompics.p2p.monitor.events.SendView;
 import se.sics.kompics.p2p.monitor.events.StartPeerMonitor;
 import se.sics.kompics.p2p.monitor.events.StopPeerMonitor;
-import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
 import se.sics.kompics.timer.events.Alarm;
 import se.sics.kompics.timer.events.CancelAlarm;
@@ -75,9 +74,8 @@ public class PeerMonitorClient {
 		// use shared LossyNetwork component
 		ComponentMembrane lnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.LossyNetwork");
-		lnSendChannel = lnMembrane.getChannelIn(LossyNetworkSendEvent.class);
-		Channel lnDeliverChannel = lnMembrane
-				.getChannelOut(LossyNetworkDeliverEvent.class);
+		lnSendChannel = lnMembrane.getChannelIn(Message.class);
+		Channel lnDeliverChannel = lnMembrane.getChannelOut(Message.class);
 
 		// use shared Chord component
 		ComponentMembrane crMembrane = component
@@ -151,7 +149,7 @@ public class PeerMonitorClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(LossyNetworkSendEvent.class)
+	@MayTriggerEventTypes(PeerViewNotification.class)
 	public void handleGetChordNeighborsResponse(GetChordNeighborsResponse event) {
 		logger.debug("GET_CHORD_NEIGHBORS_RESP");
 
@@ -160,10 +158,8 @@ public class PeerMonitorClient {
 		map.put("ChordRing", event);
 
 		PeerViewNotification viewNotification = new PeerViewNotification(
-				localPeerAddress, map);
+				localPeerAddress, map, monitorServerAddress);
 
-		LossyNetworkSendEvent sendEvent = new LossyNetworkSendEvent(
-				viewNotification, monitorServerAddress);
-		component.triggerEvent(sendEvent, lnSendChannel);
+		component.triggerEvent(viewNotification, lnSendChannel);
 	}
 }

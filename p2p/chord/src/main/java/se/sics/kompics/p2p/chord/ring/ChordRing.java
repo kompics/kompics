@@ -16,6 +16,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.chord.IntervalBounds;
 import se.sics.kompics.p2p.chord.RingMath;
 import se.sics.kompics.p2p.chord.events.ChordLookupFailed;
@@ -36,8 +37,6 @@ import se.sics.kompics.p2p.fd.events.PeerFailureSuspicion;
 import se.sics.kompics.p2p.fd.events.StartProbingPeer;
 import se.sics.kompics.p2p.fd.events.StopProbingPeer;
 import se.sics.kompics.p2p.fd.events.SuspicionStatus;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
 import se.sics.kompics.timer.events.SetAlarm;
 
@@ -101,9 +100,8 @@ public class ChordRing {
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
-		Channel pnDeliverChannel = pnMembrane
-				.getChannelOut(PerfectNetworkDeliverEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(Message.class);
+		Channel pnDeliverChannel = pnMembrane.getChannelOut(Message.class);
 
 		// use shared FailureDetector component
 		ComponentMembrane fdMembrane = component
@@ -183,8 +181,7 @@ public class ChordRing {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class,
-			NewPredecessor.class })
+	@MayTriggerEventTypes( { ChordLookupRequest.class, NewPredecessor.class })
 	public void handleJoinRing(JoinRing event) {
 		logger.debug("JOIN");
 
@@ -204,7 +201,8 @@ public class ChordRing {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { NewSuccessorList.class, JoinRingCompleted.class })
+	@MayTriggerEventTypes( { GetSuccessorListRequest.class,
+			NewSuccessorList.class, JoinRingCompleted.class })
 	public void handleChordLookupResponse(ChordLookupResponse event) {
 		logger.debug("CHORD_LOOKUP_RESP R({})={}", event.getKey(), event
 				.getResponsible());
@@ -219,10 +217,8 @@ public class ChordRing {
 
 		// trigger GetSuccessorList
 		GetSuccessorListRequest request = new GetSuccessorListRequest(
-				RequestState.JOIN);
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				request, successorList.getSuccessor());
-		component.triggerEvent(sendEvent, pnSendChannel);
+				RequestState.JOIN, successorList.getSuccessor());
+		component.triggerEvent(request, pnSendChannel);
 
 		// trigger newSuccessor
 		NewSuccessorList newSuccessor = new NewSuccessorList(localPeer,
@@ -257,21 +253,19 @@ public class ChordRing {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
+	@MayTriggerEventTypes(GetSuccessorListResponse.class)
 	public void handleGetSuccessorListRequest(GetSuccessorListRequest event) {
 		logger.debug("GET_SUCC_LIST_REQ");
 
 		GetSuccessorListResponse response = new GetSuccessorListResponse(
-				successorList, event.getRequestState());
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				response, event.getSource());
+				successorList, event.getRequestState(), event.getSource());
 		// reply with successorList
-		component.triggerEvent(sendEvent, pnSendChannel);
+		component.triggerEvent(response, pnSendChannel);
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { NewSuccessorList.class,
-			PerfectNetworkSendEvent.class })
+	@MayTriggerEventTypes( { NewSuccessorList.class, StartProbingPeer.class,
+			StopProbingPeer.class })
 	public void handleGetSuccessorListResponse(GetSuccessorListResponse event) {
 		logger.debug("GET_SUCC_LIST_RESP my={} got={}", successorList
 				.getSuccessors(), event.getSuccessorList().getSuccessors());
@@ -314,35 +308,32 @@ public class ChordRing {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class, SetAlarm.class })
+	@MayTriggerEventTypes( { GetPredecessorRequest.class, SetAlarm.class })
 	public void handleStabilizeTimerSignal(StabilizeTimerSignal event) {
 		logger.debug("STABILIZATION");
 
-		GetPredecessorRequest request = new GetPredecessorRequest();
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				request, successorList.getSuccessor());
+		GetPredecessorRequest request = new GetPredecessorRequest(localPeer,
+				successorList.getSuccessor());
 		// send get predecessor request
-		component.triggerEvent(sendEvent, pnSendChannel);
+		component.triggerEvent(request, pnSendChannel);
 		// reset the stabilization timer
 		timerHandler.setTimer(event, timerSignalChannel, stabilizationPeriod);
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
+	@MayTriggerEventTypes(GetPredecessorResponse.class)
 	public void handleGetPredecessorRequest(GetPredecessorRequest event) {
 		logger.debug("GET_PRED_REQ");
 
 		GetPredecessorResponse response = new GetPredecessorResponse(
-				predecessor);
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				response, event.getSource());
+				predecessor, event.getSource());
 		// reply with predecessor
-		component.triggerEvent(sendEvent, pnSendChannel);
+		component.triggerEvent(response, pnSendChannel);
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { NewSuccessorList.class,
-			PerfectNetworkSendEvent.class })
+	@MayTriggerEventTypes( { NewSuccessorList.class, Notify.class,
+			GetSuccessorListRequest.class })
 	public void handleGetPredecessorResponse(GetPredecessorResponse event) {
 		logger.debug("GET_PRED_RESP");
 
@@ -366,16 +357,12 @@ public class ChordRing {
 
 		// trigger GetSuccessorList
 		GetSuccessorListRequest request = new GetSuccessorListRequest(
-				RequestState.STABILIZE);
-		PerfectNetworkSendEvent gslSendEvent = new PerfectNetworkSendEvent(
-				request, successorList.getSuccessor());
-		component.triggerEvent(gslSendEvent, pnSendChannel);
+				RequestState.STABILIZE, successorList.getSuccessor());
+		component.triggerEvent(request, pnSendChannel);
 
-		Notify notify = new Notify(localPeer);
-		PerfectNetworkSendEvent nSendEvent = new PerfectNetworkSendEvent(
-				notify, successorList.getSuccessor());
+		Notify notify = new Notify(localPeer, successorList.getSuccessor());
 		// send notify
-		component.triggerEvent(nSendEvent, pnSendChannel);
+		component.triggerEvent(notify, pnSendChannel);
 	}
 
 	@EventHandlerMethod

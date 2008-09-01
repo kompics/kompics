@@ -17,6 +17,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.bootstrap.events.CacheAddPeerRequest;
 import se.sics.kompics.p2p.bootstrap.events.CacheEvictPeer;
 import se.sics.kompics.p2p.bootstrap.events.CacheGetPeersRequest;
@@ -24,8 +25,6 @@ import se.sics.kompics.p2p.bootstrap.events.CacheGetPeersResponse;
 import se.sics.kompics.p2p.bootstrap.events.CacheResetRequest;
 import se.sics.kompics.p2p.bootstrap.events.PeerEntry;
 import se.sics.kompics.p2p.bootstrap.events.StartBootstrapServer;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
 import se.sics.kompics.timer.events.Alarm;
 import se.sics.kompics.timer.events.SetAlarm;
@@ -78,9 +77,8 @@ public class BootstrapServer {
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
-		Channel pnDeliverChannel = pnMembrane
-				.getChannelOut(PerfectNetworkDeliverEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(Message.class);
+		Channel pnDeliverChannel = pnMembrane.getChannelOut(Message.class);
 
 		// use the shared WebComponent
 		ComponentMembrane webMembrane = component
@@ -149,7 +147,7 @@ public class BootstrapServer {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
+	@MayTriggerEventTypes(CacheGetPeersResponse.class)
 	public void handleCacheGetPeersRequest(CacheGetPeersRequest event) {
 		int peersMax = event.getPeersMax();
 		HashSet<PeerEntry> peers = new HashSet<PeerEntry>();
@@ -172,10 +170,8 @@ public class BootstrapServer {
 		}
 
 		CacheGetPeersResponse response = new CacheGetPeersResponse(peers, event
-				.getRequestId());
-		PerfectNetworkSendEvent pnSendEvent = new PerfectNetworkSendEvent(
-				response, event.getSource());
-		component.triggerEvent(pnSendEvent, pnSendChannel);
+				.getRequestId(), event.getSource());
+		component.triggerEvent(response, pnSendChannel);
 
 		logger.debug("Responded with {} peers to peer {}", peers.size(), event
 				.getSource());

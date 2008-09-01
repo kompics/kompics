@@ -19,16 +19,15 @@ public final class LossyNetNetworkDeliverEvent extends Message {
 	 */
 	private static final long serialVersionUID = -7947782637977816609L;
 
-	private final LossyNetworkDeliverEvent lossyNetworkDeliverEvent;
+	private final Message lossyNetworkDeliverEvent;
 
-	public LossyNetNetworkDeliverEvent(
-			LossyNetworkDeliverEvent lossyNetworkDeliverEvent, Address source,
-			Address destination) {
+	public LossyNetNetworkDeliverEvent(Message lossyNetworkDeliverEvent,
+			Address source, Address destination) {
 		super(source, destination);
 		this.lossyNetworkDeliverEvent = lossyNetworkDeliverEvent;
 	}
 
-	public final LossyNetworkDeliverEvent getLossyNetworkDeliverEvent() {
+	public final Message getLossyNetworkDeliverEvent() {
 		return lossyNetworkDeliverEvent;
 	}
 }

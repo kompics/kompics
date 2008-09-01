@@ -22,8 +22,6 @@ import se.sics.kompics.network.events.NetworkException;
 import se.sics.kompics.network.events.NetworkSessionClosed;
 import se.sics.kompics.network.events.NetworkSessionOpened;
 import se.sics.kompics.p2p.monitor.PeerMonitorServer;
-import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.timer.events.Alarm;
 import se.sics.kompics.timer.events.CancelAlarm;
 import se.sics.kompics.timer.events.CancelPeriodicAlarm;
@@ -107,9 +105,8 @@ public final class PeerMonitorServerMain {
 		networkComponent.share("se.sics.kompics.Network");
 
 		// create channels for the LossyNetwork component
-		Channel lnSendChannel = boot.createChannel(LossyNetworkSendEvent.class);
-		Channel lnDeliverChannel = boot
-				.createChannel(LossyNetworkDeliverEvent.class);
+		Channel lnSendChannel = boot.createChannel(Message.class);
+		Channel lnDeliverChannel = boot.createChannel(Message.class);
 
 		// create and share the LossyNetwork component
 		Component lnComponent = boot.createComponent(

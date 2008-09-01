@@ -16,6 +16,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.chord.IntervalBounds;
 import se.sics.kompics.p2p.chord.RingMath;
 import se.sics.kompics.p2p.chord.events.ChordLookupFailed;
@@ -31,8 +32,6 @@ import se.sics.kompics.p2p.chord.router.events.GetFingerTableRequest;
 import se.sics.kompics.p2p.chord.router.events.GetFingerTableResponse;
 import se.sics.kompics.p2p.chord.router.events.NewFingerTable;
 import se.sics.kompics.p2p.chord.router.events.RpcTimeout;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
 import se.sics.kompics.timer.events.CancelAlarm;
 import se.sics.kompics.timer.events.SetAlarm;
@@ -98,9 +97,8 @@ public class ChordIterativeRouter {
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
-		Channel pnDeliverChannel = pnMembrane
-				.getChannelOut(PerfectNetworkDeliverEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(Message.class);
+		Channel pnDeliverChannel = pnMembrane.getChannelOut(Message.class);
 
 		fixFingersLookupChannel = component.createChannel(
 				ChordLookupResponse.class, ChordLookupFailed.class);
@@ -148,6 +146,7 @@ public class ChordIterativeRouter {
 	}
 
 	@EventHandlerMethod
+	@MayTriggerEventTypes(GetFingerTableRequest.class)
 	public void handleNewSuccessorList(NewSuccessorList event) {
 		logger.debug("NEW_SUCC {}", event.getSuccessorListView());
 
@@ -162,10 +161,9 @@ public class ChordIterativeRouter {
 
 			if (!successor.equals(localPeer)) {
 				// ask successor for its finger table
-				GetFingerTableRequest request = new GetFingerTableRequest();
-				PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-						request, successor);
-				component.triggerEvent(sendEvent, pnSendChannel);
+				GetFingerTableRequest request = new GetFingerTableRequest(
+						successor);
+				component.triggerEvent(request, pnSendChannel);
 			}
 		}
 
@@ -191,7 +189,7 @@ public class ChordIterativeRouter {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetAlarm.class, PerfectNetworkSendEvent.class,
+	@MayTriggerEventTypes( { SetAlarm.class, FindSuccessorRequest.class,
 			ChordLookupResponse.class })
 	public void handleChordLookupRequest(ChordLookupRequest event) {
 		logger.debug("CHORD_LOOKUP_REQ({})", event.getKey());
@@ -214,11 +212,9 @@ public class ChordIterativeRouter {
 			outstandingLookups.put(timerId, lookupInfo);
 
 			FindSuccessorRequest request = new FindSuccessorRequest(key,
-					timerId);
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					request, firstPeer);
+					timerId, firstPeer);
 
-			component.triggerEvent(sendEvent, pnSendChannel);
+			component.triggerEvent(request, pnSendChannel);
 
 			// we try to use the hinted first peer as a possible better finger
 			fingerTable.learnedAboutFreshPeer(firstPeer);
@@ -272,16 +268,14 @@ public class ChordIterativeRouter {
 			outstandingLookups.put(timerId, lookupInfo);
 
 			FindSuccessorRequest request = new FindSuccessorRequest(key,
-					timerId);
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					request, closest);
+					timerId, closest);
 
-			component.triggerEvent(sendEvent, pnSendChannel);
+			component.triggerEvent(request, pnSendChannel);
 		}
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
+	@MayTriggerEventTypes(FindSuccessorResponse.class)
 	public void handleFindSuccessorRequest(FindSuccessorRequest event) {
 		logger.debug("FIND_SUCC_REQ {}, succ={}", event.getKey(), successor);
 
@@ -292,10 +286,8 @@ public class ChordIterativeRouter {
 						.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
 			// return ourselves as the real responsible
 			FindSuccessorResponse response = new FindSuccessorResponse(
-					localPeer, event.getLookupId(), false);
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					response, event.getSource());
-			component.triggerEvent(sendEvent, pnSendChannel);
+					localPeer, event.getLookupId(), false, event.getSource());
+			component.triggerEvent(response, pnSendChannel);
 
 			logger.error("RETURNED MYSELF {}, {}", key, localPeer);
 
@@ -304,20 +296,18 @@ public class ChordIterativeRouter {
 					IntervalBounds.OPEN_CLOSED, ringSize)) {
 				// return my successor as the real successor
 				FindSuccessorResponse response = new FindSuccessorResponse(
-						successor, event.getLookupId(), false);
-				PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-						response, event.getSource());
-				component.triggerEvent(sendEvent, pnSendChannel);
+						successor, event.getLookupId(), false, event
+								.getSource());
+				component.triggerEvent(response, pnSendChannel);
 			} else {
 				// return an indirection to my closest preceding finger
 				Address closest = fingerTable.closestPreceedingPeer(key);
 
 				if (!closest.equals(localPeer)) {
 					FindSuccessorResponse response = new FindSuccessorResponse(
-							closest, event.getLookupId(), true);
-					PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-							response, event.getSource());
-					component.triggerEvent(sendEvent, pnSendChannel);
+							closest, event.getLookupId(), true, event
+									.getSource());
+					component.triggerEvent(response, pnSendChannel);
 				}
 				// else we found no closest peer so the lookup should fail
 			}
@@ -329,7 +319,7 @@ public class ChordIterativeRouter {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes( { SetAlarm.class, CancelAlarm.class,
-			PerfectNetworkSendEvent.class, ChordLookupResponse.class })
+			FindSuccessorRequest.class, ChordLookupResponse.class })
 	public void handleFindSuccessorResponse(FindSuccessorResponse event) {
 
 		long lookupId = event.getLookupId();
@@ -361,12 +351,10 @@ public class ChordIterativeRouter {
 			outstandingLookups.put(timerId, lookupInfo);
 
 			FindSuccessorRequest request = new FindSuccessorRequest(
-					lookupRequest.getKey(), timerId);
-			PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-					request, nextHop);
+					lookupRequest.getKey(), timerId, nextHop);
 
 			// send find successor request
-			component.triggerEvent(sendEvent, pnSendChannel);
+			component.triggerEvent(request, pnSendChannel);
 		} else {
 			// we got the real responsible
 			lookupInfo.appendHop(event.getSource());
@@ -449,15 +437,13 @@ public class ChordIterativeRouter {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
+	@MayTriggerEventTypes(GetFingerTableResponse.class)
 	public void handleGetFingerTableRequest(GetFingerTableRequest event) {
 		logger.debug("GET_FINGER_TABLE_REQ");
 
 		GetFingerTableResponse response = new GetFingerTableResponse(
-				fingerTable.getView());
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				response, event.getSource());
-		component.triggerEvent(sendEvent, pnSendChannel);
+				fingerTable.getView(), event.getSource());
+		component.triggerEvent(response, pnSendChannel);
 	}
 
 	@EventHandlerMethod

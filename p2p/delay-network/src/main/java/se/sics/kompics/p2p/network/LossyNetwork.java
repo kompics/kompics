@@ -21,8 +21,6 @@ import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.network.events.LossyNetNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.LossyNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.LossyNetworkSendEvent;
 import se.sics.kompics.p2p.network.events.LossyNetworkTimerSignalEvent;
 import se.sics.kompics.p2p.network.topology.KingMatrix;
 import se.sics.kompics.timer.events.SetAlarm;
@@ -91,8 +89,8 @@ public final class LossyNetwork {
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
 		ComponentMembrane membrane = new ComponentMembrane(component);
-		membrane.inChannel(LossyNetworkSendEvent.class, sendChannel);
-		membrane.outChannel(LossyNetworkDeliverEvent.class, deliverChannel);
+		membrane.inChannel(Message.class, sendChannel);
+		membrane.outChannel(Message.class, deliverChannel);
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
@@ -124,19 +122,19 @@ public final class LossyNetwork {
 
 	@EventHandlerMethod
 	@MayTriggerEventTypes( { SetAlarm.class, Message.class })
-	public void handleLossyNetworkSendEvent(LossyNetworkSendEvent event) {
-		logger.debug("Handling send {} to {}.", event
-				.getLossyNetworkDeliverEvent(), event.getDestination());
+	public void handleLossyNetworkSendEvent(Message event) {
+		logger.debug("Handling send {} to {}.", event, event.getDestination());
 
+		event.setSource(localAddress);
 		Address destination = event.getDestination();
 
 		if (destination.equals(localAddress)) {
 			// deliver locally
-			LossyNetworkDeliverEvent deliverEvent = event
-					.getLossyNetworkDeliverEvent();
-			deliverEvent.setSource(localAddress);
-			deliverEvent.setDestination(destination);
-			component.triggerEvent(deliverEvent, deliverChannel);
+			// LossyNetworkDeliverEvent deliverEvent = event
+			// .getLossyNetworkDeliverEvent();
+			// deliverEvent.setSource(localAddress);
+			// deliverEvent.setDestination(destination);
+			component.triggerEvent(event, deliverChannel);
 			return;
 		}
 
@@ -147,7 +145,7 @@ public final class LossyNetwork {
 
 		// make a LossyNetNetworkDeliverEvent to be delivered at the destination
 		LossyNetNetworkDeliverEvent lnMessage = new LossyNetNetworkDeliverEvent(
-				event.getLossyNetworkDeliverEvent(), localAddress, destination);
+				event, localAddress, destination);
 
 		long latency = king[localKingId][destination.getId().mod(
 				BigInteger.valueOf(KingMatrix.SIZE)).intValue()];
@@ -172,16 +170,15 @@ public final class LossyNetwork {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(LossyNetworkDeliverEvent.class)
+	@MayTriggerEventTypes(Message.class)
 	public void handleLossyNetNetworkDeliverEvent(
 			LossyNetNetworkDeliverEvent event) {
 		logger.debug("Handling delivery {} from {}.", event
 				.getLossyNetworkDeliverEvent(), event.getSource());
 
-		LossyNetworkDeliverEvent lnDeliverEvent = event
-				.getLossyNetworkDeliverEvent();
-		lnDeliverEvent.setSource(event.getSource());
-		lnDeliverEvent.setDestination(event.getDestination());
+		Message lnDeliverEvent = event.getLossyNetworkDeliverEvent();
+		// lnDeliverEvent.setSource(event.getSource());
+		// lnDeliverEvent.setDestination(event.getDestination());
 
 		// trigger the encapsulated LossyNetworkDeliverEvent
 		component.triggerEvent(lnDeliverEvent, deliverChannel);

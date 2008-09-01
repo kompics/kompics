@@ -19,16 +19,15 @@ public final class PerfectNetNetworkDeliverEvent extends Message {
 	 */
 	private static final long serialVersionUID = -7947782637977816609L;
 
-	private final PerfectNetworkDeliverEvent perfectNetworkDeliverEvent;
+	private final Message perfectNetworkDeliverEvent;
 
-	public PerfectNetNetworkDeliverEvent(
-			PerfectNetworkDeliverEvent perfectNetworkDeliverEvent,
+	public PerfectNetNetworkDeliverEvent(Message perfectNetworkDeliverEvent,
 			Address source, Address destination) {
 		super(source, destination);
 		this.perfectNetworkDeliverEvent = perfectNetworkDeliverEvent;
 	}
 
-	public final PerfectNetworkDeliverEvent getPerfectNetworkDeliverEvent() {
+	public final Message getPerfectNetworkDeliverEvent() {
 		return perfectNetworkDeliverEvent;
 	}
 }

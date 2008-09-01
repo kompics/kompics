@@ -15,7 +15,6 @@ import se.sics.kompics.p2p.fd.events.Ping;
 import se.sics.kompics.p2p.fd.events.PongTimedOut;
 import se.sics.kompics.p2p.fd.events.SendPing;
 import se.sics.kompics.p2p.fd.events.SuspicionStatus;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 
 /**
  * The <code>PeerProber</code> class
@@ -179,8 +178,8 @@ public class PeerProber {
 	}
 
 	private void sendPing() {
-		fd.component.triggerEvent(new PerfectNetworkSendEvent(new Ping(),
-				probedPeer), fd.pnSendChannel);
+		fd.component.triggerEvent(new Ping(fd.localAddress, probedPeer),
+				fd.pnSendChannel);
 	}
 
 	private void suspect() {

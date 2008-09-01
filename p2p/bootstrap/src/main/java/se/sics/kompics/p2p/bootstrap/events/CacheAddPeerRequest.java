@@ -2,7 +2,7 @@ package se.sics.kompics.p2p.bootstrap.events;
 
 import se.sics.kompics.api.annotation.EventType;
 import se.sics.kompics.network.Address;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
+import se.sics.kompics.network.events.Message;
 
 /**
  * The <code>CacheAddPeerRequest</code> class.
@@ -11,7 +11,7 @@ import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
  * @version $Id$
  */
 @EventType
-public final class CacheAddPeerRequest extends PerfectNetworkDeliverEvent {
+public final class CacheAddPeerRequest extends Message {
 
 	/**
 	 * 
@@ -20,7 +20,8 @@ public final class CacheAddPeerRequest extends PerfectNetworkDeliverEvent {
 
 	private final Address peerAddress;
 
-	public CacheAddPeerRequest(Address peerAddress) {
+	public CacheAddPeerRequest(Address peerAddress, Address destination) {
+		super(destination);
 		this.peerAddress = peerAddress;
 	}
 

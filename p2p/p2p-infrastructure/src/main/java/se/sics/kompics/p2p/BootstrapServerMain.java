@@ -23,8 +23,6 @@ import se.sics.kompics.network.events.NetworkSessionClosed;
 import se.sics.kompics.network.events.NetworkSessionOpened;
 import se.sics.kompics.p2p.bootstrap.BootstrapServer;
 import se.sics.kompics.p2p.bootstrap.events.StartBootstrapServer;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.events.Alarm;
 import se.sics.kompics.timer.events.CancelAlarm;
 import se.sics.kompics.timer.events.CancelPeriodicAlarm;
@@ -106,10 +104,8 @@ public final class BootstrapServerMain {
 		networkComponent.share("se.sics.kompics.Network");
 
 		// create channels for the PerfectNetwork component
-		Channel pnSendChannel = boot
-				.createChannel(PerfectNetworkSendEvent.class);
-		Channel pnDeliverChannel = boot
-				.createChannel(PerfectNetworkDeliverEvent.class);
+		Channel pnSendChannel = boot.createChannel(Message.class);
+		Channel pnDeliverChannel = boot.createChannel(Message.class);
 
 		// create and share the PerfectNetwork component
 		Component pnComponent = boot.createComponent(

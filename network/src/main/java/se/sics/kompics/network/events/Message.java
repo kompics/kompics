@@ -17,16 +17,26 @@ import se.sics.kompics.network.Transport;
 @EventType
 public abstract class Message implements Event, Serializable {
 
-	private final Address source;
+	private Address source;
 
 	public final Address destination;
 
 	private transient Transport protocol;
 
+	protected Message(Address destination) {
+		this.destination = destination;
+		this.protocol = Transport.TCP;
+	}
+
 	protected Message(Address source, Address destination) {
 		this.source = source;
 		this.destination = destination;
 		this.protocol = Transport.TCP;
+	}
+
+	protected Message(Address destination, Transport protocol) {
+		this.destination = destination;
+		this.protocol = protocol;
 	}
 
 	protected Message(Address source, Address destination, Transport protocol) {
@@ -49,5 +59,9 @@ public abstract class Message implements Event, Serializable {
 
 	public final void setProtocol(Transport protocol) {
 		this.protocol = protocol;
+	}
+
+	public final void setSource(Address address) {
+		this.source = address;
 	}
 }

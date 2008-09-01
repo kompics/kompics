@@ -18,6 +18,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCacheReset;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCompleted;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapRequest;
@@ -28,8 +29,6 @@ import se.sics.kompics.p2p.bootstrap.events.CacheGetPeersResponse;
 import se.sics.kompics.p2p.bootstrap.events.CacheResetRequest;
 import se.sics.kompics.p2p.bootstrap.events.ClientRefreshPeer;
 import se.sics.kompics.p2p.bootstrap.events.ClientRetryRequest;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
-import se.sics.kompics.p2p.network.events.PerfectNetworkSendEvent;
 import se.sics.kompics.timer.TimerHandler;
 import se.sics.kompics.timer.events.SetAlarm;
 
@@ -84,9 +83,8 @@ public class BootstrapClient {
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.p2p.network.PerfectNetwork");
-		pnSendChannel = pnMembrane.getChannelIn(PerfectNetworkSendEvent.class);
-		Channel pnDeliverChannel = pnMembrane
-				.getChannelOut(PerfectNetworkDeliverEvent.class);
+		pnSendChannel = pnMembrane.getChannelIn(Message.class);
+		Channel pnDeliverChannel = pnMembrane.getChannelOut(Message.class);
 
 		component.subscribe(this.requestChannel, "handleBootstrapRequest");
 		component.subscribe(this.requestChannel, "handleBootstrapCompleted");
@@ -128,24 +126,21 @@ public class BootstrapClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
+	@MayTriggerEventTypes(CacheGetPeersRequest.class)
 	public void handleBootstrapRequest(BootstrapRequest event) {
 		// set an alarm to retry the request if no response
 		long id = timerHandler.setTimer(new ClientRetryRequest(event),
 				timerSignalChannel, retryPeriod);
 
 		CacheGetPeersRequest request = new CacheGetPeersRequest(event
-				.getPeersMax(), id);
-
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				request, bootstrapServerAddress);
+				.getPeersMax(), id, bootstrapServerAddress);
 
 		logger.debug("Sending GetPeersRequest");
-		component.triggerEvent(sendEvent, pnSendChannel);
+		component.triggerEvent(request, pnSendChannel);
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
+	@MayTriggerEventTypes(CacheGetPeersRequest.class)
 	public void handleClientRetryRequest(ClientRetryRequest event) {
 		if (!timerHandler.isOustandingTimer(event.getTimerId())) {
 			return;
@@ -157,13 +152,10 @@ public class BootstrapClient {
 				.getRequest()), timerSignalChannel, retryPeriod);
 
 		CacheGetPeersRequest request = new CacheGetPeersRequest(event
-				.getRequest().getPeersMax(), id);
-
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				request, bootstrapServerAddress);
+				.getRequest().getPeersMax(), id, bootstrapServerAddress);
 
 		logger.debug("Sending GetPeersRequest");
-		component.triggerEvent(sendEvent, pnSendChannel);
+		component.triggerEvent(request, pnSendChannel);
 	}
 
 	@EventHandlerMethod
@@ -180,13 +172,12 @@ public class BootstrapClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class, SetAlarm.class })
+	@MayTriggerEventTypes( { CacheAddPeerRequest.class, SetAlarm.class })
 	public void handleBootstrapCompleted(BootstrapCompleted event) {
-		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress);
+		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress,
+				bootstrapServerAddress);
 
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				request, bootstrapServerAddress);
-		component.triggerEvent(sendEvent, pnSendChannel);
+		component.triggerEvent(request, pnSendChannel);
 
 		// set refresh timer
 		ClientRefreshPeer refreshEvent = new ClientRefreshPeer(localPeerAddress);
@@ -194,26 +185,22 @@ public class BootstrapClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { PerfectNetworkSendEvent.class, SetAlarm.class })
+	@MayTriggerEventTypes( { CacheAddPeerRequest.class, SetAlarm.class })
 	public void handleClientRefreshPeer(ClientRefreshPeer event) {
-		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress);
+		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress,
+				bootstrapServerAddress);
 
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				request, bootstrapServerAddress);
-		component.triggerEvent(sendEvent, pnSendChannel);
+		component.triggerEvent(request, pnSendChannel);
 
 		// reset refresh timer
 		timerHandler.setTimer(event, timerSignalChannel, refreshPeriod);
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(PerfectNetworkSendEvent.class)
+	@MayTriggerEventTypes(CacheResetRequest.class)
 	public void handleBootstrapCacheReset(BootstrapCacheReset event) {
-		CacheResetRequest request = new CacheResetRequest(localPeerAddress);
-
-		PerfectNetworkSendEvent sendEvent = new PerfectNetworkSendEvent(
-				request, bootstrapServerAddress);
-
-		component.triggerEvent(sendEvent, pnSendChannel);
+		CacheResetRequest request = new CacheResetRequest(localPeerAddress,
+				bootstrapServerAddress);
+		component.triggerEvent(request, pnSendChannel);
 	}
 }

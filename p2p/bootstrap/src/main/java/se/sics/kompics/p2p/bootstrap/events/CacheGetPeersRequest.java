@@ -1,7 +1,8 @@
 package se.sics.kompics.p2p.bootstrap.events;
 
 import se.sics.kompics.api.annotation.EventType;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
+import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 
 /**
  * The <code>CacheGetPeersRequest</code> class.
@@ -10,18 +11,19 @@ import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
  * @version $Id$
  */
 @EventType
-public final class CacheGetPeersRequest extends PerfectNetworkDeliverEvent {
+public final class CacheGetPeersRequest extends Message {
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 4732457498826276158L;
+	private static final long serialVersionUID = 2728539355659872087L;
 
 	private final int peersMax;
 
 	private final long requestId;
 
-	public CacheGetPeersRequest(int peersMax, long id) {
+	public CacheGetPeersRequest(int peersMax, long id, Address destination) {
+		super(destination);
 		this.peersMax = peersMax;
 		this.requestId = id;
 	}

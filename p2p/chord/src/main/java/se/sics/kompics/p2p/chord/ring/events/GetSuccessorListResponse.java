@@ -1,9 +1,10 @@
 package se.sics.kompics.p2p.chord.ring.events;
 
 import se.sics.kompics.api.annotation.EventType;
+import se.sics.kompics.network.Address;
+import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.chord.ring.RequestState;
 import se.sics.kompics.p2p.chord.ring.SuccessorList;
-import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
 
 /**
  * The <code>GetSuccessorListResponse</code> class
@@ -12,7 +13,7 @@ import se.sics.kompics.p2p.network.events.PerfectNetworkDeliverEvent;
  * @version $Id: GetSuccessorListResponse.java 158 2008-06-16 10:42:01Z Cosmin $
  */
 @EventType
-public final class GetSuccessorListResponse extends PerfectNetworkDeliverEvent {
+public final class GetSuccessorListResponse extends Message {
 
 	/**
 	 * 
@@ -24,7 +25,8 @@ public final class GetSuccessorListResponse extends PerfectNetworkDeliverEvent {
 	private final RequestState requestState;
 
 	public GetSuccessorListResponse(SuccessorList successorList,
-			RequestState requestState) {
+			RequestState requestState, Address destination) {
+		super(destination);
 		this.successorList = successorList;
 		this.requestState = requestState;
 	}
