@@ -23,11 +23,11 @@ import se.sics.kompics.network.events.NetworkSessionClosed;
 import se.sics.kompics.network.events.NetworkSessionOpened;
 import se.sics.kompics.p2p.bootstrap.BootstrapServer;
 import se.sics.kompics.p2p.bootstrap.events.StartBootstrapServer;
-import se.sics.kompics.timer.events.Alarm;
-import se.sics.kompics.timer.events.CancelAlarm;
-import se.sics.kompics.timer.events.CancelPeriodicAlarm;
-import se.sics.kompics.timer.events.SetAlarm;
-import se.sics.kompics.timer.events.SetPeriodicAlarm;
+import se.sics.kompics.timer.events.CancelPeriodicTimeout;
+import se.sics.kompics.timer.events.CancelTimeout;
+import se.sics.kompics.timer.events.SchedulePeriodicTimeout;
+import se.sics.kompics.timer.events.ScheduleTimeout;
+import se.sics.kompics.timer.events.Timeout;
 import se.sics.kompics.web.events.WebRequest;
 import se.sics.kompics.web.events.WebResponse;
 
@@ -79,10 +79,10 @@ public final class BootstrapServerMain {
 		Channel faultChannel = boot.getFaultChannel();
 
 		// create channels for the timer component
-		Channel timerSetChannel = boot.createChannel(SetAlarm.class,
-				SetPeriodicAlarm.class, CancelAlarm.class,
-				CancelPeriodicAlarm.class);
-		Channel timerSignalChannel = boot.createChannel(Alarm.class);
+		Channel timerSetChannel = boot.createChannel(ScheduleTimeout.class,
+				SchedulePeriodicTimeout.class, CancelTimeout.class,
+				CancelPeriodicTimeout.class);
+		Channel timerSignalChannel = boot.createChannel(Timeout.class);
 
 		// create and share the timer component
 		Component timerComponent = boot.createComponent(

@@ -1,7 +1,7 @@
 package se.sics.kompics.p2p.chord.ring.events;
 
 import se.sics.kompics.api.annotation.EventType;
-import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.Timeout;
 
 /**
  * The <code>StabilizeTimerSignal</code> class
@@ -10,6 +10,6 @@ import se.sics.kompics.timer.events.Alarm;
  * @version $Id: StabilizeTimerSignal.java 158 2008-06-16 10:42:01Z Cosmin $
  */
 @EventType
-public final class StabilizeTimerSignal extends Alarm {
+public final class StabilizeTimerSignal extends Timeout {
 
 }

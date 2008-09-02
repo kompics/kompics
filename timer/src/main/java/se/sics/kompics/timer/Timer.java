@@ -14,11 +14,11 @@ import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.EventHandlerMethod;
-import se.sics.kompics.timer.events.CancelPeriodicAlarm;
-import se.sics.kompics.timer.events.CancelAlarm;
-import se.sics.kompics.timer.events.SetPeriodicAlarm;
-import se.sics.kompics.timer.events.SetAlarm;
-import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.CancelPeriodicTimeout;
+import se.sics.kompics.timer.events.CancelTimeout;
+import se.sics.kompics.timer.events.SchedulePeriodicTimeout;
+import se.sics.kompics.timer.events.ScheduleTimeout;
+import se.sics.kompics.timer.events.Timeout;
 
 /**
  * The <code>Timer</code> class
@@ -70,11 +70,11 @@ public class Timer {
 	@ComponentShareMethod
 	public ComponentMembrane share(String name) {
 		ComponentMembrane membrane = new ComponentMembrane(component);
-		membrane.inChannel(SetAlarm.class, requestChannel);
-		membrane.inChannel(SetPeriodicAlarm.class, requestChannel);
-		membrane.inChannel(CancelAlarm.class, requestChannel);
-		membrane.inChannel(CancelPeriodicAlarm.class, requestChannel);
-		membrane.outChannel(Alarm.class, signalChannel);
+		membrane.inChannel(ScheduleTimeout.class, requestChannel);
+		membrane.inChannel(SchedulePeriodicTimeout.class, requestChannel);
+		membrane.inChannel(CancelTimeout.class, requestChannel);
+		membrane.inChannel(CancelPeriodicTimeout.class, requestChannel);
+		membrane.outChannel(Timeout.class, signalChannel);
 		membrane.seal();
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
@@ -86,12 +86,12 @@ public class Timer {
 	}
 
 	@EventHandlerMethod
-	public void handleSetPeriodicTimerEvent(SetPeriodicAlarm event) {
+	public void handleSetPeriodicTimerEvent(SchedulePeriodicTimeout event) {
 		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
 				event.getTimerId());
 
 		PeriodicTimerSignalTask timeOutTask = new PeriodicTimerSignalTask(
-				component, event.getTimerExpiredEvent(), event
+				component, event.getTimeout(), event
 						.getClientChannel(), id);
 
 		activePeriodicTimers.put(id, timeOutTask);
@@ -100,7 +100,7 @@ public class Timer {
 	}
 
 	@EventHandlerMethod
-	public void handleCancelPeriodicTimerEvent(CancelPeriodicAlarm event) {
+	public void handleCancelPeriodicTimerEvent(CancelPeriodicTimeout event) {
 		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
 				event.getTimerId());
 		if (activePeriodicTimers.containsKey(id)) {
@@ -110,7 +110,7 @@ public class Timer {
 	}
 
 	@EventHandlerMethod
-	public void handleSetTimerEvent(SetAlarm event) {
+	public void handleSetTimerEvent(ScheduleTimeout event) {
 
 		logger.debug("Handling SET TIMER: ", event);
 
@@ -118,14 +118,14 @@ public class Timer {
 				event.getTimerId());
 
 		TimerSignalTask timeOutTask = new TimerSignalTask(this, event
-				.getTimerExpiredEvent(), event.getClientChannel(), id);
+				.geTimeout(), event.getClientChannel(), id);
 
 		activeTimers.put(id, timeOutTask);
 		timer.schedule(timeOutTask, event.getDelay());
 	}
 
 	@EventHandlerMethod
-	public void handleCancelTimerEvent(CancelAlarm event) {
+	public void handleCancelTimerEvent(CancelTimeout event) {
 		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
 				event.getTimerId());
 
@@ -136,7 +136,7 @@ public class Timer {
 	}
 
 	// called by the timeout task
-	void timeout(TimerId timerId, Alarm timerExpiredEvent,
+	void timeout(TimerId timerId, Timeout timerExpiredEvent,
 			Channel clientChannel) {
 		activeTimers.remove(timerId);
 

@@ -4,16 +4,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>ConnectionDetails</code> class
+ * The <code>PeerResponseTime</code> class
  * 
  * @author Cosmin Arad
  * @author Roberto Roverso
- * @version $Id:FailureDetectorStatistics.java 98 2006-11-14 15:13:32Z cosmin $
+ * @version $PeerResponseTime.java 98 2006-11-14 15:13:32Z cosmin $
  */
-public class FailureDetectorStatistics {
+public class PeerResponseTime {
 
-	private static Logger log = LoggerFactory
-			.getLogger(FailureDetectorStatistics.class);
+	private static Logger log = LoggerFactory.getLogger(PeerResponseTime.class);
 
 	private double avgRTT;
 
@@ -31,11 +30,11 @@ public class FailureDetectorStatistics {
 
 	private long rtoMin;
 
-	public FailureDetectorStatistics(long rtoMin) {
-		avgRTT = 0;
+	public PeerResponseTime(long rtoMin) {
+		avgRTT = 0.0;
 		varRTT = 0.0;
-		RTO = -1;
-		showedRTO = 0;
+		RTO = -1.0;
+		showedRTO = 0.0;
 
 		this.rtoMin = rtoMin;
 	}
@@ -53,8 +52,7 @@ public class FailureDetectorStatistics {
 			// this.count = 1;
 
 			/*
-			 * SRTT <- R, RTTVAR <- R/2, RTO <- SRTT + max (G, K*RTTVAR)
-			 * 
+			 * SRTT <- R, RTTVAR <- R/2, RTO <- SRTT + max (G, KRTTVAR)
 			 */
 			this.avgRTT = rtt;
 			this.varRTT = rtt / 2.0;
@@ -121,5 +119,9 @@ public class FailureDetectorStatistics {
 
 	public long getRTO() {
 		return (showedRTO == 0 ? (long) rtoMin : (long) showedRTO);
+	}
+
+	ProbedPeerData getProbedPeerData() {
+		return new ProbedPeerData(avgRTT, varRTT, RTO, showedRTO, rtoMin);
 	}
 }

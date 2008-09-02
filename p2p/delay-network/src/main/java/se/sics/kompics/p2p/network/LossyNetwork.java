@@ -23,7 +23,7 @@ import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.network.events.LossyNetworMessage;
 import se.sics.kompics.p2p.network.events.LossyNetworkAlarm;
 import se.sics.kompics.p2p.network.topology.KingMatrix;
-import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.ScheduleTimeout;
 
 /**
  * The <code>LossyNetwork</code> class
@@ -69,7 +69,7 @@ public final class LossyNetwork {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
+		timerSetChannel = timerMembrane.getChannelIn(ScheduleTimeout.class);
 
 		// use a private channel for TimerSignal events
 		timerSignalChannel = component.createChannel(LossyNetworkAlarm.class);
@@ -119,7 +119,7 @@ public final class LossyNetwork {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetAlarm.class, Message.class })
+	@MayTriggerEventTypes( { ScheduleTimeout.class, Message.class })
 	public void handleMessage(Message event) {
 		logger.debug("Handling send {} to {}.", event, event.getDestination());
 
@@ -150,8 +150,8 @@ public final class LossyNetwork {
 		if (latency > 0) {
 			// delay the sending according to the latency
 			LossyNetworkAlarm tse = new LossyNetworkAlarm(lnMessage);
-			SetAlarm ste = new SetAlarm(0, tse, timerSignalChannel, component,
-					latency);
+			ScheduleTimeout ste = new ScheduleTimeout(0, tse,
+					timerSignalChannel, component, latency);
 			component.triggerEvent(ste, timerSetChannel, Priority.HIGH);
 		} else {
 			// send immediately

@@ -30,7 +30,7 @@ import se.sics.kompics.p2p.bootstrap.events.CacheResetRequest;
 import se.sics.kompics.p2p.bootstrap.events.ClientRefreshPeer;
 import se.sics.kompics.p2p.bootstrap.events.ClientRetryRequest;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.ScheduleTimeout;
 
 /**
  * The <code>BootstrapClient</code> class
@@ -76,7 +76,8 @@ public class BootstrapClient {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(ScheduleTimeout.class);
 		timerSignalChannel = component.createChannel(ClientRefreshPeer.class,
 				ClientRetryRequest.class);
 
@@ -172,7 +173,7 @@ public class BootstrapClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { CacheAddPeerRequest.class, SetAlarm.class })
+	@MayTriggerEventTypes( { CacheAddPeerRequest.class, ScheduleTimeout.class })
 	public void handleBootstrapCompleted(BootstrapCompleted event) {
 		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress,
 				bootstrapServerAddress);
@@ -185,7 +186,7 @@ public class BootstrapClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { CacheAddPeerRequest.class, SetAlarm.class })
+	@MayTriggerEventTypes( { CacheAddPeerRequest.class, ScheduleTimeout.class })
 	public void handleClientRefreshPeer(ClientRefreshPeer event) {
 		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress,
 				bootstrapServerAddress);

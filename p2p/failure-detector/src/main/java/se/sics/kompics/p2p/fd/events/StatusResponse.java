@@ -1,9 +1,10 @@
 package se.sics.kompics.p2p.fd.events;
 
-import java.util.LinkedList;
+import java.util.Map;
 
 import se.sics.kompics.api.Event;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.p2p.fd.ProbedPeerData;
 
 /**
  * The <code>StatusResponse</code> class
@@ -13,14 +14,14 @@ import se.sics.kompics.network.Address;
  */
 public final class StatusResponse implements Event {
 
-	private final LinkedList<Address> probedPeers;
+	private final Map<Address, ProbedPeerData> probedPeers;
 
-	public StatusResponse(LinkedList<Address> probedPeers) {
+	public StatusResponse(Map<Address, ProbedPeerData> probedPeers) {
 		super();
 		this.probedPeers = probedPeers;
 	}
 
-	public LinkedList<Address> getProbedPeers() {
+	public Map<Address, ProbedPeerData> getProbedPeers() {
 		return probedPeers;
 	}
 }

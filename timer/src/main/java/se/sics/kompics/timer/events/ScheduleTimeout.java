@@ -8,35 +8,32 @@ import se.sics.kompics.api.annotation.EventType;
 /**
  * 
  * @author Cosmin Arad
- * @version $Id: SetPeriodicAlarm.java 24 2008-04-14 18:17:59Z cosmin $
+ * @version $Id$
  */
 @EventType
-public class SetPeriodicAlarm implements Event {
+public class ScheduleTimeout implements Event {
 
 	private Component clientComponent;
 
 	private long delay;
 
-	private long period;
-
 	private long timerId;
 
-	private Alarm timerExpiredEvent;
+	private Timeout timeout;
 
 	private Channel clientChannel;
 
-	public SetPeriodicAlarm(long timerId, Alarm timerExpiredEvent,
-			Channel channel, Component component, long delay, long period) {
+	public ScheduleTimeout(long timerId, Timeout timeout, Channel channel,
+			Component component, long delay) {
 		this.clientChannel = channel;
 		this.timerId = timerId;
-		this.timerExpiredEvent = timerExpiredEvent;
+		this.timeout = timeout;
 		this.clientComponent = component;
 		this.delay = delay;
-		this.period = period;
 	}
 
-	public Alarm getTimerExpiredEvent() {
-		return timerExpiredEvent;
+	public Timeout geTimeout() {
+		return timeout;
 	}
 
 	public Component getClientComponent() {
@@ -53,9 +50,5 @@ public class SetPeriodicAlarm implements Event {
 
 	public Channel getClientChannel() {
 		return clientChannel;
-	}
-
-	public long getPeriod() {
-		return period;
 	}
 }

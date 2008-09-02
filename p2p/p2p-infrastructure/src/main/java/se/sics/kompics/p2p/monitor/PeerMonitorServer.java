@@ -26,8 +26,8 @@ import se.sics.kompics.p2p.chord.router.FingerTableView;
 import se.sics.kompics.p2p.monitor.events.PeerViewNotification;
 import se.sics.kompics.p2p.monitor.events.ViewEvictPeer;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.Alarm;
-import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.ScheduleTimeout;
+import se.sics.kompics.timer.events.Timeout;
 import se.sics.kompics.web.events.WebRequest;
 import se.sics.kompics.web.events.WebResponse;
 
@@ -83,8 +83,9 @@ public class PeerMonitorServer {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
-		timerSignalChannel = timerMembrane.getChannelOut(Alarm.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(ScheduleTimeout.class);
+		timerSignalChannel = timerMembrane.getChannelOut(Timeout.class);
 
 		// use shared LossyNetwork component
 		ComponentMembrane lnMembrane = component

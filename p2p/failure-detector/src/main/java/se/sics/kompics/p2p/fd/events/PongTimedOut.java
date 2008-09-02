@@ -1,7 +1,7 @@
 package se.sics.kompics.p2p.fd.events;
 
 import se.sics.kompics.network.Address;
-import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.Timeout;
 
 /**
  * The <code>PongTimedOut</code> class
@@ -10,7 +10,7 @@ import se.sics.kompics.timer.events.Alarm;
  * @author Roberto Roverso
  * @version $Id: PongTimedOut.java 491 2007-12-11 12:01:50Z roberto $
  */
-public final class PongTimedOut extends Alarm {
+public final class PongTimedOut extends Timeout {
 
 	private final Address peer;
 

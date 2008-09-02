@@ -10,13 +10,13 @@ import se.sics.kompics.api.annotation.EventType;
  * @version $Id$
  */
 @EventType
-public class CancelPeriodicAlarm implements Event {
+public class CancelPeriodicTimeout implements Event {
 
 	private Component clientComponent;
 
 	private long timerId;
 
-	public CancelPeriodicAlarm(Component component, long timerId) {
+	public CancelPeriodicTimeout(Component component, long timerId) {
 		this.timerId = timerId;
 		this.clientComponent = component;
 	}

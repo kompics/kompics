@@ -27,9 +27,9 @@ import se.sics.kompics.p2p.monitor.events.SendView;
 import se.sics.kompics.p2p.monitor.events.StartPeerMonitor;
 import se.sics.kompics.p2p.monitor.events.StopPeerMonitor;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.Alarm;
-import se.sics.kompics.timer.events.CancelAlarm;
-import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.CancelTimeout;
+import se.sics.kompics.timer.events.ScheduleTimeout;
+import se.sics.kompics.timer.events.Timeout;
 
 /**
  * The <code>PeerMonitorClient</code> class
@@ -66,8 +66,9 @@ public class PeerMonitorClient {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
-		timerSignalChannel = component.createChannel(Alarm.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(ScheduleTimeout.class);
+		timerSignalChannel = component.createChannel(Timeout.class);
 
 		this.timerHandler = new TimerHandler(component, timerSetChannel);
 
@@ -116,7 +117,7 @@ public class PeerMonitorClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(SetAlarm.class)
+	@MayTriggerEventTypes(ScheduleTimeout.class)
 	public void handleStartPeerMonitor(StartPeerMonitor event) {
 		SendView timerEvent = new SendView(localPeerAddress.getId());
 
@@ -125,7 +126,7 @@ public class PeerMonitorClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(CancelAlarm.class)
+	@MayTriggerEventTypes(CancelTimeout.class)
 	public void handleStopPeerMonitor(StopPeerMonitor event) {
 		timerHandler.cancelAllOutstandingTimers();
 	}
@@ -136,7 +137,8 @@ public class PeerMonitorClient {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { GetChordNeighborsRequest.class, SetAlarm.class })
+	@MayTriggerEventTypes( { GetChordNeighborsRequest.class,
+			ScheduleTimeout.class })
 	public void handleSendView(SendView event) {
 		logger.debug("SEND_VIEW");
 

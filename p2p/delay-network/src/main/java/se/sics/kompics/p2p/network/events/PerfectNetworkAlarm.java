@@ -2,7 +2,7 @@ package se.sics.kompics.p2p.network.events;
 
 import se.sics.kompics.api.annotation.EventType;
 import se.sics.kompics.network.events.Message;
-import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.Timeout;
 
 /**
  * The <code>PerfectNetworkAlarm</code> class.
@@ -11,7 +11,7 @@ import se.sics.kompics.timer.events.Alarm;
  * @version $Id$
  */
 @EventType
-public final class PerfectNetworkAlarm extends Alarm {
+public final class PerfectNetworkAlarm extends Timeout {
 
 	private final Message message;
 

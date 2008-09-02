@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.mortbay.jetty.Request;
@@ -29,6 +30,7 @@ import se.sics.kompics.p2p.chord.events.GetChordNeighborsRequest;
 import se.sics.kompics.p2p.chord.events.GetChordNeighborsResponse;
 import se.sics.kompics.p2p.chord.router.FingerTableView;
 import se.sics.kompics.p2p.chord.router.LookupInfo;
+import se.sics.kompics.p2p.fd.ProbedPeerData;
 import se.sics.kompics.p2p.fd.events.StatusRequest;
 import se.sics.kompics.p2p.fd.events.StatusResponse;
 import se.sics.kompics.web.events.WebRequest;
@@ -253,23 +255,46 @@ public class WebHandler {
 	}
 
 	private String dumpFdStatusToHtml(StatusResponse response) {
-		LinkedList<Address> peers = response.getProbedPeers();
+		Map<Address, ProbedPeerData> probedPeers = response.getProbedPeers();
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("<h2 align=\"center\" class=\"style2\">Failure Detector:");
-		sb.append("</h2><table width=\"500\" border=\"2\" align=\"center\">");
-		sb.append("<th class=\"style2\" width=\"100\" scope=\"col\">Peer</th>");
-		sb.append("<th class=\"style2\" width=\"100\" scope=\"col\">Data</th>");
+		sb.append("</h2><table width=\"400\" border=\"2\" align=\"center\">");
+		sb.append("<th class=\"style2\" width=\"150\" scope=\"col\">Peer</th>");
+		sb
+				.append("<th class=\"style2\" width=\"50\" scope=\"col\">RTT avg</th>");
+		sb
+				.append("<th class=\"style2\" width=\"50\" scope=\"col\">RTT var</th>");
+		sb.append("<th class=\"style2\" width=\"50\" scope=\"col\">RTTO</th>");
+		sb
+				.append("<th class=\"style2\" width=\"50\" scope=\"col\">RTTO show</th>");
+		sb
+				.append("<th class=\"style2\" width=\"50\" scope=\"col\">RTTO min</th>");
 		sb.append("</tr>");
+
+		LinkedList<Address> peers = new LinkedList<Address>(probedPeers
+				.keySet());
 
 		if (peers != null) {
 			Collections.sort(peers);
 
 			Iterator<Address> iter = peers.iterator();
 			while (iter.hasNext()) {
+				Address address = iter.next();
+				ProbedPeerData data = probedPeers.get(address);
 				sb.append("<tr><td><div align=\"center\">");
-				appendWebLink(sb, iter.next(), null);
-				sb.append("</div></td><td>Data</td></tr>");
+				appendWebLink(sb, address, null);
+				sb.append("</div></td><td>");
+				sb.append(String.format("%.2f", data.avgRTT));
+				sb.append("</td><td>");
+				sb.append(String.format("%.2f", data.varRTT));
+				sb.append("</td><td>");
+				sb.append(String.format("%.2f", data.rtto));
+				sb.append("</td><td>");
+				sb.append(String.format("%.2f", data.showedRtto));
+				sb.append("</td><td>");
+				sb.append(String.format("%.2f", data.rttoMin));
+				sb.append("</td></tr>");
 			}
 		} else {
 			sb.append("<tr><td bgcolor=\"#FFCCFF\"><div align=\"center\">");

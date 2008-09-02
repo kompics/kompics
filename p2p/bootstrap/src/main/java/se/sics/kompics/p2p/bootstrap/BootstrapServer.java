@@ -26,8 +26,8 @@ import se.sics.kompics.p2p.bootstrap.events.CacheResetRequest;
 import se.sics.kompics.p2p.bootstrap.events.PeerEntry;
 import se.sics.kompics.p2p.bootstrap.events.StartBootstrapServer;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.Alarm;
-import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.ScheduleTimeout;
+import se.sics.kompics.timer.events.Timeout;
 import se.sics.kompics.web.events.WebRequest;
 import se.sics.kompics.web.events.WebResponse;
 
@@ -71,8 +71,9 @@ public class BootstrapServer {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
-		timerSignalChannel = timerMembrane.getChannelOut(Alarm.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(ScheduleTimeout.class);
+		timerSignalChannel = timerMembrane.getChannelOut(Timeout.class);
 
 		// use shared PerfectNetwork component
 		ComponentMembrane pnMembrane = component
@@ -111,7 +112,7 @@ public class BootstrapServer {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(SetAlarm.class)
+	@MayTriggerEventTypes(ScheduleTimeout.class)
 	public void handleCacheResetRequest(CacheResetRequest event) {
 		// cancel all eviction timers
 		timerHandler.cancelAllOutstandingTimers();
@@ -128,7 +129,7 @@ public class BootstrapServer {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes(SetAlarm.class)
+	@MayTriggerEventTypes(ScheduleTimeout.class)
 	public void handleCacheAddPeerRequest(CacheAddPeerRequest event) {
 		addPeerToCache(event.getPeerAddress());
 

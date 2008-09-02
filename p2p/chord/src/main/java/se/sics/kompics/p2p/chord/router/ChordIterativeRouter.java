@@ -33,8 +33,8 @@ import se.sics.kompics.p2p.chord.router.events.GetFingerTableResponse;
 import se.sics.kompics.p2p.chord.router.events.NewFingerTable;
 import se.sics.kompics.p2p.chord.router.events.RpcTimeout;
 import se.sics.kompics.timer.TimerHandler;
-import se.sics.kompics.timer.events.CancelAlarm;
-import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.CancelTimeout;
+import se.sics.kompics.timer.events.ScheduleTimeout;
 
 /**
  * The <code>ChordIterativeRouter</code> class
@@ -90,7 +90,8 @@ public class ChordIterativeRouter {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		Channel timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
+		Channel timerSetChannel = timerMembrane
+				.getChannelIn(ScheduleTimeout.class);
 		timerSignalChannel = component.createChannel(FixFingers.class,
 				RpcTimeout.class);
 
@@ -189,7 +190,7 @@ public class ChordIterativeRouter {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetAlarm.class, FindSuccessorRequest.class,
+	@MayTriggerEventTypes( { ScheduleTimeout.class, FindSuccessorRequest.class,
 			ChordLookupResponse.class })
 	public void handleChordLookupRequest(ChordLookupRequest event) {
 		logger.debug("CHORD_LOOKUP_REQ({})", event.getKey());
@@ -318,7 +319,7 @@ public class ChordIterativeRouter {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetAlarm.class, CancelAlarm.class,
+	@MayTriggerEventTypes( { ScheduleTimeout.class, CancelTimeout.class,
 			FindSuccessorRequest.class, ChordLookupResponse.class })
 	public void handleFindSuccessorResponse(FindSuccessorResponse event) {
 
@@ -396,7 +397,7 @@ public class ChordIterativeRouter {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { ChordLookupRequest.class, SetAlarm.class })
+	@MayTriggerEventTypes( { ChordLookupRequest.class, ScheduleTimeout.class })
 	public void handleFixFingers(FixFingers event) {
 		logger.debug("FIX_FINGER");
 

@@ -15,9 +15,16 @@ public final class Pong extends Message {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -5807328462867288380L;
+	private static final long serialVersionUID = -4264214351542432046L;
 
-	public Pong(Address source, Address destination) {
+	private final long id;
+
+	public Pong(long id, Address source, Address destination) {
 		super(source, destination);
+		this.id = id;
+	}
+
+	public long getId() {
+		return id;
 	}
 }

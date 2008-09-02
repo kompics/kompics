@@ -21,7 +21,7 @@ import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.network.events.PerfectNetworkAlarm;
 import se.sics.kompics.p2p.network.events.PerfectNetworkMessage;
 import se.sics.kompics.p2p.network.topology.KingMatrix;
-import se.sics.kompics.timer.events.SetAlarm;
+import se.sics.kompics.timer.events.ScheduleTimeout;
 
 /**
  * The <code>PeerMonitor</code> class
@@ -51,6 +51,8 @@ public final class PerfectNetwork {
 
 	private int localKingId;
 
+	private BigInteger kingSize;
+
 	public PerfectNetwork(Component component) {
 		this.component = component;
 	}
@@ -63,7 +65,7 @@ public final class PerfectNetwork {
 		// use shared timer component
 		ComponentMembrane timerMembrane = component
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
-		timerSetChannel = timerMembrane.getChannelIn(SetAlarm.class);
+		timerSetChannel = timerMembrane.getChannelIn(ScheduleTimeout.class);
 
 		// use a private channel for TimerSignal events
 		timerSignalChannel = component.createChannel(PerfectNetworkAlarm.class);
@@ -93,8 +95,8 @@ public final class PerfectNetwork {
 		logger = LoggerFactory.getLogger(PerfectNetwork.class.getName() + "@"
 				+ localAddress.getId());
 
-		BigInteger kingId = localAddress.getId().mod(
-				BigInteger.valueOf(KingMatrix.SIZE));
+		kingSize = BigInteger.valueOf(KingMatrix.SIZE);
+		BigInteger kingId = localAddress.getId().mod(kingSize);
 
 		this.localKingId = kingId.intValue();
 
@@ -108,7 +110,7 @@ public final class PerfectNetwork {
 	}
 
 	@EventHandlerMethod
-	@MayTriggerEventTypes( { SetAlarm.class, Message.class })
+	@MayTriggerEventTypes( { ScheduleTimeout.class, Message.class })
 	public void handleMessage(Message event) {
 		logger.debug("Handling send1 {} to {}.", event, event.getDestination());
 
@@ -130,13 +132,13 @@ public final class PerfectNetwork {
 		PerfectNetworkMessage pnMessage = new PerfectNetworkMessage(event,
 				localAddress, destination);
 
-		long latency = king[localKingId][destination.getId().mod(
-				BigInteger.valueOf(KingMatrix.SIZE)).intValue()];
+		long latency = king[localKingId][destination.getId().mod(kingSize)
+				.intValue()];
 		if (latency > 0) {
 			// delay the sending according to the latency
 			PerfectNetworkAlarm tse = new PerfectNetworkAlarm(pnMessage);
-			SetAlarm ste = new SetAlarm(0, tse, timerSignalChannel, component,
-					latency);
+			ScheduleTimeout ste = new ScheduleTimeout(0, tse,
+					timerSignalChannel, component, latency);
 			component.triggerEvent(ste, timerSetChannel, Priority.HIGH);
 		} else {
 			// send immediately

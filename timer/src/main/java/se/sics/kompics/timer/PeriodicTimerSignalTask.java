@@ -5,7 +5,7 @@ import java.util.TimerTask;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.Priority;
-import se.sics.kompics.timer.events.Alarm;
+import se.sics.kompics.timer.events.Timeout;
 
 /**
  * 
@@ -14,7 +14,7 @@ import se.sics.kompics.timer.events.Alarm;
  */
 class PeriodicTimerSignalTask extends TimerTask {
 
-	private Alarm timerExpiredEvent;
+	private Timeout timerExpiredEvent;
 
 	private TimerId timerId;
 
@@ -23,7 +23,7 @@ class PeriodicTimerSignalTask extends TimerTask {
 	private Channel clientChannel;
 
 	PeriodicTimerSignalTask(Component timerComponent,
-			Alarm timerExpiredEvent, Channel clientChannel,
+			Timeout timerExpiredEvent, Channel clientChannel,
 			TimerId timerId) {
 		super();
 		this.timerComponent = timerComponent;
