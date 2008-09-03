@@ -2,19 +2,19 @@
   <parent>
     <artifactId>kompics-p2p</artifactId>
     <groupId>se.sics.kompics</groupId>
-    <version>0.2</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics</groupId>
   <artifactId>failure-detector</artifactId>
   <name>Kompics P2P Failure Detector</name>
-  <version>0.2</version>
+  <version>0.3-SNAPSHOT</version>
   <description>Kompics P2P Failure Detector</description>
   <dependencies>
   	<dependency>
   		<groupId>se.sics.kompics</groupId>
   		<artifactId>delay-network</artifactId>
-  		<version>0.2</version>
+  		<version>0.3-SNAPSHOT</version>
   	</dependency>
   </dependencies>
 </project>
