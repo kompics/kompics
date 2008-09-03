@@ -41,14 +41,26 @@
 
 	<repositories>
 		<repository>
-			<id>repo</id>
+			<id>sics-release</id>
 			<name>SICS Repository</name>
 			<url>http://korsakov.sics.se/maven/repository</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
 		</repository>
 		<repository>
-			<id>snaprepo</id>
+			<id>sics-snapshot</id>
 			<name>SICS Snapshot Repository</name>
 			<url>http://korsakov.sics.se/maven/snapshotrepository</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
 		</repository>
 	</repositories>
 
@@ -130,11 +142,10 @@
 		<module>core</module>
 		<module>timer</module>
 		<module>network</module>
-		<module>protocols</module>
 		<module>p2p</module>
 		<module>web</module>
 		<!--
-			
+			<module>protocols</module>
 			<module>failure-detector</module>
 			<module>inspector</module>
 			<module>example</module>
