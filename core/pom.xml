@@ -6,7 +6,7 @@
 		<version>0.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>kompics-core</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.2.9-SNAPSHOT</version>
 	<name>Kompics Core</name>
 	<packaging>jar</packaging>
 	<properties>
@@ -43,10 +43,4 @@
 			</plugin>
 		</plugins>
 	</reporting>
-
-  <scm>
-    <connection>scm:svn:svn://small.sics.se/kompics/branches/no-reflection</connection>
-    <developerConnection>scm:svn:svn://small.sics.se/kompics/branches/no-reflection</developerConnection>
-    <url>http://small.sics.se/viewvc/kompics/branches/no-reflection</url>
-  </scm>
 </project>
