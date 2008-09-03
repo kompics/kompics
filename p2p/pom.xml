@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>se.sics.kompics</groupId>
 		<artifactId>build</artifactId>
-		<version>0.2-SNAPSHOT</version>
+		<version>0.2</version>
 	</parent>
 	<artifactId>kompics-p2p</artifactId>
 	<name>Kompics Peer2Peer Protocols</name>
@@ -45,25 +45,25 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.2-SNAPSHOT</version>
+			<version>0.2</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-timer</artifactId>
-			<version>0.2-SNAPSHOT</version>
+			<version>0.2</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-network</artifactId>
-			<version>0.2-SNAPSHOT</version>
+			<version>0.2</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-web</artifactId>
-			<version>0.2-SNAPSHOT</version>
+			<version>0.2</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
