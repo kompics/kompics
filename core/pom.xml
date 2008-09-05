@@ -6,7 +6,6 @@
 		<version>0.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>kompics-core</artifactId>
-  <version>0.2.9-SNAPSHOT</version>
 	<name>Kompics Core</name>
 	<packaging>jar</packaging>
 	<properties>
