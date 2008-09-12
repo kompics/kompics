@@ -8,7 +8,9 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
-import se.sics.kompics.api.EventAttributeFilter;
+import se.sics.kompics.api.EventFilter;
+import se.sics.kompics.api.EventHandler;
+import se.sics.kompics.api.FastEventFilter;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.capability.CapabilityNotSupportedException;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
@@ -142,22 +144,46 @@ public class ComponentReference implements Component {
 		throw new CapabilityNotSupportedException(ComponentCapabilityFlags.STOP);
 	}
 
-	public void subscribe(Channel channel, String eventHandlerName,
-			EventAttributeFilter... filters) {
+	public void subscribe(Channel channel, EventHandler<? extends Event> handler) {
 		if (componentCapabilities.contains(ComponentCapabilityFlags.SUBSCRIBE)
 				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			componentCore.subscribe(this, channel, eventHandlerName, filters);
+			componentCore.subscribe(this, channel, handler);
 			return;
 		}
 		throw new CapabilityNotSupportedException(
 				ComponentCapabilityFlags.SUBSCRIBE);
 	}
 
-	public void unsubscribe(Channel channel, String eventHandlerName) {
+	public void subscribe(Channel channel,
+			EventHandler<? extends Event> handler,
+			EventFilter<? extends Event> filter) {
+		if (componentCapabilities.contains(ComponentCapabilityFlags.SUBSCRIBE)
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
+			componentCore.subscribe(this, channel, handler, filter);
+			return;
+		}
+		throw new CapabilityNotSupportedException(
+				ComponentCapabilityFlags.SUBSCRIBE);
+	}
+
+	public void subscribe(Channel channel,
+			EventHandler<? extends Event> handler,
+			FastEventFilter<? extends Event> filter) {
+		if (componentCapabilities.contains(ComponentCapabilityFlags.SUBSCRIBE)
+				&& (capable == null || capable.equals(ComponentUUID.get()))) {
+			componentCore.subscribe(this, channel, handler, filter);
+			return;
+		}
+		throw new CapabilityNotSupportedException(
+				ComponentCapabilityFlags.SUBSCRIBE);
+	}
+
+	public void unsubscribe(Channel channel,
+			EventHandler<? extends Event> handler) {
 		if (componentCapabilities
 				.contains(ComponentCapabilityFlags.UNSUBSCRIBE)
 				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			componentCore.unsubscribe(this, channel, eventHandlerName);
+			componentCore.unsubscribe(this, channel, handler);
 			return;
 		}
 		throw new CapabilityNotSupportedException(
@@ -184,11 +210,11 @@ public class ComponentReference implements Component {
 				ComponentCapabilityFlags.TRIGGER);
 	}
 
-	void handleWork(Work work) {
+	void handleWork(int wid, Work work) {
 		if (componentCapabilities
 				.contains(ComponentCapabilityFlags.HANDLE_EVENTS)
 				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			componentCore.handleWork(work);
+			componentCore.handleWork(wid, work);
 			return;
 		}
 		throw new CapabilityNotSupportedException(

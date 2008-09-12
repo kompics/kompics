@@ -20,6 +20,9 @@ import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.api.EventAttributeFilter;
+import se.sics.kompics.api.EventFilter;
+import se.sics.kompics.api.EventHandler;
+import se.sics.kompics.api.FastEventFilter;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
@@ -37,7 +40,7 @@ import se.sics.kompics.core.scheduler.WorkQueue;
  * @since Kompics 0.1
  * @version $Id$
  */
-public class ComponentCore implements Runnable {
+public class ComponentCore {
 
 	private ComponentUUID componentIdentifier;
 
@@ -51,9 +54,9 @@ public class ComponentCore implements Runnable {
 
 	private Object handlerObject;
 
-	private HashMap<String, EventHandler> eventHandlers;
+	private HashMap<EventHandler<? extends Event>, EventHandlerCore> eventHandlers;
 
-	private HashSet<EventHandler> guardedHandlersWithBlockedEvents;
+	private HashSet<EventHandlerCore> guardedHandlersWithBlockedEvents;
 
 	private int blockedEventsCount;
 
@@ -79,6 +82,8 @@ public class ComponentCore implements Runnable {
 
 	private Scheduler scheduler;
 
+	private int wid;
+
 	private AtomicInteger workCounter;
 
 	private HashMap<ChannelCore, WorkQueue> channelWorkQueues;
@@ -92,6 +97,7 @@ public class ComponentCore implements Runnable {
 			ComponentCore parentCore, Channel faultChannel) {
 		super();
 		this.scheduler = scheduler;
+		this.wid = -1;
 		this.factoryRegistry = factoryRegistry;
 		this.factoryCore = factoryCore;
 
@@ -101,6 +107,10 @@ public class ComponentCore implements Runnable {
 		this.localChannels = new LinkedList<Channel>();
 		this.subComponentCores = new LinkedList<ComponentCore>();
 		this.localChannelCores = new LinkedList<ChannelCore>();
+
+		this.eventHandlers = new HashMap<EventHandler<? extends Event>, EventHandlerCore>();
+		this.guardedHandlersWithBlockedEvents = new HashSet<EventHandlerCore>();
+		this.blockedEventsCount = 0;
 
 		// check fault channel
 		if (!faultChannel.hasEventType(FaultEvent.class)) {
@@ -142,15 +152,6 @@ public class ComponentCore implements Runnable {
 		}
 	}
 
-	public void setEventHandlers(HashMap<String, EventHandler> eventHandlers,
-			boolean hasGuarded) {
-		this.eventHandlers = eventHandlers;
-		if (hasGuarded) {
-			this.guardedHandlersWithBlockedEvents = new HashSet<EventHandler>();
-			this.blockedEventsCount = 0;
-		}
-	}
-
 	/* =============== EVENT TRIGGERING =============== */
 
 	public void triggerEvent(Event event, Channel channel) {
@@ -170,7 +171,7 @@ public class ComponentCore implements Runnable {
 
 	private void triggerEventCore(EventCore eventCore) {
 		ChannelReference channelReference = eventCore.getChannel();
-		channelReference.publishEventCore(eventCore);
+		channelReference.publishEventCore(wid, eventCore);
 
 		if (Kompics.jmxEnabled) {
 			Kompics.mbean.publishedEvent(eventCore.getEvent());
@@ -180,7 +181,7 @@ public class ComponentCore implements Runnable {
 
 	/* =============== EVENT SCHEDULING =============== */
 
-	public void handleWork(Work work) {
+	public void handleWork(int wid, Work work) {
 		WorkQueue workQueue = channelWorkQueues.get(work.getChannelCore());
 		workQueue.add(work);
 		workQueuePool.add(workQueue);
@@ -188,7 +189,7 @@ public class ComponentCore implements Runnable {
 		// we make the component ready, if passive
 		int oldWorkCounter = workCounter.getAndIncrement();
 		if (oldWorkCounter == 0) {
-			scheduler.componentReady(this);
+			scheduler.componentReady(wid, this);
 		}
 	}
 
@@ -199,7 +200,7 @@ public class ComponentCore implements Runnable {
 	 * found at the head of a channel queue, a lower priority event is executed,
 	 * if one is available, otherwise a higher priority one.
 	 */
-	public void run() {
+	public void run(int wid) {
 		// set the thread local component identifier. The thread executes now on
 		// behalf of this component.
 		ComponentUUID.set(componentIdentifier);
@@ -212,10 +213,14 @@ public class ComponentCore implements Runnable {
 		Work work = workQueue.take();
 
 		// execute the taken work
-		EventHandler eventHandler = work.getEventHandler();
+		EventHandlerCore eventHandler = work.getEventHandlerCore();
 		Event event = work.getEventCore().getEvent();
 
 		Work.release(work);
+
+		// we set the id of the worker executing this handler so that all
+		// works triggered from this handler are signed by this worker
+		this.wid = wid;
 
 		// isolate any possible errors or exceptions while executing event
 		// handlers and guard methods
@@ -236,6 +241,10 @@ public class ComponentCore implements Runnable {
 			handleFault(throwable);
 		}
 
+		// we reset the worker id so that triggers made by non-worker thread are
+		// get a worker id of -1
+		this.wid = -1;
+
 		if (Kompics.jmxEnabled) {
 			Kompics.mbean.handledEvent(event);
 			mbean.handledEvent(event);
@@ -244,7 +253,7 @@ public class ComponentCore implements Runnable {
 		// make the component passive or ready
 		int newWorkCounter = workCounter.decrementAndGet();
 		if (newWorkCounter > 0) {
-			scheduler.componentReady(this);
+			scheduler.componentReady(wid, this);
 		}
 	}
 
@@ -256,13 +265,13 @@ public class ComponentCore implements Runnable {
 	 *         could be executed due to no satisfied guard
 	 */
 	private boolean handleOneBlockedEvent() throws Throwable {
-		Iterator<EventHandler> iterator = guardedHandlersWithBlockedEvents
+		Iterator<EventHandlerCore> iterator = guardedHandlersWithBlockedEvents
 				.iterator();
 
 		// try every guarded event handler with blocked events until one
 		// bocked event is handled
 		while (iterator.hasNext()) {
-			EventHandler eventHandler = iterator.next();
+			EventHandlerCore eventHandler = iterator.next();
 
 			boolean handled = eventHandler.handleOneBlockedEvent();
 			if (handled) {
@@ -374,12 +383,74 @@ public class ComponentCore implements Runnable {
 	}
 
 	/* =============== COMPONENT CONFIGURATION =============== */
+	@SuppressWarnings("unchecked")
+	private Class<? extends Event> reflectEventType(
+			EventHandler<? extends Event> handler) {
+		Class<? extends Event> eventType = null;
+		try {
+			Method ms[] = handler.getClass().getMethods(), m = null;
+			for (Method m1 : ms) {
+				if (m1.getName().equals("handle")) {
+					m = m1;
+					break;
+				}
+			}
+			eventType = (Class<? extends Event>) m.getParameterTypes()[0];
+
+			// eventType = (Class<? extends Event>) handler.getClass()
+			// .getMethod("handle", Event.class).getParameterTypes()[0];
+
+			// System.out.println(eventType.getCanonicalName() + "==="
+			// + ms.length);
+
+			// for (Method m1 : ms) {
+			// System.err.println(m1.getName() + m1.toGenericString());
+			// }
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		}
+		return eventType;
+	}
 
 	public void subscribe(ComponentReference componentReference,
+			Channel channel, EventHandler<? extends Event> handler) {
+		ChannelReference channelReference = (ChannelReference) channel;
+		EventHandlerCore eventHandler = eventHandlers.get(handler);
+		if (eventHandler == null) {
+			eventHandler = new EventHandlerCore(reflectEventType(handler),
+					handler);
+			eventHandlers.put(handler, eventHandler);
+		}
+
+		Subscription subscription = new Subscription(componentReference,
+				channelReference, eventHandler, new EventAttributeFilterCore[0]);
+
+		ChannelCore channelCore = channelReference
+				.addSubscription(subscription);
+		subscriptions.add(subscription);
+
+		// create a local work queue if one does not already exist
+		if (!channelWorkQueues.containsKey(channelCore)) {
+			WorkQueue workQueue = new WorkQueue();
+			channelWorkQueues.put(channelCore, workQueue);
+		}
+	}
+
+	public void subscribe(ComponentReference componentReference,
+			Channel channel, EventHandler<? extends Event> handler,
+			EventFilter<? extends Event> filter) {
+	}
+
+	public void subscribe(ComponentReference componentReference,
+			Channel channel, EventHandler<? extends Event> handler,
+			FastEventFilter<? extends Event> filter) {
+	}
+
+	public void subscribeOld(ComponentReference componentReference,
 			Channel channel, String eventHandlerName,
 			EventAttributeFilter... filters) {
 		ChannelReference channelReference = (ChannelReference) channel;
-		EventHandler eventHandler = eventHandlers.get(eventHandlerName);
+		EventHandlerCore eventHandler = eventHandlers.get(eventHandlerName);
 		if (eventHandler != null) {
 			EventAttributeFilterCore[] filterCores;
 
@@ -428,15 +499,15 @@ public class ComponentCore implements Runnable {
 	}
 
 	public void unsubscribe(ComponentReference componentReference,
-			Channel channel, String eventHandlerName) {
+			Channel channel, EventHandler<? extends Event> eventHandler) {
 		ChannelReference channelReference = (ChannelReference) channel;
-		EventHandler eventHandler = eventHandlers.get(eventHandlerName);
-		if (eventHandler != null) {
+		EventHandlerCore eventHandlerCore = eventHandlers.get(eventHandler);
+		if (eventHandlerCore != null) {
 			Subscription subscription = null;
 			for (Subscription sub : subscriptions) {
 				if (sub.getComponent().equals(componentReference)
 						&& sub.getChannel().equals(channelReference)
-						&& sub.getEventHandler().equals(eventHandler)) {
+						&& sub.getEventHandlerCore().equals(eventHandlerCore)) {
 					subscription = sub;
 					break;
 				}
@@ -449,12 +520,11 @@ public class ComponentCore implements Runnable {
 				// TODO refcount work queues and remove them on unsubscription
 			} else {
 				throw new RuntimeException("I have no subscription of "
-						+ "eventHandler " + eventHandlerName
-						+ " to this channel");
+						+ "eventHandler " + eventHandler + " to this channel");
 			}
 		} else {
 			throw new RuntimeException("I have no eventHandler named "
-					+ eventHandlerName);
+					+ eventHandler);
 		}
 	}
 
@@ -530,6 +600,8 @@ public class ComponentCore implements Runnable {
 	/* =============== COMPONENT FAULT-HANDLING =============== */
 	private void handleFault(Throwable throwable) {
 		System.out.println("ISOLATED EXCEPTION");
+
+		throwable.printStackTrace(System.err);
 
 		// filter out stack frames showing Kompics internals
 		StackTraceElement stackTrace[] = throwable.getCause().getStackTrace();

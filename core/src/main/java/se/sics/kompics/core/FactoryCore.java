@@ -5,14 +5,11 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.Event;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
@@ -20,9 +17,6 @@ import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.ComponentStartMethod;
 import se.sics.kompics.api.annotation.ComponentStopMethod;
-import se.sics.kompics.api.annotation.EventGuardMethod;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
-import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.core.scheduler.Scheduler;
 
 /**
@@ -51,37 +45,11 @@ public class FactoryCore {
 	private Class<?> handlerComponentClass;
 
 	/**
-	 * The event handler methods indexed by name.
-	 */
-	private HashMap<String, Method> eventHandlerMethods = null;
-
-	/**
-	 * The number of guarded event handlers.
-	 */
-	private int guardedHandlersCount;
-
-	/**
-	 * The event handler methods indexed by name.
-	 */
-	private HashMap<String, Class<? extends Event>> eventHandlerInputEventTypes = null;
-
-	/**
-	 * The names of the guard methods (if they exist) indexed by event handler
-	 * names.
-	 */
-	private HashMap<String, String> eventHandlerGuardNames = null;
-
-	/**
 	 * The arrays of event types possibly triggered by each event handler,
 	 * indexed by event handler name.
 	 */
-	private HashMap<String, Class<? extends Event>[]> eventHandlerOutputEventTypes = null;
-
-	/**
-	 * The event handler guard methods indexed by guard name.
-	 */
-	private HashMap<String, Method> eventGuardMethods = null;
-
+	// private HashMap<String, Class<? extends Event>[]>
+	// eventHandlerOutputEventTypes = null;
 	/**
 	 * The constructor of the component implementation class.
 	 */
@@ -152,7 +120,6 @@ public class FactoryCore {
 							+ handlerComponentClassName, e);
 		}
 
-		this.guardedHandlersCount = 0;
 		this.reflectHandlerComponentClass();
 	}
 
@@ -176,81 +143,83 @@ public class FactoryCore {
 		for (int i = 0; i < methods.length; i++) {
 			Method method = methods[i];
 
-			// reflect event handler
-			if (method.isAnnotationPresent(EventHandlerMethod.class)) {
-				// check that event handler method accepts one Event argument
-				Class<?>[] parameterTypes = method.getParameterTypes();
-				if (parameterTypes.length != 1) {
-					throw new RuntimeException(
-							"Event handler method "
-									+ method.getName()
-									+ " should take one se.sics.kompics.api.Event argument");
-				}
-				Class<? extends Event> eventType = null;
-				if (!Event.class.isAssignableFrom(parameterTypes[0])) {
-					throw new RuntimeException(
-							"Event handler method "
-									+ method.getName()
-									+ " should take one se.sics.kompics.api.Event argument");
-				} else {
-					eventType = parameterTypes[0].asSubclass(Event.class);
-				}
-
-				if (eventHandlerMethods == null) {
-					eventHandlerMethods = new HashMap<String, Method>();
-				}
-				eventHandlerMethods.put(method.getName(), method);
-				if (eventHandlerInputEventTypes == null) {
-					eventHandlerInputEventTypes = new HashMap<String, Class<? extends Event>>();
-				}
-				eventHandlerInputEventTypes.put(method.getName(), eventType);
-
-				EventHandlerMethod handlerAnnotation = method
-						.getAnnotation(EventHandlerMethod.class);
-				if (handlerAnnotation.guarded()) {
-					if (eventHandlerGuardNames == null) {
-						eventHandlerGuardNames = new HashMap<String, String>();
-					}
-					guardedHandlersCount++;
-					eventHandlerGuardNames.put(method.getName(),
-							handlerAnnotation.guard());
-				}
-
-				// reflect the event types that may be triggered by this handler
-				MayTriggerEventTypes eventTypes = method
-						.getAnnotation(MayTriggerEventTypes.class);
-				if (eventTypes != null) {
-					if (eventHandlerOutputEventTypes == null) {
-						eventHandlerOutputEventTypes = new HashMap<String, Class<? extends Event>[]>();
-					}
-					eventHandlerOutputEventTypes.put(method.getName(),
-							eventTypes.value());
-				}
-			}
-
-			// reflect event guard
-			if (method.isAnnotationPresent(EventGuardMethod.class)) {
-				// check that event handler guard method accepts one Event
-				// argument
-				Class<?>[] parameterTypes = method.getParameterTypes();
-				if (parameterTypes.length != 1) {
-					throw new RuntimeException(
-							"Event handler guard method "
-									+ method.getName()
-									+ " should take one se.sics.kompics.api.Event argument");
-				}
-				if (!Event.class.isAssignableFrom(parameterTypes[0])) {
-					throw new RuntimeException(
-							"Event handler guard method "
-									+ method.getName()
-									+ " should take one se.sics.kompics.api.Event argument");
-				}
-
-				if (eventGuardMethods == null) {
-					eventGuardMethods = new HashMap<String, Method>();
-				}
-				eventGuardMethods.put(method.getName(), method);
-			}
+			// // reflect event handler
+			// if (method.isAnnotationPresent(EventHandlerMethod.class)) {
+			// // check that event handler method accepts one Event argument
+			// Class<?>[] parameterTypes = method.getParameterTypes();
+			// if (parameterTypes.length != 1) {
+			// throw new RuntimeException(
+			// "Event handler method "
+			// + method.getName()
+			// + " should take one se.sics.kompics.api.Event argument");
+			// }
+			// Class<? extends Event> eventType = null;
+			// if (!Event.class.isAssignableFrom(parameterTypes[0])) {
+			// throw new RuntimeException(
+			// "Event handler method "
+			// + method.getName()
+			// + " should take one se.sics.kompics.api.Event argument");
+			// } else {
+			// eventType = parameterTypes[0].asSubclass(Event.class);
+			// }
+			//
+			// if (eventHandlerMethods == null) {
+			// eventHandlerMethods = new HashMap<String, Method>();
+			// }
+			// eventHandlerMethods.put(method.getName(), method);
+			// if (eventHandlerInputEventTypes == null) {
+			// eventHandlerInputEventTypes = new HashMap<String, Class<? extends
+			// Event>>();
+			// }
+			// eventHandlerInputEventTypes.put(method.getName(), eventType);
+			//
+			// EventHandlerMethod handlerAnnotation = method
+			// .getAnnotation(EventHandlerMethod.class);
+			// if (handlerAnnotation.guarded()) {
+			// if (eventHandlerGuardNames == null) {
+			// eventHandlerGuardNames = new HashMap<String, String>();
+			// }
+			// guardedHandlersCount++;
+			// eventHandlerGuardNames.put(method.getName(),
+			// handlerAnnotation.guard());
+			// }
+			//
+			// // reflect the event types that may be triggered by this handler
+			// MayTriggerEventTypes eventTypes = method
+			// .getAnnotation(MayTriggerEventTypes.class);
+			// if (eventTypes != null) {
+			// if (eventHandlerOutputEventTypes == null) {
+			// eventHandlerOutputEventTypes = new HashMap<String, Class<?
+			// extends Event>[]>();
+			// }
+			// eventHandlerOutputEventTypes.put(method.getName(),
+			// eventTypes.value());
+			// }
+			// }
+			//
+			// // reflect event guard
+			// if (method.isAnnotationPresent(EventGuardMethod.class)) {
+			// // check that event handler guard method accepts one Event
+			// // argument
+			// Class<?>[] parameterTypes = method.getParameterTypes();
+			// if (parameterTypes.length != 1) {
+			// throw new RuntimeException(
+			// "Event handler guard method "
+			// + method.getName()
+			// + " should take one se.sics.kompics.api.Event argument");
+			// }
+			// if (!Event.class.isAssignableFrom(parameterTypes[0])) {
+			// throw new RuntimeException(
+			// "Event handler guard method "
+			// + method.getName()
+			// + " should take one se.sics.kompics.api.Event argument");
+			// }
+			//
+			// if (eventGuardMethods == null) {
+			// eventGuardMethods = new HashMap<String, Method>();
+			// }
+			// eventGuardMethods.put(method.getName(), method);
+			// }
 
 			// reflect the component's start method
 			if (method.isAnnotationPresent(ComponentStartMethod.class)) {
@@ -331,41 +300,42 @@ public class FactoryCore {
 			}
 		}
 
-		// check that the component implementation class declared event handlers
-		if (eventHandlerMethods == null) {
-			throw new RuntimeException(
-					"Component class declared no event handlers found");
-		}
-		// check that all declared guard names exist and their argument types
-		// match the event handler argument types
-		if (eventHandlerGuardNames != null) {
-			if (eventGuardMethods == null) {
-				throw new RuntimeException(
-						"Guard names declared but no guard method present.");
-			}
-
-			for (Map.Entry<String, String> entry : eventHandlerGuardNames
-					.entrySet()) {
-				String handlerName = entry.getKey();
-				String guardName = entry.getValue();
-				Method guardMethod = eventGuardMethods.get(guardName);
-				if (guardMethod == null) {
-					throw new RuntimeException("Guard name " + guardName
-							+ " declared, but no guard method found");
-				}
-				Method handlerMethod = eventHandlerMethods.get(handlerName);
-				Class<?>[] guardParameterTypes = guardMethod
-						.getParameterTypes();
-				Class<?>[] handlerParameterTypes = handlerMethod
-						.getParameterTypes();
-
-				if (!handlerParameterTypes[0].equals(guardParameterTypes[0])) {
-					throw new RuntimeException("Arguments for event handler "
-							+ handlerName + " and associated guard "
-							+ guardName + " do not match.");
-				}
-			}
-		}
+		// // check that the component implementation class declared event
+		// handlers
+		// if (eventHandlerMethods == null) {
+		// throw new RuntimeException(
+		// "Component class declared no event handlers found");
+		// }
+		// // check that all declared guard names exist and their argument types
+		// // match the event handler argument types
+		// if (eventHandlerGuardNames != null) {
+		// if (eventGuardMethods == null) {
+		// throw new RuntimeException(
+		// "Guard names declared but no guard method present.");
+		// }
+		//
+		// for (Map.Entry<String, String> entry : eventHandlerGuardNames
+		// .entrySet()) {
+		// String handlerName = entry.getKey();
+		// String guardName = entry.getValue();
+		// Method guardMethod = eventGuardMethods.get(guardName);
+		// if (guardMethod == null) {
+		// throw new RuntimeException("Guard name " + guardName
+		// + " declared, but no guard method found");
+		// }
+		// Method handlerMethod = eventHandlerMethods.get(handlerName);
+		// Class<?>[] guardParameterTypes = guardMethod
+		// .getParameterTypes();
+		// Class<?>[] handlerParameterTypes = handlerMethod
+		// .getParameterTypes();
+		//
+		// if (!handlerParameterTypes[0].equals(guardParameterTypes[0])) {
+		// throw new RuntimeException("Arguments for event handler "
+		// + handlerName + " and associated guard "
+		// + guardName + " do not match.");
+		// }
+		// }
+		// }
 
 		// reflect the constructor of the component implementation instance
 		Class<?>[] paramsClasses = new Class<?>[1];
@@ -401,32 +371,34 @@ public class FactoryCore {
 			// create an instance of the implementing component type
 			Object handlerObject = constructor.newInstance(componentReference);
 
-			// create the event handlers
-			HashMap<String, EventHandler> eventHandlers = new HashMap<String, EventHandler>();
-			for (Map.Entry<String, Method> handlerEntry : eventHandlerMethods
-					.entrySet()) {
-				String handlerName = handlerEntry.getKey();
-				Method handlerMethod = handlerEntry.getValue();
-				Class<? extends Event> eventType = eventHandlerInputEventTypes
-						.get(handlerName);
-
-				EventHandler eventHandler;
-				String guardName;
-				if (guardedHandlersCount > 0
-						&& (guardName = eventHandlerGuardNames.get(handlerName)) != null) {
-					Method guardMethod = eventGuardMethods.get(guardName);
-					eventHandler = new EventHandler(handlerObject,
-							handlerMethod, guardMethod, eventType);
-				} else {
-					eventHandler = new EventHandler(handlerObject,
-							handlerMethod, eventType);
-				}
-				eventHandlers.put(handlerName, eventHandler);
-			}
+			// // create the event handlers
+			// HashMap<String, EventHandlerCore> eventHandlerCores = new
+			// HashMap<String, EventHandlerCore>();
+			// for (Map.Entry<String, Method> handlerEntry : eventHandlerMethods
+			// .entrySet()) {
+			// String handlerName = handlerEntry.getKey();
+			// Method handlerMethod = handlerEntry.getValue();
+			// Class<? extends Event> eventType = eventHandlerInputEventTypes
+			// .get(handlerName);
+			//
+			// EventHandlerCore eventHandlerCore;
+			// String guardName;
+			// if (guardedHandlersCount > 0
+			// && (guardName = eventHandlerGuardNames.get(handlerName)) != null)
+			// {
+			// Method guardMethod = eventGuardMethods.get(guardName);
+			// eventHandlerCore = new EventHandlerCore(handlerObject,
+			// handlerMethod, guardMethod, eventType);
+			// } else {
+			// eventHandlerCore = new EventHandlerCore(handlerObject,
+			// handlerMethod, eventType);
+			// }
+			// eventHandlerCores.put(handlerName, eventHandlerCore);
+			// }
 
 			componentCore.setHandlerObject(handlerObject);
-			componentCore.setEventHandlers(eventHandlers,
-					guardedHandlersCount > 0);
+			// componentCore.setEventHandlers(eventHandlerCores,
+			// guardedHandlersCount > 0);
 
 			// invoke the create method
 			if (createMethod != null) {

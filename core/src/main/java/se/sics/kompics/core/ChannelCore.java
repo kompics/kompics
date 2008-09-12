@@ -86,7 +86,7 @@ public class ChannelCore {
 	}
 
 	public void removeSubscription(Subscription subscription) {
-		Class<? extends Event> eventType = subscription.getEventHandler()
+		Class<? extends Event> eventType = subscription.getEventHandlerCore()
 				.getEventType();
 		synchronized (channelLock) {
 			lookup.clear(); // TODO safe removal of sub data
@@ -95,9 +95,7 @@ public class ChannelCore {
 				boolean removed = subs.remove(subscription);
 				if (!removed) {
 					throw new ConfigurationException(
-							"There was no subscription for handler "
-									+ subscription.getEventHandler().getName()
-									+ " at this channel");
+							"There was no subscription for given handler at this channel");
 				}
 				if (subs.size() == 0) {
 					subscribedTypes.remove(eventType);
@@ -111,7 +109,7 @@ public class ChannelCore {
 	}
 
 	public void addSubscription(Subscription subscription) {
-		Class<? extends Event> eventType = subscription.getEventHandler()
+		Class<? extends Event> eventType = subscription.getEventHandlerCore()
 				.getEventType();
 		synchronized (channelLock) {
 			lookup.clear();
@@ -142,9 +140,8 @@ public class ChannelCore {
 					subscriptions.put(eventType, subs);
 				} else {
 					throw new ConfigurationException(
-							"Cannot subscribe eventhandler "
-									+ subscription.getEventHandler().getName()
-									+ " to channel. " + eventType
+							"Cannot subscribe eventhandler to channel. "
+									+ eventType
 									+ " is not carried by this channel");
 				}
 			}
@@ -152,7 +149,7 @@ public class ChannelCore {
 	}
 
 	/* =============== EVENT TRIGGERING =============== */
-	public void publishEventCore(EventCore eventCore) {
+	public void publishEventCore(int wid, EventCore eventCore) {
 		Event event = eventCore.getEvent();
 		Class<? extends Event> eventType = event.getClass();
 		boolean typeMatch = false;
@@ -180,13 +177,15 @@ public class ChannelCore {
 			}
 
 			if (matchingSet.noFilterSubs != null) {
-				deliverToSubscribers(eventCore, event, matchingSet.noFilterSubs);
+				deliverToSubscribers(wid, eventCore, event,
+						matchingSet.noFilterSubs);
 			}
 			if (matchingSet.oneFilterSubs != null) {
-				deliverToOneFilteredSubscribers(eventCore, event, matchingSet);
+				deliverToOneFilteredSubscribers(wid, eventCore, event,
+						matchingSet);
 			}
 			if (matchingSet.manyFilterSubs != null) {
-				deliverToManyFilteredSubscribers(eventCore, event,
+				deliverToManyFilteredSubscribers(wid, eventCore, event,
 						matchingSet.manyFilterSubs);
 			}
 
@@ -208,15 +207,19 @@ public class ChannelCore {
 		}
 	}
 
-	private void deliverToSubscribers(EventCore eventCore, Event event,
-			Subscription[] subs) {
+	private void deliverToSubscribers(int wid, EventCore eventCore,
+			Event event, Subscription[] subs) {
 		for (int i = 0; i < subs.length; i++) {
-			Work work = Work.aquire(this, eventCore, subs[i].getEventHandler());
-			subs[i].getComponent().handleWork(work);
+			// Work work = new Work(this, eventCore,
+			// subs[i].getEventHandlerCore());
+			Work work = Work.acquire(this, eventCore, subs[i]
+					.getEventHandlerCore());
+
+			subs[i].getComponent().handleWork(wid, work);
 		}
 	}
 
-	private void deliverToOneFilteredSubscribers(EventCore eventCore,
+	private void deliverToOneFilteredSubscribers(int wid, EventCore eventCore,
 			Event event, SubscriptionSet set) {
 
 		for (Field f : set.oneFilterSubs.keySet()) {
@@ -224,7 +227,7 @@ public class ChannelCore {
 			try {
 				subs = set.getSubscriptions(f, f.get(event));
 				if (subs != null) {
-					deliverToSubscribers(eventCore, event, subs);
+					deliverToSubscribers(wid, eventCore, event, subs);
 				}
 			} catch (Throwable e) {
 				// exception in f.get
@@ -243,7 +246,7 @@ public class ChannelCore {
 		}
 	}
 
-	private void deliverToManyFilteredSubscribers(EventCore eventCore,
+	private void deliverToManyFilteredSubscribers(int wid, EventCore eventCore,
 			Event event, Subscription[] subs) {
 		for (int i = 0; i < subs.length; i++) {
 			boolean match = true;
@@ -264,9 +267,11 @@ public class ChannelCore {
 						.getFaultChannel());
 			}
 			if (match) {
-				Work work = Work.aquire(this, eventCore, subs[i]
-						.getEventHandler());
-				subs[i].getComponent().handleWork(work);
+				// Work work = new Work(this, eventCore, subs[i]
+				// .getEventHandlerCore());
+				Work work = Work.acquire(this, eventCore, subs[i]
+						.getEventHandlerCore());
+				subs[i].getComponent().handleWork(wid, work);
 			}
 		}
 	}

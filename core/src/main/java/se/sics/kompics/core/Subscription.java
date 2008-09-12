@@ -1,22 +1,24 @@
 package se.sics.kompics.core;
 
+
 public class Subscription {
 
 	private final ComponentReference componentReference;
 
 	private final ChannelReference channelReference;
 
-	private final EventHandler eventHandler;
+	private final EventHandlerCore eventHandlerCore;
 
 	private final EventAttributeFilterCore[] filters;
 
 	public Subscription(ComponentReference componentReference,
-			ChannelReference channelReference, EventHandler eventHandler,
+			ChannelReference channelReference,
+			EventHandlerCore eventHandlerCore,
 			EventAttributeFilterCore[] filters) {
 		super();
 		this.componentReference = componentReference;
 		this.channelReference = channelReference;
-		this.eventHandler = eventHandler;
+		this.eventHandlerCore = eventHandlerCore;
 		this.filters = filters;
 	}
 
@@ -28,16 +30,11 @@ public class Subscription {
 		return channelReference;
 	}
 
-	public EventHandler getEventHandler() {
-		return eventHandler;
+	public EventHandlerCore getEventHandlerCore() {
+		return eventHandlerCore;
 	}
 
 	public EventAttributeFilterCore[] getFilters() {
 		return filters;
-	}
-
-	public String toString() {
-		return "Subscription for handler " + eventHandler.getName() + " ("
-				+ filters.length + ")";
 	}
 }

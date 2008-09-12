@@ -2,10 +2,10 @@ package se.sics.kompics.core;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 
 @ComponentSpecification
 public class BootstrapComponent {
@@ -19,11 +19,12 @@ public class BootstrapComponent {
 
 	@ComponentCreateMethod
 	public void create(Channel channel) {
-		component.subscribe(channel, "handleFaultEvent");
+		component.subscribe(channel, faultHandler);
 	}
 
-	@EventHandlerMethod
-	public void handleFaultEvent(FaultEvent event) {
-		event.getThrowable().printStackTrace();
-	}
+	private EventHandler<FaultEvent> faultHandler = new EventHandler<FaultEvent>() {
+		public void handle(FaultEvent event) {
+			event.getThrowable().printStackTrace();
+		}
+	};
 }

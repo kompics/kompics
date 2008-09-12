@@ -42,7 +42,7 @@ public class Kompics {
 	public static se.sics.kompics.management.Kompics mbean;
 	public static se.sics.kompics.management.Component bootMbean;
 
-	private Scheduler scheduler;
+	public Scheduler scheduler;
 
 	/**
 	 * Creates a Kompics system or virtual node.

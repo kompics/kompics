@@ -103,10 +103,10 @@ public class ChannelReference implements Channel {
 				ChannelCapabilityFlags.UNSUBSCRIBE);
 	}
 
-	void publishEventCore(EventCore eventCore) {
+	void publishEventCore(int wid, EventCore eventCore) {
 		if (channelCapabilities.contains(ChannelCapabilityFlags.PUBLISH)
 				&& (capable == null || capable.equals(ComponentUUID.get()))) {
-			channelCore.publishEventCore(eventCore);
+			channelCore.publishEventCore(wid, eventCore);
 			return;
 		}
 		throw new CapabilityNotSupportedException(

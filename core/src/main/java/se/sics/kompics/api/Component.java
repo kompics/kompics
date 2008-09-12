@@ -32,10 +32,20 @@ public interface Component {
 
 	// TODO document
 	// TODO createFaultChannel
-	public void subscribe(Channel channel, String eventHandlerName,
-			EventAttributeFilter... filters);
 
-	public void unsubscribe(Channel channel, String eventHandlerName);
+	public void subscribe(Channel channel,
+			EventHandler<? extends Event> eventHandler);
+
+	public void subscribe(Channel channel,
+			EventHandler<? extends Event> eventHandler,
+			EventFilter<? extends Event> filter);
+
+	public void subscribe(Channel channel,
+			EventHandler<? extends Event> eventHandler,
+			FastEventFilter<? extends Event> filter);
+
+	public void unsubscribe(Channel channel,
+			EventHandler<? extends Event> eventHandler);
 
 	public void start();
 
