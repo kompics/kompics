@@ -44,7 +44,7 @@ public class ChannelCore {
 
 	private Object channelLock;
 
-	public se.sics.kompics.management.Channel mbean;
+	public se.sics.kompics.management.ChannelMXBeanImpl mbean;
 	private static AtomicLong id = new AtomicLong(0);
 
 	// TODO fix core visibility
@@ -65,7 +65,7 @@ public class ChannelCore {
 								+ id.incrementAndGet());
 
 				// Create the Hello World MBean
-				mbean = new se.sics.kompics.management.Channel(this);
+				mbean = new se.sics.kompics.management.ChannelMXBeanImpl(this);
 				// Register the Hello World MBean
 				mbs.registerMBean(mbean, name);
 			} catch (Exception e) {

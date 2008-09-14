@@ -146,6 +146,14 @@ public class Scheduler {
 				String.format("%.2f", avgHighDif), steps });
 	}
 
+	long getWorkStealingCount() {
+		long cnt = 0;
+		for (int i = 0; i < workers.length; i++) {
+			cnt += workers[i].tws;
+		}
+		return cnt;
+	}
+
 	public void countReduction() {
 		reductions++;
 		if (reductions % 1000 == 0) {

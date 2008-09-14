@@ -14,7 +14,7 @@ import se.sics.kompics.api.Event;
 import se.sics.kompics.core.ChannelCore;
 import se.sics.kompics.core.ComponentCore;
 
-public class Component implements ComponentMXBean {
+public class ComponentMXBeanImpl implements ComponentMXBean {
 
 	private ComponentCore core;
 
@@ -28,7 +28,7 @@ public class Component implements ComponentMXBean {
 
 	private Map<String, AtomicLong> handledEvents;
 
-	public Component(ComponentCore core, String name) {
+	public ComponentMXBeanImpl(ComponentCore core, String name) {
 		this.core = core;
 		this.name = name;
 		publishedEventCount = new AtomicLong(0);

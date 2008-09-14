@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import se.sics.kompics.api.Event;
 
-public class Kompics implements KompicsMXBean {
+public class KompicsMXBeanImpl implements KompicsMXBean {
 
 	private se.sics.kompics.api.Kompics kompics;
 
@@ -21,7 +21,7 @@ public class Kompics implements KompicsMXBean {
 
 	private Map<String, AtomicLong> handledEvents;
 
-	public Kompics(se.sics.kompics.api.Kompics kompics) {
+	public KompicsMXBeanImpl(se.sics.kompics.api.Kompics kompics) {
 		this.kompics = kompics;
 		publishedEventCount = new AtomicLong(0);
 		handledEventCount = new AtomicLong(0);

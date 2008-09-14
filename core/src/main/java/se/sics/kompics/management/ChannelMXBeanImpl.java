@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import se.sics.kompics.api.Event;
 import se.sics.kompics.core.ChannelCore;
 
-public class Channel implements ChannelMXBean {
+public class ChannelMXBeanImpl implements ChannelMXBean {
 
 	private ChannelCore core;
 
@@ -19,7 +19,7 @@ public class Channel implements ChannelMXBean {
 
 	private Map<String, AtomicLong> publishedEvents;
 
-	public Channel(ChannelCore core) {
+	public ChannelMXBeanImpl(ChannelCore core) {
 		this.core = core;
 		publishedEventCount = new AtomicLong(0);
 		publishedEvents = new ConcurrentHashMap<String, AtomicLong>();

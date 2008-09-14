@@ -16,7 +16,9 @@ import se.sics.kompics.core.ComponentReference;
 import se.sics.kompics.core.FactoryCore;
 import se.sics.kompics.core.FactoryRegistry;
 import se.sics.kompics.core.scheduler.Scheduler;
+import se.sics.kompics.core.scheduler.SchedulerMXBeanImpl;
 import se.sics.kompics.management.ComponentMXBean;
+import se.sics.kompics.management.SchedulerMXBean;
 
 /**
  * A Kompics system with a scheduler and an associated set of worker threads.
@@ -39,8 +41,10 @@ public class Kompics {
 
 	public static boolean jmxEnabled;
 
-	public static se.sics.kompics.management.Kompics mbean;
-	public static se.sics.kompics.management.Component bootMbean;
+	private SchedulerMXBean schedulerMXBean;
+
+	public static se.sics.kompics.management.KompicsMXBeanImpl mbean;
+	public static se.sics.kompics.management.ComponentMXBeanImpl bootMbean;
 
 	public Scheduler scheduler;
 
@@ -68,6 +72,8 @@ public class Kompics {
 		this.componentRegistry = new ComponentRegistry();
 		this.scheduler = new Scheduler(workers, fairnessRate);
 
+		this.schedulerMXBean = new SchedulerMXBeanImpl(scheduler);
+
 		if (null != System.getProperty("com.sun.management.jmxremote")) {
 			jmxEnabled = true;
 			try {
@@ -76,7 +82,7 @@ public class Kompics {
 				ObjectName name = new ObjectName("se.sics.kompics:type=Kompics");
 
 				// Create the Hello World MBean
-				mbean = new se.sics.kompics.management.Kompics(this);
+				mbean = new se.sics.kompics.management.KompicsMXBeanImpl(this);
 				// Register the Hello World MBean
 				mbs.registerMBean(mbean, name);
 			} catch (Exception e) {
@@ -153,5 +159,9 @@ public class Kompics {
 
 	public ComponentRegistry getComponentRegistry() {
 		return componentRegistry;
+	}
+
+	public SchedulerMXBean getSchedulerMXBean() {
+		return schedulerMXBean;
 	}
 }

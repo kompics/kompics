@@ -90,7 +90,7 @@ public class ComponentCore {
 
 	private ConcurrentLinkedQueue<WorkQueue> workQueuePool;
 
-	public se.sics.kompics.management.Component mbean;
+	public se.sics.kompics.management.ComponentMXBeanImpl mbean;
 
 	public ComponentCore(Scheduler scheduler, FactoryRegistry factoryRegistry,
 			FactoryCore factoryCore, ComponentReference parent,
@@ -142,7 +142,7 @@ public class ComponentCore {
 						"se.sics.kompics:type=Component,name=" + componentName);
 
 				// Create the Hello World MBean
-				mbean = new se.sics.kompics.management.Component(this,
+				mbean = new se.sics.kompics.management.ComponentMXBeanImpl(this,
 						componentName);
 				// Register the Hello World MBean
 				mbs.registerMBean(mbean, name);
