@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.MBeanServer;
@@ -28,6 +27,7 @@ import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
 import se.sics.kompics.core.scheduler.Scheduler;
+import se.sics.kompics.core.scheduler.SpinlockQueue;
 import se.sics.kompics.core.scheduler.Work;
 import se.sics.kompics.core.scheduler.WorkQueue;
 
@@ -88,7 +88,7 @@ public class ComponentCore {
 
 	private HashMap<ChannelCore, WorkQueue> channelWorkQueues;
 
-	private ConcurrentLinkedQueue<WorkQueue> workQueuePool;
+	private SpinlockQueue<WorkQueue> workQueuePool;
 
 	public se.sics.kompics.management.ComponentMXBeanImpl mbean;
 
@@ -126,7 +126,7 @@ public class ComponentCore {
 
 		this.channelWorkQueues = new HashMap<ChannelCore, WorkQueue>();
 
-		this.workQueuePool = new ConcurrentLinkedQueue<WorkQueue>();
+		this.workQueuePool = new SpinlockQueue<WorkQueue>();
 	}
 
 	public void setHandlerObject(Object handlerObject) {
@@ -142,8 +142,8 @@ public class ComponentCore {
 						"se.sics.kompics:type=Component,name=" + componentName);
 
 				// Create the Hello World MBean
-				mbean = new se.sics.kompics.management.ComponentMXBeanImpl(this,
-						componentName);
+				mbean = new se.sics.kompics.management.ComponentMXBeanImpl(
+						this, componentName);
 				// Register the Hello World MBean
 				mbs.registerMBean(mbean, name);
 			} catch (Exception e) {
@@ -184,7 +184,7 @@ public class ComponentCore {
 	public void handleWork(int wid, Work work) {
 		WorkQueue workQueue = channelWorkQueues.get(work.getChannelCore());
 		workQueue.add(work);
-		workQueuePool.add(workQueue);
+		workQueuePool.offer(workQueue);
 
 		// we make the component ready, if passive
 		int oldWorkCounter = workCounter.getAndIncrement();
@@ -292,16 +292,15 @@ public class ComponentCore {
 	 * called by the WorkQueue to move itself to the end of the priority pool,
 	 * maybe to a different priority pool. Both from and to can be null.
 	 */
-	public void moveWorkQueueToPool(WorkQueue workQueue, boolean remove) {
-		if (remove) {
-			// constant-time removal
-			workQueuePool.remove(workQueue);
-		} else {
-			// constant-time addition
-			workQueuePool.add(workQueue);
-		}
-	}
-
+	// public void moveWorkQueueToPool(WorkQueue workQueue, boolean remove) {
+	// if (remove) {
+	// // constant-time removal
+	// workQueuePool.remove(workQueue);
+	// } else {
+	// // constant-time addition
+	// workQueuePool.offer(workQueue);
+	// }
+	// }
 	/* =============== COMPONENT COMPOSITION =============== */
 
 	@SuppressWarnings("unchecked")

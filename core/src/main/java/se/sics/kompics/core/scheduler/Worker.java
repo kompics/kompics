@@ -1,6 +1,5 @@
 package se.sics.kompics.core.scheduler;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import se.sics.kompics.core.ComponentCore;
@@ -13,7 +12,7 @@ public class Worker extends Thread {
 
 	public AtomicInteger qsize = new AtomicInteger(0);
 
-	private final ConcurrentLinkedQueue<ComponentCore> wq;
+	private final SpinlockQueue<ComponentCore> wq;
 
 	/* === STATS === */
 	public int tws, sws, fws, twc;
@@ -30,7 +29,7 @@ public class Worker extends Thread {
 		super("Worker-" + id);
 		this.scheduler = scheduler;
 		this.id = id;
-		this.wq = new ConcurrentLinkedQueue<ComponentCore>();
+		this.wq = new SpinlockQueue<ComponentCore>();
 		// Work.Pool.set(new Work.Pool());
 	}
 

@@ -1,19 +1,17 @@
 package se.sics.kompics.core.scheduler;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 public class WorkQueue {
 
-	private ConcurrentLinkedQueue<Work> workQueue;
+	private SpinlockQueue<Work> workQueue;
 
 	public WorkQueue() {
 		super();
-		this.workQueue = new ConcurrentLinkedQueue<Work>();
+		this.workQueue = new SpinlockQueue<Work>();
 	}
 
 	/* called by the publisher thread */
 	public void add(Work work) {
-		workQueue.add(work);
+		workQueue.offer(work);
 	}
 
 	/* called by the executing thread */
