@@ -183,7 +183,7 @@ public class Scheduler {
 		int totalSize = 0, minSize = Integer.MAX_VALUE, maxSize = 0, totalFl = 0;
 		for (int i = 0; i < workers.length; i++) {
 			qsize[i] = workers[i].qsize.get();
-			flsize[i] = workers[i].pool.size.get();
+//			flsize[i] = workers[i].pool.size.get();
 			totalSize += qsize[i];
 			totalFl += flsize[i];
 			if (minSize > qsize[i])

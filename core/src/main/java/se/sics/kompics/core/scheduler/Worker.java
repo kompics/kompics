@@ -20,7 +20,7 @@ public class Worker extends Thread {
 	double avgwc;
 	long totwc;
 	public int maxQs = 0;
-	public Work.Pool pool;
+//	public Work.Pool pool;
 
 	public int minws = Integer.MAX_VALUE, maxws;
 	double avgws;
@@ -39,7 +39,9 @@ public class Worker extends Thread {
 	}
 
 	public void run() {
-		pool = Work.Pool.get();
+		ThreadID.set(id);
+		
+//		pool = Work.Pool.get();
 		while (true) {
 			// try to take from the queue
 			ComponentCore c = wq.poll();
