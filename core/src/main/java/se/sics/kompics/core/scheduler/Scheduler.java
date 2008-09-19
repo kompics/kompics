@@ -63,8 +63,8 @@ public class Scheduler {
 
 		// mqs = (mqs > 3000 ? 3000 : mqs);
 
-		if (mqs > 2) {
-			for (int i = 0; i < mqs / 3; i++) {
+		if (mqs > 1) {
+			for (int i = 0; i < mqs / 2; i++) {
 				core = workers[wm].takeWork();
 				if (core != null) {
 					workers[wid].addWork(core);
@@ -85,6 +85,24 @@ public class Scheduler {
 			core = workers[w].takeWork();
 			if (core != null) {
 				return core;
+			}
+			w++;
+		}
+		return core;
+	}
+
+	// not very good
+	ComponentCore stealOneWorkFromRound(int wid, int[] from) {
+		ComponentCore core = null;
+		int w = from[0];
+		for (int i = 0; i < workerCount; i++) {
+			w = w % workerCount;
+			if (w != wid) {
+				core = workers[w].takeWork();
+				if (core != null) {
+					from[0] = w;
+					return core;
+				}
 			}
 			w++;
 		}

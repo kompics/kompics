@@ -12,7 +12,7 @@ public class Worker extends Thread {
 
 	public AtomicInteger qsize = new AtomicInteger(0);
 
-	private final SpinlockQueue<ComponentCore> wq;
+	private final KompicsQueue<ComponentCore> wq;
 
 	/* === STATS === */
 	public int tws, sws, fws, twc;
@@ -25,12 +25,17 @@ public class Worker extends Thread {
 	public int minws = Integer.MAX_VALUE, maxws;
 	double avgws;
 
+	int stealFrom[];
+
 	public Worker(Scheduler scheduler, int id) {
 		super("Worker-" + id);
 		this.scheduler = scheduler;
 		this.id = id;
-		this.wq = new SpinlockQueue<ComponentCore>();
+		this.wq = new KompicsQueue<ComponentCore>();
 		// Work.Pool.set(new Work.Pool());
+
+		stealFrom = new int[1];
+		stealFrom[0] = id;
 	}
 
 	public void run() {
@@ -49,8 +54,11 @@ public class Worker extends Thread {
 		}
 	}
 
-	private void stealOneWork() {
+	void stealOneWork() {
 		tws++;
+//		stealFrom[0]++;
+//		ComponentCore c = scheduler.stealOneWorkFromRound(id, stealFrom);
+//		ComponentCore c = scheduler.stealOneWorkFromNext(id);
 		ComponentCore c = scheduler.stealOneWorkFromHighest(id);
 		if (c != null) {
 			resetWc();
@@ -71,7 +79,7 @@ public class Worker extends Thread {
 		}
 	}
 
-	private void stealMoreWork() {
+	void stealMoreWork() {
 		tws++;
 		int stolen = scheduler.stealMoreWorkFromHighest(id);
 
@@ -93,14 +101,14 @@ public class Worker extends Thread {
 		}
 	}
 
-	public void addWork(ComponentCore core) {
+	void addWork(ComponentCore core) {
 		wq.offer(core);
 		int qs = qsize.incrementAndGet();
 		if (maxQs < qs)
 			maxQs = qs;
 	}
 
-	public ComponentCore takeWork() {
+	ComponentCore takeWork() {
 		ComponentCore core = wq.poll();
 		if (core != null) {
 			qsize.decrementAndGet();

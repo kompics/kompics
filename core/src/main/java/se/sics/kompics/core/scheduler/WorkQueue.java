@@ -2,11 +2,11 @@ package se.sics.kompics.core.scheduler;
 
 public class WorkQueue {
 
-	private SpinlockQueue<Work> workQueue;
+	private KompicsQueue<Work> workQueue;
 
 	public WorkQueue() {
 		super();
-		this.workQueue = new SpinlockQueue<Work>();
+		this.workQueue = new KompicsQueue<Work>();
 	}
 
 	/* called by the publisher thread */

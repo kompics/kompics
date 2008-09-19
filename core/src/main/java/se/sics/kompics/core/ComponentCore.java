@@ -27,7 +27,7 @@ import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
 import se.sics.kompics.core.scheduler.Scheduler;
-import se.sics.kompics.core.scheduler.SpinlockQueue;
+import se.sics.kompics.core.scheduler.KompicsQueue;
 import se.sics.kompics.core.scheduler.Work;
 import se.sics.kompics.core.scheduler.WorkQueue;
 
@@ -88,7 +88,7 @@ public class ComponentCore {
 
 	private HashMap<ChannelCore, WorkQueue> channelWorkQueues;
 
-	private SpinlockQueue<WorkQueue> workQueuePool;
+	private KompicsQueue<WorkQueue> workQueuePool;
 
 	public se.sics.kompics.management.ComponentMXBeanImpl mbean;
 
@@ -126,7 +126,7 @@ public class ComponentCore {
 
 		this.channelWorkQueues = new HashMap<ChannelCore, WorkQueue>();
 
-		this.workQueuePool = new SpinlockQueue<WorkQueue>();
+		this.workQueuePool = new KompicsQueue<WorkQueue>();
 	}
 
 	public void setHandlerObject(Object handlerObject) {
