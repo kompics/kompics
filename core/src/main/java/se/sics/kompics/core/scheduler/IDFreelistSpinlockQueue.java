@@ -1,13 +1,27 @@
 package se.sics.kompics.core.scheduler;
 
+@SuppressWarnings("unchecked")
 public class IDFreelistSpinlockQueue<E> {
 
-	public static final int SIZE = 0;
+	public static final int SIZE = 100000;
 
 	private Spinlock lock = new Spinlock();
 
-	private Head<E>[] freeListHead;
-	
+	private static Head[] freeListHead;
+
+	public static int[] foundEmpty;
+	public static int[] foundFull;
+
+	public static int workers = 8;
+	static {
+		foundEmpty = new int[workers];
+		foundFull = new int[workers];
+		freeListHead = new Head[workers];
+		for (int i = 0; i < workers; i++) {
+			freeListHead[i] = new Head(null, 0);
+		}
+	}
+
 	static class Head<E> {
 		Node<E> next;
 		int size;
@@ -20,11 +34,13 @@ public class IDFreelistSpinlockQueue<E> {
 
 	private Node<E> allocate(E value, Node<E> next) {
 		int id = ThreadID.get();
-		if (id < 0) return new Node<E>(value, next);
-		
+		if (id < 0)
+			return new Node<E>(value, next);
+
 		Head<E> free = freeListHead[id];
 		Node<E> node = free.next;
 		if (node == null) { // nothing to recycle
+			foundEmpty[id]++;
 			return new Node<E>(value, next);
 		}
 		// recycle existing node
@@ -38,7 +54,8 @@ public class IDFreelistSpinlockQueue<E> {
 
 	private void free(Node<E> node) {
 		int id = ThreadID.get();
-		if (id < 0) return;
+		if (id < 0)
+			return;
 
 		Head<E> free = freeListHead[id];
 		node.next = free.next;
@@ -47,6 +64,7 @@ public class IDFreelistSpinlockQueue<E> {
 		free.size++;
 
 		if (free.size >= SIZE) {
+			foundFull[id]++;
 			free.next = null;
 			free.size = 0;
 		}
@@ -65,15 +83,9 @@ public class IDFreelistSpinlockQueue<E> {
 	private Node<E> head;
 	private Node<E> tail;
 
-	@SuppressWarnings("unchecked")
 	public IDFreelistSpinlockQueue() {
 		head = new Node<E>(null, null);
 		tail = head;
-		int workers = 8;
-		freeListHead = new Head[workers];
-		for (int i = 0; i < workers; i++) {
-			freeListHead[i] = new Head<E>(null, 0);
-		}
 	}
 
 	public void offer(E e) {
