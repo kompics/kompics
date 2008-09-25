@@ -1,14 +1,13 @@
 package se.sics.kompics.core.scheduler;
 
-public class FreelistSpinlockQueue<E> {
+public class DoubleFreelistSpinlockQueue<E> {
 
 	public static int SIZE = 1000;
 
 	private Spinlock lock = new Spinlock();
 
 	@SuppressWarnings("unchecked")
-	static final ThreadLocal<FreeList> freeList = new ThreadLocal<FreeList>() {
-		@Override
+	private static final ThreadLocal<FreeList> freeList = new ThreadLocal<FreeList>() {
 		protected FreeList initialValue() {
 			return new FreeList(null, 0);
 		};
@@ -16,14 +15,12 @@ public class FreelistSpinlockQueue<E> {
 
 	static class FreeList<E> {
 		Node<E> head;
+		Node<E> tail;
 		int size;
-		int foundEmpty;
-		int foundFull;
-//		int allocated;
-//		int freed;
 
 		public FreeList(Node<E> next, int size) {
 			this.head = next;
+			this.tail = head;
 			this.size = size;
 		}
 	}
@@ -32,13 +29,14 @@ public class FreelistSpinlockQueue<E> {
 	private Node<E> allocate(E value, Node<E> next) {
 		FreeList<E> free = freeList.get();
 		Node<E> node = free.head;
-//		free.allocated++;
 		if (node == null) { // nothing to recycle
-			free.foundEmpty++;
 			return new Node<E>(value, next);
 		}
 		// recycle existing node
 		free.head = node.next;
+		if (free.tail == node) {
+			free.tail = null;
+		}
 		free.size--;
 		// initialize
 		node.item = value;
@@ -49,15 +47,33 @@ public class FreelistSpinlockQueue<E> {
 	@SuppressWarnings("unchecked")
 	private void free(Node<E> node) {
 		FreeList<E> free = freeList.get();
-//		free.freed++;
 		if (free.size < SIZE) {
 			node.next = free.head;
 			node.item = null;
+			node.prev = null;
+			if (free.head != null) {
+				free.head.prev = node;
+			}
 			free.head = node;
 			free.size++;
-			return;
+			if (free.tail == null) {
+				free.tail = node;
+			}
+		} else {
+			node.next = free.head;
+			node.item = null;
+			node.prev = null;
+			if (free.head != null) {
+				free.head.prev = node;
+			}
+			free.head = node;
+			// we assume tail is not null, i.e. SIZE > 0
+			// discard tail
+			Node<E> last = free.tail;
+			free.tail = free.tail.prev;
+//			last.next = null;
+			last.prev = null;
 		}
-		free.foundFull++;
 	}
 
 	// @SuppressWarnings("unchecked")
@@ -77,6 +93,7 @@ public class FreelistSpinlockQueue<E> {
 	static class Node<E> {
 		E item;
 		Node<E> next;
+		Node<E> prev;
 
 		public Node(E item, Node<E> next) {
 			this.item = item;
@@ -87,7 +104,7 @@ public class FreelistSpinlockQueue<E> {
 	private Node<E> head;
 	private Node<E> tail;
 
-	public FreelistSpinlockQueue() {
+	public DoubleFreelistSpinlockQueue() {
 		head = new Node<E>(null, null);
 		tail = head;
 	}
@@ -120,25 +137,5 @@ public class FreelistSpinlockQueue<E> {
 		}
 		free(removed);
 		return e;
-	}
-
-	@SuppressWarnings("unchecked")
-	public static int[] getStats() {
-		FreeList free = freeList.get();
-		int ret[] = new int[4];
-		ret[0] = free.foundEmpty;
-		ret[1] = free.foundFull;
-//		ret[2] = free.allocated;
-//		ret[3] = free.freed;
-		return ret;
-	}
-
-	@SuppressWarnings("unchecked")
-	public static void resetStats() {
-		FreeList free = freeList.get();
-		free.foundEmpty = 0;
-		free.foundFull = 0;
-//		free.allocated = 0;
-//		free.freed = 0;
 	}
 }

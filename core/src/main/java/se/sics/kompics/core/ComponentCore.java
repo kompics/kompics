@@ -216,7 +216,7 @@ public class ComponentCore {
 		EventHandlerCore eventHandler = work.getEventHandlerCore();
 		Event event = work.getEventCore().getEvent();
 
-		Work.release(work);
+		Work.free(work);
 
 		// we set the id of the worker executing this handler so that all
 		// works triggered from this handler are signed by this worker

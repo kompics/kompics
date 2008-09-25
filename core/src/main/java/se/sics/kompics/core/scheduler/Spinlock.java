@@ -1,20 +1,15 @@
 package se.sics.kompics.core.scheduler;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class Spinlock {
 
-	private AtomicBoolean free = new AtomicBoolean(true);
+//	public TASSpinlock spinlock = new TASSpinlock();
+	public TATASSpinlock spinlock = new TATASSpinlock();
 
 	public void lock() {
-		while (true) {
-			while (!free.get()) {};
-			if (free.compareAndSet(true, false))
-				return;
-		}
+		spinlock.lock();
 	}
 
 	public void unlock() {
-		free.set(true);
+		spinlock.unlock();
 	}
 }

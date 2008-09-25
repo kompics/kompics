@@ -20,7 +20,8 @@ public class Worker extends Thread {
 	double avgwc;
 	long totwc;
 	public int maxQs = 0;
-//	public Work.Pool pool;
+	public Work.FreeList workFreeList;
+	int periodWc;
 
 	public int minws = Integer.MAX_VALUE, maxws;
 	double avgws;
@@ -32,7 +33,6 @@ public class Worker extends Thread {
 		this.scheduler = scheduler;
 		this.id = id;
 		this.wq = new KompicsQueue<ComponentCore>();
-		// Work.Pool.set(new Work.Pool());
 
 		stealFrom = new int[1];
 		stealFrom[0] = id;
@@ -40,8 +40,7 @@ public class Worker extends Thread {
 
 	public void run() {
 		ThreadID.set(id);
-		
-//		pool = Work.Pool.get();
+		workFreeList = Work.freeList.get();
 		while (true) {
 			// try to take from the queue
 			ComponentCore c = wq.poll();
@@ -58,9 +57,9 @@ public class Worker extends Thread {
 
 	void stealOneWork() {
 		tws++;
-//		stealFrom[0]++;
-//		ComponentCore c = scheduler.stealOneWorkFromRound(id, stealFrom);
-//		ComponentCore c = scheduler.stealOneWorkFromNext(id);
+		// stealFrom[0]++;
+		// ComponentCore c = scheduler.stealOneWorkFromRound(id, stealFrom);
+		// ComponentCore c = scheduler.stealOneWorkFromNext(id);
 		ComponentCore c = scheduler.stealOneWorkFromHighest(id);
 		if (c != null) {
 			resetWc();
@@ -122,6 +121,17 @@ public class Worker extends Thread {
 		wc++;
 		twc++;
 		scheduler.countReduction();
+
+		// periodWc++;
+		// if (periodWc == 100000) {
+		// periodWc = 0;
+		// int[] freeListStat = FreelistSpinlockQueue.getStats();
+		// FreelistSpinlockQueue.resetStats();
+		//
+		// System.out.format("E/F Ratio (%d): %.2f\n", id,
+		// ((double) freeListStat[0] / freeListStat[1]));
+		// }
+
 		core.run(id);
 	}
 

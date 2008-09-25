@@ -4,7 +4,7 @@ public class SpinlockQueue<E> {
 
 	private Spinlock lock = new Spinlock();
 
-	static class Node<E> {
+	public static class Node<E> {
 		E item;
 		Node<E> next;
 

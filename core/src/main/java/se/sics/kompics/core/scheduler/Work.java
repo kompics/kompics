@@ -1,91 +1,70 @@
 package se.sics.kompics.core.scheduler;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import se.sics.kompics.core.ChannelCore;
 import se.sics.kompics.core.EventCore;
 import se.sics.kompics.core.EventHandlerCore;
 
 public class Work {
-	private static ThreadLocal<Pool> threadLocalPool = new ThreadLocal<Pool>() {
+
+	public static int SIZE = 1000000000;
+
+	static final ThreadLocal<FreeList> freeList = new ThreadLocal<FreeList>() {
 		@Override
-		protected Pool initialValue() {
-			return new Pool(Thread.currentThread().getName());
+		protected FreeList initialValue() {
+			return new FreeList(null, 0);
 		}
 	};
 
-	public static class Pool {
-		private volatile Work freeWork;
+	public static class FreeList {
+		Work head;
+		int size;
+		public int foundEmpty;
+		public int foundFull;
 
-		public AtomicInteger size = new AtomicInteger(0);
-
-		private final String name;
-
-		// private volatile int i, j;
-
-		public Pool(String name) {
-			this.name = name;
+		public FreeList(Work head, int size) {
+			this.head = head;
+			this.size = size;
 		}
-
-		public static Pool get() {
-			return threadLocalPool.get();
-		}
-
-		// public static void set(Pool pool) {
-		// threadLocalPool.set(pool);
-		// }
-
-		public Work acquireWork(ChannelCore channelCore, EventCore eventCore,
-				EventHandlerCore eventHandlerCore) {
-			// i++;
-			// if (i == 1000000) {
-			// i = 0;
-			// System.out.println("Acquired 1000000 from " + name);
-			// }
-			if (freeWork != null) {
-				Work w = freeWork;
-				freeWork = freeWork.next;
-				size.decrementAndGet();
-				w.recycle(channelCore, eventCore, eventHandlerCore);
-				return w;
-			} else {
-				return new Work(channelCore, eventCore, eventHandlerCore);
-			}
-		}
-
-		// we stack the released work so we reuse the most recently used work
-		public void releaseWork(Work w) {
-			// j++;
-			// if (j == 1000000) {
-			// j = 0;
-			// System.out.println("Released 1000000 from " + name);
-			// }
-			w.next = freeWork;
-			freeWork = w;
-			size.incrementAndGet();
-		}
-
 	}
 
 	public static Work acquire(ChannelCore channelCore, EventCore eventCore,
 			EventHandlerCore eventHandlerCore) {
-		Pool pool = Pool.get();
-		if (pool != null) {
-			return pool.acquireWork(channelCore, eventCore, eventHandlerCore);
-		} else {
+		FreeList free = freeList.get();
+		Work w = free.head;
+		if (w == null) {
+			free.foundEmpty++;
 			return new Work(channelCore, eventCore, eventHandlerCore);
 		}
+		// recycle existing node
+		free.head = w.next;
+		free.size--;
+		// initialize
+		w.recycle(channelCore, eventCore, eventHandlerCore);
+		return w;
 	}
 
-	public static void release(Work work) {
-		Pool pool = Pool.get();
-		if (pool != null) {
-			pool.releaseWork(work);
-		} else {
-			System.err.println("OOOOOPS " + Thread.currentThread().getName());
+	public static void free(Work work) {
+		FreeList free = freeList.get();
+		if (free.size < SIZE) {
+			work.next = free.head;
+			work.eventCore = null;
+			free.head = work;
+			free.size++;
+			return;
 		}
+		free.foundFull++;
 	}
 
+	public static int[] getStats() {
+		FreeList free = freeList.get();
+		int ret[] = new int[2];
+		ret[0] = free.foundEmpty;
+		ret[1] = free.foundFull;
+		return ret;
+	}
+
+	// Work proper starts here
+	
 	private ChannelCore channelCore;
 
 	private EventCore eventCore;
@@ -106,7 +85,7 @@ public class Work {
 		this.channelCore = channelCore;
 		this.eventCore = eventCore;
 		this.eventHandlerCore = eventHandlerCore;
-		// System.out.println(".");
+		this.next = null;
 	}
 
 	public ChannelCore getChannelCore() {

@@ -14,9 +14,9 @@ public class Scheduler {
 
 	static final long SLEEP_MS = 100;
 
-	private int workerCount;
+	int workerCount;
 
-	private Worker[] workers;
+	public Worker[] workers;
 
 	private Random random;
 
@@ -134,9 +134,11 @@ public class Scheduler {
 			avgHighDif;
 
 	public void dumpStats() {
+		int totalReductions = 0;
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].resetWc();
 			workers[i].wsStat((int) workers[i].avgws);
+			totalReductions += workers[i].twc;
 			logger
 					.info("{} TWC={} TWS={} SWS={} FWS={} WC={},{},{} "
 							+ "WS={},{},{} MQS={}", new Object[] {
@@ -148,7 +150,7 @@ public class Scheduler {
 							String.format("%.2f", workers[i].avgws),
 							workers[i].maxQs });
 		}
-		logger.info("Total reductions: {}", reductions);
+		logger.info("Total reductions: {}", totalReductions);
 		logger.info("Work Queue size imbalance: Min={} Max={} Avg={} in {}"
 				+ " steps.", new Object[] { String.format("%.2f", minimb),
 				String.format("%.2f", maximb), String.format("%.2f", avgimb),
