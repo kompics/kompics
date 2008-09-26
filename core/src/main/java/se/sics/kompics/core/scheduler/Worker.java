@@ -1,10 +1,13 @@
 package se.sics.kompics.core.scheduler;
 
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import se.sics.kompics.core.ComponentCore;
 
 public class Worker extends Thread {
+
+	public static double THRESHOLD = 0.5;
 
 	private final Scheduler scheduler;
 
@@ -28,6 +31,8 @@ public class Worker extends Thread {
 
 	int stealFrom[];
 
+	private Random random;
+
 	public Worker(Scheduler scheduler, int id) {
 		super("Worker-" + id);
 		this.scheduler = scheduler;
@@ -36,24 +41,84 @@ public class Worker extends Thread {
 
 		stealFrom = new int[1];
 		stealFrom[0] = id;
+
+		random = new Random();
 	}
 
+	// work balancing
 	public void run() {
 		ThreadID.set(id);
 		workFreeList = Work.freeList.get();
+
 		while (true) {
 			// try to take from the queue
 			ComponentCore c = wq.poll();
+			int size;
 			if (c != null) {
 				// got some work, do it
 				doWork(c);
-				qsize.decrementAndGet();
+				size = qsize.decrementAndGet();
 			} else {
-				// my queue was empty. I'll try to steal some work
-				stealMoreWork();
+				size = qsize.get();
+			}
+
+			// try to balance with probability 1/(size+1)
+			if (random.nextInt(size + 1) == size) {
+				int victim = random.nextInt(scheduler.workerCount);
+				int min = (victim <= id) ? victim : id;
+				int max = (victim <= id) ? id : victim;
+				synchronized (scheduler.workers[min]) {
+					synchronized (scheduler.workers[max]) {
+						balance(scheduler.workers[min], scheduler.workers[max]);
+					}
+				}
 			}
 		}
 	}
+
+	void balance(Worker min, Worker max) {
+		int sMin = min.qsize.get();
+		int sMax = max.qsize.get();
+		Worker qMin = (sMin < sMax) ? min : max;
+		Worker qMax = (sMin < sMax) ? max : min;
+		sMin = qMin.qsize.get();
+		sMax = qMax.qsize.get();
+		
+		if (sMax < 2) return;
+		
+		int diff = sMax - sMin;
+		diff /= 2;
+
+		// if (diff > THRESHOLD) {
+		if (((double) sMin) / sMax < THRESHOLD) {
+			for (int i = 0; i < diff; i++) {
+				ComponentCore work = qMax.takeWork();
+				if (work != null) {
+				qMin.addWork(work);
+				} else {
+					return;
+				}
+			}
+		}
+	}
+
+	// not balancing
+	// public void run() {
+	// ThreadID.set(id);
+	// workFreeList = Work.freeList.get();
+	// while (true) {
+	// // try to take from the queue
+	// ComponentCore c = wq.poll();
+	// if (c != null) {
+	// // got some work, do it
+	// doWork(c);
+	// qsize.decrementAndGet();
+	// } else {
+	// // my queue was empty. I'll try to steal some work
+	// stealMoreWork();
+	// }
+	// }
+	// }
 
 	void stealOneWork() {
 		tws++;
