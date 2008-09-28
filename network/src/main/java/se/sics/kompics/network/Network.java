@@ -21,12 +21,12 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.events.Message;
 import se.sics.kompics.network.events.NetworkConnectionRefused;
@@ -37,8 +37,7 @@ import se.sics.kompics.network.events.NetworkSessionOpened;
 @ComponentSpecification
 public class Network {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(Network.class);
+	private static final Logger logger = LoggerFactory.getLogger(Network.class);
 
 	private Component component;
 
@@ -75,7 +74,7 @@ public class Network {
 		this.sendChannel = sendChannel;
 		this.deliverChannel = deliverChannel;
 
-		component.subscribe(sendChannel, "handleMessage");
+		component.subscribe(sendChannel, handleMessage);
 
 		tcpSession = new HashMap<InetSocketAddress, Session>();
 		udpSession = new HashMap<InetSocketAddress, Session>();
@@ -178,30 +177,31 @@ public class Network {
 		udpAcceptor.dispose();
 	}
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(Message.class)
-	public void handleMessage(Message message) {
-		logger.debug("Handling Message {} from {} to {} protocol {}",
-				new Object[] { message, message.getSource(),
-						message.getDestination(), message.getProtocol() });
+	private EventHandler<Message> handleMessage = new EventHandler<Message>() {
+		public void handle(Message message) {
+			logger.debug("Handling Message {} from {} to {} protocol {}",
+					new Object[] { message, message.getSource(),
+							message.getDestination(), message.getProtocol() });
 
-		if (message.getDestination().getIp()
-				.equals(message.getSource().getIp())
-				&& message.getDestination().getPort() == message.getSource()
-						.getPort()) {
-			// deliver locally
-			component.triggerEvent(message, deliverChannel);
-			return;
+			if (message.getDestination().getIp().equals(
+					message.getSource().getIp())
+					&& message.getDestination().getPort() == message
+							.getSource().getPort()) {
+				// deliver locally
+				component.triggerEvent(message, deliverChannel);
+				return;
+			}
+
+			Transport protocol = message.getProtocol();
+			Address destination = message.getDestination();
+
+			Session session = protocol.equals(Transport.TCP) ? getTcpSession(destination)
+					: getUdpSession(destination);
+
+			session.sendMessage(message);
 		}
-
-		Transport protocol = message.getProtocol();
-		Address destination = message.getDestination();
-
-		Session session = protocol.equals(Transport.TCP) ? getTcpSession(destination)
-				: getUdpSession(destination);
-
-		session.sendMessage(message);
-	}
+	};
 
 	private Session getTcpSession(Address destination) {
 		InetSocketAddress destinationSocket = address2SocketAddress(destination);

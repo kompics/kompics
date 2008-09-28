@@ -2,10 +2,10 @@ package se.sics.kompics.network;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 
 @ComponentSpecification
 public class EchoClient {
@@ -26,7 +26,7 @@ public class EchoClient {
 		this.sendChannel = sendChannel;
 		this.deliverChannel = deliverChannel;
 
-		component.subscribe(this.deliverChannel, "handleEchoMessage");
+		component.subscribe(this.deliverChannel, handleEchoMessage);
 	}
 
 	@ComponentInitializeMethod
@@ -46,20 +46,21 @@ public class EchoClient {
 		}
 	}
 
-	@EventHandlerMethod
-	public void handleEchoMessage(EchoMessage event) {
-		int seq = event.getSequenceNo();
+	private EventHandler<EchoMessage> handleEchoMessage = new EventHandler<EchoMessage>() {
+		public void handle(EchoMessage event) {
+			int seq = event.getSequenceNo();
 
-		messagesInfo[seq] = 1;
-		sum++;
+			messagesInfo[seq] = 1;
+			sum++;
 
-		if (sum == count) {
-			System.out.println("SUM = COUNT = " + count);
-			int s = 0;
-			for (int i = 0; i < messagesInfo.length; i++) {
-				s += messagesInfo[i];
+			if (sum == count) {
+				System.out.println("SUM = COUNT = " + count);
+				int s = 0;
+				for (int i = 0; i < messagesInfo.length; i++) {
+					s += messagesInfo[i];
+				}
+				System.out.println("S = " + s);
 			}
-			System.out.println("S = " + s);
 		}
-	}
+	};
 }
