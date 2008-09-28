@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -104,23 +104,22 @@ public class ChordIterativeRouter {
 		fixFingersLookupChannel = component.createChannel(
 				ChordLookupResponse.class, ChordLookupFailed.class);
 
-		component.subscribe(pnDeliverChannel, "handleFindSuccessorRequest");
-		component.subscribe(pnDeliverChannel, "handleFindSuccessorResponse");
-		component.subscribe(pnDeliverChannel, "handleGetFingerTableRequest");
-		component.subscribe(pnDeliverChannel, "handleGetFingerTableResponse");
+		component.subscribe(pnDeliverChannel, handleFindSuccessorRequest);
+		component.subscribe(pnDeliverChannel, handleFindSuccessorResponse);
+		component.subscribe(pnDeliverChannel, handleGetFingerTableRequest);
+		component.subscribe(pnDeliverChannel, handleGetFingerTableResponse);
 
-		component.subscribe(this.requestChannel, "handleChordLookupRequest");
+		component.subscribe(this.requestChannel, handleChordLookupRequest);
 
-		component.subscribe(this.chordRingChannel, "handleChordLookupRequest");
-		component.subscribe(this.chordRingChannel, "handleNewSuccessorList");
-		component.subscribe(this.chordRingChannel, "handleNewPredecessor");
+		component.subscribe(this.chordRingChannel, handleChordLookupRequest);
+		component.subscribe(this.chordRingChannel, handleNewSuccessorList);
+		component.subscribe(this.chordRingChannel, handleNewPredecessor);
 
-		component.subscribe(fixFingersLookupChannel,
-				"handleChordLookupResponse");
-		component.subscribe(fixFingersLookupChannel, "handleChordLookupFailed");
+		component.subscribe(fixFingersLookupChannel, handleChordLookupResponse);
+		component.subscribe(fixFingersLookupChannel, handleChordLookupFailed);
 
-		component.subscribe(timerSignalChannel, "handleRpcTimeout");
-		component.subscribe(timerSignalChannel, "handleFixFingers");
+		component.subscribe(timerSignalChannel, handleRpcTimeout);
+		component.subscribe(timerSignalChannel, handleFixFingers);
 
 		this.timerHandler = new TimerHandler(component, timerSetChannel);
 	}
@@ -146,326 +145,348 @@ public class ChordIterativeRouter {
 		fingerTableChanged();
 	}
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(GetFingerTableRequest.class)
-	public void handleNewSuccessorList(NewSuccessorList event) {
-		logger.debug("NEW_SUCC {}", event.getSuccessorListView());
+	private EventHandler<NewSuccessorList> handleNewSuccessorList = new EventHandler<NewSuccessorList>() {
+		public void handle(NewSuccessorList event) {
+			logger.debug("NEW_SUCC {}", event.getSuccessorListView());
 
-		if (successor == null) {
-			// if this is the first time we get this event, we initialize the
-			// periodic FixFingers timer
-			FixFingers fixFingers = new FixFingers();
-			timerHandler.setTimer(fixFingers, timerSignalChannel,
-					fingerStabilizationPeriod);
+			if (successor == null) {
+				// if this is the first time we get this event, we initialize
+				// the
+				// periodic FixFingers timer
+				FixFingers fixFingers = new FixFingers();
+				timerHandler.setTimer(fixFingers, timerSignalChannel,
+						fingerStabilizationPeriod);
+
+				successor = event.getSuccessorListView().get(0);
+
+				if (!successor.equals(localPeer)) {
+					// ask successor for its finger table
+					GetFingerTableRequest request = new GetFingerTableRequest(
+							successor);
+					component.triggerEvent(request, pnSendChannel);
+				}
+			}
 
 			successor = event.getSuccessorListView().get(0);
 
-			if (!successor.equals(localPeer)) {
-				// ask successor for its finger table
-				GetFingerTableRequest request = new GetFingerTableRequest(
-						successor);
-				component.triggerEvent(request, pnSendChannel);
+			boolean changed = false;
+			// try to use the successors
+			for (Address address : event.getSuccessorListView()) {
+				if (fingerTable.learnedAboutPeer(address, false, false)) {
+					changed = true;
+				}
+			}
+			if (changed) {
+				fingerTableChanged();
 			}
 		}
+	};
 
-		successor = event.getSuccessorListView().get(0);
+	private EventHandler<NewPredecessor> handleNewPredecessor = new EventHandler<NewPredecessor>() {
+		public void handle(NewPredecessor event) {
+			logger.debug("NEW_PRED {}", event.getPredecessorPeer());
 
-		boolean changed = false;
-		// try to use the successors
-		for (Address address : event.getSuccessorListView()) {
-			if (fingerTable.learnedAboutPeer(address, false, false)) {
-				changed = true;
-			}
+			predecessor = event.getPredecessorPeer();
 		}
-		if (changed) {
-			fingerTableChanged();
-		}
-	}
+	};
 
-	@EventHandlerMethod
-	public void handleNewPredecessor(NewPredecessor event) {
-		logger.debug("NEW_PRED {}", event.getPredecessorPeer());
-
-		predecessor = event.getPredecessorPeer();
-	}
-
-	@EventHandlerMethod
 	@MayTriggerEventTypes( { ScheduleTimeout.class, FindSuccessorRequest.class,
 			ChordLookupResponse.class })
-	public void handleChordLookupRequest(ChordLookupRequest event) {
-		logger.debug("CHORD_LOOKUP_REQ({})", event.getKey());
+	private EventHandler<ChordLookupRequest> handleChordLookupRequest = new EventHandler<ChordLookupRequest>() {
+		public void handle(ChordLookupRequest event) {
+			logger.debug("CHORD_LOOKUP_REQ({})", event.getKey());
 
-		BigInteger key = event.getKey();
-		Address firstPeer = event.getFirstPeer();
+			BigInteger key = event.getKey();
+			Address firstPeer = event.getFirstPeer();
 
-		// special case for Ring join, we don't have a successor yet.
-		if (firstPeer != null) {
+			// special case for Ring join, we don't have a successor yet.
+			if (firstPeer != null) {
 
-			logger.debug("FIRST_PEER is {}", firstPeer);
+				logger.debug("FIRST_PEER is {}", firstPeer);
 
-			LookupInfo lookupInfo = new LookupInfo(event);
-			lookupInfo.initiatedNow();
+				LookupInfo lookupInfo = new LookupInfo(event);
+				lookupInfo.initiatedNow();
 
-			RpcTimeout timeout = new RpcTimeout(event, firstPeer);
-			long timerId = timerHandler.setTimer(timeout, timerSignalChannel,
-					rpcTimeout);
+				RpcTimeout timeout = new RpcTimeout(event, firstPeer);
+				long timerId = timerHandler.setTimer(timeout,
+						timerSignalChannel, rpcTimeout);
 
-			outstandingLookups.put(timerId, lookupInfo);
+				outstandingLookups.put(timerId, lookupInfo);
 
-			FindSuccessorRequest request = new FindSuccessorRequest(key,
-					timerId, firstPeer);
+				FindSuccessorRequest request = new FindSuccessorRequest(key,
+						timerId, firstPeer);
 
-			component.triggerEvent(request, pnSendChannel);
+				component.triggerEvent(request, pnSendChannel);
 
-			// we try to use the hinted first peer as a possible better finger
-			fingerTable.learnedAboutFreshPeer(firstPeer);
-			return;
-		}
-
-		// special case for when we are alone in the ring
-		if (successor == null || successor.equals(localPeer)) {
-			// to avoid an infinite loop, we return ourselves
-			ChordLookupResponse response = new ChordLookupResponse(key,
-					localPeer, event.getAttachment(), new LookupInfo(event));
-			component.triggerEvent(response, event.getResponseChannel());
-			return;
-		}
-
-		// normal case
-		if (predecessor != null
-				&& RingMath.belongsTo(key, predecessor.getId(), localPeer
-						.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
-			// we are responsible
-			ChordLookupResponse response = new ChordLookupResponse(key,
-					localPeer, event.getAttachment(), new LookupInfo(event));
-			component.triggerEvent(response, event.getResponseChannel());
-			return;
-		} else if (RingMath.belongsTo(key, localPeer.getId(),
-				successor.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
-			// our successor is responsible for the looked up key
-			ChordLookupResponse response = new ChordLookupResponse(key,
-					successor, event.getAttachment(), new LookupInfo(event));
-			component.triggerEvent(response, event.getResponseChannel());
-			return;
-		} else {
-			// some other peer is responsible for the looked up key
-			LookupInfo lookupInfo = new LookupInfo(event);
-			lookupInfo.initiatedNow();
-
-			Address closest = fingerTable.closestPreceedingPeer(key);
-
-			if (closest.equals(localPeer)) {
-				// we found no closes peer so the lookup should fail
-				ChordLookupFailed failed = new ChordLookupFailed(key, event
-						.getAttachment(), null);
-				component.triggerEvent(failed, event.getResponseChannel());
+				// we try to use the hinted first peer as a possible better
+				// finger
+				fingerTable.learnedAboutFreshPeer(firstPeer);
 				return;
 			}
 
-			RpcTimeout timeout = new RpcTimeout(event, closest);
-			long timerId = timerHandler.setTimer(timeout, timerSignalChannel,
-					rpcTimeout);
+			// special case for when we are alone in the ring
+			if (successor == null || successor.equals(localPeer)) {
+				// to avoid an infinite loop, we return ourselves
+				ChordLookupResponse response = new ChordLookupResponse(key,
+						localPeer, event.getAttachment(), new LookupInfo(event));
+				component.triggerEvent(response, event.getResponseChannel());
+				return;
+			}
 
-			outstandingLookups.put(timerId, lookupInfo);
-
-			FindSuccessorRequest request = new FindSuccessorRequest(key,
-					timerId, closest);
-
-			component.triggerEvent(request, pnSendChannel);
-		}
-	}
-
-	@EventHandlerMethod
-	@MayTriggerEventTypes(FindSuccessorResponse.class)
-	public void handleFindSuccessorRequest(FindSuccessorRequest event) {
-		logger.debug("FIND_SUCC_REQ {}, succ={}", event.getKey(), successor);
-
-		BigInteger key = event.getKey();
-
-		if (predecessor != null
-				&& RingMath.belongsTo(key, predecessor.getId(), localPeer
-						.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
-			// return ourselves as the real responsible
-			FindSuccessorResponse response = new FindSuccessorResponse(
-					localPeer, event.getLookupId(), false, event.getSource());
-			component.triggerEvent(response, pnSendChannel);
-
-			logger.error("RETURNED MYSELF {}, {}", key, localPeer);
-
-		} else if (successor != null) {
-			if (RingMath.belongsTo(key, localPeer.getId(), successor.getId(),
-					IntervalBounds.OPEN_CLOSED, ringSize)) {
-				// return my successor as the real successor
-				FindSuccessorResponse response = new FindSuccessorResponse(
-						successor, event.getLookupId(), false, event
-								.getSource());
-				component.triggerEvent(response, pnSendChannel);
+			// normal case
+			if (predecessor != null
+					&& RingMath.belongsTo(key, predecessor.getId(), localPeer
+							.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
+				// we are responsible
+				ChordLookupResponse response = new ChordLookupResponse(key,
+						localPeer, event.getAttachment(), new LookupInfo(event));
+				component.triggerEvent(response, event.getResponseChannel());
+				return;
+			} else if (RingMath.belongsTo(key, localPeer.getId(), successor
+					.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
+				// our successor is responsible for the looked up key
+				ChordLookupResponse response = new ChordLookupResponse(key,
+						successor, event.getAttachment(), new LookupInfo(event));
+				component.triggerEvent(response, event.getResponseChannel());
+				return;
 			} else {
-				// return an indirection to my closest preceding finger
+				// some other peer is responsible for the looked up key
+				LookupInfo lookupInfo = new LookupInfo(event);
+				lookupInfo.initiatedNow();
+
 				Address closest = fingerTable.closestPreceedingPeer(key);
 
-				if (!closest.equals(localPeer)) {
+				if (closest.equals(localPeer)) {
+					// we found no closes peer so the lookup should fail
+					ChordLookupFailed failed = new ChordLookupFailed(key, event
+							.getAttachment(), null);
+					component.triggerEvent(failed, event.getResponseChannel());
+					return;
+				}
+
+				RpcTimeout timeout = new RpcTimeout(event, closest);
+				long timerId = timerHandler.setTimer(timeout,
+						timerSignalChannel, rpcTimeout);
+
+				outstandingLookups.put(timerId, lookupInfo);
+
+				FindSuccessorRequest request = new FindSuccessorRequest(key,
+						timerId, closest);
+
+				component.triggerEvent(request, pnSendChannel);
+			}
+		}
+	};
+
+	@MayTriggerEventTypes(FindSuccessorResponse.class)
+	private EventHandler<FindSuccessorRequest> handleFindSuccessorRequest = new EventHandler<FindSuccessorRequest>() {
+		public void handle(FindSuccessorRequest event) {
+			logger.debug("FIND_SUCC_REQ {},succ={}", event.getKey(), successor);
+
+			BigInteger key = event.getKey();
+
+			if (predecessor != null
+					&& RingMath.belongsTo(key, predecessor.getId(), localPeer
+							.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
+				// return ourselves as the real responsible
+				FindSuccessorResponse response = new FindSuccessorResponse(
+						localPeer, event.getLookupId(), false, event
+								.getSource());
+				component.triggerEvent(response, pnSendChannel);
+
+				logger.error("RETURNED MYSELF {}, {}", key, localPeer);
+
+			} else if (successor != null) {
+				if (RingMath.belongsTo(key, localPeer.getId(), successor
+						.getId(), IntervalBounds.OPEN_CLOSED, ringSize)) {
+					// return my successor as the real successor
 					FindSuccessorResponse response = new FindSuccessorResponse(
-							closest, event.getLookupId(), true, event
+							successor, event.getLookupId(), false, event
 									.getSource());
 					component.triggerEvent(response, pnSendChannel);
+				} else {
+					// return an indirection to my closest preceding finger
+					Address closest = fingerTable.closestPreceedingPeer(key);
+
+					if (!closest.equals(localPeer)) {
+						FindSuccessorResponse response = new FindSuccessorResponse(
+								closest, event.getLookupId(), true, event
+										.getSource());
+						component.triggerEvent(response, pnSendChannel);
+					}
+					// else we found no closest peer so the lookup should fail
 				}
-				// else we found no closest peer so the lookup should fail
 			}
+
+			// we try to use the requester as a possible better finger
+			fingerTable.learnedAboutFreshPeer(event.getSource());
 		}
+	};
 
-		// we try to use the requester as a possible better finger
-		fingerTable.learnedAboutFreshPeer(event.getSource());
-	}
-
-	@EventHandlerMethod
 	@MayTriggerEventTypes( { ScheduleTimeout.class, CancelTimeout.class,
 			FindSuccessorRequest.class, ChordLookupResponse.class })
-	public void handleFindSuccessorResponse(FindSuccessorResponse event) {
+	private EventHandler<FindSuccessorResponse> handleFindSuccessorResponse = new EventHandler<FindSuccessorResponse>() {
+		public void handle(FindSuccessorResponse event) {
 
-		long lookupId = event.getLookupId();
-		if (timerHandler.isOustandingTimer(lookupId)) {
-			// we got the response before the RpcTimeout, so we cancel the timer
-			timerHandler.cancelTimer(lookupId);
-		} else {
-			// we got the response too late so we just give up since we have
-			// already triggered a LookupFailed event
-			return;
-		}
-
-		LookupInfo lookupInfo = outstandingLookups.remove(lookupId);
-		ChordLookupRequest lookupRequest = lookupInfo.getRequest();
-
-		logger.debug("FIND_SUCC_RESP NH({}) is {}. {}",
-				new Object[] { lookupRequest.getKey(), event.getSuccessor(),
-						event.isNextHop() });
-
-		if (event.isNextHop()) {
-			// we got an indirection
-			Address nextHop = event.getSuccessor();
-
-			RpcTimeout timeout = new RpcTimeout(lookupRequest, nextHop);
-			long timerId = timerHandler.setTimer(timeout, timerSignalChannel,
-					rpcTimeout);
-
-			lookupInfo.appendHop(event.getSource());
-			outstandingLookups.put(timerId, lookupInfo);
-
-			FindSuccessorRequest request = new FindSuccessorRequest(
-					lookupRequest.getKey(), timerId, nextHop);
-
-			// send find successor request
-			component.triggerEvent(request, pnSendChannel);
-		} else {
-			// we got the real responsible
-			lookupInfo.appendHop(event.getSource());
-			lookupInfo.completedNow();
-			ChordLookupResponse response = new ChordLookupResponse(
-					lookupRequest.getKey(), event.getSuccessor(), lookupRequest
-							.getAttachment(), lookupInfo);
-			component
-					.triggerEvent(response, lookupRequest.getResponseChannel());
-		}
-
-		// we try to use the responsible or the next hop as a possible better
-		// finger
-		fingerTable.learnedAboutPeer(event.getSuccessor());
-	}
-
-	@EventHandlerMethod
-	@MayTriggerEventTypes(ChordLookupFailed.class)
-	public void handleRpcTimeout(RpcTimeout event) {
-		logger.debug("RPC_TIMEOUT");
-
-		long timerId = event.getTimerId();
-
-		if (timerHandler.isOustandingTimer(timerId)) {
-			timerHandler.handledTimerExpired(timerId);
-
-			// we got an RPC timeout before the RPC response so we have to
-			// return a ChordLookupFailed event and to mark the finger as failed
-			ChordLookupRequest lookupRequest = outstandingLookups.remove(
-					timerId).getRequest();
-			ChordLookupFailed failed = new ChordLookupFailed(lookupRequest
-					.getKey(), lookupRequest.getAttachment(), event.getPeer());
-			component.triggerEvent(failed, lookupRequest.getResponseChannel());
-
-			// mark the slow/failed peer as suspected
-			fingerTable.fingerSuspected(event.getPeer());
-		}
-		// else we got the RPC response before the timeout so everything is OK.
-	}
-
-	@EventHandlerMethod
-	@MayTriggerEventTypes( { ChordLookupRequest.class, ScheduleTimeout.class })
-	public void handleFixFingers(FixFingers event) {
-		logger.debug("FIX_FINGER");
-
-		int nextFingerToFix = fingerTable.nextFingerToFix();
-
-		timerHandler.setTimer(event, timerSignalChannel,
-				fingerStabilizationPeriod);
-
-		// actually fix the finger now
-		// finger[next] = findSuccessor(n plus 2^(next-1))
-		BigInteger fingerBegin = fingerTable.getFingerBegin(nextFingerToFix);
-		ChordLookupRequest request = new ChordLookupRequest(fingerBegin,
-				fixFingersLookupChannel, nextFingerToFix);
-		component.triggerEvent(request, requestChannel);
-	}
-
-	@EventHandlerMethod
-	public void handleChordLookupResponse(ChordLookupResponse event) {
-		logger.debug("CHORD_LOOKUP_RESP");
-
-		Address fingerPeer = event.getResponsible();
-		int fingerIndex = (Integer) event.getAttachment();
-
-		fingerTable.fingerFixed(fingerIndex, fingerPeer);
-	}
-
-	@EventHandlerMethod
-	@MayTriggerEventTypes(ChordLookupRequest.class)
-	public void handleChordLookupFailed(ChordLookupFailed event) {
-		logger.debug("CHORD_LOOKUP_FAILED");
-
-		// retry lookup
-		// int fingerIndex = (Integer) event.getAttachment();
-		// BigInteger fingerBegin = fingerTable.getFingerBegin(fingerIndex);
-		// ChordLookupRequest request = new ChordLookupRequest(fingerBegin,
-		// fixFingersLookupChannel, fingerIndex);
-		// component.triggerEvent(request, requestChannel);
-	}
-
-	@EventHandlerMethod
-	@MayTriggerEventTypes(GetFingerTableResponse.class)
-	public void handleGetFingerTableRequest(GetFingerTableRequest event) {
-		logger.debug("GET_FINGER_TABLE_REQ");
-
-		GetFingerTableResponse response = new GetFingerTableResponse(
-				fingerTable.getView(), event.getSource());
-		component.triggerEvent(response, pnSendChannel);
-	}
-
-	@EventHandlerMethod
-	@MayTriggerEventTypes(JoinRingCompleted.class)
-	public void handleGetFingerTableResponse(GetFingerTableResponse event) {
-		logger.debug("GET_FINGER_TABLE_RESP");
-
-		// we try to populate our finger table with our successor's finger table
-		boolean changed = false;
-		// try to use the successors
-		for (Address address : event.getFingerTable().finger) {
-			if (fingerTable.learnedAboutPeer(address, false, false)) {
-				changed = true;
+			long lookupId = event.getLookupId();
+			if (timerHandler.isOustandingTimer(lookupId)) {
+				// we got the response before the RpcTimeout, so we cancel the
+				// timer
+				timerHandler.cancelTimer(lookupId);
+			} else {
+				// we got the response too late so we just give up since we have
+				// already triggered a LookupFailed event
+				return;
 			}
+
+			LookupInfo lookupInfo = outstandingLookups.remove(lookupId);
+			ChordLookupRequest lookupRequest = lookupInfo.getRequest();
+
+			logger.debug("FIND_SUCC_RESP NH({}) is {}. {}", new Object[] {
+					lookupRequest.getKey(), event.getSuccessor(),
+					event.isNextHop() });
+
+			if (event.isNextHop()) {
+				// we got an indirection
+				Address nextHop = event.getSuccessor();
+
+				RpcTimeout timeout = new RpcTimeout(lookupRequest, nextHop);
+				long timerId = timerHandler.setTimer(timeout,
+						timerSignalChannel, rpcTimeout);
+
+				lookupInfo.appendHop(event.getSource());
+				outstandingLookups.put(timerId, lookupInfo);
+
+				FindSuccessorRequest request = new FindSuccessorRequest(
+						lookupRequest.getKey(), timerId, nextHop);
+
+				// send find successor request
+				component.triggerEvent(request, pnSendChannel);
+			} else {
+				// we got the real responsible
+				lookupInfo.appendHop(event.getSource());
+				lookupInfo.completedNow();
+				ChordLookupResponse response = new ChordLookupResponse(
+						lookupRequest.getKey(), event.getSuccessor(),
+						lookupRequest.getAttachment(), lookupInfo);
+				component.triggerEvent(response, lookupRequest
+						.getResponseChannel());
+			}
+
+			// we try to use the responsible or the next hop as a possible
+			// better
+			// finger
+			fingerTable.learnedAboutPeer(event.getSuccessor());
 		}
-		if (changed) {
-			fingerTableChanged();
+	};
+
+	@MayTriggerEventTypes(ChordLookupFailed.class)
+	private EventHandler<RpcTimeout> handleRpcTimeout = new EventHandler<RpcTimeout>() {
+		public void handle(RpcTimeout event) {
+			logger.debug("RPC_TIMEOUT");
+
+			long timerId = event.getTimerId();
+
+			if (timerHandler.isOustandingTimer(timerId)) {
+				timerHandler.handledTimerExpired(timerId);
+
+				// we got an RPC timeout before the RPC response so we have to
+				// return a ChordLookupFailed event and to mark the finger as
+				// failed
+				ChordLookupRequest lookupRequest = outstandingLookups.remove(
+						timerId).getRequest();
+				ChordLookupFailed failed = new ChordLookupFailed(lookupRequest
+						.getKey(), lookupRequest.getAttachment(), event
+						.getPeer());
+				component.triggerEvent(failed, lookupRequest
+						.getResponseChannel());
+
+				// mark the slow/failed peer as suspected
+				fingerTable.fingerSuspected(event.getPeer());
+			}
+			// else we got the RPC response before the timeout so everything is
+			// OK.
 		}
-		component.triggerEvent(new JoinRingCompleted(localPeer),
-				notificationChannel);
-	}
+	};
+
+	@MayTriggerEventTypes( { ChordLookupRequest.class, ScheduleTimeout.class })
+	private EventHandler<FixFingers> handleFixFingers = new EventHandler<FixFingers>() {
+		public void handle(FixFingers event) {
+			logger.debug("FIX_FINGER");
+
+			int nextFingerToFix = fingerTable.nextFingerToFix();
+
+			timerHandler.setTimer(event, timerSignalChannel,
+					fingerStabilizationPeriod);
+
+			// actually fix the finger now
+			// finger[next] = findSuccessor(n plus 2^(next-1))
+			BigInteger fingerBegin = fingerTable
+					.getFingerBegin(nextFingerToFix);
+			ChordLookupRequest request = new ChordLookupRequest(fingerBegin,
+					fixFingersLookupChannel, nextFingerToFix);
+			component.triggerEvent(request, requestChannel);
+		}
+	};
+
+	private EventHandler<ChordLookupResponse> handleChordLookupResponse = new EventHandler<ChordLookupResponse>() {
+		public void handle(ChordLookupResponse event) {
+			logger.debug("CHORD_LOOKUP_RESP");
+
+			Address fingerPeer = event.getResponsible();
+			int fingerIndex = (Integer) event.getAttachment();
+
+			fingerTable.fingerFixed(fingerIndex, fingerPeer);
+		}
+	};
+
+	@MayTriggerEventTypes(ChordLookupRequest.class)
+	private EventHandler<ChordLookupFailed> handleChordLookupFailed = new EventHandler<ChordLookupFailed>() {
+		public void handle(ChordLookupFailed event) {
+			logger.debug("CHORD_LOOKUP_FAILED");
+
+			// retry lookup
+			// int fingerIndex = (Integer) event.getAttachment();
+			// BigInteger fingerBegin = fingerTable.getFingerBegin(fingerIndex);
+			// ChordLookupRequest request = new ChordLookupRequest(fingerBegin,
+			// fixFingersLookupChannel, fingerIndex);
+			// component.triggerEvent(request, requestChannel);
+		}
+	};
+
+	@MayTriggerEventTypes(GetFingerTableResponse.class)
+	private EventHandler<GetFingerTableRequest> handleGetFingerTableRequest = new EventHandler<GetFingerTableRequest>() {
+		public void handle(GetFingerTableRequest event) {
+			logger.debug("GET_FINGER_TABLE_REQ");
+
+			GetFingerTableResponse response = new GetFingerTableResponse(
+					fingerTable.getView(), event.getSource());
+			component.triggerEvent(response, pnSendChannel);
+		}
+	};
+
+	@MayTriggerEventTypes(JoinRingCompleted.class)
+	private EventHandler<GetFingerTableResponse> handleGetFingerTableResponse = new EventHandler<GetFingerTableResponse>() {
+		public void handle(GetFingerTableResponse event) {
+			logger.debug("GET_FINGER_TABLE_RESP");
+
+			// we try to populate our finger table with our successor's finger
+			// table
+			boolean changed = false;
+			// try to use the successors
+			for (Address address : event.getFingerTable().finger) {
+				if (fingerTable.learnedAboutPeer(address, false, false)) {
+					changed = true;
+				}
+			}
+			if (changed) {
+				fingerTableChanged();
+			}
+			component.triggerEvent(new JoinRingCompleted(localPeer),
+					notificationChannel);
+		}
+	};
 
 	void fingerTableChanged() {
 		NewFingerTable newFingerTable = new NewFingerTable(fingerTable

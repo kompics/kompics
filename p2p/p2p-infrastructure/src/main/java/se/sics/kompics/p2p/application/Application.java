@@ -14,11 +14,11 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.p2p.application.events.DoNextOperation;
 import se.sics.kompics.p2p.application.events.StartApplication;
@@ -67,8 +67,8 @@ public class Application {
 
 		this.peerClusterCommandChannel = peerClusterCommandChannel;
 
-		component.subscribe(startChannel, "handleStartApplication");
-		component.subscribe(timerSignalChannel, "handleDoNextOperation");
+		component.subscribe(startChannel, handleStartApplication);
+		component.subscribe(timerSignalChannel, handleDoNextOperation);
 	}
 
 	@ComponentInitializeMethod
@@ -76,19 +76,21 @@ public class Application {
 		logger.debug("Init");
 	}
 
-	@EventHandlerMethod
-	public void handleStartApplication(StartApplication event) {
-		operations = event.getOperations();
-		lastOperationIndex = -1;
-		doNextOperation();
-	}
+	private EventHandler<StartApplication> handleStartApplication = new EventHandler<StartApplication>() {
+		public void handle(StartApplication event) {
+			operations = event.getOperations();
+			lastOperationIndex = -1;
+			doNextOperation();
+		}
+	};
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(ScheduleTimeout.class)
-	public void handleDoNextOperation(DoNextOperation event) {
-		logger.info("DONE WAITING");
-		doNextOperation();
-	}
+	private EventHandler<DoNextOperation> handleDoNextOperation = new EventHandler<DoNextOperation>() {
+		public void handle(DoNextOperation event) {
+			logger.info("DONE WAITING");
+			doNextOperation();
+		}
+	};
 
 	private void doNextOperation() {
 		lastOperationIndex++;

@@ -11,10 +11,10 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -87,16 +87,16 @@ public class BootstrapServer {
 		webRequestChannel = webMembrane.getChannelOut(WebRequest.class);
 		webResponseChannel = webMembrane.getChannelIn(WebResponse.class);
 
-		component.subscribe(webRequestChannel, "handleWebRequest");
+		component.subscribe(webRequestChannel, handleWebRequest);
 
-		component.subscribe(startChannel, "handleStartEvent");
+		component.subscribe(startChannel, handleStartEvent);
 
-		component.subscribe(pnDeliverChannel, "handleCacheResetRequest");
-		component.subscribe(pnDeliverChannel, "handleCacheAddPeerRequest");
-		component.subscribe(pnDeliverChannel, "handleCacheGetPeersRequest");
+		component.subscribe(pnDeliverChannel, handleCacheResetRequest);
+		component.subscribe(pnDeliverChannel, handleCacheAddPeerRequest);
+		component.subscribe(pnDeliverChannel, handleCacheGetPeersRequest);
 
 		this.timerHandler = new TimerHandler(component, timerSetChannel);
-		component.subscribe(timerSignalChannel, "handleCacheEvictPeer");
+		component.subscribe(timerSignalChannel, handleCacheEvictPeer);
 	}
 
 	@ComponentInitializeMethod
@@ -104,88 +104,95 @@ public class BootstrapServer {
 		this.evictAfter = evictAfterSeconds * 1000;
 	}
 
-	@EventHandlerMethod
-	public void handleStartEvent(StartBootstrapServer event) {
-		logger.debug("Started");
+	private EventHandler<StartBootstrapServer> handleStartEvent = new EventHandler<StartBootstrapServer>() {
+		public void handle(StartBootstrapServer event) {
+			logger.debug("Started");
 
-		dumpCacheToLog();
-	}
-
-	@EventHandlerMethod
-	@MayTriggerEventTypes(ScheduleTimeout.class)
-	public void handleCacheResetRequest(CacheResetRequest event) {
-		// cancel all eviction timers
-		timerHandler.cancelAllOutstandingTimers();
-
-		// reset cache
-		cache.clear();
-		mostRecentEntriesFirst.clear();
-		cacheEpoch++;
-
-		logger.debug("Cleared cache");
-		addPeerToCache(event.getPeerAddress());
-
-		dumpCacheToLog();
-	}
-
-	@EventHandlerMethod
-	@MayTriggerEventTypes(ScheduleTimeout.class)
-	public void handleCacheAddPeerRequest(CacheAddPeerRequest event) {
-		addPeerToCache(event.getPeerAddress());
-
-		dumpCacheToLog();
-	}
-
-	@EventHandlerMethod
-	public void handleCacheEvictPeer(CacheEvictPeer event) {
-		// only evict if it was not refreshed in the meantime
-		// which means the timer is not anymore outstanding
-		if (timerHandler.isOustandingTimer(event.getTimerId())) {
-			removePeerFromCache(event.getPeerAddress(), event.getEpoch());
+			dumpCacheToLog();
 		}
+	};
 
-		dumpCacheToLog();
-	}
+	@MayTriggerEventTypes(ScheduleTimeout.class)
+	private EventHandler<CacheResetRequest> handleCacheResetRequest = new EventHandler<CacheResetRequest>() {
+		public void handle(CacheResetRequest event) {
+			// cancel all eviction timers
+			timerHandler.cancelAllOutstandingTimers();
 
-	@EventHandlerMethod
+			// reset cache
+			cache.clear();
+			mostRecentEntriesFirst.clear();
+			cacheEpoch++;
+
+			logger.debug("Cleared cache");
+			addPeerToCache(event.getPeerAddress());
+
+			dumpCacheToLog();
+		}
+	};
+
+	@MayTriggerEventTypes(ScheduleTimeout.class)
+	private EventHandler<CacheAddPeerRequest> handleCacheAddPeerRequest = new EventHandler<CacheAddPeerRequest>() {
+		public void handle(CacheAddPeerRequest event) {
+			addPeerToCache(event.getPeerAddress());
+
+			dumpCacheToLog();
+		}
+	};
+
+	private EventHandler<CacheEvictPeer> handleCacheEvictPeer = new EventHandler<CacheEvictPeer>() {
+		public void handle(CacheEvictPeer event) {
+			// only evict if it was not refreshed in the meantime
+			// which means the timer is not anymore outstanding
+			if (timerHandler.isOustandingTimer(event.getTimerId())) {
+				removePeerFromCache(event.getPeerAddress(), event.getEpoch());
+			}
+
+			dumpCacheToLog();
+		}
+	};
+
 	@MayTriggerEventTypes(CacheGetPeersResponse.class)
-	public void handleCacheGetPeersRequest(CacheGetPeersRequest event) {
-		int peersMax = event.getPeersMax();
-		HashSet<PeerEntry> peers = new HashSet<PeerEntry>();
-		long now = System.currentTimeMillis();
+	private EventHandler<CacheGetPeersRequest> handleCacheGetPeersRequest = new EventHandler<CacheGetPeersRequest>() {
+		public void handle(CacheGetPeersRequest event) {
+			int peersMax = event.getPeersMax();
+			HashSet<PeerEntry> peers = new HashSet<PeerEntry>();
+			long now = System.currentTimeMillis();
 
-		// get the most recent up to peersMax entries
-		Iterator<Address> iterator = mostRecentEntriesFirst
-				.descendingIterator();
-		while (iterator.hasNext()) {
-			Address address = iterator.next();
-			CacheEntry cacheEntry = cache.get(address);
-			PeerEntry peerEntry = new PeerEntry(address, now
-					- cacheEntry.getAddedAt(), now
-					- cacheEntry.getRefreshedAt());
-			peers.add(peerEntry);
-			peersMax--;
+			// get the most recent up to peersMax entries
+			Iterator<Address> iterator = mostRecentEntriesFirst
+					.descendingIterator();
+			while (iterator.hasNext()) {
+				Address address = iterator.next();
+				CacheEntry cacheEntry = cache.get(address);
+				PeerEntry peerEntry = new PeerEntry(address, now
+						- cacheEntry.getAddedAt(), now
+						- cacheEntry.getRefreshedAt());
+				peers.add(peerEntry);
+				peersMax--;
 
-			if (peersMax == 0)
-				break;
+				if (peersMax == 0)
+					break;
+			}
+
+			CacheGetPeersResponse response = new CacheGetPeersResponse(peers,
+					event.getRequestId(), event.getSource());
+			component.triggerEvent(response, pnSendChannel);
+
+			logger.debug("Responded with {} peers to peer {}", peers.size(),
+					event.getSource());
 		}
+	};
 
-		CacheGetPeersResponse response = new CacheGetPeersResponse(peers, event
-				.getRequestId(), event.getSource());
-		component.triggerEvent(response, pnSendChannel);
-
-		logger.debug("Responded with {} peers to peer {}", peers.size(), event
-				.getSource());
-	}
-
-	@EventHandlerMethod
 	@MayTriggerEventTypes(WebResponse.class)
-	public void handleWebRequest(WebRequest event) {
-		logger.debug("Handling WebRequest");
+	private EventHandler<WebRequest> handleWebRequest = new EventHandler<WebRequest>() {
+		public void handle(WebRequest event) {
+			logger.debug("Handling WebRequest");
 
-		WebResponse response = new WebResponse(dumpCacheToHtml(), event, 1, 1);
-		component.triggerEvent(response, webResponseChannel);
-	}
+			WebResponse response = new WebResponse(dumpCacheToHtml(), event, 1,
+					1);
+			component.triggerEvent(response, webResponseChannel);
+		}
+	};
 
 	private void addPeerToCache(Address address) {
 		if (address != null) {

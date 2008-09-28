@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -86,12 +86,12 @@ public class PeerMonitorClient {
 		chordResponseChannel = component
 				.createChannel(GetChordNeighborsResponse.class);
 
-		component.subscribe(lnDeliverChannel, "handleChangeUpdatePeriod");
+		component.subscribe(lnDeliverChannel, handleChangeUpdatePeriod);
 		component.subscribe(chordResponseChannel,
-				"handleGetChordNeighborsResponse");
+				handleGetChordNeighborsResponse);
 
-		component.subscribe(requestChannel, "handleStartPeerMonitor");
-		component.subscribe(requestChannel, "handleStopPeerMonitor");
+		component.subscribe(requestChannel, handleStartPeerMonitor);
+		component.subscribe(requestChannel, handleStopPeerMonitor);
 	}
 
 	@ComponentInitializeMethod("monitor.properties")
@@ -113,55 +113,61 @@ public class PeerMonitorClient {
 		monitorServerAddress = new Address(ip, port, BigInteger.ZERO);
 		localPeerAddress = localAddress;
 
-		component.subscribe(timerSignalChannel, "handleSendView");
+		component.subscribe(timerSignalChannel, handleSendView);
 	}
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(ScheduleTimeout.class)
-	public void handleStartPeerMonitor(StartPeerMonitor event) {
-		SendView timerEvent = new SendView(localPeerAddress.getId());
+	private EventHandler<StartPeerMonitor> handleStartPeerMonitor = new EventHandler<StartPeerMonitor>() {
+		public void handle(StartPeerMonitor event) {
+			SendView timerEvent = new SendView(localPeerAddress.getId());
 
-		// timerHandler.setTimer(timerEvent, timerSignalChannel, updatePeriod);
-		component.triggerEvent(timerEvent, timerSignalChannel);
-	}
+			// timerHandler.setTimer(timerEvent, timerSignalChannel,
+			// updatePeriod);
+			component.triggerEvent(timerEvent, timerSignalChannel);
+		}
+	};
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(CancelTimeout.class)
-	public void handleStopPeerMonitor(StopPeerMonitor event) {
-		timerHandler.cancelAllOutstandingTimers();
-	}
+	private EventHandler<StopPeerMonitor> handleStopPeerMonitor = new EventHandler<StopPeerMonitor>() {
+		public void handle(StopPeerMonitor event) {
+			timerHandler.cancelAllOutstandingTimers();
+		}
+	};
 
-	@EventHandlerMethod
-	public void handleChangeUpdatePeriod(ChangeUpdatePeriod event) {
-		updatePeriod = event.getNewUpdatePeriod();
-	}
+	private EventHandler<ChangeUpdatePeriod> handleChangeUpdatePeriod = new EventHandler<ChangeUpdatePeriod>() {
+		public void handle(ChangeUpdatePeriod event) {
+			updatePeriod = event.getNewUpdatePeriod();
+		}
+	};
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes( { GetChordNeighborsRequest.class,
 			ScheduleTimeout.class })
-	public void handleSendView(SendView event) {
-		logger.debug("SEND_VIEW");
+	private EventHandler<SendView> handleSendView = new EventHandler<SendView>() {
+		public void handle(SendView event) {
+			logger.debug("SEND_VIEW");
 
-		GetChordNeighborsRequest request = new GetChordNeighborsRequest(
-				chordResponseChannel);
-		component.triggerEvent(request, chordRequestChannel);
+			GetChordNeighborsRequest request = new GetChordNeighborsRequest(
+					chordResponseChannel);
+			component.triggerEvent(request, chordRequestChannel);
 
-		// reset the timer for sending the next view notification
-		timerHandler.setTimer(event, timerSignalChannel, updatePeriod);
-	}
+			// reset the timer for sending the next view notification
+			timerHandler.setTimer(event, timerSignalChannel, updatePeriod);
+		}
+	};
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(PeerViewNotification.class)
-	public void handleGetChordNeighborsResponse(GetChordNeighborsResponse event) {
-		logger.debug("GET_CHORD_NEIGHBORS_RESP");
+	private EventHandler<GetChordNeighborsResponse> handleGetChordNeighborsResponse = new EventHandler<GetChordNeighborsResponse>() {
+		public void handle(GetChordNeighborsResponse event) {
+			logger.debug("GET_CHORD_NEIGHBORS_RESP");
 
-		HashMap<String, Object> map = new HashMap<String, Object>();
+			HashMap<String, Object> map = new HashMap<String, Object>();
 
-		map.put("ChordRing", event);
+			map.put("ChordRing", event);
 
-		PeerViewNotification viewNotification = new PeerViewNotification(
-				localPeerAddress, map, monitorServerAddress);
+			PeerViewNotification viewNotification = new PeerViewNotification(
+					localPeerAddress, map, monitorServerAddress);
 
-		component.triggerEvent(viewNotification, lnSendChannel);
-	}
+			component.triggerEvent(viewNotification, lnSendChannel);
+		}
+	};
 }

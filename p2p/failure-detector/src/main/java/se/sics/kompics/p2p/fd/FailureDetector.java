@@ -10,11 +10,11 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -58,9 +58,12 @@ public final class FailureDetector {
 
 	Address localAddress;
 
+	private final FailureDetector thisFailureDetector;
+
 	public FailureDetector(Component component) {
 		this.component = component;
 		peerProbers = new HashMap<Address, PeerProber>();
+		this.thisFailureDetector = this;
 	}
 
 	@ComponentCreateMethod
@@ -82,15 +85,15 @@ public final class FailureDetector {
 		pnSendChannel = pnMembrane.getChannelIn(Message.class);
 		Channel pnDeliverChannel = pnMembrane.getChannelOut(Message.class);
 
-		component.subscribe(alarmChannel, "handleSendPing");
-		component.subscribe(alarmChannel, "handlePongTimedOut");
+		component.subscribe(alarmChannel, handleSendPing);
+		component.subscribe(alarmChannel, handlePongTimedOut);
 
-		component.subscribe(pnDeliverChannel, "handlePing");
-		component.subscribe(pnDeliverChannel, "handlePong");
+		component.subscribe(pnDeliverChannel, handlePing);
+		component.subscribe(pnDeliverChannel, handlePong);
 
-		component.subscribe(requestChannel, "handleStartProbingPeer");
-		component.subscribe(requestChannel, "handleStopProbingPeer");
-		component.subscribe(requestChannel, "handleStatusRequest");
+		component.subscribe(requestChannel, handleStartProbingPeer);
+		component.subscribe(requestChannel, handleStopProbingPeer);
+		component.subscribe(requestChannel, handleStatusRequest);
 	}
 
 	@ComponentShareMethod
@@ -118,99 +121,110 @@ public final class FailureDetector {
 				.getProperty("pong.timeout.add"));
 	}
 
-	@EventHandlerMethod
-	public void handleStartProbingPeer(StartProbingPeer event) {
-		Address peerAddress = event.getPeerAddress();
-		if (!peerProbers.containsKey(peerAddress)) {
-			PeerProber peerProber = new PeerProber(peerAddress, this);
+	private EventHandler<StartProbingPeer> handleStartProbingPeer = new EventHandler<StartProbingPeer>() {
+		public void handle(StartProbingPeer event) {
+			Address peerAddress = event.getPeerAddress();
+			if (!peerProbers.containsKey(peerAddress)) {
+				PeerProber peerProber = new PeerProber(peerAddress,
+						thisFailureDetector);
 
-			peerProber.addClientComponent(event.getComponent(), event
-					.getChannel());
-			peerProbers.put(peerAddress, peerProber);
-			peerProber.start();
-			logger.debug("Started probing peer {}", peerAddress);
-		} else {
-			peerProbers.get(peerAddress).addClientComponent(
-					event.getComponent(), event.getChannel());
-			logger.debug("Peer {} is already being probed", peerAddress);
+				peerProber.addClientComponent(event.getComponent(), event
+						.getChannel());
+				peerProbers.put(peerAddress, peerProber);
+				peerProber.start();
+				logger.debug("Started probing peer {}", peerAddress);
+			} else {
+				peerProbers.get(peerAddress).addClientComponent(
+						event.getComponent(), event.getChannel());
+				logger.debug("Peer {} is already being probed", peerAddress);
+			}
 		}
-	}
+	};
 
-	@EventHandlerMethod
-	public void handleStopProbingPeer(StopProbingPeer event) {
-		Address peerAddress = event.getPeerAddress();
-		if (peerProbers.containsKey(peerAddress)) {
-			PeerProber prober = peerProbers.get(peerAddress);
-			Component requestingComponent = event.getComponent();
-			if (prober.isClientComponent(requestingComponent)) {
-				boolean last = prober
-						.removeClientComponent(requestingComponent);
-				if (last) {
-					peerProbers.remove(peerAddress);
-					prober.stop();
-					logger.debug("Stoped probing peer {}", peerAddress);
+	private EventHandler<StopProbingPeer> handleStopProbingPeer = new EventHandler<StopProbingPeer>() {
+		public void handle(StopProbingPeer event) {
+			Address peerAddress = event.getPeerAddress();
+			if (peerProbers.containsKey(peerAddress)) {
+				PeerProber prober = peerProbers.get(peerAddress);
+				Component requestingComponent = event.getComponent();
+				if (prober.isClientComponent(requestingComponent)) {
+					boolean last = prober
+							.removeClientComponent(requestingComponent);
+					if (last) {
+						peerProbers.remove(peerAddress);
+						prober.stop();
+						logger.debug("Stoped probing peer {}", peerAddress);
+					}
+				} else {
+					logger
+							.debug(
+									"Component {} didn't request the probing of peer {}",
+									requestingComponent.getName(), peerAddress);
 				}
 			} else {
-				logger.debug(
-						"Component {} didn't request the probing of peer {}",
-						requestingComponent.getName(), peerAddress);
+				logger.debug("Peer {} is not currently being probed",
+						peerAddress);
 			}
-		} else {
-			logger.debug("Peer {} is not currently being probed", peerAddress);
 		}
-	}
+	};
 
-	@EventHandlerMethod
-	public void handleSendPing(SendPing event) {
-		Address peer = event.getPeer();
-		PeerProber prober = peerProbers.get(peer);
-		if (prober != null) {
-			prober.ping();
-		} else {
-			logger.debug("Peer {} is not currently being probed", peer);
-		}
-	}
-
-	@EventHandlerMethod
-	public void handlePongTimedOut(PongTimedOut event) {
-		if (timerHandler.isOustandingTimer(event.getTimerId())) {
+	private EventHandler<SendPing> handleSendPing = new EventHandler<SendPing>() {
+		public void handle(SendPing event) {
 			Address peer = event.getPeer();
-			if (peerProbers.containsKey(peer)) {
-				peerProbers.get(peer).pongTimedOut();
+			PeerProber prober = peerProbers.get(peer);
+			if (prober != null) {
+				prober.ping();
 			} else {
 				logger.debug("Peer {} is not currently being probed", peer);
 			}
 		}
-	}
+	};
 
-	@EventHandlerMethod
-	public void handlePing(Ping event) {
-		logger.debug("Received Ping from {}. Sending Pong.", event.getSource());
-
-		component.triggerEvent(new Pong(event.getId(), localAddress, event
-				.getSource()), pnSendChannel);
-	}
-
-	@EventHandlerMethod
-	public void handlePong(Pong event) {
-		Address peer = event.getSource();
-		if (peerProbers.containsKey(peer)) {
-			peerProbers.get(peer).pong(event.getId());
-		} else {
-			logger.debug("Peer {} is not currently being probed", peer);
+	private EventHandler<PongTimedOut> handlePongTimedOut = new EventHandler<PongTimedOut>() {
+		public void handle(PongTimedOut event) {
+			if (timerHandler.isOustandingTimer(event.getTimerId())) {
+				Address peer = event.getPeer();
+				if (peerProbers.containsKey(peer)) {
+					peerProbers.get(peer).pongTimedOut();
+				} else {
+					logger.debug("Peer {} is not currently being probed", peer);
+				}
+			}
 		}
-	}
+	};
 
-	@EventHandlerMethod
+	private EventHandler<Ping> handlePing = new EventHandler<Ping>() {
+		public void handle(Ping event) {
+			logger.debug("Received Ping from {}. Sending Pong.", event
+					.getSource());
+
+			component.triggerEvent(new Pong(event.getId(), localAddress, event
+					.getSource()), pnSendChannel);
+		}
+	};
+
+	private EventHandler<Pong> handlePong = new EventHandler<Pong>() {
+		public void handle(Pong event) {
+			Address peer = event.getSource();
+			if (peerProbers.containsKey(peer)) {
+				peerProbers.get(peer).pong(event.getId());
+			} else {
+				logger.debug("Peer {} is not currently being probed", peer);
+			}
+		}
+	};
+
 	@MayTriggerEventTypes(StatusResponse.class)
-	public void handleStatusRequest(StatusRequest request) {
-		Map<Address, ProbedPeerData> probedPeers = new HashMap<Address, ProbedPeerData>();
-		for (Map.Entry<Address, PeerProber> entry : peerProbers.entrySet()) {
-			probedPeers.put(entry.getKey(), entry.getValue()
-					.getProbedPeerData());
-		}
-		StatusResponse response = new StatusResponse(probedPeers);
+	private EventHandler<StatusRequest> handleStatusRequest = new EventHandler<StatusRequest>() {
+		public void handle(StatusRequest request) {
+			Map<Address, ProbedPeerData> probedPeers = new HashMap<Address, ProbedPeerData>();
+			for (Map.Entry<Address, PeerProber> entry : peerProbers.entrySet()) {
+				probedPeers.put(entry.getKey(), entry.getValue()
+						.getProbedPeerData());
+			}
+			StatusResponse response = new StatusResponse(probedPeers);
 
-		component.triggerEvent(response, request.getChannel());
-	}
+			component.triggerEvent(response, request.getChannel());
+		}
+	};
 }

@@ -10,13 +10,13 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.EventAttributeFilter;
+import se.sics.kompics.api.EventHandler;
+import se.sics.kompics.api.FastEventFilter;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -80,8 +80,8 @@ public final class LossyNetwork {
 		netSendChannel = networkMembrane.getChannelIn(Message.class);
 		netDeliverChannel = networkMembrane.getChannelOut(Message.class);
 
-		component.subscribe(timerSignalChannel, "handleLossyNetworkAlarm");
-		component.subscribe(this.sendChannel, "handleMessage");
+		component.subscribe(timerSignalChannel, handleLossyNetworkAlarm);
+		component.subscribe(this.sendChannel, handleMessage);
 	}
 
 	@ComponentShareMethod
@@ -110,72 +110,79 @@ public final class LossyNetwork {
 		lossRate = Double.parseDouble(properties.getProperty(
 				"global.loss.rate", "0.0"));
 
-		EventAttributeFilter destinationFilter = new EventAttributeFilter(
-				"destination", localAddress);
-		component.subscribe(netDeliverChannel, "handleLossyNetworkMessage",
-				destinationFilter);
+		component.subscribe(netDeliverChannel, handleLossyNetworkMessage,
+				new FastEventFilter<Message>("destination", localAddress) {
+					public boolean filter(Message m) {
+						return m.destination.equals(value);
+					}
+				});
 		logger.debug("Subscribed for LossyNetNetDeliver with destination {}",
 				localAddress);
 	}
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes( { ScheduleTimeout.class, Message.class })
-	public void handleMessage(Message event) {
-		logger.debug("Handling send {} to {}.", event, event.getDestination());
+	private EventHandler<Message> handleMessage = new EventHandler<Message>() {
+		public void handle(Message event) {
+			logger.debug("Handling send {} to {}.", event, event
+					.getDestination());
 
-		event.setSource(localAddress);
-		Address destination = event.getDestination();
+			event.setSource(localAddress);
+			Address destination = event.getDestination();
 
-		if (destination.equals(localAddress)) {
-			// deliver locally
-			// LossyNetworkDeliverEvent deliverEvent = event
-			// .getLossyNetworkDeliverEvent();
-			// deliverEvent.setSource(localAddress);
-			// deliverEvent.setDestination(destination);
-			component.triggerEvent(event, deliverChannel);
-			return;
+			if (destination.equals(localAddress)) {
+				// deliver locally
+				// LossyNetworkDeliverEvent deliverEvent = event
+				// .getLossyNetworkDeliverEvent();
+				// deliverEvent.setSource(localAddress);
+				// deliverEvent.setDestination(destination);
+				component.triggerEvent(event, deliverChannel);
+				return;
+			}
+
+			if (random.nextDouble() < lossRate) {
+				// drop the message according to the loss rate
+				return;
+			}
+
+			// make a LossyNetNetworkDeliverEvent to be delivered at the
+			// destination
+			LossyNetworMessage lnMessage = new LossyNetworMessage(event,
+					localAddress, destination);
+
+			long latency = king[localKingId][destination.getId().mod(
+					BigInteger.valueOf(KingMatrix.SIZE)).intValue()];
+			if (latency > 0) {
+				// delay the sending according to the latency
+				LossyNetworkAlarm tse = new LossyNetworkAlarm(lnMessage);
+				ScheduleTimeout ste = new ScheduleTimeout(0, tse,
+						timerSignalChannel, component, latency);
+				component.triggerEvent(ste, timerSetChannel, Priority.HIGH);
+			} else {
+				// send immediately
+				component.triggerEvent(lnMessage, netSendChannel);
+			}
 		}
+	};
 
-		if (random.nextDouble() < lossRate) {
-			// drop the message according to the loss rate
-			return;
-		}
-
-		// make a LossyNetNetworkDeliverEvent to be delivered at the destination
-		LossyNetworMessage lnMessage = new LossyNetworMessage(event,
-				localAddress, destination);
-
-		long latency = king[localKingId][destination.getId().mod(
-				BigInteger.valueOf(KingMatrix.SIZE)).intValue()];
-		if (latency > 0) {
-			// delay the sending according to the latency
-			LossyNetworkAlarm tse = new LossyNetworkAlarm(lnMessage);
-			ScheduleTimeout ste = new ScheduleTimeout(0, tse,
-					timerSignalChannel, component, latency);
-			component.triggerEvent(ste, timerSetChannel, Priority.HIGH);
-		} else {
-			// send immediately
-			component.triggerEvent(lnMessage, netSendChannel);
-		}
-	}
-
-	@EventHandlerMethod
 	@MayTriggerEventTypes(Message.class)
-	public void handleLossyNetworkAlarm(LossyNetworkAlarm event) {
-		component.triggerEvent(event.getMessage(), netSendChannel);
-	}
+	private EventHandler<LossyNetworkAlarm> handleLossyNetworkAlarm = new EventHandler<LossyNetworkAlarm>() {
+		public void handle(LossyNetworkAlarm event) {
+			component.triggerEvent(event.getMessage(), netSendChannel);
+		}
+	};
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(Message.class)
-	public void handleLossyNetworkMessage(LossyNetworMessage event) {
-		logger.debug("Handling delivery {} from {}.", event.getMessage(), event
-				.getSource());
+	private EventHandler<LossyNetworMessage> handleLossyNetworkMessage = new EventHandler<LossyNetworMessage>() {
+		public void handle(LossyNetworMessage event) {
+			logger.debug("Handling delivery {} from {}.", event.getMessage(),
+					event.getSource());
 
-		Message lnDeliverEvent = event.getMessage();
-		// lnDeliverEvent.setSource(event.getSource());
-		// lnDeliverEvent.setDestination(event.getDestination());
+			Message lnDeliverEvent = event.getMessage();
+			// lnDeliverEvent.setSource(event.getSource());
+			// lnDeliverEvent.setDestination(event.getDestination());
 
-		// trigger the encapsulated LossyNetworkDeliverEvent
-		component.triggerEvent(lnDeliverEvent, deliverChannel);
-	}
+			// trigger the encapsulated LossyNetworkDeliverEvent
+			component.triggerEvent(lnDeliverEvent, deliverChannel);
+		}
+	};
 }

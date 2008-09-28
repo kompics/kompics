@@ -11,11 +11,11 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -87,14 +87,14 @@ public class BootstrapClient {
 		pnSendChannel = pnMembrane.getChannelIn(Message.class);
 		Channel pnDeliverChannel = pnMembrane.getChannelOut(Message.class);
 
-		component.subscribe(this.requestChannel, "handleBootstrapRequest");
-		component.subscribe(this.requestChannel, "handleBootstrapCompleted");
-		component.subscribe(this.requestChannel, "handleBootstrapCacheReset");
-		component.subscribe(pnDeliverChannel, "handleCacheGetPeersResponse");
+		component.subscribe(this.requestChannel, handleBootstrapRequest);
+		component.subscribe(this.requestChannel, handleBootstrapCompleted);
+		component.subscribe(this.requestChannel, handleBootstrapCacheReset);
+		component.subscribe(pnDeliverChannel, handleCacheGetPeersResponse);
 
 		this.timerHandler = new TimerHandler(component, timerSetChannel);
-		component.subscribe(timerSignalChannel, "handleClientRefreshPeer");
-		component.subscribe(timerSignalChannel, "handleClientRetryRequest");
+		component.subscribe(timerSignalChannel, handleClientRefreshPeer);
+		component.subscribe(timerSignalChannel, handleClientRetryRequest);
 	}
 
 	@ComponentShareMethod
@@ -126,82 +126,90 @@ public class BootstrapClient {
 				+ peerAddress.getId());
 	}
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(CacheGetPeersRequest.class)
-	public void handleBootstrapRequest(BootstrapRequest event) {
-		// set an alarm to retry the request if no response
-		long id = timerHandler.setTimer(new ClientRetryRequest(event),
-				timerSignalChannel, retryPeriod);
+	private EventHandler<BootstrapRequest> handleBootstrapRequest = new EventHandler<BootstrapRequest>() {
+		public void handle(BootstrapRequest event) {
+			// set an alarm to retry the request if no response
+			long id = timerHandler.setTimer(new ClientRetryRequest(event),
+					timerSignalChannel, retryPeriod);
 
-		CacheGetPeersRequest request = new CacheGetPeersRequest(event
-				.getPeersMax(), id, bootstrapServerAddress);
+			CacheGetPeersRequest request = new CacheGetPeersRequest(event
+					.getPeersMax(), id, bootstrapServerAddress);
 
-		logger.debug("Sending GetPeersRequest");
-		component.triggerEvent(request, pnSendChannel);
-	}
-
-	@EventHandlerMethod
-	@MayTriggerEventTypes(CacheGetPeersRequest.class)
-	public void handleClientRetryRequest(ClientRetryRequest event) {
-		if (!timerHandler.isOustandingTimer(event.getTimerId())) {
-			return;
+			logger.debug("Sending GetPeersRequest");
+			component.triggerEvent(request, pnSendChannel);
 		}
-		timerHandler.cancelTimer(event.getTimerId());
+	};
 
-		// set an alarm to retry the request if no response
-		long id = timerHandler.setTimer(new ClientRetryRequest(event
-				.getRequest()), timerSignalChannel, retryPeriod);
+	@MayTriggerEventTypes(CacheGetPeersRequest.class)
+	private EventHandler<ClientRetryRequest> handleClientRetryRequest = new EventHandler<ClientRetryRequest>() {
+		public void handle(ClientRetryRequest event) {
+			if (!timerHandler.isOustandingTimer(event.getTimerId())) {
+				return;
+			}
+			timerHandler.cancelTimer(event.getTimerId());
 
-		CacheGetPeersRequest request = new CacheGetPeersRequest(event
-				.getRequest().getPeersMax(), id, bootstrapServerAddress);
+			// set an alarm to retry the request if no response
+			long id = timerHandler.setTimer(new ClientRetryRequest(event
+					.getRequest()), timerSignalChannel, retryPeriod);
 
-		logger.debug("Sending GetPeersRequest");
-		component.triggerEvent(request, pnSendChannel);
-	}
+			CacheGetPeersRequest request = new CacheGetPeersRequest(event
+					.getRequest().getPeersMax(), id, bootstrapServerAddress);
 
-	@EventHandlerMethod
+			logger.debug("Sending GetPeersRequest");
+			component.triggerEvent(request, pnSendChannel);
+		}
+	};
+
 	@MayTriggerEventTypes(BootstrapResponse.class)
-	public void handleCacheGetPeersResponse(CacheGetPeersResponse event) {
-		if (timerHandler.isOustandingTimer(event.getReqestId())) {
-			timerHandler.cancelTimer(event.getReqestId());
+	private EventHandler<CacheGetPeersResponse> handleCacheGetPeersResponse = new EventHandler<CacheGetPeersResponse>() {
+		public void handle(CacheGetPeersResponse event) {
+			if (timerHandler.isOustandingTimer(event.getReqestId())) {
+				timerHandler.cancelTimer(event.getReqestId());
+			}
+
+			BootstrapResponse response = new BootstrapResponse(event.getPeers());
+
+			logger.debug("Received GetPeersResponse");
+			component.triggerEvent(response, responseChannel);
 		}
+	};
 
-		BootstrapResponse response = new BootstrapResponse(event.getPeers());
-
-		logger.debug("Received GetPeersResponse");
-		component.triggerEvent(response, responseChannel);
-	}
-
-	@EventHandlerMethod
 	@MayTriggerEventTypes( { CacheAddPeerRequest.class, ScheduleTimeout.class })
-	public void handleBootstrapCompleted(BootstrapCompleted event) {
-		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress,
-				bootstrapServerAddress);
+	private EventHandler<BootstrapCompleted> handleBootstrapCompleted = new EventHandler<BootstrapCompleted>() {
+		public void handle(BootstrapCompleted event) {
+			CacheAddPeerRequest request = new CacheAddPeerRequest(
+					localPeerAddress, bootstrapServerAddress);
 
-		component.triggerEvent(request, pnSendChannel);
+			component.triggerEvent(request, pnSendChannel);
 
-		// set refresh timer
-		ClientRefreshPeer refreshEvent = new ClientRefreshPeer(localPeerAddress);
-		timerHandler.setTimer(refreshEvent, timerSignalChannel, refreshPeriod);
-	}
+			// set refresh timer
+			ClientRefreshPeer refreshEvent = new ClientRefreshPeer(
+					localPeerAddress);
+			timerHandler.setTimer(refreshEvent, timerSignalChannel,
+					refreshPeriod);
+		}
+	};
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes( { CacheAddPeerRequest.class, ScheduleTimeout.class })
-	public void handleClientRefreshPeer(ClientRefreshPeer event) {
-		CacheAddPeerRequest request = new CacheAddPeerRequest(localPeerAddress,
-				bootstrapServerAddress);
+	private EventHandler<ClientRefreshPeer> handleClientRefreshPeer = new EventHandler<ClientRefreshPeer>() {
+		public void handle(ClientRefreshPeer event) {
+			CacheAddPeerRequest request = new CacheAddPeerRequest(
+					localPeerAddress, bootstrapServerAddress);
 
-		component.triggerEvent(request, pnSendChannel);
+			component.triggerEvent(request, pnSendChannel);
 
-		// reset refresh timer
-		timerHandler.setTimer(event, timerSignalChannel, refreshPeriod);
-	}
+			// reset refresh timer
+			timerHandler.setTimer(event, timerSignalChannel, refreshPeriod);
+		}
+	};
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(CacheResetRequest.class)
-	public void handleBootstrapCacheReset(BootstrapCacheReset event) {
-		CacheResetRequest request = new CacheResetRequest(localPeerAddress,
-				bootstrapServerAddress);
-		component.triggerEvent(request, pnSendChannel);
-	}
+	private EventHandler<BootstrapCacheReset> handleBootstrapCacheReset = new EventHandler<BootstrapCacheReset>() {
+		public void handle(BootstrapCacheReset event) {
+			CacheResetRequest request = new CacheResetRequest(localPeerAddress,
+					bootstrapServerAddress);
+			component.triggerEvent(request, pnSendChannel);
+		}
+	};
 }

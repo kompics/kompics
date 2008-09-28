@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
-import se.sics.kompics.api.EventAttributeFilter;
+import se.sics.kompics.api.EventHandler;
+import se.sics.kompics.api.FastEventFilter;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -76,8 +76,8 @@ public final class PerfectNetwork {
 		netSendChannel = networkMembrane.getChannelIn(Message.class);
 		netDeliverChannel = networkMembrane.getChannelOut(Message.class);
 
-		component.subscribe(timerSignalChannel, "handlePerfectNetworkAlarm");
-		component.subscribe(this.sendChannel, "handleMessage");
+		component.subscribe(timerSignalChannel, handlePerfectNetworkAlarm);
+		component.subscribe(this.sendChannel, handleMessage);
 	}
 
 	@ComponentShareMethod
@@ -100,73 +100,78 @@ public final class PerfectNetwork {
 
 		this.localKingId = kingId.intValue();
 
-		EventAttributeFilter destinationFilter = new EventAttributeFilter(
-				"destination", localAddress);
-
-		component.subscribe(netDeliverChannel, "handlePerfectNetworkMessage",
-				destinationFilter);
+		component.subscribe(netDeliverChannel, handlePerfectNetworkMessage,
+				new FastEventFilter<Message>("destination", localAddress) {
+					public boolean filter(Message m) {
+						return m.destination.equals(value);
+					}
+				});
 		logger.debug("Subscribed for PerfectNetNetDeliver with destination {}",
 				localAddress);
 	}
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes( { ScheduleTimeout.class, Message.class })
-	public void handleMessage(Message event) {
-		logger.debug("Handling send1 {} to {}.", event, event.getDestination());
+	private EventHandler<Message> handleMessage = new EventHandler<Message>() {
+		public void handle(Message event) {
+			logger.debug("Handling send1 {} to {}.", event, event
+					.getDestination());
 
-		event.setSource(localAddress);
-		Address destination = event.getDestination();
+			event.setSource(localAddress);
+			Address destination = event.getDestination();
 
-		if (destination.equals(localAddress)) {
-			// deliver locally
-			// PerfectNetworkDeliverEvent deliverEvent = event
-			// .getPerfectNetworkDeliverEvent();
-			// deliverEvent.setSource(localAddress);
-			// deliverEvent.setDestination(destination);
-			component.triggerEvent(event, deliverChannel);
-			return;
+			if (destination.equals(localAddress)) {
+				// deliver locally
+				// PerfectNetworkDeliverEvent deliverEvent = event
+				// .getPerfectNetworkDeliverEvent();
+				// deliverEvent.setSource(localAddress);
+				// deliverEvent.setDestination(destination);
+				component.triggerEvent(event, deliverChannel);
+				return;
+			}
+
+			// make a PerfectNetNetworkDeliverEvent to be delivered at the
+			// destination
+			PerfectNetworkMessage pnMessage = new PerfectNetworkMessage(event,
+					localAddress, destination);
+
+			long latency = king[localKingId][destination.getId().mod(kingSize)
+					.intValue()];
+			if (latency > 0) {
+				// delay the sending according to the latency
+				PerfectNetworkAlarm tse = new PerfectNetworkAlarm(pnMessage);
+				ScheduleTimeout ste = new ScheduleTimeout(0, tse,
+						timerSignalChannel, component, latency);
+				component.triggerEvent(ste, timerSetChannel, Priority.HIGH);
+			} else {
+				// send immediately
+				component.triggerEvent(pnMessage, netSendChannel);
+			}
 		}
+	};
 
-		// make a PerfectNetNetworkDeliverEvent to be delivered at the
-		// destination
-		PerfectNetworkMessage pnMessage = new PerfectNetworkMessage(event,
-				localAddress, destination);
+	@MayTriggerEventTypes(Message.class)
+	private EventHandler<PerfectNetworkAlarm> handlePerfectNetworkAlarm = new EventHandler<PerfectNetworkAlarm>() {
+		public void handle(PerfectNetworkAlarm event) {
+			logger.debug("Handling send2 {} to {}.",
+					((PerfectNetworkMessage) event.getMessage()).getMessage(),
+					event.getMessage().getDestination());
 
-		long latency = king[localKingId][destination.getId().mod(kingSize)
-				.intValue()];
-		if (latency > 0) {
-			// delay the sending according to the latency
-			PerfectNetworkAlarm tse = new PerfectNetworkAlarm(pnMessage);
-			ScheduleTimeout ste = new ScheduleTimeout(0, tse,
-					timerSignalChannel, component, latency);
-			component.triggerEvent(ste, timerSetChannel, Priority.HIGH);
-		} else {
-			// send immediately
-			component.triggerEvent(pnMessage, netSendChannel);
+			component.triggerEvent(event.getMessage(), netSendChannel);
 		}
-	}
+	};
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(Message.class)
-	public void handlePerfectNetworkAlarm(PerfectNetworkAlarm event) {
-		logger.debug("Handling send2 {} to {}.", ((PerfectNetworkMessage) event
-				.getMessage()).getMessage(), event.getMessage()
-				.getDestination());
+	private EventHandler<PerfectNetworkMessage> handlePerfectNetworkMessage = new EventHandler<PerfectNetworkMessage>() {
+		public void handle(PerfectNetworkMessage event) {
+			logger.debug("Handling delivery {} from {}.", event.getMessage(),
+					event.getSource());
 
-		component.triggerEvent(event.getMessage(), netSendChannel);
-	}
+			Message pnDeliverEvent = event.getMessage();
+			// pnDeliverEvent.setSource(event.getSource());
+			// pnDeliverEvent.setDestination(event.getDestination());
 
-	@EventHandlerMethod
-	@MayTriggerEventTypes(Message.class)
-	public void handlePerfectNetworkMessage(PerfectNetworkMessage event) {
-		logger.debug("Handling delivery {} from {}.", event.getMessage(), event
-				.getSource());
-
-		Message pnDeliverEvent = event.getMessage();
-		// pnDeliverEvent.setSource(event.getSource());
-		// pnDeliverEvent.setDestination(event.getDestination());
-
-		// trigger the encapsulated PerfectNetworkDeliverEvent
-		component.triggerEvent(pnDeliverEvent, deliverChannel);
-	}
+			// trigger the encapsulated PerfectNetworkDeliverEvent
+			component.triggerEvent(pnDeliverEvent, deliverChannel);
+		}
+	};
 }

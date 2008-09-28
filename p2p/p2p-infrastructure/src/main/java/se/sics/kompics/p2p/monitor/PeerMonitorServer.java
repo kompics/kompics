@@ -14,10 +14,10 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -99,12 +99,12 @@ public class PeerMonitorServer {
 		webRequestChannel = webMembrane.getChannelOut(WebRequest.class);
 		webResponseChannel = webMembrane.getChannelIn(WebResponse.class);
 
-		component.subscribe(webRequestChannel, "handleWebRequest");
+		component.subscribe(webRequestChannel, handleWebRequest);
 
-		component.subscribe(lnDeliverChannel, "handlePeerNotification");
+		component.subscribe(lnDeliverChannel, handlePeerNotification);
 
 		this.timerHandler = new TimerHandler(component, timerSetChannel);
-		component.subscribe(timerSignalChannel, "handleViewEvictPeer");
+		component.subscribe(timerSignalChannel, handleViewEvictPeer);
 	}
 
 	@ComponentInitializeMethod()
@@ -115,49 +115,53 @@ public class PeerMonitorServer {
 		logger.debug("INIT");
 	}
 
-	@EventHandlerMethod
-	public void handlePeerNotification(PeerViewNotification event) {
-		Address peerAddress = event.getPeerAddress();
-		Map<String, Object> peerData = event.getPeerData();
+	private EventHandler<PeerViewNotification> handlePeerNotification = new EventHandler<PeerViewNotification>() {
+		public void handle(PeerViewNotification event) {
+			Address peerAddress = event.getPeerAddress();
+			Map<String, Object> peerData = event.getPeerData();
 
-		p2pNetworkData.put(peerAddress, peerData);
+			p2pNetworkData.put(peerAddress, peerData);
 
-		addPeerToView(peerAddress);
+			addPeerToView(peerAddress);
 
-		Address pred = alivePeers.lower(peerAddress);
-		if (pred != null) {
-			predecessor.put(peerAddress, pred);
-		} else {
-			predecessor.put(peerAddress, alivePeers.last());
+			Address pred = alivePeers.lower(peerAddress);
+			if (pred != null) {
+				predecessor.put(peerAddress, pred);
+			} else {
+				predecessor.put(peerAddress, alivePeers.last());
+			}
+
+			Address succ = alivePeers.higher(peerAddress);
+			if (succ != null) {
+				successor.put(peerAddress, succ);
+			} else {
+				successor.put(peerAddress, alivePeers.first());
+			}
+
+			logger.debug("Got notification from peer {}", peerAddress);
 		}
+	};
 
-		Address succ = alivePeers.higher(peerAddress);
-		if (succ != null) {
-			successor.put(peerAddress, succ);
-		} else {
-			successor.put(peerAddress, alivePeers.first());
+	private EventHandler<ViewEvictPeer> handleViewEvictPeer = new EventHandler<ViewEvictPeer>() {
+		public void handle(ViewEvictPeer event) {
+			// only evict if it was not refreshed in the meantime
+			// which means the timer is not anymore outstanding
+			if (timerHandler.isOustandingTimer(event.getTimerId())) {
+				removePeerFromView(event.getPeerAddress());
+			}
 		}
+	};
 
-		logger.debug("Got notification from peer {}", peerAddress);
-	}
-
-	@EventHandlerMethod
-	public void handleViewEvictPeer(ViewEvictPeer event) {
-		// only evict if it was not refreshed in the meantime
-		// which means the timer is not anymore outstanding
-		if (timerHandler.isOustandingTimer(event.getTimerId())) {
-			removePeerFromView(event.getPeerAddress());
-		}
-	}
-
-	@EventHandlerMethod
 	@MayTriggerEventTypes(WebResponse.class)
-	public void handleWebRequest(WebRequest event) {
-		logger.debug("Handling WebRequest");
+	private EventHandler<WebRequest> handleWebRequest = new EventHandler<WebRequest>() {
+		public void handle(WebRequest event) {
+			logger.debug("Handling WebRequest");
 
-		WebResponse response = new WebResponse(dumpViewToHtml(), event, 1, 1);
-		component.triggerEvent(response, webResponseChannel);
-	}
+			WebResponse response = new WebResponse(dumpViewToHtml(), event, 1,
+					1);
+			component.triggerEvent(response, webResponseChannel);
+		}
+	};
 
 	private void addPeerToView(Address address) {
 		if (address != null) {

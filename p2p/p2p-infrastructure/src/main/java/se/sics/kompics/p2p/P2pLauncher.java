@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory;
 public final class P2pLauncher {
 
 	static {
-		PropertyConfigurator.configureAndWatch("log4j.properties");
+		PropertyConfigurator
+				.configureAndWatch("src/main/config/log4j.properties");
 	}
 
 	private static final Logger logger = LoggerFactory
@@ -59,8 +60,8 @@ public final class P2pLauncher {
 			// start Bootstrap server
 			processes[1] = launchProcess(
 					"se.sics.kompics.p2p.BootstrapServerMain",
-					"-Dlog4j.properties=log4j.properties", "Bootstrap Server",
-					1);
+					"-Dlog4j.properties=src/main/config/log4j.properties",
+					"Bootstrap Server", 1);
 
 			logger.debug("Launched Bootrap Server");
 		}
@@ -68,7 +69,7 @@ public final class P2pLauncher {
 			// start PeerMonitorServer
 			processes[0] = launchProcess(
 					"se.sics.kompics.p2p.PeerMonitorServerMain",
-					"-Dlog4j.properties=log4j.properties",
+					"-Dlog4j.properties=src/main/config/log4j.properties",
 					"P2P Monitor Server", 0);
 
 			logger.debug("Launched P2P Monitor Server");
@@ -85,11 +86,11 @@ public final class P2pLauncher {
 			String nodeNetworkAddress = commands.getProperty(i + ".network");
 			String nodeWebAddress = commands.getProperty(i + ".web");
 			if (nodeCommand != null) {
-				processes[i + 1] = launchProcess("se.sics.kompics.p2p.P2pMain "
-						+ nodeNetworkAddress + " " + nodeWebAddress + " "
-						+ nodeCommand,
-						"-Xmx128m -Dlog4j.properties=log4j.properties", "Node "
-								+ i, i + 1);
+				processes[i + 1] = launchProcess(
+						"se.sics.kompics.p2p.P2pMain " + nodeNetworkAddress
+								+ " " + nodeWebAddress + " " + nodeCommand,
+						"-Xmx128m -Dlog4j.properties=src/main/config/log4j.properties",
+						"Node " + i, i + 1);
 
 				logger.debug("Launched Node {}", i);
 			}

@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.bootstrap.BootstrapClient;
@@ -67,9 +67,9 @@ public class Peer {
 	public void create(Channel peerChannel) {
 		this.peerChannel = peerChannel;
 
-		component.subscribe(peerChannel, "handleJoinPeer");
-		component.subscribe(peerChannel, "handleLeavePeer");
-		component.subscribe(peerChannel, "handleFailPeer");
+		component.subscribe(peerChannel, handleJoinPeer);
+		component.subscribe(peerChannel, handleLeavePeer);
+		component.subscribe(peerChannel, handleFailPeer);
 	}
 
 	@ComponentInitializeMethod
@@ -190,18 +190,21 @@ public class Peer {
 		logger.debug("Init");
 	}
 
-	@EventHandlerMethod
-	public void handleJoinPeer(JoinPeer event) {
-		logger.debug("Joined");
-	}
+	private EventHandler<JoinPeer> handleJoinPeer = new EventHandler<JoinPeer>() {
+		public void handle(JoinPeer event) {
+			logger.debug("Joined");
+		}
+	};
 
-	@EventHandlerMethod
-	public void handleLeavePeer(LeavePeer event) {
-		logger.debug("Leaved");
-	}
+	private EventHandler<LeavePeer> handleLeavePeer = new EventHandler<LeavePeer>() {
+		public void handle(LeavePeer event) {
+			logger.debug("Leaved");
+		}
+	};
 
-	@EventHandlerMethod
-	public void handleFailPeer(FailPeer event) {
-		logger.debug("Failed");
-	}
+	private EventHandler<FailPeer> handleFailPeer = new EventHandler<FailPeer>() {
+		public void handle(FailPeer event) {
+			logger.debug("Failed");
+		}
+	};
 }

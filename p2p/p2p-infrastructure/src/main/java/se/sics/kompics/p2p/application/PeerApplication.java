@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapCompleted;
 import se.sics.kompics.p2p.bootstrap.events.BootstrapRequest;
@@ -53,9 +53,9 @@ public class PeerApplication {
 
 	@ComponentCreateMethod
 	public void create(Channel commandChannel) {
-		component.subscribe(commandChannel, "handleJoinPeer");
-		component.subscribe(commandChannel, "handleLeavePeer");
-		component.subscribe(commandChannel, "handleFailPeer");
+		component.subscribe(commandChannel, handleJoinPeer);
+		component.subscribe(commandChannel, handleLeavePeer);
+		component.subscribe(commandChannel, handleFailPeer);
 	}
 
 	@ComponentInitializeMethod
@@ -81,58 +81,62 @@ public class PeerApplication {
 		chordResponseChannel = ringMembrane
 				.getChannelOut(JoinRingCompleted.class);
 
-		component
-				.subscribe(bootstrapResponseChannel, "handleBootstrapResponse");
+		component.subscribe(bootstrapResponseChannel, handleBootstrapResponse);
 
-		component.subscribe(chordResponseChannel, "handleJoinRingCompleted");
+		component.subscribe(chordResponseChannel, handleJoinRingCompleted);
 	}
 
-	@EventHandlerMethod
-	public void handleJoinPeer(JoinPeer event) {
-		logger.debug("Started, trying to bootstrap");
+	private EventHandler<JoinPeer> handleJoinPeer = new EventHandler<JoinPeer>() {
+		public void handle(JoinPeer event) {
+			logger.debug("Started, trying to bootstrap");
 
-		BootstrapRequest request = new BootstrapRequest(10);
-		component.triggerEvent(request, bootstrapRequestChannel);
-	}
-
-	@EventHandlerMethod
-	public void handleLeavePeer(LeavePeer event) {
-		logger.debug("Leave not implemented");
-	}
-
-	@EventHandlerMethod
-	public void handleFailPeer(FailPeer event) {
-		logger.debug("Fail not implemented");
-	}
-
-	@EventHandlerMethod
-	public void handleBootstrapResponse(BootstrapResponse event) {
-		if (!bootstraped) {
-			logger.debug("Got BoostrapResponse {}, Bootstrap complete", event
-					.getPeers().size());
-
-			Set<PeerEntry> somePeers = event.getPeers();
-
-			if (somePeers.size() > 0) {
-				// we join though the first peer;
-				PeerEntry peerEntry = somePeers.iterator().next();
-				JoinRing request = new JoinRing(peerEntry.getAddress());
-				component.triggerEvent(request, chordRequestChannel);
-			} else {
-				// we create a new ring
-				CreateRing request = new CreateRing();
-				component.triggerEvent(request, chordRequestChannel);
-			}
-			bootstraped = true;
+			BootstrapRequest request = new BootstrapRequest(10);
+			component.triggerEvent(request, bootstrapRequestChannel);
 		}
-	}
+	};
 
-	@EventHandlerMethod
-	public void handleJoinRingCompleted(JoinRingCompleted event) {
-		logger.debug("JoinRing completed");
+	private EventHandler<LeavePeer> handleLeavePeer = new EventHandler<LeavePeer>() {
+		public void handle(LeavePeer event) {
+			logger.debug("Leave not implemented");
+		}
+	};
 
-		// bootstrap completed
-		component.triggerEvent(new BootstrapCompleted(),
-				bootstrapRequestChannel);
-	}
+	private EventHandler<FailPeer> handleFailPeer = new EventHandler<FailPeer>() {
+		public void handle(FailPeer event) {
+			logger.debug("Fail not implemented");
+		}
+	};
+
+	private EventHandler<BootstrapResponse> handleBootstrapResponse = new EventHandler<BootstrapResponse>() {
+		public void handle(BootstrapResponse event) {
+			if (!bootstraped) {
+				logger.debug("Got BoostrapResponse {}, Bootstrap complete",
+						event.getPeers().size());
+
+				Set<PeerEntry> somePeers = event.getPeers();
+
+				if (somePeers.size() > 0) {
+					// we join though the first peer;
+					PeerEntry peerEntry = somePeers.iterator().next();
+					JoinRing request = new JoinRing(peerEntry.getAddress());
+					component.triggerEvent(request, chordRequestChannel);
+				} else {
+					// we create a new ring
+					CreateRing request = new CreateRing();
+					component.triggerEvent(request, chordRequestChannel);
+				}
+				bootstraped = true;
+			}
+		}
+	};
+
+	private EventHandler<JoinRingCompleted> handleJoinRingCompleted = new EventHandler<JoinRingCompleted>() {
+		public void handle(JoinRingCompleted event) {
+			logger.debug("JoinRing completed");
+
+			// bootstrap completed
+			component.triggerEvent(new BootstrapCompleted(),
+					bootstrapRequestChannel);
+		}
+	};
 }

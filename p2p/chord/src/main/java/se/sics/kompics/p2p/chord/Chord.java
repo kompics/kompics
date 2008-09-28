@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.chord.events.ChordLookupRequest;
@@ -78,12 +78,12 @@ public class Chord {
 				component.getFaultChannel(), requestChannel,
 				notificationChannel, ringRouterChannel);
 
-		component.subscribe(requestChannel, "handleGetChordNeighborsRequest");
-		component.subscribe(requestChannel, "handleGetChordResponsibility");
+		component.subscribe(requestChannel, handleGetChordNeighborsRequest);
+		component.subscribe(requestChannel, handleGetChordResponsibility);
 
-		component.subscribe(notificationChannel, "handleNewSuccessorList");
-		component.subscribe(notificationChannel, "handleNewPredecessor");
-		component.subscribe(notificationChannel, "handleNewFingerTable");
+		component.subscribe(notificationChannel, handleNewSuccessorList);
+		component.subscribe(notificationChannel, handleNewPredecessor);
+		component.subscribe(notificationChannel, handleNewFingerTable);
 	}
 
 	@ComponentInitializeMethod
@@ -112,43 +112,47 @@ public class Chord {
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(GetChordNeighborsResponse.class)
-	public void handleGetChordNeighborsRequest(GetChordNeighborsRequest event) {
-		GetChordNeighborsResponse response = new GetChordNeighborsResponse(
-				localPeer, (successorListView == null ? localPeer
-						: successorListView.get(0)), predecessor,
-				successorListView, fingerTableView);
-		component.triggerEvent(response, event.getResponseChannel());
-	}
+	private EventHandler<GetChordNeighborsRequest> handleGetChordNeighborsRequest = new EventHandler<GetChordNeighborsRequest>() {
+		public void handle(GetChordNeighborsRequest event) {
+			GetChordNeighborsResponse response = new GetChordNeighborsResponse(
+					localPeer, (successorListView == null ? localPeer
+							: successorListView.get(0)), predecessor,
+					successorListView, fingerTableView);
+			component.triggerEvent(response, event.getResponseChannel());
+		}
+	};
 
-	@EventHandlerMethod
 	@MayTriggerEventTypes(ChordResponsibility.class)
-	public void handleGetChordResponsibility(GetChordResponsibility event) {
-		ChordResponsibility response = new ChordResponsibility(predecessor
-				.getId(), localPeer.getId());
-		component.triggerEvent(response, notificationChannel);
-	}
+	private EventHandler<GetChordResponsibility> handleGetChordResponsibility = new EventHandler<GetChordResponsibility>() {
+		public void handle(GetChordResponsibility event) {
+			ChordResponsibility response = new ChordResponsibility(predecessor
+					.getId(), localPeer.getId());
+			component.triggerEvent(response, notificationChannel);
+		}
+	};
 
-	@EventHandlerMethod
-	public void handleNewSuccessorList(NewSuccessorList event) {
-		logger.debug("NEW_SUCCESSOR_LIST {}", event.getSuccessorListView());
+	private EventHandler<NewSuccessorList> handleNewSuccessorList = new EventHandler<NewSuccessorList>() {
+		public void handle(NewSuccessorList event) {
+			logger.debug("NEW_SUCCESSOR_LIST {}", event.getSuccessorListView());
 
-		successorListView = event.getSuccessorListView();
-	}
+			successorListView = event.getSuccessorListView();
+		}
+	};
 
-	@EventHandlerMethod
-	public void handleNewPredecessor(NewPredecessor event) {
-		logger.debug("NEW_PREDECESSOR {}", event.getPredecessorPeer());
+	private EventHandler<NewPredecessor> handleNewPredecessor = new EventHandler<NewPredecessor>() {
+		public void handle(NewPredecessor event) {
+			logger.debug("NEW_PREDECESSOR {}", event.getPredecessorPeer());
 
-		predecessor = event.getPredecessorPeer();
-	}
+			predecessor = event.getPredecessorPeer();
+		}
+	};
 
-	@EventHandlerMethod
-	public void handleNewFingerTable(NewFingerTable event) {
-		logger.debug("NEW_FINGER_TABLE {}", event.getFingerTableView());
+	private EventHandler<NewFingerTable> handleNewFingerTable = new EventHandler<NewFingerTable>() {
+		public void handle(NewFingerTable event) {
+			logger.debug("NEW_FINGER_TABLE {}", event.getFingerTableView());
 
-		fingerTableView = event.getFingerTableView();
-	}
-
+			fingerTableView = event.getFingerTableView();
+		}
+	};
 }

@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.peer.events.FailPeer;
 import se.sics.kompics.p2p.peer.events.JoinPeer;
@@ -46,9 +46,9 @@ public class PeerCluster {
 	public void create(Channel peerClusterCommandChannel) {
 		logger.debug("Create");
 
-		component.subscribe(peerClusterCommandChannel, "handleJoinPeer");
-		component.subscribe(peerClusterCommandChannel, "handleLeavePeer");
-		component.subscribe(peerClusterCommandChannel, "handleFailPeer");
+		component.subscribe(peerClusterCommandChannel, handleJoinPeer);
+		component.subscribe(peerClusterCommandChannel, handleLeavePeer);
+		component.subscribe(peerClusterCommandChannel, handleFailPeer);
 	}
 
 	@ComponentInitializeMethod
@@ -57,29 +57,32 @@ public class PeerCluster {
 		this.localSocketAddress = localSocketAddress;
 	}
 
-	@EventHandlerMethod
-	public void handleJoinPeer(JoinPeer event) {
-		ComponentMembrane membrane = createPeer(event.getPeerId());
-		Channel peerChannel = membrane.getChannelIn(JoinPeer.class);
+	private EventHandler<JoinPeer> handleJoinPeer = new EventHandler<JoinPeer>() {
+		public void handle(JoinPeer event) {
+			ComponentMembrane membrane = createPeer(event.getPeerId());
+			Channel peerChannel = membrane.getChannelIn(JoinPeer.class);
 
-		component.triggerEvent(event, peerChannel);
-	}
+			component.triggerEvent(event, peerChannel);
+		}
+	};
 
-	@EventHandlerMethod
-	public void handleLeavePeer(LeavePeer event) {
-		ComponentMembrane membrane = peers.get(event.getPeerId());
-		Channel peerChannel = membrane.getChannelIn(LeavePeer.class);
+	private EventHandler<LeavePeer> handleLeavePeer = new EventHandler<LeavePeer>() {
+		public void handle(LeavePeer event) {
+			ComponentMembrane membrane = peers.get(event.getPeerId());
+			Channel peerChannel = membrane.getChannelIn(LeavePeer.class);
 
-		component.triggerEvent(event, peerChannel);
-	}
+			component.triggerEvent(event, peerChannel);
+		}
+	};
 
-	@EventHandlerMethod
-	public void handleFailPeer(FailPeer event) {
-		ComponentMembrane membrane = peers.get(event.getPeerId());
-		Channel peerChannel = membrane.getChannelIn(FailPeer.class);
+	private EventHandler<FailPeer> handleFailPeer = new EventHandler<FailPeer>() {
+		public void handle(FailPeer event) {
+			ComponentMembrane membrane = peers.get(event.getPeerId());
+			Channel peerChannel = membrane.getChannelIn(FailPeer.class);
 
-		component.triggerEvent(event, peerChannel);
-	}
+			component.triggerEvent(event, peerChannel);
+		}
+	};
 
 	private ComponentMembrane createPeer(BigInteger peerId) {
 		// create channels for the port instance component
