@@ -19,11 +19,11 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.web.events.WebRequest;
 import se.sics.kompics.web.events.WebResponse;
 
@@ -59,7 +59,7 @@ public final class WebServer {
 		this.requestChannel = requestChannel;
 		this.responseChannel = responseChannel;
 
-		component.subscribe(responseChannel, "handleWebResponseEvent");
+		component.subscribe(responseChannel, handleWebResponse);
 	}
 
 	@ComponentInitializeMethod
@@ -91,22 +91,23 @@ public final class WebServer {
 		return component.registerSharedComponentMembrane(name, membrane);
 	}
 
-	@EventHandlerMethod
-	public void handleWebResponseEvent(WebResponse event) {
-		WebRequest requestEvent = event.getRequestEvent();
+	private EventHandler<WebResponse> handleWebResponse = new EventHandler<WebResponse>() {
+		public void handle(WebResponse event) {
+			WebRequest requestEvent = event.getRequestEvent();
 
-		LinkedBlockingQueue<WebResponse> queue;
+			LinkedBlockingQueue<WebResponse> queue;
 
-		synchronized (activeRequests) {
-			queue = activeRequests.get(requestEvent);
-			if (queue != null) {
-				queue.offer(event);
-			} else {
-				// request expired
-				return;
+			synchronized (activeRequests) {
+				queue = activeRequests.get(requestEvent);
+				if (queue != null) {
+					queue.offer(event);
+				} else {
+					// request expired
+					return;
+				}
 			}
 		}
-	}
+	};
 
 	void handleRequest(String target, Request request,
 			HttpServletResponse response) throws IOException {
@@ -116,9 +117,8 @@ public final class WebServer {
 
 		String handlerId = args[1];
 
-		WebRequest requestEvent = new WebRequest(new BigInteger(
-				handlerId), requestId++, target.substring(target
-				.indexOf('/', 1)), request);
+		WebRequest requestEvent = new WebRequest(new BigInteger(handlerId),
+				requestId++, target.substring(target.indexOf('/', 1)), request);
 
 		LinkedBlockingQueue<WebResponse> queue = new LinkedBlockingQueue<WebResponse>();
 
