@@ -8,12 +8,12 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
+import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentDestroyMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
-import se.sics.kompics.api.annotation.EventHandlerMethod;
 import se.sics.kompics.timer.events.CancelPeriodicTimeout;
 import se.sics.kompics.timer.events.CancelTimeout;
 import se.sics.kompics.timer.events.SchedulePeriodicTimeout;
@@ -41,6 +41,8 @@ public class Timer {
 
 	private final Component component;
 
+	private final Timer thisTimer;
+
 	private Channel requestChannel, signalChannel;
 
 	/**
@@ -50,6 +52,7 @@ public class Timer {
 		this.component = component;
 		this.activeTimers = new HashMap<TimerId, TimerSignalTask>();
 		this.activePeriodicTimers = new HashMap<TimerId, PeriodicTimerSignalTask>();
+		thisTimer = this;
 	}
 
 	@ComponentCreateMethod
@@ -58,10 +61,10 @@ public class Timer {
 		this.signalChannel = signalChannel;
 
 		// subscribe to the given channels
-		component.subscribe(requestChannel, "handleSetTimerEvent");
-		component.subscribe(requestChannel, "handleSetPeriodicTimerEvent");
-		component.subscribe(requestChannel, "handleCancelTimerEvent");
-		component.subscribe(requestChannel, "handleCancelPeriodicTimerEvent");
+		component.subscribe(requestChannel, handleScheduleTimeout);
+		component.subscribe(requestChannel, handleSchedulePeriodicTimeout);
+		component.subscribe(requestChannel, handleCancelTimeout);
+		component.subscribe(requestChannel, handleCancelPeriodicTimeout);
 
 		this.timer = new java.util.Timer("TimerComponent@"
 				+ Integer.toHexString(this.hashCode()));
@@ -85,55 +88,57 @@ public class Timer {
 		this.timer = null;
 	}
 
-	@EventHandlerMethod
-	public void handleSetPeriodicTimerEvent(SchedulePeriodicTimeout event) {
-		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
-				event.getTimerId());
+	private EventHandler<SchedulePeriodicTimeout> handleSchedulePeriodicTimeout = new EventHandler<SchedulePeriodicTimeout>() {
+		public void handle(SchedulePeriodicTimeout event) {
+			TimerId id = new TimerId(event.getClientComponent()
+					.getComponentUUID(), event.getTimerId());
 
-		PeriodicTimerSignalTask timeOutTask = new PeriodicTimerSignalTask(
-				component, event.getTimeout(), event
-						.getClientChannel(), id);
+			PeriodicTimerSignalTask timeOutTask = new PeriodicTimerSignalTask(
+					component, event.getTimeout(), event.getClientChannel(), id);
 
-		activePeriodicTimers.put(id, timeOutTask);
-		timer.scheduleAtFixedRate(timeOutTask, event.getDelay(), event
-				.getPeriod());
-	}
-
-	@EventHandlerMethod
-	public void handleCancelPeriodicTimerEvent(CancelPeriodicTimeout event) {
-		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
-				event.getTimerId());
-		if (activePeriodicTimers.containsKey(id)) {
-			activePeriodicTimers.get(id).cancel();
-			activePeriodicTimers.remove(id);
+			activePeriodicTimers.put(id, timeOutTask);
+			timer.scheduleAtFixedRate(timeOutTask, event.getDelay(), event
+					.getPeriod());
 		}
-	}
+	};
 
-	@EventHandlerMethod
-	public void handleSetTimerEvent(ScheduleTimeout event) {
-
-		logger.debug("Handling SET TIMER: ", event);
-
-		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
-				event.getTimerId());
-
-		TimerSignalTask timeOutTask = new TimerSignalTask(this, event
-				.geTimeout(), event.getClientChannel(), id);
-
-		activeTimers.put(id, timeOutTask);
-		timer.schedule(timeOutTask, event.getDelay());
-	}
-
-	@EventHandlerMethod
-	public void handleCancelTimerEvent(CancelTimeout event) {
-		TimerId id = new TimerId(event.getClientComponent().getComponentUUID(),
-				event.getTimerId());
-
-		if (activeTimers.containsKey(id)) {
-			activeTimers.get(id).cancel();
-			activeTimers.remove(id);
+	private EventHandler<CancelPeriodicTimeout> handleCancelPeriodicTimeout = new EventHandler<CancelPeriodicTimeout>() {
+		public void handle(CancelPeriodicTimeout event) {
+			TimerId id = new TimerId(event.getClientComponent()
+					.getComponentUUID(), event.getTimerId());
+			if (activePeriodicTimers.containsKey(id)) {
+				activePeriodicTimers.get(id).cancel();
+				activePeriodicTimers.remove(id);
+			}
 		}
-	}
+	};
+
+	private EventHandler<ScheduleTimeout> handleScheduleTimeout = new EventHandler<ScheduleTimeout>() {
+		public void handle(ScheduleTimeout event) {
+			logger.debug("Handling SET TIMER: ", event);
+
+			TimerId id = new TimerId(event.getClientComponent()
+					.getComponentUUID(), event.getTimerId());
+
+			TimerSignalTask timeOutTask = new TimerSignalTask(thisTimer, event
+					.geTimeout(), event.getClientChannel(), id);
+
+			activeTimers.put(id, timeOutTask);
+			timer.schedule(timeOutTask, event.getDelay());
+		}
+	};
+
+	private EventHandler<CancelTimeout> handleCancelTimeout = new EventHandler<CancelTimeout>() {
+		public void handle(CancelTimeout event) {
+			TimerId id = new TimerId(event.getClientComponent()
+					.getComponentUUID(), event.getTimerId());
+
+			if (activeTimers.containsKey(id)) {
+				activeTimers.get(id).cancel();
+				activeTimers.remove(id);
+			}
+		}
+	};
 
 	// called by the timeout task
 	void timeout(TimerId timerId, Timeout timerExpiredEvent,
