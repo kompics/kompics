@@ -180,13 +180,13 @@ public class ChannelCore {
 				deliverToSubscribers(wid, eventCore, event,
 						matchingSet.noFilterSubs);
 			}
-			if (matchingSet.oneFilterSubs != null) {
-				deliverToOneFilteredSubscribers(wid, eventCore, event,
+			if (matchingSet.fastFilterSubs != null) {
+				deliverToFastFilteredSubscribers(wid, eventCore, event,
 						matchingSet);
 			}
-			if (matchingSet.manyFilterSubs != null) {
-				deliverToManyFilteredSubscribers(wid, eventCore, event,
-						matchingSet.manyFilterSubs);
+			if (matchingSet.slowFilterSubs != null) {
+				deliverToSlowFilteredSubscribers(wid, eventCore, event,
+						matchingSet.slowFilterSubs);
 			}
 
 			if (Kompics.jmxEnabled) {
@@ -219,10 +219,10 @@ public class ChannelCore {
 		}
 	}
 
-	private void deliverToOneFilteredSubscribers(int wid, EventCore eventCore,
+	private void deliverToFastFilteredSubscribers(int wid, EventCore eventCore,
 			Event event, SubscriptionSet set) {
 
-		for (Field f : set.oneFilterSubs.keySet()) {
+		for (Field f : set.fastFilterSubs.keySet()) {
 			Subscription[] subs;
 			try {
 				subs = set.getSubscriptions(f, f.get(event));
@@ -233,7 +233,7 @@ public class ChannelCore {
 				// exception in f.get
 				e.printStackTrace(System.err);
 
-				for (Subscription[] list : set.oneFilterSubs.get(f).values())
+				for (Subscription[] list : set.fastFilterSubs.get(f).values())
 					for (Subscription s : list) {
 						// make the subscriber component trigger a fault
 						// event since its subscription by event attribute
@@ -246,17 +246,16 @@ public class ChannelCore {
 		}
 	}
 
-	private void deliverToManyFilteredSubscribers(int wid, EventCore eventCore,
+	private void deliverToSlowFilteredSubscribers(int wid, EventCore eventCore,
 			Event event, Subscription[] subs) {
 		for (int i = 0; i < subs.length; i++) {
-			boolean match = true;
 			try {
-				// for each filter
-				for (EventAttributeFilterCore filter : subs[i].getFilters()) {
-					if (!filter.checkFilter(event)) {
-						match = false;
-						break;
-					}
+				if (subs[i].getEventFilter().filter(event)) {
+					// Work work = new Work(this, eventCore, subs[i]
+					// .getEventHandlerCore());
+					Work work = Work.acquire(this, eventCore, subs[i]
+							.getEventHandlerCore());
+					subs[i].getComponent().handleWork(wid, work);
 				}
 			} catch (Throwable e) {
 				// make the subscriber component trigger a fault
@@ -265,13 +264,6 @@ public class ChannelCore {
 				ComponentReference component = subs[i].getComponent();
 				component.triggerEvent(new FaultEvent(e), component
 						.getFaultChannel());
-			}
-			if (match) {
-				// Work work = new Work(this, eventCore, subs[i]
-				// .getEventHandlerCore());
-				Work work = Work.acquire(this, eventCore, subs[i]
-						.getEventHandlerCore());
-				subs[i].getComponent().handleWork(wid, work);
 			}
 		}
 	}

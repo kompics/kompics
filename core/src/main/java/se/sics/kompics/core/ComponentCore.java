@@ -18,7 +18,6 @@ import se.sics.kompics.api.Channel;
 import se.sics.kompics.api.Component;
 import se.sics.kompics.api.ComponentMembrane;
 import se.sics.kompics.api.Event;
-import se.sics.kompics.api.EventAttributeFilter;
 import se.sics.kompics.api.EventFilter;
 import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.FastEventFilter;
@@ -26,8 +25,8 @@ import se.sics.kompics.api.FaultEvent;
 import se.sics.kompics.api.Kompics;
 import se.sics.kompics.api.Priority;
 import se.sics.kompics.api.capability.ComponentCapabilityFlags;
-import se.sics.kompics.core.scheduler.Scheduler;
 import se.sics.kompics.core.scheduler.KompicsQueue;
+import se.sics.kompics.core.scheduler.Scheduler;
 import se.sics.kompics.core.scheduler.Work;
 import se.sics.kompics.core.scheduler.WorkQueue;
 
@@ -413,16 +412,56 @@ public class ComponentCore {
 
 	public void subscribe(ComponentReference componentReference,
 			Channel channel, EventHandler<? extends Event> handler) {
-		ChannelReference channelReference = (ChannelReference) channel;
-		EventHandlerCore eventHandler = eventHandlers.get(handler);
-		if (eventHandler == null) {
-			eventHandler = new EventHandlerCore(reflectEventType(handler),
+		doSubscribe(componentReference, channel, handler, null, null);
+	}
+
+	public void subscribe(ComponentReference componentReference,
+			Channel channel, EventHandler<? extends Event> handler,
+			EventFilter<? extends Event> filter) {
+		doSubscribe(componentReference, channel, handler, filter, null);
+	}
+
+	public void subscribe(ComponentReference componentReference,
+			Channel channel, EventHandler<? extends Event> handler,
+			FastEventFilter<? extends Event> filter) {
+
+		EventHandlerCore handlerCore = eventHandlers.get(handler);
+		if (handlerCore == null) {
+			handlerCore = new EventHandlerCore(reflectEventType(handler),
 					handler);
-			eventHandlers.put(handler, eventHandler);
+			eventHandlers.put(handler, handlerCore);
+		}
+		Class<? extends Event> eventType = handlerCore.getEventType();
+
+		Field attribute;
+		try {
+			attribute = eventType.getField(filter.getAttribute());
+		} catch (SecurityException e) {
+			throw new RuntimeException("Subscription by attribute "
+					+ "failed: no attribute " + filter.getAttribute()
+					+ " in event type " + eventType);
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException("Subscription by attribute "
+					+ "failed: no attribute " + filter.getAttribute()
+					+ " in event type " + eventType);
+		}
+		doSubscribe(componentReference, channel, handler, filter, attribute);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void doSubscribe(ComponentReference componentReference,
+			Channel channel, EventHandler<? extends Event> handler,
+			EventFilter<? extends Event> filter, Field field) {
+		ChannelReference channelReference = (ChannelReference) channel;
+		EventHandlerCore handlerCore = eventHandlers.get(handler);
+		if (handlerCore == null) {
+			handlerCore = new EventHandlerCore(reflectEventType(handler),
+					handler);
+			eventHandlers.put(handler, handlerCore);
 		}
 
 		Subscription subscription = new Subscription(componentReference,
-				channelReference, eventHandler, new EventAttributeFilterCore[0]);
+				channelReference, handlerCore, (EventFilter<Event>) filter, field);
 
 		ChannelCore channelCore = channelReference
 				.addSubscription(subscription);
@@ -435,67 +474,57 @@ public class ComponentCore {
 		}
 	}
 
-	public void subscribe(ComponentReference componentReference,
-			Channel channel, EventHandler<? extends Event> handler,
-			EventFilter<? extends Event> filter) {
-	}
-
-	public void subscribe(ComponentReference componentReference,
-			Channel channel, EventHandler<? extends Event> handler,
-			FastEventFilter<? extends Event> filter) {
-	}
-
-	public void subscribeOld(ComponentReference componentReference,
-			Channel channel, String eventHandlerName,
-			EventAttributeFilter... filters) {
-		ChannelReference channelReference = (ChannelReference) channel;
-		EventHandlerCore eventHandler = eventHandlers.get(eventHandlerName);
-		if (eventHandler != null) {
-			EventAttributeFilterCore[] filterCores;
-
-			Class<? extends Event> eventType = eventHandler.getEventType();
-
-			if (filters.length > 0) {
-				filterCores = new EventAttributeFilterCore[filters.length];
-				for (int i = 0; i < filterCores.length; i++) {
-					try {
-						Field attribute = eventType.getField(filters[i]
-								.getAttribute());
-						filterCores[i] = new EventAttributeFilterCore(
-								attribute, filters[i].getValue());
-					} catch (SecurityException e) {
-						throw new RuntimeException("Subscription by attribute "
-								+ "failed: no attribute "
-								+ filters[i].getAttribute() + " in event type "
-								+ eventType);
-					} catch (NoSuchFieldException e) {
-						throw new RuntimeException("Subscription by attribute "
-								+ "failed: no attribute "
-								+ filters[i].getAttribute() + " in event type "
-								+ eventType);
-					}
-				}
-			} else {
-				filterCores = new EventAttributeFilterCore[0];
-			}
-
-			Subscription subscription = new Subscription(componentReference,
-					channelReference, eventHandler, filterCores);
-
-			ChannelCore channelCore = channelReference
-					.addSubscription(subscription);
-			subscriptions.add(subscription);
-
-			// create a local work queue if one does not already exist
-			if (!channelWorkQueues.containsKey(channelCore)) {
-				WorkQueue workQueue = new WorkQueue();
-				channelWorkQueues.put(channelCore, workQueue);
-			}
-		} else {
-			throw new RuntimeException("I have no eventHandler named "
-					+ eventHandlerName);
-		}
-	}
+	// public void subscribeOld(ComponentReference componentReference,
+	// Channel channel, String eventHandlerName,
+	// EventAttributeFilter... filters) {
+	// ChannelReference channelReference = (ChannelReference) channel;
+	// EventHandlerCore eventHandler = eventHandlers.get(eventHandlerName);
+	// if (eventHandler != null) {
+	// EventAttributeFilterCore[] filterCores;
+	//
+	// Class<? extends Event> eventType = eventHandler.getEventType();
+	//
+	// if (filters.length > 0) {
+	// filterCores = new EventAttributeFilterCore[filters.length];
+	// for (int i = 0; i < filterCores.length; i++) {
+	// try {
+	// Field attribute = eventType.getField(filters[i]
+	// .getAttribute());
+	// filterCores[i] = new EventAttributeFilterCore(
+	// attribute, filters[i].getValue());
+	// } catch (SecurityException e) {
+	// throw new RuntimeException("Subscription by attribute "
+	// + "failed: no attribute "
+	// + filters[i].getAttribute() + " in event type "
+	// + eventType);
+	// } catch (NoSuchFieldException e) {
+	// throw new RuntimeException("Subscription by attribute "
+	// + "failed: no attribute "
+	// + filters[i].getAttribute() + " in event type "
+	// + eventType);
+	// }
+	// }
+	// } else {
+	// filterCores = new EventAttributeFilterCore[0];
+	// }
+	//
+	// Subscription subscription = new Subscription(componentReference,
+	// channelReference, eventHandler, filterCores);
+	//
+	// ChannelCore channelCore = channelReference
+	// .addSubscription(subscription);
+	// subscriptions.add(subscription);
+	//
+	// // create a local work queue if one does not already exist
+	// if (!channelWorkQueues.containsKey(channelCore)) {
+	// WorkQueue workQueue = new WorkQueue();
+	// channelWorkQueues.put(channelCore, workQueue);
+	// }
+	// } else {
+	// throw new RuntimeException("I have no eventHandler named "
+	// + eventHandlerName);
+	// }
+	// }
 
 	public void unsubscribe(ComponentReference componentReference,
 			Channel channel, EventHandler<? extends Event> eventHandler) {

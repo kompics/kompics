@@ -1,7 +1,7 @@
 package se.sics.kompics.api;
 
-
-public abstract class FastEventFilter<E extends Event> {
+public abstract class FastEventFilter<E extends Event> implements
+		EventFilter<E> {
 
 	protected final String attribute;
 

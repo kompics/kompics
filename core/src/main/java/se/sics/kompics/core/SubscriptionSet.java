@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 
 import se.sics.kompics.api.Event;
+import se.sics.kompics.api.FastEventFilter;
 
 /**
  * The <code>SubscriptionSet</code> class
@@ -17,20 +18,20 @@ public class SubscriptionSet {
 
 	Subscription[] noFilterSubs;
 
-	Subscription[] manyFilterSubs;
+	Subscription[] slowFilterSubs;
 
-	HashMap<Field, HashMap<Object, Subscription[]>> oneFilterSubs;
+	HashMap<Field, HashMap<Object, Subscription[]>> fastFilterSubs;
 
 	public SubscriptionSet(Class<? extends Event> eventType) {
 		this.eventType = eventType;
 		this.noFilterSubs = null;
-		this.manyFilterSubs = null;
-		this.oneFilterSubs = null;
+		this.slowFilterSubs = null;
+		this.fastFilterSubs = null;
 	}
 
 	/* called only for one filter subs */
 	public Subscription[] getSubscriptions(Field field, Object value) {
-		HashMap<Object, Subscription[]> valueSubs = oneFilterSubs.get(field);
+		HashMap<Object, Subscription[]> valueSubs = fastFilterSubs.get(field);
 		if (valueSubs == null) {
 			return null;
 		}
@@ -39,54 +40,55 @@ public class SubscriptionSet {
 	}
 
 	public void addSubscription(Subscription sub) {
-		if (sub.getFilters().length == 0) {
+		if (sub.getEventFilter() == null) {
 			// no filters
 			noFilterSubs = addToArray(noFilterSubs, sub);
-		} else if (sub.getFilters().length > 1) {
-			// more than one filter
-			manyFilterSubs = addToArray(manyFilterSubs, sub);
-		} else {
-			// exactly one filter
-			if (oneFilterSubs == null) {
-				oneFilterSubs = new HashMap<Field, HashMap<Object, Subscription[]>>();
+		} else if (sub.getEventFilter() instanceof FastEventFilter) {
+			// fast filter
+			if (fastFilterSubs == null) {
+				fastFilterSubs = new HashMap<Field, HashMap<Object, Subscription[]>>();
 			}
-			Field field = sub.getFilters()[0].getAttribute();
-			HashMap<Object, Subscription[]> valueSubs = oneFilterSubs
+			FastEventFilter<? extends Event> fastEventFilter = (FastEventFilter<? extends Event>) sub
+					.getEventFilter();
+			Field field = sub.getField();
+			HashMap<Object, Subscription[]> valueSubs = fastFilterSubs
 					.get(field);
 			if (valueSubs == null) {
 				valueSubs = new HashMap<Object, Subscription[]>();
-				oneFilterSubs.put(field, valueSubs);
+				fastFilterSubs.put(field, valueSubs);
 			}
-			Object value = sub.getFilters()[0].getValue();
+			Object value = fastEventFilter.getValue();
 			Subscription[] subs = valueSubs.get(value);
 			subs = addToArray(subs, sub);
 			valueSubs.put(value, subs);
+		} else {
+			// slow filter filter
+			slowFilterSubs = addToArray(slowFilterSubs, sub);
 		}
 	}
 
 	public void removeSubscription(Subscription sub) {
-		if (sub.getFilters().length == 0) {
+		if (sub.getEventFilter() == null) {
 			// no filters
 			noFilterSubs = removeFromArray(noFilterSubs, sub);
-		} else if (sub.getFilters().length > 1) {
-			// more than one filter
-			manyFilterSubs = removeFromArray(manyFilterSubs, sub);
-		} else {
-			// exactly one filter
-			if (oneFilterSubs != null) {
-				Field field = sub.getFilters()[0].getAttribute();
-				HashMap<Object, Subscription[]> valueSubs = oneFilterSubs
+		} else if (sub.getEventFilter() instanceof FastEventFilter) {
+			// fast filter
+			if (fastFilterSubs != null) {
+				Field field = sub.getField();
+				HashMap<Object, Subscription[]> valueSubs = fastFilterSubs
 						.get(field);
 				if (valueSubs != null) {
-					Object value = sub.getFilters()[0].getValue();
+					FastEventFilter<? extends Event> fastEventFilter = (FastEventFilter<? extends Event>) sub
+							.getEventFilter();
+					Object value = fastEventFilter.getValue();
 					Subscription[] subs = valueSubs.get(value);
 					subs = removeFromArray(subs, sub);
 					if (subs == null) {
 						valueSubs.remove(value);
 						if (valueSubs.size() == 0) {
-							oneFilterSubs.remove(field);
-							if (oneFilterSubs.size() == 0) {
-								oneFilterSubs = null;
+							fastFilterSubs.remove(field);
+							if (fastFilterSubs.size() == 0) {
+								fastFilterSubs = null;
 							}
 						}
 					} else {
@@ -94,6 +96,9 @@ public class SubscriptionSet {
 					}
 				}
 			}
+		} else {
+			// slow filter
+			slowFilterSubs = removeFromArray(slowFilterSubs, sub);
 		}
 	}
 
