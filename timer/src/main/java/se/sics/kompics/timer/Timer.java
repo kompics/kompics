@@ -121,7 +121,7 @@ public class Timer {
 					.getComponentUUID(), event.getTimerId());
 
 			TimerSignalTask timeOutTask = new TimerSignalTask(thisTimer, event
-					.geTimeout(), event.getClientChannel(), id);
+					.getTimeout(), event.getClientChannel(), id);
 
 			activeTimers.put(id, timeOutTask);
 			timer.schedule(timeOutTask, event.getDelay());

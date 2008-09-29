@@ -20,7 +20,7 @@ import se.sics.kompics.api.annotation.ComponentSpecification;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
-import se.sics.kompics.p2p.network.events.LossyNetworMessage;
+import se.sics.kompics.p2p.network.events.LossyNetworkMessage;
 import se.sics.kompics.p2p.network.events.LossyNetworkAlarm;
 import se.sics.kompics.p2p.network.topology.KingMatrix;
 import se.sics.kompics.timer.events.ScheduleTimeout;
@@ -146,7 +146,7 @@ public final class LossyNetwork {
 
 			// make a LossyNetNetworkDeliverEvent to be delivered at the
 			// destination
-			LossyNetworMessage lnMessage = new LossyNetworMessage(event,
+			LossyNetworkMessage lnMessage = new LossyNetworkMessage(event,
 					localAddress, destination);
 
 			long latency = king[localKingId][destination.getId().mod(
@@ -172,8 +172,8 @@ public final class LossyNetwork {
 	};
 
 	@MayTriggerEventTypes(Message.class)
-	private EventHandler<LossyNetworMessage> handleLossyNetworkMessage = new EventHandler<LossyNetworMessage>() {
-		public void handle(LossyNetworMessage event) {
+	private EventHandler<LossyNetworkMessage> handleLossyNetworkMessage = new EventHandler<LossyNetworkMessage>() {
+		public void handle(LossyNetworkMessage event) {
 			logger.debug("Handling delivery {} from {}.", event.getMessage(),
 					event.getSource());
 

@@ -32,7 +32,7 @@ public class ScheduleTimeout implements Event {
 		this.delay = delay;
 	}
 
-	public Timeout geTimeout() {
+	public Timeout getTimeout() {
 		return timeout;
 	}
 

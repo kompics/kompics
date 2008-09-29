@@ -5,13 +5,13 @@ import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
 
 /**
- * The <code>LossyNetworMessage</code> class.
+ * The <code>LossyNetworkMessage</code> class.
  * 
  * @author Cosmin Arad
  * @version $Id$
  */
 @EventType
-public final class LossyNetworMessage extends Message {
+public final class LossyNetworkMessage extends Message {
 
 	/**
 	 * 
@@ -20,7 +20,7 @@ public final class LossyNetworMessage extends Message {
 
 	private final Message message;
 
-	public LossyNetworMessage(Message message, Address source,
+	public LossyNetworkMessage(Message message, Address source,
 			Address destination) {
 		super(source, destination);
 		this.message = message;
