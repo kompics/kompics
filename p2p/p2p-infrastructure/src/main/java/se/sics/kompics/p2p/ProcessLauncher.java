@@ -53,7 +53,7 @@ public class ProcessLauncher extends Thread {
 
 		commandArgs.add("-Xmx1g");
 
-		commandArgs.add("-Dcom.sun.management.jmxremote");
+//		commandArgs.add("-Dcom.sun.management.jmxremote");
 
 		commandArgs.add("-classpath");
 		commandArgs.add(classpath);

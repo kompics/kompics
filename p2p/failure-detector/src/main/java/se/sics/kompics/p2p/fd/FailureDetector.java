@@ -91,8 +91,8 @@ public final class FailureDetector {
 		component.subscribe(pnDeliverChannel, handlePing);
 		component.subscribe(pnDeliverChannel, handlePong);
 
-		component.subscribe(requestChannel, handleStartProbingPeer);
-		component.subscribe(requestChannel, handleStopProbingPeer);
+//		component.subscribe(requestChannel, handleStartProbingPeer);
+//		component.subscribe(requestChannel, handleStopProbingPeer);
 		component.subscribe(requestChannel, handleStatusRequest);
 	}
 

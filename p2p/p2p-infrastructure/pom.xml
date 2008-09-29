@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?><project>
   <parent>
     <artifactId>kompics-p2p</artifactId>
     <groupId>se.sics.kompics</groupId>
@@ -10,46 +10,39 @@
   <name>Kompics P2P Infrastructure</name>
   <version>0.2.1-SNAPSHOT</version>
   <description>Kompics P2P Infrastructure</description>
-  <dependencies>
-  	<dependency>
-  		<groupId>se.sics.kompics</groupId>
-  		<artifactId>chord</artifactId>
-  		<version>0.2.1-SNAPSHOT</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>se.sics.kompics</groupId>
-  		<artifactId>bootstrap</artifactId>
-  		<version>0.2.1-SNAPSHOT</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>se.sics.kompics</groupId>
-  		<artifactId>failure-detector</artifactId>
-  		<version>0.2.1-SNAPSHOT</version>
-  	</dependency>
-  </dependencies>
   <build>
-     <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <configuration>
-                <archive>
-                    <manifest>
-                        <mainClass>se.sics.kompics.p2p.P2pLauncher</mainClass>
-                    </manifest>
-                </archive>
-                <!--
-                <descriptorRefs>
-                    <descriptorRef>bin</descriptorRef>
-                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                </descriptorRefs>
-                -->
-                <descriptors>
-                    <descriptor>src/main/assembly/src.xml</descriptor>
-                </descriptors>
-                <finalName>kompics</finalName>
-            </configuration>
-        </plugin>
-     </plugins>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>se.sics.kompics.p2p.P2pLauncher</mainClass>
+            </manifest>
+          </archive>
+          <descriptors>
+            <descriptor>src/main/assembly/src.xml</descriptor>
+          </descriptors>
+          <finalName>kompics</finalName>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
+  <dependencies>
+    <dependency>
+      <groupId>se.sics.kompics</groupId>
+      <artifactId>chord</artifactId>
+      <version>0.2.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>se.sics.kompics</groupId>
+      <artifactId>bootstrap</artifactId>
+      <version>0.2.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>se.sics.kompics</groupId>
+      <artifactId>failure-detector</artifactId>
+      <version>0.2.1-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
 </project>

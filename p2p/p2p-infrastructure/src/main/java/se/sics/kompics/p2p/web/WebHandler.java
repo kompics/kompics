@@ -124,7 +124,7 @@ public class WebHandler {
 				new FastEventFilter<WebRequest>("destination", localAddress
 						.getId()) {
 					public boolean filter(WebRequest request) {
-						return request.destination.equals(value);
+						return value.equals(request.destination);
 					}
 				});
 

@@ -103,7 +103,7 @@ public final class PerfectNetwork {
 		component.subscribe(netDeliverChannel, handlePerfectNetworkMessage,
 				new FastEventFilter<Message>("destination", localAddress) {
 					public boolean filter(Message m) {
-						return m.destination.equals(value);
+						return value.equals(m.destination);
 					}
 				});
 		logger.debug("Subscribed for PerfectNetNetDeliver with destination {}",

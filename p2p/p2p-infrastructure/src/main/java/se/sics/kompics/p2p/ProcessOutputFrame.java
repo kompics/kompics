@@ -97,8 +97,8 @@ public class ProcessOutputFrame extends JFrame {
 			frameSize.width = screenSize.width;
 		}
 
-		WIDTH = screenSize.width / 2;
-		HEIGHT = (screenSize.height - 20) / 2;
+		WIDTH = (screenSize.width - 130) / 2;
+		HEIGHT = (screenSize.height - 0) / 2;
 		this.setSize(WIDTH, HEIGHT);
 
 		if (pid == 0) {

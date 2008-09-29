@@ -113,7 +113,7 @@ public final class LossyNetwork {
 		component.subscribe(netDeliverChannel, handleLossyNetworkMessage,
 				new FastEventFilter<Message>("destination", localAddress) {
 					public boolean filter(Message m) {
-						return m.destination.equals(value);
+						return value.equals(m.destination);
 					}
 				});
 		logger.debug("Subscribed for LossyNetNetDeliver with destination {}",
