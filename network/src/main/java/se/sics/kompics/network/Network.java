@@ -131,8 +131,8 @@ public class Network {
 				.getFilterChain();
 		tcpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
 				new ObjectSerializationCodecFactory()));
-//		tcpAcceptor.getSessionConfig().setReuseAddress(true);
-		tcpAcceptor.setReuseAddress(true);
+		tcpAcceptor.getSessionConfig().setReuseAddress(true);
+//		tcpAcceptor.setReuseAddress(true);
 		tcpAcceptor.bind(localSocketAddress);
 
 		// TCP Connector

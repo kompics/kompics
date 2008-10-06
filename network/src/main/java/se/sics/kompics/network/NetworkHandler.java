@@ -33,7 +33,9 @@ public class NetworkHandler extends IoHandlerAdapter {
 		if (address != null)
 			logger.debug("Problems with {} connection to {}",
 					(Transport) session.getAttribute("protocol"), address);
-		logger.error("Exception caught:", cause);
+
+		logger.error("Exception caught: {}-{} in {}/{}", new Object[] { cause,
+				cause.getMessage(), address, session });
 
 		networkComponent.networkException(new NetworkException(address));
 	}
@@ -45,8 +47,7 @@ public class NetworkHandler extends IoHandlerAdapter {
 		Transport protocol = (Transport) session.getAttribute("protocol");
 
 		logger.debug("Message received from {}", session.getRemoteAddress());
-		networkComponent
-				.deliverMessage((Message) message, protocol);
+		networkComponent.deliverMessage((Message) message, protocol);
 	}
 
 	@Override
