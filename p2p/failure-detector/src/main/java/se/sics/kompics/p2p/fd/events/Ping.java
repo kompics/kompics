@@ -15,16 +15,23 @@ public final class Ping extends Message {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 3746724182377458990L;
+	private static final long serialVersionUID = 5066114231916864333L;
 
 	private final long id;
 
-	public Ping(long id, Address source, Address destination) {
+	private final long ts;
+	
+	public Ping(long id, long ts, Address source, Address destination) {
 		super(source, destination);
 		this.id = id;
+		this.ts =ts;
 	}
 
 	public long getId() {
 		return id;
+	}
+
+	public long getTs() {
+		return ts;
 	}
 }

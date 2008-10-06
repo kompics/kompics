@@ -72,6 +72,8 @@ public class PeerCluster {
 			Channel peerChannel = membrane.getChannelIn(LeavePeer.class);
 
 			component.triggerEvent(event, peerChannel);
+			
+			membrane.getComponent().stop();
 		}
 	};
 
@@ -81,6 +83,8 @@ public class PeerCluster {
 			Channel peerChannel = membrane.getChannelIn(FailPeer.class);
 
 			component.triggerEvent(event, peerChannel);
+
+			membrane.getComponent().stop();
 		}
 	};
 

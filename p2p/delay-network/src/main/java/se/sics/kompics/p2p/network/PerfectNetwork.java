@@ -15,6 +15,7 @@ import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
+import se.sics.kompics.api.annotation.ComponentStopMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -53,6 +54,8 @@ public final class PerfectNetwork {
 
 	private BigInteger kingSize;
 
+	private boolean active = true;
+	
 	public PerfectNetwork(Component component) {
 		this.component = component;
 	}
@@ -109,10 +112,19 @@ public final class PerfectNetwork {
 		logger.debug("Subscribed for PerfectNetNetDeliver with destination {}",
 				localAddress);
 	}
+	
+	@ComponentStopMethod
+	public void stop() {
+//		logger.error("STOP");
+		active = false;
+		component.unsubscribe(netDeliverChannel, handlePerfectNetworkMessage);
+}
 
 	@MayTriggerEventTypes( { ScheduleTimeout.class, Message.class })
 	private EventHandler<Message> handleMessage = new EventHandler<Message>() {
 		public void handle(Message event) {
+			if (!active) return;
+			
 			logger.debug("Handling send1 {} to {}.", event, event
 					.getDestination());
 
@@ -152,6 +164,8 @@ public final class PerfectNetwork {
 	@MayTriggerEventTypes(Message.class)
 	private EventHandler<PerfectNetworkAlarm> handlePerfectNetworkAlarm = new EventHandler<PerfectNetworkAlarm>() {
 		public void handle(PerfectNetworkAlarm event) {
+			if (!active) return;
+
 			logger.debug("Handling send2 {} to {}.",
 					((PerfectNetworkMessage) event.getMessage()).getMessage(),
 					event.getMessage().getDestination());

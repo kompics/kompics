@@ -75,7 +75,7 @@ public final class FailureDetector {
 				.getSharedComponentMembrane("se.sics.kompics.Timer");
 		Channel timerSetChannel = timerMembrane
 				.getChannelIn(ScheduleTimeout.class);
-		alarmChannel = timerMembrane.getChannelOut(Timeout.class);
+		alarmChannel = component.createChannel(Timeout.class);
 
 		timerHandler = new TimerHandler(component, timerSetChannel);
 
@@ -91,8 +91,8 @@ public final class FailureDetector {
 		component.subscribe(pnDeliverChannel, handlePing);
 		component.subscribe(pnDeliverChannel, handlePong);
 
-//		component.subscribe(requestChannel, handleStartProbingPeer);
-//		component.subscribe(requestChannel, handleStopProbingPeer);
+		component.subscribe(requestChannel, handleStartProbingPeer);
+		component.subscribe(requestChannel, handleStopProbingPeer);
 		component.subscribe(requestChannel, handleStatusRequest);
 	}
 
@@ -198,8 +198,8 @@ public final class FailureDetector {
 			logger.debug("Received Ping from {}. Sending Pong.", event
 					.getSource());
 
-			component.triggerEvent(new Pong(event.getId(), localAddress, event
-					.getSource()), pnSendChannel);
+			component.triggerEvent(new Pong(event.getId(), event.getTs(),
+					localAddress, event.getSource()), pnSendChannel);
 		}
 	};
 
@@ -207,7 +207,7 @@ public final class FailureDetector {
 		public void handle(Pong event) {
 			Address peer = event.getSource();
 			if (peerProbers.containsKey(peer)) {
-				peerProbers.get(peer).pong(event.getId());
+				peerProbers.get(peer).pong(event.getId(), event.getTs());
 			} else {
 				logger.debug("Peer {} is not currently being probed", peer);
 			}

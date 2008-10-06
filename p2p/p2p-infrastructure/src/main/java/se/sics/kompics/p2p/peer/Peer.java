@@ -14,6 +14,7 @@ import se.sics.kompics.api.EventHandler;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
+import se.sics.kompics.api.annotation.ComponentStopMethod;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
 import se.sics.kompics.p2p.bootstrap.BootstrapClient;
@@ -59,6 +60,8 @@ public class Peer {
 
 	private Address peerAddress;
 
+	private Component ln, pn, wh;
+	
 	public Peer(Component component) {
 		this.component = component;
 	}
@@ -90,6 +93,8 @@ public class Peer {
 		pnComponent.initialize(peerAddress);
 		pnComponent.share("se.sics.kompics.p2p.network.PerfectNetwork");
 
+		pn = pnComponent;
+		
 		// create channels for the LossyNetwork component
 		Channel lnSendChannel = component.createChannel(Message.class);
 		Channel lnDeliverChannel = component.createChannel(Message.class);
@@ -100,6 +105,8 @@ public class Peer {
 						.getFaultChannel(), lnSendChannel, lnDeliverChannel);
 		lnComponent.initialize(peerAddress);
 		lnComponent.share("se.sics.kompics.p2p.network.LossyNetwork");
+
+		ln = lnComponent;
 
 		// create channels for the BootstrapClient component
 		Channel bootRequestChannel = component.createChannel(
@@ -167,6 +174,8 @@ public class Peer {
 		webHandler.initialize(peerAddress, monitorWebAddress,
 				bootstrapWebAddress);
 
+		wh = webHandler;
+		
 		// create channel for the PeerMonitorClient component
 		Channel pmcRequestChannel = component.createChannel(
 				StartPeerMonitor.class, StopPeerMonitor.class);
@@ -185,9 +194,17 @@ public class Peer {
 
 		// starting PeerMonitor
 		component.triggerEvent(new StartPeerMonitor(), pmcRequestChannel);
-		logger.info("PUB START PEER MONITOR");
+//		logger.info("PUB START PEER MONITOR");
 
 		logger.debug("Init");
+	}
+	
+	@ComponentStopMethod
+	public void stop() {
+		pn.stop();
+		ln.stop();
+		wh.stop();
+//		logger.error("DESTRUCT");
 	}
 
 	private EventHandler<JoinPeer> handleJoinPeer = new EventHandler<JoinPeer>() {

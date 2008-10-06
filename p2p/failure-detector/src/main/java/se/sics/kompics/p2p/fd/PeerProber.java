@@ -16,136 +16,74 @@ import se.sics.kompics.p2p.fd.events.PongTimedOut;
 import se.sics.kompics.p2p.fd.events.SendPing;
 import se.sics.kompics.p2p.fd.events.SuspicionStatus;
 
-/**
- * The <code>PeerProber</code> class
- * 
- * @author Cosmin Arad
- * @author Roberto Roverso
- * @version $Id: PeerProber.java 294 2006-05-05 17:14:14Z roberto $
- */
 public class PeerProber {
-
-	private enum State {
-		TRUST, AWAITING_PONG, SUSPECT;
-	}
 
 	private Logger logger;
 
+	private long intervalPingTimerId;
+	private long pongTimeoutId;
+
+	private boolean suspected;
+
 	private FailureDetector fd;
 
-	private State state;
-
-	private Address probedPeer;
-
+	private PeerResponseTime times;
 	private Set<Component> clientComponents;
 	private HashMap<Component, Channel> clientChannels;
 
-	private long intervalPingTimerId;
-	private long pongTimeoutId;
-	private long pingTimestamp;
-
-	private PeerResponseTime times;
+	private Address probedPeer;
 
 	PeerProber(Address probedPeer, FailureDetector fd) {
 		this.probedPeer = probedPeer;
 		this.fd = fd;
-		this.times = new PeerResponseTime(fd.rtoMin);
+
+		suspected = false;
+
 		this.clientComponents = new HashSet<Component>();
 		clientChannels = new HashMap<Component, Channel>();
+
+		this.times = new PeerResponseTime(fd.rtoMin);
 
 		logger = LoggerFactory.getLogger(fd.logger.getName() + "->"
 				+ probedPeer.getId());
 	}
 
 	void start() {
-		state = State.TRUST;
-		setTrustPingTimer();
-		logger.debug("Started");
+		setPingTimer();
 	}
 
 	void ping() {
-		if (state == State.TRUST) {
-			// Setting timer for the receiving the Pong packet
-			pongTimeoutId = fd.timerHandler.setTimer(new PongTimedOut(
-					probedPeer), fd.alarmChannel, times.getRTO()
-					+ fd.pongTimeoutAdd);
+		logger.debug("PING");
+		setPingTimer();
 
-			sendPing(pongTimeoutId);
-			pingTimestamp = System.currentTimeMillis();
+		// Setting timer for the receiving the Pong packet
+//		pongTimeoutId = fd.timerHandler.setTimer(new PongTimedOut(probedPeer),
+//				fd.alarmChannel, times.getRTO() + fd.pongTimeoutAdd);
+		pongTimeoutId = fd.timerHandler.setTimer(new PongTimedOut(probedPeer),
+				fd.alarmChannel, fd.pongTimeoutAdd);
 
-			logger.debug("State change {}->{}", State.TRUST,
-					State.AWAITING_PONG);
-			state = State.AWAITING_PONG;
-		} else if (state == State.SUSPECT) {
-			/*
-			 * When suspecting, the FD continues sending pings until a pong is
-			 * received. When that happens, the RTO will be updated considering
-			 * the time passed from the first ping sent and the first pong
-			 * received.
-			 */
-			logger.debug("Received no Pong, sending another ping...");
-
-			sendPing(pongTimeoutId);
-			setSuspectPingTimer();
-		} else {
-			logger.error("Wrong state PING");
-		}
+		sendPing(pongTimeoutId, System.currentTimeMillis());
 	}
 
-	void pong(long pongId) {
-		long RTT = System.currentTimeMillis() - pingTimestamp;
-		logger.debug("RTT is {}", RTT);
+	void pong(long pongId, long ts) {
+		logger.debug("PoNG {}", pongId);
 
-		if (state == State.AWAITING_PONG) {
-			logger.debug("State change {}->{}", State.AWAITING_PONG,
-					State.TRUST);
-
-			fd.timerHandler.cancelTimer(pongId);
-			fd.timerHandler.cancelTimer(pongTimeoutId);
-			times.updateRTO(RTT);
-			setTrustPingTimer();
-			state = State.TRUST;
-		} else if (state == State.SUSPECT) {
-			logger.debug("State change {}->{}", State.SUSPECT, State.TRUST);
-
-			times.updateRTO(RTT);
+		if (suspected == true) {
+			suspected = false;
 			reviseSuspicion();
-			setTrustPingTimer();
-			state = State.TRUST;
-		} else if (state == State.TRUST) {
-			logger.debug("Ignoring ping timed out event");
 		}
-		logger.debug("Pong handler, exiting state {}", state);
+
+		long RTT = System.currentTimeMillis() - ts;
+		fd.timerHandler.cancelTimer(pongId);
+//		fd.timerHandler.cancelTimer(pongTimeoutId);
+		times.updateRTO(RTT);
 	}
 
 	void pongTimedOut() {
-		if (state == State.AWAITING_PONG) {
-			logger.debug("State change {}->{}", State.AWAITING_PONG,
-					State.SUSPECT);
+		if (suspected == false) {
+			suspected = true;
 			suspect();
-			state = State.SUSPECT;
-			/*
-			 * Continue sending pings until an answer is received
-			 */
-			setSuspectPingTimer();
-		} else {
-			logger.error("Wrong State PTO");
 		}
-	}
-
-	private void setTrustPingTimer() {
-		intervalPingTimerId = fd.timerHandler.setTimer(
-				new SendPing(probedPeer), fd.alarmChannel, fd.livePingInterval);
-	}
-
-	private void setSuspectPingTimer() {
-		intervalPingTimerId = fd.timerHandler.setTimer(
-				new SendPing(probedPeer), fd.alarmChannel, fd.deadPingInterval);
-	}
-
-	private void sendPing(long id) {
-		fd.component.triggerEvent(new Ping(id, fd.localAddress, probedPeer),
-				fd.pnSendChannel);
 	}
 
 	private void suspect() {
@@ -178,6 +116,18 @@ public class PeerProber {
 	void stop() {
 		fd.timerHandler.cancelTimer(intervalPingTimerId);
 		fd.timerHandler.cancelTimer(pongTimeoutId);
+	}
+
+	private void sendPing(long id, long ts) {
+		fd.component
+				.triggerEvent(new Ping(id, ts, fd.localAddress, probedPeer),
+						fd.pnSendChannel);
+	}
+
+	private void setPingTimer() {
+		long interval = suspected ? fd.deadPingInterval : fd.livePingInterval;
+		intervalPingTimerId = fd.timerHandler.setTimer(
+				new SendPing(probedPeer), fd.alarmChannel, interval);
 	}
 
 	void addClientComponent(Component monitoringComponent, Channel channel) {

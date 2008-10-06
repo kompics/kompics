@@ -17,6 +17,7 @@ import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentShareMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
+import se.sics.kompics.api.annotation.ComponentStopMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.events.Message;
@@ -56,6 +57,8 @@ public final class LossyNetwork {
 	private Random random;
 
 	private double lossRate;
+
+	private boolean active = true;
 
 	public LossyNetwork(Component component) {
 		this.component = component;
@@ -120,9 +123,18 @@ public final class LossyNetwork {
 				localAddress);
 	}
 
+	@ComponentStopMethod
+	public void stop() {
+//		logger.error("STOP");
+		active = false;
+		component.unsubscribe(netDeliverChannel, handleLossyNetworkMessage);
+	}
+
 	@MayTriggerEventTypes( { ScheduleTimeout.class, Message.class })
 	private EventHandler<Message> handleMessage = new EventHandler<Message>() {
 		public void handle(Message event) {
+			if (!active) return;
+
 			logger.debug("Handling send {} to {}.", event, event
 					.getDestination());
 
@@ -167,6 +179,8 @@ public final class LossyNetwork {
 	@MayTriggerEventTypes(Message.class)
 	private EventHandler<LossyNetworkAlarm> handleLossyNetworkAlarm = new EventHandler<LossyNetworkAlarm>() {
 		public void handle(LossyNetworkAlarm event) {
+			if (!active) return;
+
 			component.triggerEvent(event.getMessage(), netSendChannel);
 		}
 	};

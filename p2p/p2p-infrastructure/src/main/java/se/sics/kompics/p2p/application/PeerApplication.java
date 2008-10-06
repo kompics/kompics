@@ -97,13 +97,13 @@ public class PeerApplication {
 
 	private EventHandler<LeavePeer> handleLeavePeer = new EventHandler<LeavePeer>() {
 		public void handle(LeavePeer event) {
-			logger.debug("Leave not implemented");
+			logger.debug("I'm leaving.");
 		}
 	};
 
 	private EventHandler<FailPeer> handleFailPeer = new EventHandler<FailPeer>() {
 		public void handle(FailPeer event) {
-			logger.debug("Fail not implemented");
+//			logger.debug("Fail not implemented");
 		}
 	};
 

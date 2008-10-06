@@ -21,6 +21,7 @@ import se.sics.kompics.api.FastEventFilter;
 import se.sics.kompics.api.annotation.ComponentCreateMethod;
 import se.sics.kompics.api.annotation.ComponentInitializeMethod;
 import se.sics.kompics.api.annotation.ComponentSpecification;
+import se.sics.kompics.api.annotation.ComponentStopMethod;
 import se.sics.kompics.api.annotation.MayTriggerEventTypes;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.p2p.chord.events.ChordLookupFailed;
@@ -131,6 +132,13 @@ public class WebHandler {
 		logger.debug("Subscribed for WebRequestEvent with destination {}",
 				localAddress.getId());
 	}
+
+	@ComponentStopMethod
+	public void stop() {
+//		logger.error("STOP");
+		component.unsubscribe(webRequestChannel, handleWebRequest);
+	}
+
 
 	private EventHandler<WebRequest> handleWebRequest = new EventHandler<WebRequest>() {
 		public void handle(WebRequest event) {

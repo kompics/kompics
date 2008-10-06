@@ -483,8 +483,8 @@ public class ChordIterativeRouter {
 			if (changed) {
 				fingerTableChanged();
 			}
-			component.triggerEvent(new JoinRingCompleted(localPeer),
-					notificationChannel);
+//			component.triggerEvent(new JoinRingCompleted(localPeer),
+//					notificationChannel);
 		}
 	};
 
