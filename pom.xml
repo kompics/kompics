@@ -3,14 +3,14 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>build</artifactId>
 	<packaging>pom</packaging>
-	<version>0.3-SNAPSHOT</version>
+	<version>0.2.1</version>
 	<name>Kompics Parent POM</name>
 	<url>http://kompics.sics.se</url>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/trunk</connection>
-		<url>http://small.sics.se/viewvc/kompics/trunk</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/tags/build-0.2.1</connection>
+		<url>http://small.sics.se/viewvc/kompics/tags/build-0.2.1</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/tags/build-0.2.1</developerConnection>
 	</scm>
 
 	<distributionManagement>
