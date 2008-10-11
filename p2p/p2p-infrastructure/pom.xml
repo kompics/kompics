@@ -2,13 +2,13 @@
   <parent>
     <artifactId>kompics-p2p</artifactId>
     <groupId>se.sics.kompics</groupId>
-    <version>0.2.1</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics</groupId>
   <artifactId>p2p-infrastructure</artifactId>
   <name>Kompics P2P Infrastructure</name>
-  <version>0.2.1</version>
+  <version>0.3-SNAPSHOT</version>
   <description>Kompics P2P Infrastructure</description>
   <build>
     <plugins>
@@ -32,17 +32,17 @@
     <dependency>
       <groupId>se.sics.kompics</groupId>
       <artifactId>chord</artifactId>
-      <version>0.2.1</version>
+      <version>0.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>se.sics.kompics</groupId>
       <artifactId>bootstrap</artifactId>
-      <version>0.2.1</version>
+      <version>0.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>se.sics.kompics</groupId>
       <artifactId>failure-detector</artifactId>
-      <version>0.2.1</version>
+      <version>0.3-SNAPSHOT</version>
     </dependency>
   </dependencies>
 </project>

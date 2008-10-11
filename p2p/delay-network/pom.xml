@@ -2,7 +2,7 @@
   <parent>
     <artifactId>kompics-p2p</artifactId>
     <groupId>se.sics.kompics</groupId>
-    <version>0.2.1</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics</groupId>

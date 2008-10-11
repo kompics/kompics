@@ -3,10 +3,10 @@
 	<parent>
 		<groupId>se.sics.kompics</groupId>
 		<artifactId>build</artifactId>
-		<version>0.2.1</version>
+		<version>0.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>kompics-core</artifactId>
-	<version>0.2.1</version>
+	<version>0.3-SNAPSHOT</version>
 
 	<name>Kompics Core</name>
 	<packaging>jar</packaging>
