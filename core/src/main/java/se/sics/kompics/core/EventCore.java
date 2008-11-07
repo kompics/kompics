@@ -11,11 +11,14 @@ public class EventCore {
 
 	private Priority priority;
 
+	private long triggerTime;
+	
 	public EventCore(Event event, ChannelReference channelReference,
 			Priority priority) {
 		this.event = event;
 		this.channelReference = channelReference;
 		this.priority = priority;
+		this.triggerTime = System.nanoTime();
 	}
 
 	public Event getEvent() {
@@ -28,5 +31,9 @@ public class EventCore {
 
 	public Priority getPriority() {
 		return priority;
+	}
+	
+	public long getQueuingTime() {
+		return System.nanoTime() - triggerTime;
 	}
 }

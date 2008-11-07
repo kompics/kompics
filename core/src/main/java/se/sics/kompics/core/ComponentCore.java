@@ -29,6 +29,7 @@ import se.sics.kompics.core.scheduler.KompicsQueue;
 import se.sics.kompics.core.scheduler.Scheduler;
 import se.sics.kompics.core.scheduler.Work;
 import se.sics.kompics.core.scheduler.WorkQueue;
+import se.sics.kompics.core.stats.WorkerStat;
 
 /**
  * The core of a component. It contains scheduling data, configuration data,
@@ -213,8 +214,13 @@ public class ComponentCore {
 
 		// execute the taken work
 		EventHandlerCore eventHandler = work.getEventHandlerCore();
-		Event event = work.getEventCore().getEvent();
+		EventCore eventCore = work.getEventCore();
+		Event event = eventCore.getEvent();
 
+//		System.err.println(eventCore.getQueuingTime() + "\t" + eventCore.getQueuingTimeMs());
+		
+		WorkerStat.get().tau(eventCore.getQueuingTime());
+		
 		Work.free(work);
 
 		// we set the id of the worker executing this handler so that all
