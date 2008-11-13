@@ -36,19 +36,39 @@ public class NetStatsProcessor extends Thread {
 	}
 
 	void processData(double[] data) {
+		for (int i = 0; i < data.length; i++) {
+			processPoint(data[i]);
+		}
+	}
+	
+	void processPoint(double d) {
 		count++;
-		double mean = computeMean(data);
 
-		avg = avg + (mean - avg) / count;
+		avg = avg + (d - avg) / count;
 
 		try {
-			out.write(count + " " + avg + " " + mean + "\n");
+			out.write(count + " " + avg + " " + d + "\n");
 			out.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.err.println(count + " " + avg + " " + mean);
+		System.err.println(count + " " + avg + " " + d);
 	}
+
+//	void processData(double[] data) {
+//		count++;
+//		double mean = computeMean(data);
+//
+//		avg = avg + (mean - avg) / count;
+//
+//		try {
+//			out.write(count + " " + avg + " " + mean + "\n");
+//			out.flush();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		System.err.println(count + " " + avg + " " + mean);
+//	}
 
 	private double computeMean(double[] data) {
 		double sum = 0;

@@ -17,21 +17,21 @@ public class NetStats {
 	ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 
 	boolean on = true;
-	
+
 	public NetStats() {
 		try {
 			out = SocketChannel.open();
 			out.configureBlocking(true);
 
 			String ss = System.getProperty("statServer");
-			
+
 			if (ss == null) {
 				on = false;
 				return;
 			} else {
 				on = true;
 			}
-			
+
 			out.connect(new InetSocketAddress(ss, 4444));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -42,29 +42,37 @@ public class NetStats {
 
 	private int count = 0;
 
-	public int getCount() {
-		return count;
-	}
+	private int mCount = 0;
 
+	private double sum = 0;
+	
 	public void push(double x) {
 		if (!on) {
 			return;
 		}
 
 		count++;
-
-		buffer.putDouble(x);
-
+		sum += x;
+		
 		if (count == MAX_COUNT) {
+			mCount++;
+			
+			buffer.putDouble(sum / count);
+
+			sum = 0;
 			count = 0;
-			// dump to file
-			buffer.flip();
-			try {
-				out.write(buffer);
-			} catch (IOException e) {
-				e.printStackTrace();
+
+			if (mCount == MAX_COUNT) {
+				mCount = 0;
+				// dump to file
+				buffer.flip();
+				try {
+					out.write(buffer);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				buffer.clear();
 			}
-			buffer.clear();
 		}
 	}
 }
