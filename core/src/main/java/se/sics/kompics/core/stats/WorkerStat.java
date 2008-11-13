@@ -10,9 +10,13 @@ public class WorkerStat {
 		}
 	};
 	
-	int i = 0;
+//	int i = 0;
+//	
+//	Stats tau = new Stats();
+
+//	FileStats tau = new FileStats();
 	
-	Stats tau = new Stats();
+	NetStats tau = new NetStats();
 	
 	public static WorkerStat get() {
 		return localStat.get();
@@ -20,11 +24,11 @@ public class WorkerStat {
 	
 	public void tau(long nanos) {
 		tau.push(nanos);
-		i++;
-		
-		if (i == 100) {
-			i = 0;
-			System.err.println(tau.toString());
-		}
+//		i++;
+//		
+//		if (i == 100) {
+//			i = 0;
+//			System.err.println(tau.toString());
+//		}
 	}
 }
