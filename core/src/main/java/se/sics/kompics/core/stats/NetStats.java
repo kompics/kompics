@@ -23,9 +23,9 @@ public class NetStats {
 			out = SocketChannel.open();
 			out.configureBlocking(true);
 
-			String ss = System.getProperty("statServer", "127.0.0.1");
+			String ss = System.getProperty("statServer");
 			
-			if (ss.equals("off")) {
+			if (ss == null) {
 				on = false;
 				return;
 			} else {
