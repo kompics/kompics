@@ -12,8 +12,13 @@ public class Scheduler {
 	private final static Logger logger = LoggerFactory
 			.getLogger(Scheduler.class);
 
-	static final long SLEEP_MS = 100;
+	static final long SLEEP_MS = Long.parseLong(System.getProperty("sleepMS",
+			"100"));
 
+	static {
+		System.err.println("SLEEP_MS=" + SLEEP_MS);
+	}
+	
 	int workerCount;
 
 	public Worker[] workers;
@@ -185,7 +190,7 @@ public class Scheduler {
 		int totalSize = 0, minSize = Integer.MAX_VALUE, maxSize = 0, totalFl = 0;
 		for (int i = 0; i < workers.length; i++) {
 			qsize[i] = workers[i].qsize.get();
-//			flsize[i] = workers[i].pool.size.get();
+			// flsize[i] = workers[i].pool.size.get();
 			totalSize += qsize[i];
 			totalFl += flsize[i];
 			if (minSize > qsize[i])
