@@ -89,7 +89,7 @@ public final class P2pLauncher {
 				processes[i + 1] = launchProcess(
 						"se.sics.kompics.p2p.P2pMain " + nodeNetworkAddress
 								+ " " + nodeWebAddress + " " + nodeCommand,
-						"-Xmx1g -Dlog4j.properties=src/main/config/log4j.properties",
+						"-Xmx1g -Dlog4j.properties=src/main/config/log4j.properties -DsleepMS=0 -DstatServer=193.10.67.72",
 						"Node " + i, i + 1);
 
 				logger.debug("Launched Node {}", i);

@@ -57,7 +57,7 @@ public class P2pMain {
 		String webAddress = args[1];
 		String command = args[2];
 
-		Kompics kompics = new Kompics(2, 0);
+		Kompics kompics = new Kompics(6, 0);
 		Kompics.setGlobalKompics(kompics);
 
 		Component boot = kompics.getBootstrapComponent();
