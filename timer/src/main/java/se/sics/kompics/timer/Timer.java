@@ -123,7 +123,9 @@ public class Timer {
 			TimerSignalTask timeOutTask = new TimerSignalTask(thisTimer, event
 					.getTimeout(), event.getClientChannel(), id);
 
-			activeTimers.put(id, timeOutTask);
+			synchronized (activeTimers) {
+				activeTimers.put(id, timeOutTask);
+			}
 			timer.schedule(timeOutTask, event.getDelay());
 		}
 	};
@@ -133,9 +135,11 @@ public class Timer {
 			TimerId id = new TimerId(event.getClientComponent()
 					.getComponentUUID(), event.getTimerId());
 
-			if (activeTimers.containsKey(id)) {
-				activeTimers.get(id).cancel();
-				activeTimers.remove(id);
+			synchronized (activeTimers) {
+				if (activeTimers.containsKey(id)) {
+					activeTimers.get(id).cancel();
+					activeTimers.remove(id);
+				}
 			}
 		}
 	};
@@ -143,7 +147,9 @@ public class Timer {
 	// called by the timeout task
 	void timeout(TimerId timerId, Timeout timerExpiredEvent,
 			Channel clientChannel) {
-		activeTimers.remove(timerId);
+		synchronized (activeTimers) {
+			activeTimers.remove(timerId);
+		}
 
 		logger.debug("TRIGGERing timer expired {}", timerExpiredEvent);
 
