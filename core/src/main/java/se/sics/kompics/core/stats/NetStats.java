@@ -42,37 +42,58 @@ public class NetStats {
 
 	private int count = 0;
 
-	private int mCount = 0;
+//	private int mCount = 0;
+//	private double sum = 0;
 
-	private double sum = 0;
-	
+	// transmit every event
 	public void push(double x) {
 		if (!on) {
 			return;
 		}
-
 		count++;
-		sum += x;
-		
+		buffer.putDouble(x);
+
 		if (count == MAX_COUNT) {
-			mCount++;
-			
-			buffer.putDouble(sum / count);
-
-			sum = 0;
 			count = 0;
-
-			if (mCount == MAX_COUNT) {
-				mCount = 0;
-				// dump to file
-				buffer.flip();
-				try {
-					out.write(buffer);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				buffer.clear();
+			// dump to file
+			buffer.flip();
+			try {
+				out.write(buffer);
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
+			buffer.clear();
 		}
 	}
+
+	// local average before transmit
+	// public void push(double x) {
+	// if (!on) {
+	// return;
+	// }
+	//
+	// count++;
+	// sum += x;
+	//		
+	// if (count == MAX_COUNT) {
+	// mCount++;
+	//			
+	// buffer.putDouble(sum / count);
+	//
+	// sum = 0;
+	// count = 0;
+	//
+	// if (mCount == MAX_COUNT) {
+	// mCount = 0;
+	// // dump to file
+	// buffer.flip();
+	// try {
+	// out.write(buffer);
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// }
+	// buffer.clear();
+	// }
+	// }
+	// }
 }

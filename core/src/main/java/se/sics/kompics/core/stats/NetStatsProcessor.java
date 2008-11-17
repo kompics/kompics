@@ -9,6 +9,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class NetStatsProcessor extends Thread {
 
+	private static final int PERIOD = 512 * 8 * 1; 
+	
 	LinkedBlockingQueue<double[]> queue;
 
 	double avg = 0;
@@ -17,11 +19,14 @@ public class NetStatsProcessor extends Thread {
 
 	BufferedWriter out;
 
+	MovingAverage ma;
+	
 	public NetStatsProcessor(LinkedBlockingQueue<double[]> queue)
 			throws FileNotFoundException {
 		this.queue = queue;
 		this.out = new BufferedWriter(new OutputStreamWriter(
 				new FileOutputStream(System.getProperty("datafile", "plot.data"))));
+		ma = new MovingAverage(PERIOD);
 	}
 
 	public void run() {
@@ -35,26 +40,47 @@ public class NetStatsProcessor extends Thread {
 		}
 	}
 
+	// MA, aggregation done in statserver
 	void processData(double[] data) {
-		for (int i = 0; i < data.length; i++) {
-			processPoint(data[i]);
-		}
-	}
+	count++;
+	double mean = computeMean(data);
+
+	ma.pushData(data);
+	double movingAvg = ma.getMovingAverage();
 	
-	void processPoint(double d) {
-		count++;
+	avg = avg + (mean - avg) / count;
 
-		avg = avg + (d - avg) / count;
-
-		try {
-			out.write(count + " " + avg + " " + d + "\n");
-			out.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		System.err.println(count + " " + avg + " " + d);
+	try {
+		out.write(count + " " + avg + " " + movingAvg + "\n");
+		out.flush();
+	} catch (IOException e) {
+		e.printStackTrace();
 	}
+	System.err.println(count + " " + avg + " " + mean);
+}
 
+	// no MA with aggregation done in worker
+//	void processData(double[] data) {
+//		for (int i = 0; i < data.length; i++) {
+//			processPoint(data[i]);
+//		}
+//	}
+//	
+//	void processPoint(double d) {
+//		count++;
+//
+//		avg = avg + (d - avg) / count;
+//
+//		try {
+//			out.write(count + " " + avg + " " + d + "\n");
+//			out.flush();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		System.err.println(count + " " + avg + " " + d);
+//	}
+
+	// no MA with aggregation done in statserver
 //	void processData(double[] data) {
 //		count++;
 //		double mean = computeMean(data);
