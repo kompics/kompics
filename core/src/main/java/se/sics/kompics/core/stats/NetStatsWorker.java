@@ -3,6 +3,7 @@ package se.sics.kompics.core.stats;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -14,7 +15,9 @@ public class NetStatsWorker extends Thread {
 
 	NetStatsServer server;
 
-	SocketChannel channel;
+	SocketChannel network;
+	
+	FileChannel disk;
 
 	ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 
@@ -22,22 +25,27 @@ public class NetStatsWorker extends Thread {
 
 	double[] data = new double[COUNT];
 
-	public NetStatsWorker(NetStatsServer server, SocketChannel channel,
-			LinkedBlockingQueue<double[]> queue) {
+	public NetStatsWorker(NetStatsServer server, SocketChannel network,
+			FileChannel disk, LinkedBlockingQueue<double[]> queue) {
 		this.server = server;
-		this.channel = channel;
+		this.network = network;
 		this.queue = queue;
+		this.disk = disk;
 	}
 
 	public void run() {
 		while (true) {
 			try {
 				do {
-					channel.read(buffer);
+					network.read(buffer);
 				} while (buffer.remaining() > 0);
 
 				buffer.flip();
 
+				disk.write(buffer);
+				
+				buffer.rewind();
+				
 				processBuffer();
 
 				buffer.clear();

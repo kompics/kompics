@@ -18,7 +18,7 @@ public class NetStatsProcessor extends Thread {
 	int count = 0;
 
 	BufferedWriter out;
-
+	
 	MovingAverage ma;
 	
 	public NetStatsProcessor(LinkedBlockingQueue<double[]> queue)
