@@ -16,7 +16,7 @@ public class NetStatsWorker extends Thread {
 	NetStatsServer server;
 
 	SocketChannel network;
-	
+
 	FileChannel disk;
 
 	ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
@@ -25,12 +25,22 @@ public class NetStatsWorker extends Thread {
 
 	double[] data = new double[COUNT];
 
+	private boolean measuring = false;
+
 	public NetStatsWorker(NetStatsServer server, SocketChannel network,
-			FileChannel disk, LinkedBlockingQueue<double[]> queue) {
+			LinkedBlockingQueue<double[]> queue) {
 		this.server = server;
 		this.network = network;
 		this.queue = queue;
+	}
+
+	public synchronized void startMeasuring(FileChannel disk) {
 		this.disk = disk;
+		measuring = true;
+	}
+	
+	public synchronized void stopMeasuring() {
+		this.measuring = false;
 	}
 
 	public void run() {
@@ -42,10 +52,19 @@ public class NetStatsWorker extends Thread {
 
 				buffer.flip();
 
-				disk.write(buffer);
-				
-				buffer.rewind();
-				
+				boolean on;
+				FileChannel diskChannel;
+
+				synchronized (this) {
+					on = measuring;
+					diskChannel = disk;
+				}
+
+				if (on) {
+					diskChannel.write(buffer);
+					buffer.rewind();
+				}
+
 				processBuffer();
 
 				buffer.clear();

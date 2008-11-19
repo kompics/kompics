@@ -64,12 +64,27 @@ public class NetStatsServer {
 
 		System.out.println("I'm starting to measure. Stop typing!");
 
+		int w;
+		synchronized (workers) {
+			w = workerCount;
+		}
+		for (int i = 0; i < w; i++) {
+			workers[i].startMeasuring(bin);
+		}
+		
 		long time = System.currentTimeMillis();
 
 		try {
 			Thread.sleep(MEASURING_TIME);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+		}
+
+		synchronized (workers) {
+			w = workerCount;
+		}
+		for (int i = 0; i < w; i++) {
+			workers[i].stopMeasuring();
 		}
 
 		time = System.currentTimeMillis() - time;
@@ -104,7 +119,7 @@ public class NetStatsServer {
 		while (true) {
 			SocketChannel channel = serverChannel.accept();
 			channel.configureBlocking(true);
-			workers[workerCount] = new NetStatsWorker(this, channel, bin, queue);
+			workers[workerCount] = new NetStatsWorker(this, channel, queue);
 			workers[workerCount].start();
 
 			synchronized (workers) {
