@@ -46,6 +46,8 @@ public class MovingAverage {
 	}
 
 	public double getMovingAverage() {
+		if (count < size)
+			return 0;
 		return sum / count;
 	}
 }

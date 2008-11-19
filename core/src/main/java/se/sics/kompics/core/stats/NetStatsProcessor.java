@@ -9,8 +9,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class NetStatsProcessor extends Thread {
 
-	private static final int PERIOD = 512 * 8 * 1; 
-	
+	static {
+		System.err.println("Proc v. 1-10");
+	}
+
+	private static final int PERIOD = 512 * 8;
+
 	LinkedBlockingQueue<double[]> queue;
 
 	double avg = 0;
@@ -19,14 +23,16 @@ public class NetStatsProcessor extends Thread {
 
 	BufferedWriter out;
 	
-	MovingAverage ma;
-	
+	MovingAverage ma1, ma10;
+
 	public NetStatsProcessor(LinkedBlockingQueue<double[]> queue)
 			throws FileNotFoundException {
 		this.queue = queue;
 		this.out = new BufferedWriter(new OutputStreamWriter(
-				new FileOutputStream(System.getProperty("datafile", "plot.data"))));
-		ma = new MovingAverage(PERIOD);
+				new FileOutputStream(System
+						.getProperty("datafile", "plot.data"))));
+		ma1 = new MovingAverage(PERIOD);
+		ma10 = new MovingAverage(PERIOD * 100);
 	}
 
 	public void run() {
@@ -42,59 +48,64 @@ public class NetStatsProcessor extends Thread {
 
 	// MA, aggregation done in statserver
 	void processData(double[] data) {
-	count++;
-	double mean = computeMean(data);
+		count++;
+		double mean = computeMean(data);
 
-	ma.pushData(data);
-	double movingAvg = ma.getMovingAverage();
-	
-	avg = avg + (mean - avg) / count;
+		ma1.pushData(data);
+		double movingAvg1 = ma1.getMovingAverage();
 
-	try {
-		out.write(count + " " + avg + " " + movingAvg + "\n");
-		out.flush();
-	} catch (IOException e) {
-		e.printStackTrace();
+		ma10.pushData(data);
+		double movingAvg10 = ma10.getMovingAverage();
+
+		avg = avg + (mean - avg) / count;
+
+		try {
+			out.write(count + " " + avg + " " + movingAvg1 + " " + movingAvg10
+					+ "\n");
+			out.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.err.println(count + " " + avg + " " + movingAvg1 + " "
+				+ movingAvg10 + "\n");
 	}
-	System.err.println(count + " " + avg + " " + mean);
-}
 
 	// no MA with aggregation done in worker
-//	void processData(double[] data) {
-//		for (int i = 0; i < data.length; i++) {
-//			processPoint(data[i]);
-//		}
-//	}
-//	
-//	void processPoint(double d) {
-//		count++;
-//
-//		avg = avg + (d - avg) / count;
-//
-//		try {
-//			out.write(count + " " + avg + " " + d + "\n");
-//			out.flush();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		System.err.println(count + " " + avg + " " + d);
-//	}
+	// void processData(double[] data) {
+	// for (int i = 0; i < data.length; i++) {
+	// processPoint(data[i]);
+	// }
+	// }
+	//
+	// void processPoint(double d) {
+	// count++;
+	//
+	// avg = avg + (d - avg) / count;
+	//
+	// try {
+	// out.write(count + " " + avg + " " + d + "\n");
+	// out.flush();
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// }
+	// System.err.println(count + " " + avg + " " + d);
+	// }
 
 	// no MA with aggregation done in statserver
-//	void processData(double[] data) {
-//		count++;
-//		double mean = computeMean(data);
-//
-//		avg = avg + (mean - avg) / count;
-//
-//		try {
-//			out.write(count + " " + avg + " " + mean + "\n");
-//			out.flush();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		System.err.println(count + " " + avg + " " + mean);
-//	}
+	// void processData(double[] data) {
+	// count++;
+	// double mean = computeMean(data);
+	//
+	// avg = avg + (mean - avg) / count;
+	//
+	// try {
+	// out.write(count + " " + avg + " " + mean + "\n");
+	// out.flush();
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// }
+	// System.err.println(count + " " + avg + " " + mean);
+	// }
 
 	private double computeMean(double[] data) {
 		double sum = 0;
