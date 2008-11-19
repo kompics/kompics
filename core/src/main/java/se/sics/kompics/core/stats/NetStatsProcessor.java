@@ -100,6 +100,8 @@ public class NetStatsProcessor extends Thread {
 		double sum = 0;
 		for (int i = 0; i < data.length; i++) {
 			sum += data[i];
+			
+			if (data[i] < 0) throw new RuntimeException("Negative tau");
 		}
 		return sum / data.length;
 	}
