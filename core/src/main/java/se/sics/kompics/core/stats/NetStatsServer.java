@@ -38,6 +38,9 @@ public class NetStatsServer {
 			}
 		}.start();
 
+		// start the signal server
+		new NetStatsSignalServer(4445, server).start();
+		
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
 			String line = in.readLine();

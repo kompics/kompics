@@ -5,22 +5,21 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class NetStatsSignalClient extends Thread {
 
 	private int port;
-	private NetStatsServer server;
+	private SignalContinueHandler continueHandler;
 
-	private ServerSocket serverSocket;
 	private Socket socket;
 	private BufferedReader in;
 	private BufferedWriter out;
 
-	public NetStatsSignalClient(int port, NetStatsServer server) {
+	public NetStatsSignalClient(int port, SignalContinueHandler continueHandler) {
 		this.port = port;
-		this.server = server;
+		this.continueHandler = continueHandler;
 	}
 
 	@Override
@@ -37,33 +36,33 @@ public class NetStatsSignalClient extends Thread {
 			if (line == null)
 				break;
 
-			if (line.startsWith("measure")) {
-				line = line.substring(7);
-				int cnt = Integer.parseInt(line);
-				server.measure(cnt);
-				
-				// signal client to continue
+			if (line.startsWith("CONTINUE")) {
+
+				String command = continueHandler.cont();
+
+				// signal server to continue
 				try {
-					out.write("CONTINUE\n");
+					out.write(command + "\n");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			}else if (line.equals("QUIT")){
-				System.out.println("Quitting.");
-				System.exit(0);
 			} else {
 				System.out
 						.println("Ignored. Type measure4000 if you just joined 4000.");
 			}
 		}
 
-		System.err.println("SignalServer terminated!");
+		System.err.println("SignalClient terminated!");
 	}
 
 	private void init() {
 		try {
-			serverSocket = new ServerSocket(port);
-			socket = serverSocket.accept();
+			InetSocketAddress socketAddress = new InetSocketAddress(System
+					.getProperty("statServer"), port);
+
+			socket = new Socket();
+			socket.connect(socketAddress);
+
 			in = new BufferedReader(new InputStreamReader(socket
 					.getInputStream()));
 			out = new BufferedWriter(new OutputStreamWriter(socket

@@ -1,8 +1,10 @@
 package se.sics.kompics.core.stats;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -14,6 +16,7 @@ public class NetStatsSignalServer extends Thread {
 	private ServerSocket serverSocket;
 	private Socket socket;
 	private BufferedReader in;
+	private BufferedWriter out;
 
 	public NetStatsSignalServer(int port, NetStatsServer server) {
 		this.port = port;
@@ -38,6 +41,13 @@ public class NetStatsSignalServer extends Thread {
 				line = line.substring(7);
 				int cnt = Integer.parseInt(line);
 				server.measure(cnt);
+				
+				// signal client to continue
+				try {
+					out.write("CONTINUE\n");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}else if (line.equals("QUIT")){
 				System.out.println("Quitting.");
 				System.exit(0);
@@ -56,6 +66,8 @@ public class NetStatsSignalServer extends Thread {
 			socket = serverSocket.accept();
 			in = new BufferedReader(new InputStreamReader(socket
 					.getInputStream()));
+			out = new BufferedWriter(new OutputStreamWriter(socket
+					.getOutputStream()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
