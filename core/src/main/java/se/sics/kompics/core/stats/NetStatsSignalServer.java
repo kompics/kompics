@@ -30,6 +30,7 @@ public class NetStatsSignalServer extends Thread {
 		// signal client to start
 		try {
 			out.write("CONTINUE\n");
+			out.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -54,6 +55,7 @@ public class NetStatsSignalServer extends Thread {
 				// signal client to continue
 				try {
 					out.write("CONTINUE\n");
+					out.flush();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

@@ -26,6 +26,8 @@ public class NetStatsSignalClient extends Thread {
 	public void run() {
 		init();
 
+		System.out.println("Signal client in stand-by");
+		
 		while (true) {
 			String line = null;
 			try {
@@ -45,6 +47,7 @@ public class NetStatsSignalClient extends Thread {
 				// signal server to continue
 				try {
 					out.write(command + "\n");
+					out.flush();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
