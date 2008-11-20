@@ -27,6 +27,13 @@ public class NetStatsSignalServer extends Thread {
 	public void run() {
 		init();
 
+		// signal client to start
+		try {
+			out.write("CONTINUE\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		while (true) {
 			String line = null;
 			try {
