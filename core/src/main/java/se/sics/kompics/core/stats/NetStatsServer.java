@@ -9,6 +9,8 @@ import java.net.InetSocketAddress;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class NetStatsServer {
@@ -59,10 +61,17 @@ public class NetStatsServer {
 	private static final int MEASURING_TIME = Integer.parseInt(System
 			.getProperty("measuringTime", "180000"));
 
-	private void measure(int cnt) {
+	private static final Calendar now = Calendar.getInstance();
+
+	private static final String EXPERIMENT = System.getProperty("experiment",
+			"exp" + now.get(Calendar.HOUR) + now.get(Calendar.MINUTE));
+
+	private void measure(int cnt) throws FileNotFoundException {
 		count += cnt;
 
-		System.out.println("I'm starting to measure. Stop typing!");
+		String dataFile = EXPERIMENT + "-" + count;
+
+		bin = new FileOutputStream(dataFile, false).getChannel();
 
 		int w;
 		synchronized (workers) {
@@ -71,7 +80,10 @@ public class NetStatsServer {
 		for (int i = 0; i < w; i++) {
 			workers[i].startMeasuring(bin);
 		}
-		
+
+		System.out.println("I'm starting to measure (" + dataFile + ") [" + w
+				+ "]. Stop typing!");
+
 		long time = System.currentTimeMillis();
 
 		try {
@@ -80,9 +92,6 @@ public class NetStatsServer {
 			e.printStackTrace();
 		}
 
-		synchronized (workers) {
-			w = workerCount;
-		}
 		for (int i = 0; i < w; i++) {
 			workers[i].stopMeasuring();
 		}
@@ -102,10 +111,6 @@ public class NetStatsServer {
 	int workerCount = 0;
 
 	private FileChannel bin;
-
-	public NetStatsServer() throws FileNotFoundException {
-		bin = new FileOutputStream("data.bin", false).getChannel();
-	}
 
 	public void bind() throws IOException {
 		serverChannel = ServerSocketChannel.open();

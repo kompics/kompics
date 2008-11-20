@@ -38,7 +38,7 @@ public class NetStatsWorker extends Thread {
 		this.disk = disk;
 		measuring = true;
 	}
-	
+
 	public synchronized void stopMeasuring() {
 		this.measuring = false;
 	}
@@ -52,19 +52,13 @@ public class NetStatsWorker extends Thread {
 
 				buffer.flip();
 
-				boolean on;
-				FileChannel diskChannel;
-
 				synchronized (this) {
-					on = measuring;
-					diskChannel = disk;
+					if (measuring) {
+						disk.write(buffer);
+						buffer.rewind();
+					}
 				}
-
-				if (on) {
-					diskChannel.write(buffer);
-					buffer.rewind();
-				}
-
+				
 				processBuffer();
 
 				buffer.clear();
