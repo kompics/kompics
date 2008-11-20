@@ -9,22 +9,28 @@ import java.net.Socket;
 public class NetStatsSignalServer extends Thread {
 
 	private int port;
+	private NetStatsServer server;
 
 	private ServerSocket serverSocket;
 	private Socket socket;
+	private BufferedReader in;
 
-	public NetStatsSignalServer(int port) {
+	public NetStatsSignalServer(int port, NetStatsServer server) {
 		this.port = port;
+		this.server = server;
 	}
 
 	@Override
 	public void run() {
 		init();
 
-		BufferedReader in = new BufferedReader(new InputStreamReader(socket
-				.getInputStream()));
 		while (true) {
-			String line = in.readLine();
+			String line = null;
+			try {
+				line = in.readLine();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			if (line == null)
 				break;
 
@@ -32,6 +38,9 @@ public class NetStatsSignalServer extends Thread {
 				line = line.substring(7);
 				int cnt = Integer.parseInt(line);
 				server.measure(cnt);
+			}else if (line.equals("QUIT")){
+				System.out.println("Quitting.");
+				System.exit(0);
 			} else {
 				System.out
 						.println("Ignored. Type measure4000 if you just joined 4000.");
@@ -45,7 +54,8 @@ public class NetStatsSignalServer extends Thread {
 		try {
 			serverSocket = new ServerSocket(port);
 			socket = serverSocket.accept();
-
+			in = new BufferedReader(new InputStreamReader(socket
+					.getInputStream()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
