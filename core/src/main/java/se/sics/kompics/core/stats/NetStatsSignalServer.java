@@ -33,6 +33,8 @@ public class NetStatsSignalServer extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		System.out.println("Signalled client to continue");
 
 		while (true) {
 			String line = null;
@@ -55,7 +57,7 @@ public class NetStatsSignalServer extends Thread {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-			}else if (line.equals("QUIT")){
+			}else if (line.startsWith("QUIT")){
 				System.out.println("Quitting.");
 				System.exit(0);
 			} else {

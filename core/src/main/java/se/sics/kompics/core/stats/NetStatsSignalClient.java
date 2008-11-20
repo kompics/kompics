@@ -36,6 +36,8 @@ public class NetStatsSignalClient extends Thread {
 			if (line == null)
 				break;
 
+			System.out.print("GOT: " + line);
+			
 			if (line.startsWith("CONTINUE")) {
 
 				String command = continueHandler.cont();
