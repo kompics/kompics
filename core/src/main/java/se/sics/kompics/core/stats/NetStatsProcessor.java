@@ -66,8 +66,8 @@ public class NetStatsProcessor extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.err.println(count + " " + avg + " " + movingAvg1 + " "
-				+ movingAvg10 + "\n");
+//		System.err.println(count + " " + avg + " " + movingAvg1 + " "
+//				+ movingAvg10 + "\n");
 	}
 
 	// no MA with aggregation done in worker

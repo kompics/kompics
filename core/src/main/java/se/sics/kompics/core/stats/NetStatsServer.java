@@ -1,7 +1,6 @@
 package se.sics.kompics.core.stats;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,7 +9,6 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class NetStatsServer {
@@ -66,7 +64,7 @@ public class NetStatsServer {
 	private static final String EXPERIMENT = System.getProperty("experiment",
 			"exp" + now.get(Calendar.HOUR) + now.get(Calendar.MINUTE));
 
-	private void measure(int cnt) throws FileNotFoundException {
+	private void measure(int cnt) throws IOException {
 		count += cnt;
 
 		String dataFile = EXPERIMENT + "-" + count;
@@ -96,6 +94,8 @@ public class NetStatsServer {
 			workers[i].stopMeasuring();
 		}
 
+		bin.close();
+		
 		time = System.currentTimeMillis() - time;
 
 		System.out.println("I've been measuring for " + time / 1000
