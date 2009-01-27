@@ -1,4 +1,4 @@
-package sandbox.se.sics.kompics;
+package se.sics.kompics;
 
 public final class Stop extends Event {
 

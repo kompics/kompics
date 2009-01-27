@@ -1,4 +1,4 @@
-package sandbox.se.sics.kompics;
+package se.sics.kompics;
 
 public abstract class Filter<E extends Event> {
 

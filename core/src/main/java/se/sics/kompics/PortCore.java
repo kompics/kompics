@@ -1,4 +1,4 @@
-package sandbox.se.sics.kompics;
+package se.sics.kompics;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
