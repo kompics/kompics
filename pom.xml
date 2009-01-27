@@ -8,9 +8,9 @@
 	<url>http://kompics.sics.se</url>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/trunk</connection>
-		<url>http://small.sics.se/viewvc/kompics/trunk</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/branches/0.3-SNAPSHOT</connection>
+		<url>http://small.sics.se/viewvc/kompics/branches/0.3-SNAPSHOT</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/branches/0.3-SNAPSHOT</developerConnection>
 	</scm>
 
 	<distributionManagement>
