@@ -26,7 +26,7 @@ package se.sics.kompics;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id: Filter.java 268 2008-09-28 19:18:04Z Cosmin $
+ * @version $Id$
  */
 public abstract class Filter<E extends Event> {
 

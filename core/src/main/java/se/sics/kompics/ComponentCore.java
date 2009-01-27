@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id: ComponentCore.java 268 2008-09-28 19:18:04Z Cosmin $
+ * @version $Id$
  */
 public class ComponentCore implements Component {
 
