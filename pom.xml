@@ -144,7 +144,6 @@
 		<module>network</module>
 		<module>p2p</module>
 		<module>web</module>
-			<module>protocols</module>
 		<!--
 			<module>failure-detector</module>
 			<module>inspector</module>
