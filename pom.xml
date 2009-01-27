@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>build</artifactId>
@@ -7,62 +8,30 @@
 	<name>Kompics Parent POM</name>
 	<url>http://kompics.sics.se</url>
 
-	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/branches/0.3-SNAPSHOT</connection>
-		<url>http://small.sics.se/viewvc/kompics/branches/0.3-SNAPSHOT</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/branches/0.3-SNAPSHOT</developerConnection>
-	</scm>
+	<!--
+		These are the Kompics subprojects. Copy the POM entries below into
+		each of their POMs to avoid a fake dependency on the parent POM.
+	-->
+	<modules>
+		<module>core</module>
+	</modules>
 
-	<distributionManagement>
-		<!-- use the following if you're not using a snapshot version. -->
-		<repository>
-			<id>repo</id>
-			<name>SICS Repository</name>
-			<url>scpexe://korsakov.sics.se/home/maven2/repository</url>
-		</repository>
-		<!-- use the following if you ARE using a snapshot version. -->
-		<snapshotRepository>
-			<id>snaprepo</id>
-			<name>SICS Snapshot Repository</name>
-			<url>
-				scpexe://korsakov.sics.se/home/maven2/snapshotrepository
-			</url>
-		</snapshotRepository>
-		<site>
-			<id>kompics-site</id>
-			<url>
-				scpexe://kompics.sics.se/var/www/kompics/report/trunk
-			</url>
-		</site>
-		<downloadUrl>
-			http://korsakov.sics.se/maven/repository
-		</downloadUrl>
-	</distributionManagement>
-
-	<repositories>
-		<repository>
-			<id>sics-release</id>
-			<name>SICS Repository</name>
-			<url>http://korsakov.sics.se/maven/repository</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>sics-snapshot</id>
-			<name>SICS Snapshot Repository</name>
-			<url>http://korsakov.sics.se/maven/snapshotrepository</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<source>1.6</source>
+					<target>1.6</target>
+					<debug>true</debug>
+					<optimize>true</optimize>
+					<showDeprecations>true</showDeprecations>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 	<reporting>
 		<plugins>
@@ -81,16 +50,8 @@
 						Kompics ${project.version} API Documentation
 					</doctitle>
 					<encoding>UTF-8</encoding>
-					<excludePackageNames>
-						1se.sics.kompics
-					</excludePackageNames>
-					<includePackageNames>
-						1se.sics.kompics.api
-					</includePackageNames>
 					<links>
-						<link>
-							http://java.sun.com/j2se/1.5.0/docs/api/
-						</link>
+						<link>http://java.sun.com/javase/6/docs/api/</link>
 						<link>http://www.slf4j.org/api/</link>
 					</links>
 					<locale>en_US</locale>
@@ -115,39 +76,60 @@
 					<linkXref>true</linkXref>
 					<sourceEncoding>utf-8</sourceEncoding>
 					<minimumTokens>100</minimumTokens>
-					<targetJdk>1.5</targetJdk>
+					<targetJdk>1.6</targetJdk>
 				</configuration>
 			</plugin>
 		</plugins>
 	</reporting>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<encoding>UTF-8</encoding>
-					<source>1.5</source>
-					<target>1.5</target>
-					<debug>true</debug>
-					<optimize>true</optimize>
-					<showDeprecations>true</showDeprecations>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+	<repositories>
+		<repository>
+			<id>sics-release</id>
+			<name>SICS Repository</name>
+			<url>http://kompics.sics.se/maven/repository</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>sics-snapshot</id>
+			<name>SICS Snapshot Repository</name>
+			<url>http://kompics.sics.se/maven/snapshotrepository</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
-	<modules>
-		<module>core</module>
-		<module>timer</module>
-		<module>network</module>
-		<module>p2p</module>
-		<module>web</module>
-		<!--
-			<module>failure-detector</module>
-			<module>inspector</module>
-			<module>example</module>
-		-->
-	</modules>
+	<scm>
+		<connection>scm:svn:svn://small.sics.se/kompics/trunk</connection>
+		<url>http://kompics.sics.se/trac/browser/trunk</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk</developerConnection>
+	</scm>
+
+	<distributionManagement>
+		<!-- use the following if you're not using a snapshot version. -->
+		<repository>
+			<id>sics-release-repository</id>
+			<name>SICS Repository</name>
+			<url>scpexe://korsakov.sics.se/home/maven2/repository</url>
+		</repository>
+		<!-- use the following if you ARE using a snapshot version. -->
+		<snapshotRepository>
+			<id>sics-snapshot-repository</id>
+			<name>SICS Snapshot Repository</name>
+			<url>scpexe://korsakov.sics.se/home/maven2/snapshotrepository</url>
+		</snapshotRepository>
+		<site>
+			<id>kompics-site</id>
+			<url>scpexe://kompics.sics.se/var/www/kompics/report/trunk</url>
+		</site>
+		<downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
+	</distributionManagement>
 </project>
