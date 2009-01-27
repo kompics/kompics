@@ -3,11 +3,11 @@
 	<parent>
 		<groupId>se.sics.kompics</groupId>
 		<artifactId>build</artifactId>
-		<version>0.3-SNAPSHOT</version>
+		<version>0.4-SNAPSHOT</version>
 	</parent>
 	<artifactId>kompics-network</artifactId>
 	<name>Kompics Network Component</name>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<properties>
 		<symbolicName>${pom.groupId}.network</symbolicName>
@@ -49,13 +49,13 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.3-SNAPSHOT</version>
+			<version>0.4-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-timer</artifactId>
-			<version>0.3-SNAPSHOT</version>
+			<version>0.4-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
