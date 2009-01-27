@@ -1,3 +1,23 @@
+/**
+ * This file is part of the Kompics component model runtime.
+ * 
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
+ *
+ * Kompics is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package se.sics.kompics;
 
 import java.util.HashMap;
@@ -5,6 +25,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The <code>ComponentCore</code> class.
+ * 
+ * @author Cosmin Arad <cosmin@sics.se>
+ * @author Jim Dowling <jdowling@sics.se>
+ * @version $Id: ComponentCore.java 268 2008-09-28 19:18:04Z Cosmin $
+ */
 public class ComponentCore implements Component {
 
 	/* outside ports */
@@ -25,6 +53,12 @@ public class ComponentCore implements Component {
 
 	int wid;
 
+	/**
+	 * Instantiates a new component core.
+	 * 
+	 * @param componentDefinition
+	 *            the component definition
+	 */
 	public ComponentCore(ComponentDefinition componentDefinition) {
 		this.positivePorts = new HashMap<Class<? extends PortType>, PortCore<? extends PortType>>();
 		this.negativePorts = new HashMap<Class<? extends PortType>, PortCore<? extends PortType>>();
@@ -32,10 +66,16 @@ public class ComponentCore implements Component {
 		this.component = componentDefinition;
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.Component#getControl()
+	 */
 	public Positive<ControlPort> getControl() {
 		return positiveControl;
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.Component#getNegative(java.lang.Class)
+	 */
 	@SuppressWarnings("unchecked")
 	public <P extends PortType> Negative<P> getNegative(Class<P> portType) {
 		Negative<P> port = (Negative<P>) negativePorts.get(portType);
@@ -45,6 +85,9 @@ public class ComponentCore implements Component {
 		return port;
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.Component#getPositive(java.lang.Class)
+	 */
 	@SuppressWarnings("unchecked")
 	public <P extends PortType> Positive<P> getPositive(Class<P> portType) {
 		Positive<P> port = (Positive<P>) positivePorts.get(portType);
@@ -143,6 +186,12 @@ public class ComponentCore implements Component {
 
 	private SpinlockQueue<PortCore<?>> readyPorts = new SpinlockQueue<PortCore<?>>();
 
+	/**
+	 * Sets the scheduler.
+	 * 
+	 * @param scheduler
+	 *            the new scheduler
+	 */
 	public void setScheduler(Scheduler scheduler) {
 		this.scheduler = scheduler;
 	}

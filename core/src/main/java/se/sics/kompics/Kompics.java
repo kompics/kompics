@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>Kompics</code> class
+ * The <code>Kompics</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
@@ -42,11 +42,25 @@ public final class Kompics {
 
 	private static Scheduler scheduler;
 
+	/**
+	 * Creates the and start.
+	 * 
+	 * @param main
+	 *            the main
+	 */
 	public static void createAndStart(Class<? extends ComponentDefinition> main) {
 		createAndStart(main, Runtime.getRuntime().availableProcessors());
 		// createAndStart(main, 1);
 	}
 
+	/**
+	 * Creates the and start.
+	 * 
+	 * @param main
+	 *            the main
+	 * @param workers
+	 *            the workers
+	 */
 	public static void createAndStart(
 			Class<? extends ComponentDefinition> main, int workers) {
 		if (on)
@@ -78,6 +92,9 @@ public final class Kompics {
 	private Kompics() {
 	}
 
+	/**
+	 * Log stats.
+	 */
 	public static void logStats() {
 		scheduler.logStats();
 	}
