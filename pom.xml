@@ -128,7 +128,7 @@
 		</snapshotRepository>
 		<site>
 			<id>kompics-site</id>
-			<url>scpexe://kompics.sics.se/var/www/kompics/report/trunk</url>
+			<url>scpexe://korsakov.sics.se/var/www/kompics/report/trunk</url>
 		</site>
 		<downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
 	</distributionManagement>
