@@ -22,13 +22,12 @@ package se.sics.kompics;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-// TODO: Auto-generated Javadoc
 /**
  * The <code>Worker</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id: Worker.java 268 2008-09-28 19:18:04Z Cosmin $
+ * @version $Id$
  */
 public class Worker extends Thread {
 
