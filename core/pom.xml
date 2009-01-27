@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-core</artifactId>
 	<packaging>jar</packaging>
-	<version>0.4.0</version>
+	<version>0.4.1-SNAPSHOT</version>
 	<name>Kompics Core</name>
 	<url>http://kompics.sics.se</url>
 
@@ -129,9 +129,9 @@
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/tags/kompics-parent-pom-0.4.0/core</connection>
-		<url>http://kompics.sics.se/trac/browser/tags/kompics-parent-pom-0.4.0/core</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/tags/kompics-parent-pom-0.4.0/core</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/trunk/core</connection>
+		<url>http://kompics.sics.se/trac/browser/trunk/core</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/core</developerConnection>
 	</scm>
 
 	<distributionManagement>
