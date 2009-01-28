@@ -1,11 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-component-mina-network</artifactId>
 	<packaging>jar</packaging>
 	<name>MinaNetwork Kompics Component</name>
-	<version>0.4.0-SNAPSHOT</version>
+	<version>0.4.0</version>
 	<url>http://kompics.sics.se</url>
 
 	<properties>
@@ -154,9 +153,9 @@
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/trunk/component-mina-network</connection>
-		<url>http://kompics.sics.se/trac/browser/trunk/component-mina-network</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/component-mina-network</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/tags/kompics-component-mina-network-0.4.0</connection>
+		<url>http://kompics.sics.se/trac/browser/tags/kompics-component-mina-network-0.4.0</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/tags/kompics-component-mina-network-0.4.0</developerConnection>
 	</scm>
 
 	<distributionManagement>
