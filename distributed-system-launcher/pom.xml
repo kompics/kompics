@@ -1,16 +1,15 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>se.sics.kompics</groupId>
-	<artifactId>kompics-component-java-timer</artifactId>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>se.sics.kompics</groupId>
+  <artifactId>distributed-system-launcher</artifactId>
+  <name>Kompics Distributed System Launcher</name>
 	<packaging>jar</packaging>
-	<version>0.4.0-SNAPSHOT</version>
-	<name>JavaTimer Kompics Component</name>
+  <version>0.4.0-SNAPSHOT</version>
 	<url>http://kompics.sics.se</url>
 
 	<properties>
-		<symbolicName>${pom.groupId}.timer.java</symbolicName>
-		<exportedPackage>${pom.groupId}.timer.java</exportedPackage>
+		<symbolicName>${pom.groupId}.launch</symbolicName>
+		<exportedPackage>${pom.groupId}.launch</exportedPackage>
 	</properties>
 
 	<dependencies>
@@ -22,13 +21,13 @@
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-core</artifactId>
+			<artifactId>kompics-address</artifactId>
 			<version>0.4.0</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-port-timer</artifactId>
+			<artifactId>kompics-core</artifactId>
 			<version>0.4.0</version>
 			<scope>compile</scope>
 		</dependency>
@@ -142,9 +141,9 @@
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/trunk/component-java-timer</connection>
-		<url>http://kompics.sics.se/trac/browser/trunk/component-java-timer</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/component-java-timer</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/trunk/process-launcher</connection>
+		<url>http://kompics.sics.se/trac/browser/trunk/process-launcher</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/process-launcher</developerConnection>
 	</scm>
 
 	<distributionManagement>

@@ -18,6 +18,7 @@
 		<module>port-timer</module>
 		<module>component-mina-network</module>
 		<module>component-java-timer</module>
+		<module>process-launcher</module>
 	</modules>
 
 	<build>
