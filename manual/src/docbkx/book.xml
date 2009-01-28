@@ -15,7 +15,7 @@
 
     <subtitle>For Kompics &version;</subtitle>
 
-    <subtitle>(Compiled from &version;)</subtitle>
+<!--    <subtitle>(Compiled from &version;)</subtitle> -->
 
     <edition>First</edition>
     <authorgroup>
