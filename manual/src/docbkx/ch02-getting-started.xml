@@ -1,0 +1,423 @@
+<chapter id="kompics.getting-started">
+  <title>A Minimal Kompics Application</title>
+
+  <para>This chapter shows you how to build a simple Kompics Ping-Pong
+  		application. The goal of this chapter is to familiarize you with
+  		the basic steps required to build a minimal Kompics application. 
+  		We do not explain very many details of the source code here, as 
+  		these details will be introduced later chapters.</para>
+  <para>See <xref linkend="kompics.basic"/> for a basic introduction to
+  		Kompics.</para>
+
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+
+  <sect1 id="kompics.getting-started.ping">
+    <title>Ping (Example 1)</title>
+
+	  <para>In this first example, see <xref linkend="kompics.getting-started.ping-fig"/>,
+	  		a <literal>Root</literal> component will send a 
+	  		<firstterm>ping</firstterm> message to a <literal>Host</literal> 
+	  		component. <literal>Root</literal> contains the 
+	  		<literal> public void static main</literal> , where a   
+	  		component that sends a <literal>Ping</literal> event to the 
+	  		<literal>Host</literal> component. <literal>Host</literal> has 
+	  		registered a handler, <literal>handlePing</literal>, with its
+	  		<literal>PingPort</literal> PortType, so when the <literal>Ping</literal>
+	  		event arrives at <literal>PingPort</literal> it is forwarded to
+	  		<literal>handlePing</literal>. Finally, <literal>handlePing</literal>
+	  		prints a message saying received the <literal>Ping</literal> event.</para> 
+
+	<note>
+	<para>It helps immensely to draw a diagram of your components and their ports along 
+		  with the ports' polarity. In particular, a diagram will aid you in understanding the
+		  polarity of the port based on your context. For example, when you are a client of
+		  a Port you have a reference to the Port the opposite polarity. </para>
+		  <para>Also, you should keep in mind the <xref linkend="kompics.basic.INPUT">
+		  <emphasis>INPUt Idiom</emphasis></xref> (Implements Negative, Positive Uses).</para>		  
+	</note>
+	
+
+	<para>
+     <figure id="kompics.getting-started.ping-fig">
+      <title>Ping component inside a Root component.</title>
+      <graphic fileref="images/ch02-ping-component.png"/>
+    </figure>
+	</para>
+
+	<sect2>
+		<title>Ping Event</title>	
+		<programlisting language="java">
+		package sandbox.manual.example1;
+		import sandbox.se.sics.kompics.Event;
+		
+		public class Ping extends Event {
+			public Ping()
+			{the 
+			}
+		}	
+		</programlisting>	
+	</sect2>
+
+	<sect2>
+		<title>PingPort Port</title>	
+	
+		<programlisting language="java">
+		package sandbox.manual.example1;	
+		import sandbox.se.sics.kompics.PortType;
+		
+		public class PingPort extends PortType {
+		
+			{
+				negative(Ping.class);
+			}
+		}
+		</programlisting>		
+	</sect2>
+	
+	<sect2 id="kompics.basic.example1">
+		<title>Root Component</title>	
+		<para>An alternative (and more common) way of starting this
+		program is to write a <literal>startHandler</literal> for
+		<literal>Root</literal>. When a <literal>Root</literal> component
+		is constructed, its <literal>startHandler</literal> is automatically
+		called.</para> 
+		<programlisting language="java">
+		package sandbox.manual.example1;
+		import sandbox.se.sics.kompics.Component;
+		import sandbox.se.sics.kompics.ComponentDefinition;
+		import sandbox.se.sics.kompics.Handler;
+		import sandbox.se.sics.kompics.Kompics;
+		import sandbox.se.sics.kompics.Start;
+		
+		public class Root extends ComponentDefinition {
+		
+			public static void  main(String[] args)
+			{
+				Kompics.createAndStart(RootComponentStart.class);
+			}
+			public Root() {
+				subscribe(handleStart,control);
+			}
+		
+			private Handler&lt;Start&gt; handleStart = new Handler&lt;Start&gt;() {
+				public void handle(Start event) {
+					Component hostComponent = create(Host.class);
+					trigger(new Ping(), hostComponent.getPositive(PingPort.class));
+				}
+			};
+		}
+		</programlisting>	
+	</sect2>
+
+	<sect2>
+		<title>Host Component</title>	
+		<programlisting language="java">
+		package sandbox.manual.example1;
+		import sandbox.se.sics.kompics.ComponentDefinition;
+		import sandbox.se.sics.kompics.Handler;
+		import sandbox.se.sics.kompics.Negative;
+		
+		public class Host extends ComponentDefinition {
+		
+			Negative&lt;PingPort&gt; pingN = negative(PingPort.class);
+			
+			public Host() {
+				subscribe(handlePing, pingN);
+			}
+		
+			private Handler&lt;Ping&gt; handlePing = new Handler&lt;Ping&gt;() {
+				public void handle(Ping event) {
+					System.out.println("Received ping..");
+				}
+			};
+		}	
+		</programlisting>	
+	</sect2>
+
+  </sect1>
+
+  <sect1 id="kompics.basic.example2">
+      <title>Ping-Pong with 2 Ports (Example 2a)</title>
+
+	  <para>In this example, a Root component will exchange 
+	  		<firstterm>ping</firstterm> and <firstterm>pong</firstterm> 
+	  		messages with a Host component. The <literal>Root</literal> 
+	  		component sends a <literal>Ping</literal> event to the 
+	  		<literal>Host</literal> component. <literal>Host</literal> has 
+	  		registered a handler, <literal>handlePing</literal>, with its
+	  		<literal>PingPort</literal> PortType, so when the <literal>Ping</literal>
+	  		event arrives at <literal>PingPort</literal> it is forwarded to
+	  		<literal>handlePing</literal>. <literal>handlePing</literal> sends a
+	  		<literal>Pong</literal> event to its PongPort, which is forwarded to
+	  		handlePong in Root.</para> 
+    		<para>In the examples directory for this manual, you will find a reworking of this example (Example 2b),
+  			where we reverse the event directions for the pong port in <literal>PongPortReversed</literal>.
+  			</para>
+  
+  	<para>
+     <figure id="kompics.getting-started.pingpong-two-ports">
+      <title>Ping-Pong component with two Ports inside a Root component.</title>
+      <graphic fileref="images/ch02-ping-pong-two-ports.png"/>
+    </figure>
+	</para>
+
+   	<sect2>
+		<title>Pong Event</title>
+		<programlisting language="java">
+			package sandbox.manual.example2a;
+			import sandbox.se.sics.kompics.Event;
+			
+			public class Pong extends Event {
+				public Pong()
+				{
+				}
+			}
+		</programlisting>
+	</sect2>
+  		
+	<sect2>
+		<title>PongPort</title>
+		<programlisting language="java">
+			package sandbox.manual.example2a;
+			
+			import sandbox.se.sics.kompics.PortType;
+			
+			public class PongPort extends PortType {
+			
+				{
+					positive(Pong.class);
+				}
+			}
+		</programlisting>
+	</sect2>
+  
+  	<sect2 id="kompics.basic.example2">
+		<title>Root Component</title>
+		<programlisting language="java">
+		package sandbox.manual.example2a;
+
+		import sandbox.manual.example1.Ping;
+		import sandbox.manual.example1.PingPort;
+		import sandbox.se.sics.kompics.Component;
+		import sandbox.se.sics.kompics.ComponentDefinition;
+		import sandbox.se.sics.kompics.Handler;
+		import sandbox.se.sics.kompics.Kompics;
+		import sandbox.se.sics.kompics.Start;
+		
+		public class Root extends ComponentDefinition {
+		
+			public static void  main(String[] args)
+			{
+				Kompics.createAndStart(Root.class);
+			}
+			public Root() {
+				subscribe(handleStart,control);
+			}
+			
+			private Handler&lt;Start&gt; handleStart = new Handler&lt;Start&gt;() {
+				public void handle(Start event) {
+					Component hostComponent = create(Host.class);
+					subscribe(handlePong, hostComponent.getPositive(PongPort.class));
+					trigger(new Ping(), hostComponent.getPositive(PingPort.class));
+				}
+			};
+		
+			private Handler&lt;Pong&gt; handlePong = new Handler&lt;Pong&gt;() {
+				public void handle(Pong event) {
+					System.out.println("Pong received.");
+				}
+			};
+		}
+		</programlisting>
+  	</sect2>
+  
+	<sect2>
+		<title>Host Component</title>
+		<programlisting language="java">
+  			package sandbox.manual.example2a;
+
+			import sandbox.manual.example1.Ping;
+			import sandbox.manual.example1.PingPort;
+			import sandbox.se.sics.kompics.ComponentDefinition;
+			import sandbox.se.sics.kompics.Handler;
+			import sandbox.se.sics.kompics.Negative;
+			
+			public class Host extends ComponentDefinition {
+			
+				Negative&lt;PingPort&gt; negPing = negative(PingPort.class);
+				Negative&lt;PongPort&gt; negPong = negative(PongPort.class);
+				
+				public Host() {
+					subscribe(handlePing, negPing);
+				}
+			
+				private Handler&lt;Ping&gt; handlePing = new Handler&lt;Ping&gt;() {
+					public void handle(Ping event) {
+						System.out.println("Received ping, sending Pong..");
+						trigger(new Pong(), negPong);
+					}
+				};	
+			}
+		</programlisting>
+	</sect2>
+	</sect1>
+	
+	<sect1 id="kompics.basic.example3">
+    <title>Ping-Pong with a Single Port (Example 3a)</title>
+	  	<para>We now refactor <xref linkend="kompics.basic.example2"/> so that <literal>Host</literal>
+	  	only has a single <literal>PingPong Port</literal>, instead of two ports. This example
+	  	demonstrates the concept of "two-way event interfaces" (where events flow in and come out of 
+	  	a component). 
+	  	</para>
+  		<para>In the examples directory for this manual, you will find a reworking of this example (Example 3b),
+  		where we reverse the event directions in a port called <literal>PingPongPortReversed</literal>.
+  		</para>
+  	<para>
+     <figure id="kompics.getting-started.pingpong-one-port">
+      <title>Ping-Pong component with one Port inside a Root component.</title>
+      <graphic fileref="images/ch02-ping-pong-one-port.png"/>
+    </figure>
+	</para>
+
+
+	<sect2>
+		<title>PingPongPort</title>
+		<programlisting language="java">
+			package sandbox.manual.example3a;
+			
+			import sandbox.manual.example1.Ping;
+			import sandbox.manual.example2a.Pong;
+			import sandbox.se.sics.kompics.PortType;
+			
+			public class PingPongPort extends PortType {
+			
+				{
+					negative(Ping.class);
+					positive(Pong.class);
+				}
+			}
+		</programlisting>
+	</sect2>
+
+
+  	<sect2>
+		<title>Root Component</title>
+		<programlisting language="java">
+			package sandbox.manual.example3a;
+			
+			import sandbox.manual.example1.Ping;
+			import sandbox.manual.example2a.Pong;
+			import sandbox.se.sics.kompics.Component;
+			import sandbox.se.sics.kompics.ComponentDefinition;
+			import sandbox.se.sics.kompics.Handler;
+			import sandbox.se.sics.kompics.Kompics;
+			import sandbox.se.sics.kompics.Start;
+			
+			public class Root extends ComponentDefinition {
+			
+				private Component hostComponent;
+				
+				public static void  main(String[] args)
+				{
+					Kompics.createAndStart(Root.class);
+				}
+				public Root() {
+					hostComponent = create(Host.class);
+					subscribe(handleStart,control);
+					subscribe(handlePong, hostComponent.getPositive(PingPongPort.class));
+				}
+			
+				private Handler&lt;Start&gt; handleStart = new Handler&lt;Start&gt;() {
+					public void handle(Start event) {
+						trigger(new Ping(), hostComponent.getPositive(PingPongPort.class));		}
+				};
+			
+				private Handler&lt;Pong&gt; handlePong = new Handler&lt;Pong&gt;() {
+					public void handle(Pong event) {
+						System.out.println("Pong received.");
+					}
+				};
+			}
+		</programlisting>
+	</sect2>
+
+	<sect2>
+		<title>Host Component</title>
+		<programlisting language="java">
+			package sandbox.manual.example3a;
+			
+			import sandbox.manual.example1.Ping;
+			import sandbox.manual.example2a.Pong;
+			import sandbox.se.sics.kompics.ComponentDefinition;
+			import sandbox.se.sics.kompics.Handler;
+			import sandbox.se.sics.kompics.Negative;
+			
+			public class Host extends ComponentDefinition {
+			
+				Negative&lt;PingPongPort&gt; negPingPong = negative(PingPongPort.class);
+				
+				public Host() {
+					subscribe(handlePing, negPingPong);
+				}
+			
+				private Handler&lt;Ping&gt; handlePing = new Handler&lt;Ping&gt;() {
+					public void handle(Ping event) {
+						System.out.println("Received ping, sending Pong..");
+						trigger(new Pong(), negPingPong);
+					}
+				};	
+			}
+		</programlisting>
+	</sect2>
+		
+  </sect1>
+
+	<sect1>
+    <title>Ping-Pong with a HostPing and a HostPong component (Example 4)</title>
+
+	<para>The diagram in <xref linkend="kompics.getting-started.pingpong-two-components-two-ports"/>
+	shows the same Ping-Pong example factored as two different components, <literal>HostPing</literal> 
+	and <literal>HostPong</literal>. The application starts by <literal>Root</literal> sending a
+	start event to <literal>HostPong</literal>, which then sends a <literal>Ping</literal> event
+	to  <literal>HostPing</literal>, which then replies to <literal>HostPong</literal> with a 
+	<literal>Pong</literal> event.</para>
+	<para>In the code fragment below, we connect the <emphasis>positive side</emphasis> of
+		<literal>PingPort</literal> on <literal>pingHost</literal> to the <emphasis>negative side
+		</emphasis> of <literal>PingPort</literal> on <literal>pongHost</literal>, which returns a 
+		<firstterm>Channel</firstterm> object <literal>x1</literal>.</para>
+	
+	<para>The code for this example can be found in the examples directory for this manual.</para>
+	
+	<programlisting language="java" id="kompics.getting-started.connecting-ports">
+		Positive&lt;PingPort&gt; pingPosPort = pingHost.getPositive(PingPort.class);
+		Negative&lt;PingPort&gt; pingNegPort = pongHost.getNegative(PingPort.class);
+		Channel&lt;PingPort&gt; x1 = connect(pingNegPort, pingPosPort);
+	</programlisting>
+		
+  	<para>
+     <figure id="kompics.getting-started.pingpong-two-components-two-ports">
+      <title>A PingComponent and a PongComponent with two Ports each, inside a parent Root component.</title>
+      <graphic fileref="images/ch02-ping-pong-two-components-two-ports.png"/>
+    </figure>
+	</para>
+	
+<!-- 	
+	<sect2>
+		<title>Root Component</title>
+		<programlisting language="java">
+		</programlisting>
+	</sect2>
+-->
+		
+	</sect1>
+
+
+</chapter>
+
+<!--
+local variables:
+sgml-parent-document: ("book.xml" "chapter")
+end:
+-->

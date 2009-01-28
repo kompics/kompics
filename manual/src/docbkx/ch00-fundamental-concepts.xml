@@ -1,0 +1,172 @@
+<chapter id="kompics.basic">
+  <title>Fundamental Concepts</title>
+
+  <para>This chapter is a brief informal introduction to Kompics.
+	We begin with a discussion of the main concepts in Kompics,
+	then describe how to download and install Kompics,
+	and finally cover the build environment, based on Maven2.
+	</para>
+
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+  <sect1 id="kompics.basic.concepts">
+    <title>Kompics: Components, Events, Ports and Channels</title>
+
+ 	<para>
+    A component is a reactive unit of computation that communicates with other
+	components asynchronously by passing data-carrying typed events. Events are
+	passive immutable objects that can be serialized and communicated over network
+	links and between different address spaces.
+	</para>
+	
+	<para>
+	Components are loosely coupled in the sense that a component does not
+	know the component type, availability or identity of any components with which
+	it communicates. Rather, components are endowed with typed communication
+	ports. A component sends events to and receives events from a local port. Ports
+	of the same type on two different components can be connected by a bidirectional
+	channel. This connection enables the two components to communicate.
+	</para>
+	
+	<para>
+	As a reaction to received events, components execute event handlers, procedures
+	specific to the types of events being received. During execution, event handlers
+	may trigger new events, by sending them to one of the component's ports.
+	An event handler is associated with events of a certain type, received though a
+	certain port, by means of a subscription.
+	</para>
+	
+	<para>
+          <table id="kompics.concepts.tbl-1">
+          <title>Kompics Programming Abstractions</title>
+          <tgroup cols="2">
+            <thead>
+              <row>
+                <entry>Entity</entry>
+                <entry>Description</entry>                
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry><emphasis>Component</emphasis></entry>
+                <entry><para>A <firstterm>component</firstterm> is a reactive unit of computation 
+                that communicates with other components asynchronously by passing 
+                data-carrying typed events over ports. Components contain handlers to execute
+                received events, and components can be composed into <firstterm>composite 
+                components</firstterm>.</para></entry>
+              </row>
+              <row>
+                <entry><emphasis>Event</emphasis></entry>
+                <entry><para>An <firstterm>event</firstterm> is a passive immutable object that 
+                can be serialized and communicated over network links and between different
+                address spaces.</para></entry>
+              </row>
+              <row>
+                <entry><emphasis>Port</emphasis></entry>
+                <entry><para>A port represents a bidirectional event interface of a component and it
+				specifies the types of events that flow into or out of the component. The direction
+				in which an event flows through a port is defined as either <firstterm>positive</firstterm>
+				or <firstterm>negative</firstterm>. A negative event type flows towards the negative side
+				of the port, while a positive event type flows towards teh positive side of the port.
+				 A port is illustrated in <xref linkend="kompics.basic.port"/>.
+				</para>
+				 
+    			<para>
+				By convention, the positive pole (+) of a port is understood to be the provided
+				direction for events, while the negative pole (−) of a port is understood to
+				be the required direction for events. When a component provides a port, the
+				port is oriented with its + pole to the outside of the component and its − pole inside. 
+				Conversely, a required port is oriented with its − pole outside
+				and its + pole inside. The types of events flowing through the port from the
+				− pole to the + pole are tagged with + and the types of events flowing from
+				the + pole to the − pole are tagged with −.
+				 </para>
+				 </entry>
+              </row>
+              <row>
+                <entry><emphasis>Event Handler</emphasis></entry>
+                <entry><para>An event handler is a procedure that a component executes as a reaction 
+                to receiving a certain event.</para></entry>
+              </row>
+              <row>
+                <entry><emphasis>Subscription</emphasis></entry>
+                <entry><para>A subscription binds an event handler to a port pole.</para></entry>
+              </row>
+              <row>
+                <entry><emphasis>Channel</emphasis></entry>
+                <entry><para>A channel is a first-class bidirectional connection between two ports
+                of the same type. A channel can connect two ports of the same type and of
+                different polarity.</para></entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>	
+    </para>
+    
+      <para> In <xref linkend="kompics.basic.fig-port"/>, we can see two Ports containing 2 events and 
+      3 events, respectively. For <literal>PortType1</literal>, <literal>e1</literal> both goes "out"
+      and comes "in". For <literal>PortType2</literal>, <literal>e2</literal> goes "out", while 
+      <literal>e2</literal> and <literal>e3</literal> come "in".
+      </para>
+    
+     <figure id="kompics.basic.fig-port">
+      <title>Example port.</title>
+      <graphic fileref="images/ch00-port.png"/>
+    </figure>
+
+
+	<para>A component with two ports (one outgoing, one incoming), two handlers and two subscriptions 
+	is illustrated in <xref linkend="kompics.basic.component"/>. The ports in this component are from
+	<xref linkend="kompics.basic.port"/>. <literal>PortType1</literal> is provided by the component 
+	and	<literal>PortType2</literal> is required by the component. We can see how the 
+	<literal>subscriptions</literal> map events from <literal>Ports</literal> to <literal>
+	handlers</literal>, while handlers can trigger (or send) an <literal>event</literal> to a port
+	(if the polarity of that port allows that event to be sent in that direction).</para>
+	<para>So, we can see for <literal>PortType1</literal>, the event <literal>E1</literal> can
+	be both sent and received over this port. For <literal>PortType2</literal>, we can see that
+	a handler inside the component can send either <literal>E2</literal> or <literal>E3</literal>
+	to the port and handler inside the component can subscribe for <literal>E2</literal> (but not 
+	<literal>E3</literal>). For handlers or components outside this component (handlers would
+	have to be in a parent component), they can send and receive events of the opposite type. So,
+	for <literal>PortType2</literal>, they could subscribe for <literal>E2</literal> or 
+	<literal>E3</literal> events, and send <literal>E2</literal> events to the component.
+	</para>
+	<para>
+     <figure id="kompics.basic.fig-component">
+      <title>Example component.</title>
+      <graphic fileref="images/ch00-component.png"/>
+    </figure>
+	</para>
+  </sect1>
+
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+
+   <sidebar id="kompics.basic.INPUT">
+     <title>INPUt (Implements Negative, Positive Uses)</title>
+     <para>An easy way to remember whether a PortType refers to the client-side
+     or server-side is to remember the idiom <emphasis>INPUt</emphasis>
+     (Implements Negative, Positive Uses). INPUt reminds you that a negative 
+     PortType is one that is provided or implemented by a component (server-side),
+     while a positive PortType is one that is used by a component (client-side).
+     </para>
+   </sidebar>
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+      
+  <sect2 id="kompics.basic.summary">
+    <title>Summary</title>
+    <para>We introduced a number of concepts for Kompics, and outlined the
+    software requirements for downloading and installing Kompics.</para>
+  </sect2>
+
+</chapter>
+
+<!--
+local variables: 
+sgml-parent-document: ("book.xml" "chapter")
+end:
+-->

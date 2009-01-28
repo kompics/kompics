@@ -1,0 +1,57 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>se.sics.kompics</groupId>
+	<artifactId>kompics-manual</artifactId>
+	<name>Kompics Manual</name>
+	<version>0.4.0-SNAPSHOT</version>
+	<description>Kompics Manual</description>
+		<build>
+		<plugins>
+			<plugin>
+		        <groupId>com.agilejava.docbkx</groupId>
+		        <artifactId>docbkx-maven-plugin</artifactId>
+		        <executions>
+		          <execution>
+		            <goals>
+		              <goal>generate-html</goal>
+		              <goal>generate-pdf</goal>
+		            </goals>
+		            <phase>pre-site</phase>
+		          </execution>
+		        </executions>
+		        <dependencies>
+		          <dependency>
+		            <groupId>org.docbook</groupId>
+		            <artifactId>docbook-xml</artifactId>
+		            <version>4.4</version>
+		            <scope>compile</scope>
+		          </dependency>
+		        </dependencies>
+		        <configuration>
+		          <includes>*.xml</includes>
+		          <!--
+				  <foCustomization>../tools/fo-stylesheet.xsl</foCustomization>
+		       	  <makeValidHtml>true</makeValidHtml>
+				  <targetFileExtension>html</targetFileExtension>
+				  <targetsFileName>index.html</targetsFileName>
+				  -->
+				  <generateSectionTocLevel>0</generateSectionTocLevel>
+				  <chunkToc>0</chunkToc>
+				  <chunkTocsAndLots>0</chunkTocsAndLots>
+				  <targetDirectory>src/docbkx/manual</targetDirectory>
+				  <htmlStylesheet>styles.css</htmlStylesheet>
+		          <chunkedOutput>false</chunkedOutput>
+		          <highlightSource>true</highlightSource>
+				  <xincludeSupported>true</xincludeSupported>
+		          <entities>
+		            <entity>
+		              <name>version</name>
+		              <value>${version}</value>
+		            </entity>
+		          </entities>
+		       </configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

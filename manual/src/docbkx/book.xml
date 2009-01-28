@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE book SYSTEM "../tools/dtd/docbook-4.4/docbookx.dtd"
+[
+%vers;
+<!ENTITY ch00     SYSTEM "ch00-fundamental-concepts.xml">
+<!ENTITY ch01     SYSTEM "ch01-installing-kompics.xml">
+<!ENTITY ch02     SYSTEM "ch02-getting-started.xml">
+]>
+
+<book id="kompics">
+  <title>Kompics Programming Manual</title>
+
+  <bookinfo>
+
+    <subtitle>For Kompics &version;</subtitle>
+
+    <subtitle>(Compiled from &version;)</subtitle>
+
+    <edition>First</edition>
+    <authorgroup>
+      <author>
+        <firstname>Jim</firstname>
+        <surname>Dowling</surname>
+      </author>
+      <author>
+        <firstname>Cosmin</firstname>
+        <surname>Arad</surname>
+      </author>
+    </authorgroup>
+
+    <editor>
+      <firstname>Jim</firstname>
+      <surname>Dowling</surname>
+    </editor>
+
+    <pagenums>33 pages (est.)</pagenums>
+
+     <copyright>
+      <year>2009</year>
+      <holder>Swedish Institute of Computer Science and Kunliga Tekniska Högskola</holder>
+    </copyright>
+    <legalnotice><para>This work is licensed under the Creative
+      Commons Attribution License.  To view a copy of this license,
+      visit <ulink url="http://creativecommons.org/licenses/by/2.0/"/>
+      or send a letter to Creative Commons, 559 Nathan Abbott Way,
+      Stanford, California 94305, USA.</para></legalnotice>
+
+  </bookinfo>
+
+  <!-- External entity refs -->
+  &ch00;
+  &ch01;
+  &ch02;
+
+</book>
