@@ -15,6 +15,7 @@
 		<module>core</module>
 		<module>address</module>
 		<module>port-network</module>
+		<module>port-timer</module>
 	</modules>
 
 	<build>
