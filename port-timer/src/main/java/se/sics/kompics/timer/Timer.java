@@ -27,7 +27,7 @@ import se.sics.kompics.PortType;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id: Timer.java 268 2008-09-28 19:18:04Z Cosmin $
+ * @version $Id$
  */
 public final class Timer extends PortType {
 	{
