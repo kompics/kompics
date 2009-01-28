@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-port-network</artifactId>
 	<packaging>jar</packaging>
-	<version>0.4.0</version>
+	<version>0.4.1-SNAPSHOT</version>
 	<name>Kompics Network PortType</name>
 	<url>http://kompics.sics.se</url>
 
@@ -123,9 +123,9 @@
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/tags/kompics-port-network-0.4.0</connection>
-		<url>http://kompics.sics.se/trac/browser/tags/kompics-port-network-0.4.0</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/tags/kompics-port-network-0.4.0</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/trunk/port-network</connection>
+		<url>http://kompics.sics.se/trac/browser/trunk/port-network</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/port-network</developerConnection>
 	</scm>
 
 	<distributionManagement>
