@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
-	<artifactId>port-timer</artifactId>
+	<artifactId>kompics-port-timer</artifactId>
 	<packaging>jar</packaging>
 	<version>0.4.0-SNAPSHOT</version>
 	<name>Kompics Timer PortType</name>
