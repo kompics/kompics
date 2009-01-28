@@ -16,6 +16,7 @@
 		<module>address</module>
 		<module>port-network</module>
 		<module>port-timer</module>
+		<module>component-mina-network</module>
 	</modules>
 
 	<build>
