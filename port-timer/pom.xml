@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-port-timer</artifactId>
 	<packaging>jar</packaging>
-	<version>0.4.0</version>
+	<version>0.4.1-SNAPSHOT</version>
 	<name>Kompics Timer PortType</name>
 	<url>http://kompics.sics.se</url>
 
@@ -117,9 +117,9 @@
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/tags/kompics-port-timer-0.4.0</connection>
-		<url>http://kompics.sics.se/trac/browser/tags/kompics-port-timer-0.4.0</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/tags/kompics-port-timer-0.4.0</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/trunk/port-timer</connection>
+		<url>http://kompics.sics.se/trac/browser/trunk/port-timer</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/port-timer</developerConnection>
 	</scm>
 
 	<distributionManagement>
