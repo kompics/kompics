@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-manual</artifactId>
 	<name>Kompics Manual</name>
-	<version>0.4.0</version>
+	<version>0.4.1-SNAPSHOT</version>
 	<description>Kompics Manual</description>
 	<packaging>jar</packaging>
 
@@ -205,9 +205,9 @@
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/tags/kompics-manual-0.4.0</connection>
-		<url>http://kompics.sics.se/trac/browser/tags/kompics-manual-0.4.0</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/tags/kompics-manual-0.4.0</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/trunk/component-java-timer</connection>
+		<url>http://kompics.sics.se/trac/browser/trunk/component-java-timer</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/component-java-timer</developerConnection>
 	</scm>
 
 	<distributionManagement>
