@@ -4,7 +4,7 @@
 	<artifactId>kompics-component-mina-network</artifactId>
 	<packaging>jar</packaging>
 	<name>MinaNetwork Kompics Component</name>
-	<version>0.4.0</version>
+	<version>0.4.1-SNAPSHOT</version>
 	<url>http://kompics.sics.se</url>
 
 	<properties>
@@ -153,9 +153,9 @@
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/tags/kompics-component-mina-network-0.4.0</connection>
-		<url>http://kompics.sics.se/trac/browser/tags/kompics-component-mina-network-0.4.0</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/tags/kompics-component-mina-network-0.4.0</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/trunk/component-mina-network</connection>
+		<url>http://kompics.sics.se/trac/browser/trunk/component-mina-network</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/component-mina-network</developerConnection>
 	</scm>
 
 	<distributionManagement>
