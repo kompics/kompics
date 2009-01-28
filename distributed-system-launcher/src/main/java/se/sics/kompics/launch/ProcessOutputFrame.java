@@ -50,7 +50,7 @@ import javax.swing.KeyStroke;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id: ProcessOutputFrame.java 268 2008-09-28 19:18:04Z Cosmin $
+ * @version $Id$
  */
 @SuppressWarnings("serial")
 public class ProcessOutputFrame extends JFrame {
