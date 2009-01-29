@@ -50,7 +50,6 @@ public final class Kompics {
 	 */
 	public static void createAndStart(Class<? extends ComponentDefinition> main) {
 		createAndStart(main, Runtime.getRuntime().availableProcessors());
-		// createAndStart(main, 1);
 	}
 
 	/**

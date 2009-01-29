@@ -87,6 +87,8 @@ public class Worker extends Thread {
 					sleepCount++;
 					scheduler.waitForWork(this);
 				}
+			} else {
+				workCount.decrementAndGet();
 			}
 		} while (core == null);
 

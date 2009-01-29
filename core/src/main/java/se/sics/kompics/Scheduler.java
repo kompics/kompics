@@ -94,8 +94,10 @@ public final class Scheduler {
 
 	final ComponentCore stealWork(int wid) {
 		ComponentCore core = null;
-		int wmax = wid, max = 0;
+		int wmax, max;
 		do {
+			max = 0;
+			wmax = wid;
 			for (int i = 0; i < workers.length; i++) {
 				if (i != wid) {
 					int wc = workers[i].getWorkCount();
