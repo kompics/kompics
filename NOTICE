@@ -1,4 +1,4 @@
-Kompics Component Model
+Kompics - Reactive Component Model for Distributed Computing
 
 Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
 Copyright (C) 2009 Royal Institute of Technology (KTH)
@@ -12,3 +12,10 @@ copyright by SLF4J.ORG and QOS.ch. The original software is
 available from
 
    http://www.slf4j.org/
+
+Message logging is also provided by the LOG4J library package,
+which is open source software, developed at The Apache Software Foundation
+(http://www.apache.org/). The original software is available from
+
+   http://logging.apache.org/log4j/1.2/
+   
