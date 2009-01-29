@@ -1,21 +1,28 @@
-<?xml version="1.0"?>
-
-<!DOCTYPE book SYSTEM "../tools/dtd/docbook-4.4/docbookx.dtd"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book SYSTEM "docbook-4.4/docbookx.dtd"
 [
 %vers;
 <!ENTITY ch00     SYSTEM "ch00-fundamental-concepts.xml">
 <!ENTITY ch01     SYSTEM "ch01-installing-kompics.xml">
 <!ENTITY ch02     SYSTEM "ch02-getting-started.xml">
-]>
+<!ENTITY license  SYSTEM "copyright.xml">
+]
+>
 
-<book id="kompics">
+<!--
+PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" 
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" 
+SYSTEM "http://docbook.org/xml/4.4/docbookx.dtd" "docbook-4.4/docbookx.dtd"
+SYSTEM "http://docbook.org/xml/4.4/docbookx.dtd" docbook-4.4/docbookx.dtd
+
+ -->
+
+<book>
   <title>Kompics Programming Manual</title>
 
   <bookinfo>
 
-    <subtitle>For Kompics &version;</subtitle>
-
-<!--    <subtitle>(Compiled from &version;)</subtitle> -->
+    <subtitle>For Kompics </subtitle>
 
     <edition>First</edition>
     <authorgroup>
@@ -48,9 +55,9 @@
 
   </bookinfo>
 
-  <!-- External entity refs -->
+
   &ch00;
   &ch01;
   &ch02;
-
+  &license;
 </book>

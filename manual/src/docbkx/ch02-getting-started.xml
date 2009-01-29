@@ -6,7 +6,7 @@
   		the basic steps required to build a minimal Kompics application. 
   		We do not explain very many details of the source code here, as 
   		these details will be introduced later chapters.</para>
-  <para>See <xref linkend="kompics.basic"/> for a basic introduction to
+  <para>See <xref linkend="kompics.concepts"/> for a basic introduction to
   		Kompics.</para>
 
   <!-- ================================================================= -->
@@ -34,7 +34,7 @@
 		  with the ports' polarity. In particular, a diagram will aid you in understanding the
 		  polarity of the port based on your context. For example, when you are a client of
 		  a Port you have a reference to the Port the opposite polarity. </para>
-		  <para>Also, you should keep in mind the <xref linkend="kompics.basic.INPUT">
+		  <para>Also, you should keep in mind the <xref linkend="kompics.concepts.INPUT">
 		  <emphasis>INPUt Idiom</emphasis></xref> (Implements Negative, Positive Uses).</para>		  
 	</note>
 	
@@ -76,7 +76,7 @@
 		</programlisting>		
 	</sect2>
 	
-	<sect2 id="kompics.basic.example1">
+	<sect2 id="kompics.getting-started.example1">
 		<title>Root Component</title>	
 		<para>An alternative (and more common) way of starting this
 		program is to write a <literal>startHandler</literal> for
@@ -138,7 +138,7 @@
 
   </sect1>
 
-  <sect1 id="kompics.basic.example2">
+  <sect1 id="kompics.getting-started.example2">
       <title>Ping-Pong with 2 Ports (Example 2a)</title>
 
 	  <para>In this example, a Root component will exchange 
@@ -193,7 +193,7 @@
 		</programlisting>
 	</sect2>
   
-  	<sect2 id="kompics.basic.example2">
+  	<sect2>
 		<title>Root Component</title>
 		<programlisting language="java">
 		package sandbox.manual.example2a;
@@ -264,9 +264,9 @@
 	</sect2>
 	</sect1>
 	
-	<sect1 id="kompics.basic.example3">
+	<sect1 id="kompics.getting-started.example3">
     <title>Ping-Pong with a Single Port (Example 3a)</title>
-	  	<para>We now refactor <xref linkend="kompics.basic.example2"/> so that <literal>Host</literal>
+	  	<para>We now refactor <xref linkend="kompics.getting-started.example2"/> so that <literal>Host</literal>
 	  	only has a single <literal>PingPong Port</literal>, instead of two ports. This example
 	  	demonstrates the concept of "two-way event interfaces" (where events flow in and come out of 
 	  	a component). 
