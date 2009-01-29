@@ -1,0 +1,135 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>se.sics.kompics</groupId>
+	<artifactId>p2p-framework</artifactId>
+	<packaging>pom</packaging>
+	<name>Kompics P2P Framework</name>
+	<version>0.4.0-SNAPSHOT</version>
+	<description>Kompics P2P Framework</description>
+	<url>http://kompics.sics.se</url>
+
+	<!--
+		These are the Kompics subprojects. Copy the POM entries below into
+		each of their POMs to avoid a fake dependency on the parent POM.
+	-->
+	<modules>
+	</modules>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<source>1.6</source>
+					<target>1.6</target>
+					<debug>true</debug>
+					<optimize>true</optimize>
+					<showDeprecations>true</showDeprecations>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+					<breakiterator>true</breakiterator>
+					<charset>UTF-8</charset>
+					<docencoding>UTF-8</docencoding>
+					<windowtitle>
+						Kompics ${project.version} API Documentation
+                    </windowtitle>
+					<doctitle>
+						Kompics ${project.version} API Documentation
+                    </doctitle>
+					<encoding>UTF-8</encoding>
+					<links>
+						<link>http://java.sun.com/javase/6/docs/api/</link>
+						<link>http://www.slf4j.org/api/</link>
+					</links>
+					<locale>en_US</locale>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+					<linkJavadoc>true</linkJavadoc>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<configuration>
+					<linkXref>true</linkXref>
+					<sourceEncoding>utf-8</sourceEncoding>
+					<minimumTokens>100</minimumTokens>
+					<targetJdk>1.6</targetJdk>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
+
+	<repositories>
+		<repository>
+			<id>sics-release</id>
+			<name>SICS Repository</name>
+			<url>http://kompics.sics.se/maven/repository</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>sics-snapshot</id>
+			<name>SICS Snapshot Repository</name>
+			<url>http://kompics.sics.se/maven/snapshotrepository</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<scm>
+		<connection>scm:svn:svn://small.sics.se/kompics/trunk/p2p-framework</connection>
+		<url>http://kompics.sics.se/trac/browser/trunk/p2p-framework</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/p2p-framework</developerConnection>
+	</scm>
+
+	<distributionManagement>
+		<!-- use the following if you're not using a snapshot version. -->
+		<repository>
+			<id>sics-release-repository</id>
+			<name>SICS Repository</name>
+			<url>scpexe://korsakov.sics.se/home/maven2/repository</url>
+		</repository>
+		<!-- use the following if you ARE using a snapshot version. -->
+		<snapshotRepository>
+			<id>sics-snapshot-repository</id>
+			<name>SICS Snapshot Repository</name>
+			<url>scpexe://korsakov.sics.se/home/maven2/snapshotrepository</url>
+		</snapshotRepository>
+		<site>
+			<id>kompics-site</id>
+            <url>scpexe://korsakov.sics.se/var/www/kompics/report/${project.artifactId}/${project.version}</url>
+		</site>
+		<downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
+	</distributionManagement>
+</project>
