@@ -1,0 +1,14 @@
+Kompics Component Model
+
+Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
+Copyright (C) 2009 Royal Institute of Technology (KTH)
+
+Please refer to each LICENSE.<component> file for the
+license terms of the libraries that Kompics depends on.
+
+Message logging is provided by the SLF4J library package,
+which is open source software, written by Ceki Gülcü, and
+copyright by SLF4J.ORG and QOS.ch. The original software is
+available from
+
+   http://www.slf4j.org/
