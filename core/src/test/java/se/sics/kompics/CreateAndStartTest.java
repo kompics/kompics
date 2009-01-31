@@ -27,11 +27,11 @@ import java.util.concurrent.Semaphore;
 import org.junit.Test;
 
 /**
- * The <code>CreateAndDestroyTest</code> class.
+ * The <code>CreateAndStartTest</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id: CreateAndDestroyTest.java 466 2009-01-27 22:30:37Z cosmin $
+ * @version $Id$
  */
 public class CreateAndStartTest {
 
