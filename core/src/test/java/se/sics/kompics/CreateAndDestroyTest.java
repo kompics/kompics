@@ -22,6 +22,8 @@ package se.sics.kompics;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.Semaphore;
+
 import org.junit.Test;
 
 /**
@@ -40,9 +42,9 @@ public class CreateAndDestroyTest {
 	}
 
 	private static boolean root0Created;
-  
+
 	/**
-	 * Test bootstrap.
+	 * Tests the creation of the main component.
 	 * 
 	 * @throws Exception
 	 *             the exception
@@ -72,7 +74,7 @@ public class CreateAndDestroyTest {
 	private static boolean comp1Created;
 
 	/**
-	 * Test create.
+	 * Test the creation of a subcomponent.
 	 * 
 	 * @throws Exception
 	 *             the exception
@@ -83,6 +85,107 @@ public class CreateAndDestroyTest {
 		Kompics.createAndStart(TestRoot1.class, 1);
 		assertTrue(root1Created);
 		assertTrue(comp1Created);
+		Kompics.shutdown();
+	}
+
+	private static class TestRoot2 extends ComponentDefinition {
+		public TestRoot2() {
+			root2Created = true;
+
+			subscribe(startHandler, control);
+		}
+
+		Handler<Start> startHandler = new Handler<Start>() {
+			public void handle(Start event) {
+				root2Started = true;
+				semaphore2.release();
+			}
+		};
+	}
+
+	private static boolean root2Created;
+	private static boolean root2Started;
+	private static Semaphore semaphore2;
+
+	/**
+	 * Tests that the main component is automatically started.
+	 * 
+	 * @throws Exception
+	 *             the exception
+	 */
+	@Test
+	public void testStart() throws Exception {
+		root2Created = false;
+		root2Started = false;
+		semaphore2 = new Semaphore(0);
+		
+		Kompics.createAndStart(TestRoot2.class, 1);
+		
+		semaphore2.acquire();
+		assertTrue(root2Created);
+		assertTrue(root2Started);
+		Kompics.shutdown();
+	}
+
+	private static class TestRoot3 extends ComponentDefinition {
+		public TestRoot3() {
+			root3Created = true;
+
+			create(TestComponent3.class);
+
+			subscribe(startHandler, control);
+		}
+
+		Handler<Start> startHandler = new Handler<Start>() {
+			public void handle(Start event) {
+				root3Started = true;
+				semaphore3.release();
+			}
+		};
+	}
+
+	private static class TestComponent3 extends ComponentDefinition {
+		public TestComponent3() {
+			comp3Created = true;
+
+			subscribe(startHandler, control);
+		}
+
+		Handler<Start> startHandler = new Handler<Start>() {
+			public void handle(Start event) {
+				comp3Started = true;
+				semaphore3.release();
+			}
+		};
+	}
+
+	private static boolean root3Created;
+	private static boolean root3Started;
+	private static boolean comp3Created;
+	private static boolean comp3Started;
+	private static Semaphore semaphore3;
+
+	/**
+	 * Tests that the main component is automatically started.
+	 * 
+	 * @throws Exception
+	 *             the exception
+	 */
+	@Test
+	public void testCreateAndStart() throws Exception {
+		root3Created = false;
+		root3Started = false;
+		comp3Created = false;
+		comp3Started = false;
+		semaphore3 = new Semaphore(0);
+
+		Kompics.createAndStart(TestRoot3.class, 1);
+
+		semaphore3.acquire(2);
+		assertTrue(root3Created);
+		assertTrue(root3Started);
+		assertTrue(comp3Created);
+		assertTrue(comp3Started);
 		Kompics.shutdown();
 	}
 }

@@ -91,7 +91,7 @@ public final class Kompics {
 	private Kompics() {
 	}
 
-	public static void shutdown() {
+	static void shutdown() {
 		// TODO stop and destroy components
 		on = false;
 	}
