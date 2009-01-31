@@ -33,7 +33,7 @@ import org.junit.Test;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id: CreateAndDestroyTest.java 466 2009-01-27 22:30:37Z cosmin $
  */
-public class CreateAndDestroyTest {
+public class CreateAndStartTest {
 
 	private static class TestRoot0 extends ComponentDefinition {
 		public TestRoot0() {
