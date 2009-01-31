@@ -135,7 +135,7 @@
 					<bodyFontFamily>Helvetica</bodyFontFamily>
 				</configuration>
 			</plugin>
-
+<!--
 			<plugin>
 			    <groupId>org.jboss.maven.plugins</groupId>
 			    <artifactId>maven-jdocbook-plugin</artifactId>
@@ -154,11 +154,10 @@
 			            </format>
 			        </formats>
 	                <imageCopyingRequired>true</imageCopyingRequired>
-			        <!-- 
 			        <imagesDirectory>${basedir}/src/main/images</imagesDirectory>
-			         -->
 			    </configuration>
-			</plugin>	
+			</plugin>
+-->	
 		</plugins>
 	</build>
 
