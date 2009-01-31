@@ -59,8 +59,6 @@ public final class Scheduler {
 	}
 
 	final void start() {
-		Kompics.logger.error("Starting {} workers.", workers.length);
-
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
 		}
@@ -118,11 +116,11 @@ public final class Scheduler {
 			sleepingWorkers.offer(w);
 			sleepingWorkerCount.incrementAndGet();
 			try {
-				Kompics.logger.debug("{} sleeping.", w.getWid());
+//				Kompics.logger.debug("{} sleeping.", w.getWid());
 				w.wait();
 			} catch (InterruptedException e) {
 			}
-			Kompics.logger.debug("{} woke up.", w.getWid());
+//			Kompics.logger.debug("{} woke up.", w.getWid());
 		}
 	}
 

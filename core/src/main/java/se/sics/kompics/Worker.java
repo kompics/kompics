@@ -63,7 +63,6 @@ public class Worker extends Thread {
 	 */
 	@Override
 	public final void run() {
-		Kompics.logger.error("{} started", getName());
 		while (true) {
 			try {
 				executeComponent();

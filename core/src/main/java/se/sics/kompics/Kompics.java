@@ -91,6 +91,11 @@ public final class Kompics {
 	private Kompics() {
 	}
 
+	public static void shutdown() {
+		// TODO stop and destroy components
+		on = false;
+	}
+
 	/**
 	 * Log stats.
 	 */
