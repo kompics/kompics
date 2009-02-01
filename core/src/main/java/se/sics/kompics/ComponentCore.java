@@ -66,14 +66,18 @@ public class ComponentCore implements Component {
 		this.component = componentDefinition;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.Component#getControl()
 	 */
 	public Positive<ControlPort> getControl() {
 		return positiveControl;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.Component#getNegative(java.lang.Class)
 	 */
 	@SuppressWarnings("unchecked")
@@ -85,7 +89,9 @@ public class ComponentCore implements Component {
 		return port;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.Component#getPositive(java.lang.Class)
 	 */
 	@SuppressWarnings("unchecked")
@@ -196,7 +202,7 @@ public class ComponentCore implements Component {
 		this.scheduler = scheduler;
 	}
 
-	void workReceived(PortCore<?> port, int wid) {
+	void eventReceived(PortCore<?> port, int wid) {
 		readyPorts.offer(port);
 
 		int wc = workCount.getAndIncrement();
@@ -215,8 +221,14 @@ public class ComponentCore implements Component {
 
 		PortCore<?> nextPort = readyPorts.poll();
 
-		Work work = nextPort.pickWork();
-		executeWork(work);
+		Event event = nextPort.pickFirstEvent();
+		LinkedList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
+
+		if (handlers != null) {
+			for (Handler<?> handler : handlers) {
+				executeEvent(event, handler);
+			}
+		}
 
 		int wc = workCount.decrementAndGet();
 		// System.err.println(component + ".schedule: " + (wc + 1) + " -> " +
@@ -227,9 +239,9 @@ public class ComponentCore implements Component {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void executeWork(Work work) {
+	private void executeEvent(Event event, Handler<?> handler) {
 		try {
-			((Handler<Event>) work.getHandler()).handle(work.getEvent());
+			((Handler<Event>) handler).handle(event);
 		} catch (Throwable throwable) {
 			handleFault(throwable);
 		}

@@ -27,7 +27,7 @@ import java.util.concurrent.Semaphore;
 import org.junit.Test;
 
 /**
- * The <code>CreateAndStartTest</code> class.
+ * The <code>CreateAndStartTest</code> class tests component creation and start.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
@@ -118,9 +118,9 @@ public class CreateAndStartTest {
 		root2Created = false;
 		root2Started = false;
 		semaphore2 = new Semaphore(0);
-		
+
 		Kompics.createAndStart(TestRoot2.class, 1);
-		
+
 		semaphore2.acquire();
 		assertTrue(root2Created);
 		assertTrue(root2Started);
@@ -166,7 +166,8 @@ public class CreateAndStartTest {
 	private static Semaphore semaphore3;
 
 	/**
-	 * Tests that the main component is automatically started.
+	 * Tests that a child component of the main component is automatically
+	 * started.
 	 * 
 	 * @throws Exception
 	 *             the exception

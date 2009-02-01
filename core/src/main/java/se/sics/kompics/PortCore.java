@@ -47,11 +47,11 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 	private ReentrantReadWriteLock rwLock;
 
-	private HashMap<Class<? extends Event>, LinkedList<Handler<? extends Event>>> subs;
+	private HashMap<Class<? extends Event>, LinkedList<Handler<?>>> subs;
 
 	private LinkedList<ChannelCore<?>> channels;
 
-	private SpinlockQueue<Work> eventQueue;
+	private SpinlockQueue<Event> eventQueue;
 
 	private Set<PortCore<P>> remotePorts;
 
@@ -59,7 +59,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		this.positive = positive;
 		this.portType = portType;
 		this.rwLock = new ReentrantReadWriteLock();
-		this.subs = new HashMap<Class<? extends Event>, LinkedList<Handler<? extends Event>>>();
+		this.subs = new HashMap<Class<? extends Event>, LinkedList<Handler<?>>>();
 		this.channels = new LinkedList<ChannelCore<?>>();
 		this.remotePorts = new HashSet<PortCore<P>>();
 		this.owner = owner;
@@ -82,8 +82,13 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 					+ remotePort.pair.owner.component);
 		}
 
-		channels.add(channel);
-		remotePorts.add(remotePort);
+		rwLock.writeLock().lock();
+		try {
+			channels.add(channel);
+			remotePorts.add(remotePort);
+		} finally {
+			rwLock.writeLock().unlock();
+		}
 	}
 
 	<E extends Event> void doSubscribe(Handler<E> handler) {
@@ -102,19 +107,20 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		}
 
 		rwLock.writeLock().lock();
+		try {
+			LinkedList<Handler<?>> handlers = subs.get(eventType);
+			if (handlers == null) {
+				handlers = new LinkedList<Handler<?>>();
+				subs.put(eventType, handlers);
+			}
+			handlers.add(handler);
 
-		LinkedList<Handler<? extends Event>> handlers = subs.get(eventType);
-		if (handlers == null) {
-			handlers = new LinkedList<Handler<? extends Event>>();
-			subs.put(eventType, handlers);
+			if (eventQueue == null) {
+				eventQueue = new SpinlockQueue<Event>();
+			}
+		} finally {
+			rwLock.writeLock().unlock();
 		}
-		handlers.add(handler);
-
-		if (eventQueue == null) {
-			eventQueue = new SpinlockQueue<Work>();
-		}
-
-		rwLock.writeLock().unlock();
 	}
 
 	<E extends Event> void doUnsubscribe(Handler<E> handler) {
@@ -125,24 +131,45 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		}
 
 		rwLock.writeLock().lock();
+		try {
+			LinkedList<Handler<?>> handlers = subs.get(eventType);
+			if (handlers == null) {
+				throw new RuntimeException("Handler " + handler
+						+ " is not subscribed to "
+						+ (positive ? "positive " : "negative ")
+						+ portType.getClass().getCanonicalName() + " for "
+						+ eventType.getCanonicalName() + " events.");
+			}
 
-		LinkedList<Handler<? extends Event>> handlers = subs.get(eventType);
-		if (handlers == null) {
-			throw new RuntimeException("Handler " + handler
-					+ " is not subscribed to "
-					+ (positive ? "positive " : "negative ")
-					+ portType.getClass().getCanonicalName() + " for "
-					+ eventType.getCanonicalName() + " events.");
-		}
-		if (!handlers.remove(handler)) {
-			throw new RuntimeException("Handler " + handler
-					+ " is not subscribed to "
-					+ (positive ? "positive " : "negative ")
-					+ portType.getClass().getCanonicalName() + " for "
-					+ eventType.getCanonicalName() + " events.");
-		}
+			if (!handlers.remove(handler)) {
+				throw new RuntimeException("Handler " + handler
+						+ " is not subscribed to "
+						+ (positive ? "positive " : "negative ")
+						+ portType.getClass().getCanonicalName() + " for "
+						+ eventType.getCanonicalName() + " events.");
+			}
 
-		rwLock.writeLock().unlock();
+			if (handlers.size() == 0) {
+				subs.remove(eventQueue);
+			}
+		} finally {
+			rwLock.writeLock().unlock();
+		}
+	}
+
+	LinkedList<Handler<?>> getSubscribedHandlers(Event event) {
+		Class<? extends Event> eventType = event.getClass();
+		LinkedList<Handler<?>> ret = new LinkedList<Handler<?>>();
+
+		for (Class<? extends Event> eType : subs.keySet()) {
+			if (eType.isAssignableFrom(eventType)) {
+				LinkedList<Handler<?>> handlers = subs.get(eType);
+				if (handlers != null) {
+					ret.addAll(handlers);
+				}
+			}
+		}
+		return ret;
 	}
 
 	// TODO optimize trigger/subscribe
@@ -156,46 +183,45 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		boolean delivered = false;
 
 		rwLock.readLock().lock();
-
-		// Kompics.logger.debug("Deliver {} in {}", event, owner.component);
-
-		for (Class<? extends Event> eType : subs.keySet()) {
-			if (eType.isAssignableFrom(eventType)) {
-				LinkedList<Handler<? extends Event>> handlers = subs.get(eType);
-				if (handlers != null) {
-					for (Handler<? extends Event> handler : handlers) {
-						doDeliver(handler, event, wid);
-						delivered = true;
-					}
+		try {
+			for (Class<? extends Event> eType : subs.keySet()) {
+				if (eType.isAssignableFrom(eventType)) {
+					// there is at least one subscription
+					doDeliver(event, wid);
+					delivered = true;
+					break;
 				}
 			}
-		}
 
-		ChannelCore<?> caller = (ChannelCore<?>) event.getTopChannel();
-		if (caller != null) {
-			Kompics.logger.debug("Caller +{}-{} in {} fwd {}", new Object[] {
-					caller.getPositivePort().pair.owner.component,
-					caller.getNegativePort().pair.owner.component,
-					caller.getNegativePort().owner.component, event });
-			if (positive) {
-				caller.forwardToNegative(event, wid);
-			} else {
-				caller.forwardToPositive(event, wid);
-			}
-			delivered = true;
-		} else {
-
-			for (ChannelCore<?> channel : channels) {
+			ChannelCore<?> caller = (ChannelCore<?>) event.getTopChannel();
+			if (caller != null) {
+				Kompics.logger
+						.debug(
+								"Caller +{}-{} in {} fwd {}",
+								new Object[] {
+										caller.getPositivePort().pair.owner.component,
+										caller.getNegativePort().pair.owner.component,
+										caller.getNegativePort().owner.component,
+										event });
 				if (positive) {
-					channel.forwardToNegative(event, wid);
+					caller.forwardToNegative(event, wid);
 				} else {
-					channel.forwardToPositive(event, wid);
+					caller.forwardToPositive(event, wid);
 				}
 				delivered = true;
+			} else {
+				for (ChannelCore<?> channel : channels) {
+					if (positive) {
+						channel.forwardToNegative(event, wid);
+					} else {
+						channel.forwardToPositive(event, wid);
+					}
+					delivered = true;
+				}
 			}
+		} finally {
+			rwLock.readLock().unlock();
 		}
-
-		rwLock.readLock().unlock();
 
 		if (!delivered) {
 			if (portType.hasEvent(positive, eventType)) {
@@ -226,13 +252,12 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		}
 	}
 
-	private void doDeliver(Handler<? extends Event> handler, Event event,
-			int wid) {
-		eventQueue.offer(new Work(event, handler));
-		owner.workReceived(this, wid);
+	private void doDeliver(Event event, int wid) {
+		eventQueue.offer(event);
+		owner.eventReceived(this, wid);
 	}
 
-	Work pickWork() {
+	Event pickFirstEvent() {
 		return eventQueue.poll();
 	}
 
@@ -263,7 +288,9 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		return eventType;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.Port#getPortType()
 	 */
 	public P getPortType() {
