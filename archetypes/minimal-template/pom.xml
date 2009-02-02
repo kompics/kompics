@@ -2,11 +2,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.mycompany.app</groupId>
+    <groupId>se.sics.kompics</groupId>
     <artifactId>archetypes</artifactId>
 	<version>0.4.1-SNAPSHOT</version>
   </parent>
-  <artifactId>p2p-template</artifactId>
+  <artifactId>minimal-template</artifactId>
   <url>http://www.sics.se/kompics/</url>
   <packaging>jar</packaging>
 

@@ -13,6 +13,32 @@
 		<module>p2p-template</module>
 		<module>mina-template</module>
 	</modules>
+	<dependencies>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-core</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-port-timer</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-port-network</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-component-java-timer</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
 
   <reporting>
      <plugins>
@@ -71,9 +97,9 @@
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/trunk</connection>
-		<url>http://kompics.sics.se/trac/browser/trunk</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/trunk/archetypes</connection>
+		<url>http://kompics.sics.se/trac/browser/trunk/archetypes</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/archetypes</developerConnection>
 	</scm>
 
 	<distributionManagement>
