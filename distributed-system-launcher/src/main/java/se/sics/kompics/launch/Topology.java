@@ -48,7 +48,7 @@ public abstract class Topology implements Serializable {
 	 */
 	private static final long serialVersionUID = -7257077939867770981L;
 
-	private final class Node implements Serializable {
+	private final static class Node implements Serializable {
 		/**
 		 * 
 		 */

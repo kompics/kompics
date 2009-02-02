@@ -20,11 +20,14 @@
  */
 package se.sics.kompics.launch;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.concurrent.Semaphore;
 
 import se.sics.kompics.ComponentDefinition;
 
@@ -37,11 +40,38 @@ import se.sics.kompics.ComponentDefinition;
  */
 public abstract class Scenario {
 
+	protected static final class Command {
+		protected final String command;
+		protected final long delayMs;
+		protected Command nextCommand;
+
+		private Command(String command) {
+			this(command, 0);
+		}
+
+		private Command(String command, long delayMs) {
+			this.command = command;
+			this.delayMs = delayMs;
+			this.nextCommand = null;
+		}
+
+		public final Command recover(long delayMs) {
+			nextCommand = new Command(command, delayMs);
+			return nextCommand;
+		}
+
+		public final Command recover(String command, long delayMs) {
+			nextCommand = new Command(command, delayMs);
+			return nextCommand;
+		}
+	}
+
 	private final String classPath = System.getProperty("java.class.path");
 	private final String mainClass;
-	private final String name;
+	final String name;
 
 	private HashMap<Integer, ProcessLauncher> processes = new HashMap<Integer, ProcessLauncher>();
+	private HashMap<Integer, Command> commands = new HashMap<Integer, Command>();
 	private int processCount = 0;
 
 	/**
@@ -59,14 +89,34 @@ public abstract class Scenario {
 	 * Command.
 	 * 
 	 * @param pid
-	 *            the pid
+	 *            the process id
 	 * @param command
 	 *            the command
 	 */
-	protected final void command(int pid, String command) {
-		ProcessLauncher processLauncher = createProcess(pid, command);
-		processes.put(pid, processLauncher);
+	protected final Command command(int pid, String cmd) {
+		return command(pid, cmd, 0);
+	}
+
+	/**
+	 * Command.
+	 * 
+	 * @param pid
+	 *            the process id
+	 * @param command
+	 *            the command
+	 * @param command
+	 *            the delay in milliseconds after which to start the process
+	 */
+	protected final Command command(int pid, String cmd, long delayMs) {
+		Command command = new Command(cmd, delayMs);
+		Command oldCommand = commands.put(pid, command);
+		if (oldCommand != null) {
+			throw new RuntimeException(
+					"Cannot define two command scripts for process " + pid);
+		}
+
 		processCount++;
+		return command;
 	}
 
 	/**
@@ -95,7 +145,9 @@ public abstract class Scenario {
 			System.err.println("Warning: Some topology nodes unused");
 		}
 
-		System.out.print("Executiong " + name + "... ");
+		System.out.println("Executing " + name + "... ");
+
+		// write the topology to file
 		File file = null;
 		try {
 			file = File.createTempFile("topology", ".bin");
@@ -108,20 +160,33 @@ public abstract class Scenario {
 			e.printStackTrace();
 			System.exit(0);
 		}
-		for (ProcessLauncher processLauncher : processes.values()) {
+
+		long now = System.currentTimeMillis();
+		Semaphore semaphore = new Semaphore(0, false);
+
+		// create process launchers
+		for (int pid : commands.keySet()) {
+			Command command = commands.get(pid);
+			ProcessLauncher processLauncher = createProcess(pid, command, now,
+					semaphore);
+			processes.put(pid, processLauncher);
+
 			processLauncher.setProcessCount(processCount);
 			processLauncher.setTopologyFile(file.getAbsolutePath());
 			new Thread(processLauncher).start();
 		}
 
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(2000);
 		} catch (InterruptedException e) {
 		}
-		for (ProcessLauncher processLauncher : processes.values()) {
-			processLauncher.waitFor();
-		}
-		System.out.println("done.");
+
+		startInputReaderThread();
+
+		// wait for all launchers to become ready
+		semaphore.acquireUninterruptibly(processCount);
+
+		System.out.println("DONE");
 	}
 
 	/**
@@ -133,10 +198,57 @@ public abstract class Scenario {
 		}
 	}
 
-	private ProcessLauncher createProcess(int id, String command) {
+	private ProcessLauncher createProcess(int id, Command command, long now,
+			Semaphore semaphore) {
 		ProcessLauncher processLauncher = new ProcessLauncher(classPath,
-				mainClass, "-Dlog4j.properties=log4j.properties", (command
-						.equals("") ? " " : command), id, this);
+				mainClass, "-Dlog4j.properties=log4j.properties", command, id,
+				this, now, semaphore);
 		return processLauncher;
+	}
+
+	private void tryRecover(int id, final String command) {
+		final ProcessLauncher processLauncher = processes.get(id);
+		if (processLauncher == null) {
+			System.err.println("Scenario does not contain process " + id);
+			return;
+		}
+		(new Thread("Process Recovery Launcher") {
+			public void run() {
+				processLauncher.recover(command);
+			}
+		}).start();
+	}
+
+	private void startInputReaderThread() {
+		Thread inputReader = new Thread("ScenarioInputReader") {
+			public void run() {
+				BufferedReader in = new BufferedReader(new InputStreamReader(
+						System.in));
+				while (true) {
+					try {
+						String line = in.readLine();
+
+						if (line.startsWith("recover")) {
+							String[] args = line.substring(8).split("@");
+							if (args.length == 2) {
+								try {
+									int id = Integer.parseInt(args[0]);
+									String command = args[1];
+									tryRecover(id, command);
+									continue;
+								} catch (RuntimeException e) {
+								}
+							}
+						}
+						System.out.println("Try 'recover@pid@command'");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		};
+		inputReader.start();
+		System.out.println("For process recovery try 'recover@pid@command'"
+				+ ", as in 'recover@1@S100:help'");
 	}
 }

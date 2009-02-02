@@ -31,7 +31,11 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -46,14 +50,14 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
 /**
- * The <code>ProcessOutputFrame</code> class.
+ * The <code>ProcessFrame</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
 @SuppressWarnings("serial")
-public class ProcessOutputFrame extends JFrame {
+public class ProcessFrame extends JFrame {
 
 	private static int WIDTH = 700;
 
@@ -65,6 +69,7 @@ public class ProcessOutputFrame extends JFrame {
 
 	private JMenuBar menuBar = null;
 	private JPanel inputPanel = null;
+	private JTextField inputTextField = null;
 
 	private JTextArea logArea = null;
 	private JScrollPane scrollPane;
@@ -91,7 +96,7 @@ public class ProcessOutputFrame extends JFrame {
 	 * @param launcher
 	 *            the launcher
 	 */
-	public ProcessOutputFrame(ProcessLauncher processLauncher, String command,
+	public ProcessFrame(ProcessLauncher processLauncher, String command,
 			String processID, int count, Scenario launcher) {
 		super();
 		this.processLauncher = processLauncher;
@@ -115,11 +120,17 @@ public class ProcessOutputFrame extends JFrame {
 		this.setIconImage(Toolkit.getDefaultToolkit().getImage(
 				getClass().getResource("kompics32.png")));
 		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-		this.addWindowListener(new java.awt.event.WindowAdapter() {
-			public void windowClosed(java.awt.event.WindowEvent e) {
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent e) {
 				processLauncher.kill(false);
 			}
 		});
+		this.addWindowFocusListener(new WindowAdapter() {
+		    public void windowGainedFocus(WindowEvent e) {
+		        getInputTextField().requestFocusInWindow();
+		    }
+		});
+
 		if (frameSize.height > screenSize.height) {
 			frameSize.height = screenSize.height;
 		}
@@ -137,6 +148,8 @@ public class ProcessOutputFrame extends JFrame {
 		} else {
 			init6Frames(screenSize, frameSize);
 		}
+		
+		getInputTextField().requestFocusInWindow(); 
 	}
 
 	private void init2Frames(Dimension screenSize, Dimension frameSize) {
@@ -275,22 +288,26 @@ public class ProcessOutputFrame extends JFrame {
 			inputPanel = new JPanel();
 			inputPanel.setLayout(new BorderLayout());
 			inputPanel.add(new JLabel(" Input: "), BorderLayout.WEST);
-			final JTextField textField = new JTextField();
-			inputPanel.add(textField, BorderLayout.CENTER);
-			textField.addActionListener(new ActionListener() {
+			inputPanel.add(getInputTextField(), BorderLayout.CENTER);
+		}
+		return inputPanel;
+	}
+	
+	private JTextField getInputTextField() {
+		if (inputTextField == null) {
+			inputTextField = new JTextField();
+			inputTextField.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
 						processLauncher.input(e.getActionCommand());
 						append(e.getActionCommand() + "\n");
-						textField.setText("");
+						inputTextField.setText("");
 					} catch (IOException e1) {
-						// e1.printStackTrace();
 					}
 				}
 			});
-
 		}
-		return inputPanel;
+		return inputTextField;
 	}
 
 	private JPanel getLogPanel() {
@@ -311,6 +328,11 @@ public class ProcessOutputFrame extends JFrame {
 			logArea.setFont(new Font("Courier New", Font.PLAIN, 12));
 			logArea.setBackground(Color.DARK_GRAY);
 			logArea.setForeground(Color.WHITE);
+			logArea.addFocusListener(new FocusAdapter() {
+				public void focusGained(FocusEvent e) {
+			        getInputTextField().requestFocusInWindow();
+				}
+			});
 		}
 		return logArea;
 	}

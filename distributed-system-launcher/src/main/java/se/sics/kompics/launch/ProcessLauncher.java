@@ -25,6 +25,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import se.sics.kompics.launch.Scenario.Command;
 
 /**
  * The <code>ProcessLauncher</code> class.
@@ -39,13 +43,16 @@ public final class ProcessLauncher implements Runnable {
 	private final String mainClass;
 	private final String log4jProperties;
 	private final int id;
-	private final String command;
+	private final Command command;
+	private final Semaphore semaphore;
+	private final AtomicBoolean busy;
 
 	private Process process;
 	private int processCount;
-	private ProcessOutputFrame mainFrame;
+	private ProcessFrame mainFrame;
 	private BufferedWriter input;
-	private Scenario launcher;
+	private Scenario scenario;
+	private final long startedAt;
 
 	/**
 	 * Instantiates a new process launcher.
@@ -64,26 +71,73 @@ public final class ProcessLauncher implements Runnable {
 	 *            the launcher
 	 */
 	public ProcessLauncher(String classpath, String mainClass,
-			String log4jProperties, String command, int id, Scenario launcher) {
+			String log4jProperties, Command command, int id, Scenario launcher,
+			long now, Semaphore semaphore) {
 		this.classpath = classpath;
 		this.mainClass = mainClass;
 		this.log4jProperties = log4jProperties;
 		this.command = command;
 		this.id = id;
-		this.launcher = launcher;
+		this.scenario = launcher;
+		this.semaphore = semaphore;
+		this.startedAt = now;
+		this.busy = new AtomicBoolean(true);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Runnable#run()
 	 */
-	public void run() {
-		mainFrame = new ProcessOutputFrame(this, command, "" + id,
-				processCount, launcher);
+	public final void run() {
+		mainFrame = new ProcessFrame(this, command.command, "" + id,
+				processCount, scenario);
+
+		Command cmd = command;
+		launchProcess(cmd.command, cmd.delayMs, "started");
+		cmd = cmd.nextCommand;
+
+		while (cmd != null) {
+			launchProcess(cmd.command, cmd.delayMs, "recovered");
+			cmd = cmd.nextCommand;
+		}
+
+		waitFor();
+		semaphore.release();
+		busy.set(false);
+	}
+
+	public final void recover(String script) {
+		boolean success = busy.compareAndSet(false, true);
+		if (success) {
+			semaphore.acquireUninterruptibly();
+			launchProcess(script, 0, "recovered");
+			waitFor();
+			semaphore.release();
+			busy.set(false);
+		} else {
+			System.err.println("Process " + id + " is active.");
+		}
+	}
+
+	private void launchProcess(String commandScript, long delayMs, String action) {
+		if (delayMs > 0) {
+			try {
+				Thread.sleep(delayMs);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+		}
+		if (commandScript.equals("")) {
+			// we add an empty command if command is void
+			commandScript = " ";
+		}
+		mainFrame.setTitle("Process " + id + " - " + commandScript);
 		mainFrame.setVisible(true);
 
 		ProcessBuilder processBuilder = new ProcessBuilder("java",
 				"-classpath", classpath, log4jProperties, "-Dtopology="
-						+ topologyFile, mainClass, "" + id, command);
+						+ topologyFile, mainClass, "" + id, commandScript);
 		processBuilder.redirectErrorStream(true);
 
 		try {
@@ -92,6 +146,12 @@ public final class ProcessLauncher implements Runnable {
 					process.getInputStream()));
 			input = new BufferedWriter(new OutputStreamWriter(process
 					.getOutputStream()));
+
+			String log = String.format(
+					"%5d@SCENARIO {%s} Process %d has %s commands [%s].\n",
+					now(), scenario.name, id, action, commandScript);
+			mainFrame.append(log);
+			System.out.print(log);
 
 			String line;
 			do {
@@ -104,7 +164,11 @@ public final class ProcessLauncher implements Runnable {
 			mainFrame.append(e.getMessage());
 		}
 
-		mainFrame.append("Process " + id + " has terminated.");
+		String log = String.format(
+				"%5d@SCENARIO {%s} Process %d has terminated.\n", now(),
+				scenario.name, id);
+		mainFrame.append(log);
+		System.out.print(log);
 	}
 
 	/**
@@ -113,7 +177,7 @@ public final class ProcessLauncher implements Runnable {
 	 * @param dispose
 	 *            the dispose
 	 */
-	public void kill(boolean dispose) {
+	public final void kill(boolean dispose) {
 		if (process != null) {
 			process.destroy();
 			if (dispose)
@@ -130,7 +194,7 @@ public final class ProcessLauncher implements Runnable {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	public void input(String string) throws IOException {
+	public final void input(String string) throws IOException {
 		input.write(string);
 		input.write("\n");
 		input.flush();
@@ -142,7 +206,7 @@ public final class ProcessLauncher implements Runnable {
 	 * @param processCount
 	 *            the new process count
 	 */
-	public void setProcessCount(int processCount) {
+	public final void setProcessCount(int processCount) {
 		this.processCount = processCount;
 	}
 
@@ -154,14 +218,14 @@ public final class ProcessLauncher implements Runnable {
 	 * @param topologyFile
 	 *            the new topology file
 	 */
-	public void setTopologyFile(String topologyFile) {
+	public final void setTopologyFile(String topologyFile) {
 		this.topologyFile = topologyFile;
 	}
 
 	/**
 	 * Wait for.
 	 */
-	public void waitFor() {
+	private final void waitFor() {
 		if (process != null) {
 			while (true) {
 				try {
@@ -172,5 +236,9 @@ public final class ProcessLauncher implements Runnable {
 				}
 			}
 		}
+	}
+
+	private final long now() {
+		return System.currentTimeMillis() - startedAt;
 	}
 }
