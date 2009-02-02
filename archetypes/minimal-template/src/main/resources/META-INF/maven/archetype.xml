@@ -1,14 +1,6 @@
 <archetype>
-  <id>kompics-archetype-starter</id>
-  <sources>
-    <source>src/main/java/ApplicationComponent.java</source>
-    <source>src/main/java/main/Main.java</source>
-  </sources>
+  <id>minimal-template</id>
   <resources>
-    <resource>src/main/resources/se/sics/kompics/user.properties</resource>
     <resource>src/main/resources/log4j.properties</resource>
   </resources>
-  <testSources>
-    <source>src/test/java/AppTest.java</source>
-  </testSources>
 </archetype>
