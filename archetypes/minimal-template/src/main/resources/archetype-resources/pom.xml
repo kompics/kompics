@@ -1,0 +1,86 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>${groupId}</groupId>
+  <version>${version}</version>
+  <artifactId>${artifactId}</artifactId>
+  <packaging>jar</packaging>
+  <name>${artifactId}</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>se.sics.kompics</groupId>
+      <artifactId>kompics-core</artifactId>
+      <version>0.2.1-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>se.sics.kompics</groupId>
+      <artifactId>kompics-network</artifactId>
+      <version>0.2.1-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>se.sics.kompics</groupId>
+      <artifactId>delay-network</artifactId>
+      <version>0.2.1-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>se.sics.kompics</groupId>
+      <artifactId>kompics-web</artifactId>
+      <version>0.2.1-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>se.sics.kompics</groupId>
+      <artifactId>bootstrap</artifactId>
+      <version>0.2.1-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+
+  <reporting>
+     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+            <excludePackageNames>bad.packagename</excludePackageNames>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
+
+  <build>
+     <plugins>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-compiler-plugin</artifactId>
+         <configuration>
+           <encoding>UTF-8</encoding>
+           <source>1.6</source>
+           <target>1.6</target>
+           <debug>true</debug>
+           <optimize>true</optimize>
+           <showDeprecations>true</showDeprecations>
+         </configuration>
+       </plugin>
+       <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <archive>
+            <manifest>
+              <mainClass>se.sics.kompics.${artifactId}.main.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+       </plugin>
+     </plugins>
+  </build>
+</project>
+
