@@ -37,7 +37,7 @@ import se.sics.kompics.launch.Scenario.Command;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public final class ProcessLauncher implements Runnable {
+public final class ProcessLauncher extends Thread {
 
 	private final String classpath;
 	private final String mainClass;
@@ -157,10 +157,16 @@ public final class ProcessLauncher implements Runnable {
 			do {
 				line = out.readLine();
 				if (line != null) {
+					if (line.equals("2DIE")) {
+						if (process != null) {
+							process.destroy();
+						}
+						break;
+					}
 					mainFrame.append(line + "\n");
 				}
 			} while (line != null);
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			mainFrame.append(e.getMessage());
 		}
 

@@ -173,7 +173,7 @@ public abstract class Scenario {
 
 			processLauncher.setProcessCount(processCount);
 			processLauncher.setTopologyFile(file.getAbsolutePath());
-			new Thread(processLauncher).start();
+			processLauncher.start();
 		}
 
 		try {
