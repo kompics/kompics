@@ -1,7 +1,7 @@
 <archetype>
   <id>minimal-template</id>
   <sources>
-    <source>src/main/java/se/sics/kopmics/main/Root.java</source>
+    <source>src/main/java/se/sics/kompics/main/Root.java</source>
   </sources>
   <resources>
     <resource>src/main/resources/log4j.properties</resource>
