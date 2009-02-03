@@ -247,6 +247,7 @@ public abstract class Scenario {
 				}
 			}
 		};
+		inputReader.setDaemon(true);
 		inputReader.start();
 		System.out.println("For process recovery try 'recover@pid@command'"
 				+ ", as in 'recover@1@S100:help'");
