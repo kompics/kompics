@@ -21,12 +21,18 @@
 			<version>4.5</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-core</artifactId>
-			<version>0.4.0</version>
-			<scope>compile</scope>
-		</dependency>
+        <dependency>
+            <groupId>se.sics.kompics</groupId>
+            <artifactId>kompics-core</artifactId>
+            <version>0.4.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>se.sics.kompics</groupId>
+            <artifactId>distributed-system-launcher</artifactId>
+            <version>0.4.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-port-timer</artifactId>
