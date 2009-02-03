@@ -10,6 +10,7 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.manual.twopc.Coordination;
 import se.sics.kompics.manual.twopc.event.Abort;
+import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.Commit;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
 import se.sics.kompics.manual.twopc.event.Prepare;
@@ -67,6 +68,10 @@ public class Coordinator extends ComponentDefinition {
 	  subscribe(handleCoordinatorInit,control);
 	  
 	  subscribe(handleStartTransaction, coordinator);
+	  
+	  subscribe(handleCommit,net);
+	  subscribe(handleAbort,net);
+	  subscribe(handleAck,net);
 	}
 	
 	Handler<CoordinatorInit> handleCoordinatorInit = new Handler<CoordinatorInit>() {
@@ -117,5 +122,8 @@ public class Coordinator extends ComponentDefinition {
 		}
 	};
 	
-	
+	Handler<Ack> handleAck = new Handler<Ack>() {
+		public void handle(Ack ack) {
+		}
+	};
 }

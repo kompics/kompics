@@ -1,7 +1,9 @@
 package se.sics.kompics.manual.twopc.simple;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
@@ -54,7 +56,13 @@ public class Participant extends ComponentDefinition {
 	
     private Address self;
     private Address coordinatorAddress;
-	
+    
+    private Map<String,String> database = new HashMap<String,String>();
+
+    private Map<Integer,Map<String,String>> outstandingTransactions = new 
+    		HashMap<Integer,Map<String,String>>();
+
+    
 	public Participant() {
 		  subscribe(handleParticipantInit,control);
 		  subscribe(handlePrepare,net);
@@ -75,6 +83,14 @@ public class Participant extends ComponentDefinition {
 			Transaction t = prepare.getTrans();
 			int id = t.getId();
 			
+			List<Operation> ops = t.getOperations();
+			Map<String,String> entries = new HashMap<String,String>();
+			for (Operation op : ops)
+			{
+				entries.put(op.getName(), op.getValue());
+			}
+			outstandingTransactions.put(id, entries);
+			
 			trigger(new Commit(id, self, prepare.getSource()), net);
 		}
 	};
@@ -82,6 +98,8 @@ public class Participant extends ComponentDefinition {
 	Handler<Commit> handleCommit = new Handler<Commit>() {
 		public void handle(Commit commit) {
 			int tId = commit.getTransactionId();
+			
+			// copy from outstanding transactions
 			
 		}
 	};
