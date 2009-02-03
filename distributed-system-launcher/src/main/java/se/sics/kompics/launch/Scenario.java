@@ -198,6 +198,16 @@ public abstract class Scenario {
 		}
 	}
 
+	/**
+	 * Kill.
+	 */
+	public final void killNode(int id) {
+		ProcessLauncher processLauncher = processes.get(id);
+		if (processLauncher != null) {
+			processLauncher.kill(false);
+		}
+	}
+
 	private ProcessLauncher createProcess(int id, Command command, long now,
 			Semaphore semaphore) {
 		ProcessLauncher processLauncher = new ProcessLauncher(classPath,
