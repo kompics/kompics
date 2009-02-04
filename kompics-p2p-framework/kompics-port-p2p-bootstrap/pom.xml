@@ -9,7 +9,7 @@
 	</parent>
 
 	<groupId>se.sics.kompics</groupId>
-	<artifactId>p2p-bootstrap</artifactId>
+	<artifactId>kompics-port-p2p-bootstrap</artifactId>
 	<version>0.4.2-SNAPSHOT</version>
 	<name>Kompics P2P Bootstrap</name>
 	<description>Kompics P2P Bootstrap server and client</description>
