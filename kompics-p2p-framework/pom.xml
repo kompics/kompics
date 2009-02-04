@@ -16,8 +16,7 @@
 	<description>Kompics P2P Framework</description>
 
 	<modules>
-		<module>p2p-bootstrap</module>
-		<module>kompics-failure-detector</module>
+		<module>kompics-port-p2p-bootstrap</module>
 		<module>kompics-port-failure-detector</module>
 	</modules>
 
