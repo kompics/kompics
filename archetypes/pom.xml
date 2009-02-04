@@ -1,18 +1,23 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>se.sics.kompics</groupId>
-  <packaging>pom</packaging>  
-  <version>0.4.1-SNAPSHOT</version>
-  <artifactId>archetypes</artifactId>
-  <name>Parent for Kompics archetypes (archetypes are templates for creating projects).</name>
-  <url>http://www.sics.se/kompics/</url>
-
+	<modelVersion>4.0.0</modelVersion>
+  
+	<parent>
+		<groupId>se.sics.kompics</groupId>
+		<artifactId>kompics-parent-pom</artifactId>
+		<version>0.4.1-SNAPSHOT</version>
+	</parent>
+	<groupId>se.sics.kompics</groupId>
+	<artifactId>archetypes</artifactId>
+	<packaging>pom</packaging>  
+	<version>0.4.1-SNAPSHOT</version>
+	<name>Parent for Kompics archetypes (archetypes are templates for creating projects).</name>
 	<modules>
 		<module>minimal-template</module>	
 		<module>p2p-template</module>
 		<module>mina-template</module>
 	</modules>
+
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
@@ -40,87 +45,5 @@
 		</dependency>
 	</dependencies>
 
-  <reporting>
-     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-            <excludePackageNames>bad.packagename</excludePackageNames>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
-
-
-  <build>
-     <plugins>
-       <plugin>
-         <groupId>org.apache.maven.plugins</groupId>
-         <artifactId>maven-compiler-plugin</artifactId>
-         <configuration>
-           <encoding>UTF-8</encoding>
-           <source>1.6</source>
-           <target>1.6</target>
-           <debug>true</debug>
-           <optimize>true</optimize>
-           <showDeprecations>true</showDeprecations>
-         </configuration>
-       </plugin>
-     </plugins>
-  </build>
-  
-  
-  	<repositories>
-		<repository>
-			<id>sics-release</id>
-			<name>SICS Repository</name>
-			<url>http://kompics.sics.se/maven/repository</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>sics-snapshot</id>
-			<name>SICS Snapshot Repository</name>
-			<url>http://kompics.sics.se/maven/snapshotrepository</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
-	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/trunk/archetypes</connection>
-		<url>http://kompics.sics.se/trac/browser/trunk/archetypes</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk/archetypes</developerConnection>
-	</scm>
-
-	<distributionManagement>
-		<!-- use the following if you're not using a snapshot version. -->
-		<repository>
-			<id>sics-release-repository</id>
-			<name>SICS Repository</name>
-			<url>scpexe://korsakov.sics.se/home/maven2/repository</url>
-		</repository>
-		<!-- use the following if you ARE using a snapshot version. -->
-		<snapshotRepository>
-			<id>sics-snapshot-repository</id>
-			<name>SICS Snapshot Repository</name>
-			<url>scpexe://korsakov.sics.se/home/maven2/snapshotrepository</url>
-		</snapshotRepository>
-		<site>
-			<id>kompics-site</id>
-			<url>scpexe://korsakov.sics.se/var/www/kompics/report/trunk</url>
-		</site>
-		<downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
-	</distributionManagement>
-  
 </project>
 
