@@ -165,7 +165,7 @@
 	<repositories>
 		<repository>
 			<id>sics-release</id>
-			<name>SICS Repository</name>
+            <name>SICS Release Repository</name>
 			<url>http://kompics.sics.se/maven/repository</url>
 			<releases>
 				<enabled>true</enabled>
