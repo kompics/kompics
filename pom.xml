@@ -8,10 +8,21 @@
 	<name>Kompics</name>
 	<url>http://kompics.sics.se</url>
 
-	<!--
-		These are the Kompics subprojects. Copy the POM entries below into
-		each of their POMs to avoid a fake dependency on the parent POM.
-	-->
+	<inceptionYear>2008</inceptionYear>
+
+	<issueManagement>
+		<system>Trac</system>
+		<url>http://kompics.sics.se/trac</url>
+	</issueManagement>
+
+	<licenses>
+		<license>
+			<name>GNU General Public License Version 2</name>
+			<url>http://www.gnu.org/licenses/gpl-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
 	<modules>
 		<module>core</module>
 		<module>address</module>
@@ -22,9 +33,37 @@
 		<module>distributed-system-launcher</module>
 	</modules>
 
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.5</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.5.6</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.5.6</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.14</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>
+				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
@@ -42,6 +81,7 @@
 	<reporting>
 		<plugins>
 			<plugin>
+				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
@@ -61,27 +101,29 @@
 						<link>http://www.slf4j.org/api/</link>
 					</links>
 					<groups>
-                        <group>
-                            <title>Kompics Core</title>
-                            <packages>se.sics.kompics</packages>
-                        </group>
-                        <group>
-                            <title>Kompics Network</title>
-                            <packages>se.sics.kompics.network:se.sics.kompics.network.*</packages>
-                        </group>
-                        <group>
-                            <title>Kompics Timer</title>
-                            <packages>se.sics.kompics.timer:se.sics.kompics.timer.*</packages>
-                        </group>
-                        <group>
-                            <title>Kompics Distributed System Launcher</title>
-                            <packages>se.sics.kompics.launch</packages>
-                        </group>
+						<group>
+							<title>Kompics Core</title>
+							<packages>se.sics.kompics</packages>
+						</group>
+						<group>
+							<title>Kompics Network</title>
+							<packages>se.sics.kompics.network:se.sics.kompics.network.*</packages>
+						</group>
+						<group>
+							<title>Kompics Timer</title>
+							<packages>se.sics.kompics.timer:se.sics.kompics.timer.*</packages>
+						</group>
+						<group>
+							<title>Kompics Distributed System Launcher</title>
+							<packages>se.sics.kompics.launch</packages>
+						</group>
 					</groups>
 					<locale>en_US</locale>
 				</configuration>
 			</plugin>
+
 			<plugin>
+				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jxr-plugin</artifactId>
 				<configuration>
@@ -89,15 +131,19 @@
 					<linkJavadoc>true</linkJavadoc>
 				</configuration>
 			</plugin>
+
 			<plugin>
+				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
-                <configuration>
-                    <aggregate>true</aggregate>
-                    <linkXRef>true</linkXRef>
-                </configuration>
+				<configuration>
+					<aggregate>true</aggregate>
+					<linkXRef>true</linkXRef>
+				</configuration>
 			</plugin>
+
 			<plugin>
+				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
 				<configuration>
@@ -106,6 +152,12 @@
 					<minimumTokens>100</minimumTokens>
 					<targetJdk>1.6</targetJdk>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<inherited>true</inherited>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</reporting>
@@ -142,13 +194,11 @@
 	</scm>
 
 	<distributionManagement>
-		<!-- use the following if you're not using a snapshot version. -->
 		<repository>
 			<id>sics-release-repository</id>
 			<name>SICS Repository</name>
 			<url>scpexe://korsakov.sics.se/home/maven2/repository</url>
 		</repository>
-		<!-- use the following if you ARE using a snapshot version. -->
 		<snapshotRepository>
 			<id>sics-snapshot-repository</id>
 			<name>SICS Snapshot Repository</name>
@@ -160,4 +210,14 @@
 		</site>
 		<downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
 	</distributionManagement>
+
+	<mailingLists>
+		<mailingList>
+			<name>Kompics Mailing List</name>
+			<subscribe>https://list.sics.se/sympa/subscribe/kompics</subscribe>
+			<unsubscribe>https://list.sics.se/sympa/sigrequest/kompics</unsubscribe>
+			<post>kompics@sics.se</post>
+			<archive>https://list.sics.se/sympa/arc/kompics</archive>
+		</mailingList>
+	</mailingLists>
 </project>
