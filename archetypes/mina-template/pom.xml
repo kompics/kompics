@@ -9,5 +9,14 @@
   <artifactId>mina-template</artifactId>
   <url>http://www.sics.se/kompics/</url>
 
+	<dependencies>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-component-mina-network</artifactId>
+			<version>0.4.1-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
 </project>
 
