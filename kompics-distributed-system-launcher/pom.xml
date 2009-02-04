@@ -9,7 +9,7 @@
     </parent>
 
 	<groupId>se.sics.kompics</groupId>
-	<artifactId>distributed-system-launcher</artifactId>
+	<artifactId>kompics-distributed-system-launcher</artifactId>
 	<name>Kompics Distributed System Launcher</name>
 	<packaging>jar</packaging>
 	<version>0.4.1-SNAPSHOT</version>
