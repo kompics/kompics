@@ -90,7 +90,7 @@ public abstract class Scenario {
 	 * 
 	 * @param pid
 	 *            the process id
-	 * @param command
+	 * @param cmd
 	 *            the command
 	 */
 	protected final Command command(int pid, String cmd) {
@@ -103,7 +103,7 @@ public abstract class Scenario {
 	 * @param pid
 	 *            the process id
 	 * @param command
-	 *            the command
+	 *            the cmd
 	 * @param command
 	 *            the delay in milliseconds after which to start the process
 	 */
