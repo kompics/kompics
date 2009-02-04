@@ -75,9 +75,9 @@
     			<para>
 				By convention, the positive pole (+) of a port is understood to be the provided
 				direction for events, while the negative pole (−) of a port is understood to
-				be the required direction for events. When a component provides a port, the
+				be the required direction for events. When a component implements (or provides) a port, the
 				port is oriented with its + pole to the outside of the component and its − pole inside. 
-				Conversely, a required port is oriented with its − pole outside
+				Conversely, a (required) port that is used by a component is oriented with its − pole outside
 				and its + pole inside. The types of events flowing through the port from the
 				− pole to the + pole are tagged with + and the types of events flowing from
 				the + pole to the − pole are tagged with −.
@@ -112,7 +112,7 @@
     
      <figure id="kompics.concepts.fig-port">
       <title>Example port.</title>
-      <graphic fileref="ch00-port.png"/>
+      <graphic fileref="images/ch00-port.png"/>
     </figure>
 
 
@@ -135,7 +135,7 @@
 	<para>
      <figure id="kompics.concepts.fig-component">
       <title>Example component.</title>
-      <graphic fileref="ch00-component.png"/>
+      <graphic fileref="images/ch00-component.png"/>
     </figure>
 	</para>
   </sect1>

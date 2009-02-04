@@ -11,6 +11,7 @@
       <title>Install software required for Kompics</title>
       
       	<para>The minimal requirements for downloading and installing Kompics are 
+      	<emphasis>Java (JDK 5.0 update 6 and above)</emphasis>,
       	<emphasis>subversion</emphasis> and <emphasis>maven2</emphasis>.
       	However, we recommend building Kompics from an Eclipse environment
       	(Netbeans should also work fine, but isn't discussed here).</para>
@@ -88,8 +89,8 @@ $ mvn install
 					You will need to install the following Eclipse tools to build Kompics:
 			   	   <itemizedlist>
 			        <listitem>
-			          <para><emphasis>Eclipse IDE</emphasis> (Gandymede version is recommended). You now
-			          need to know how to install plugins for Eclipse. For the Gandymede version of Eclipse,
+			          <para><emphasis>Eclipse IDE</emphasis> (Ganymede version is recommended). You now
+			          need to know how to install plugins for Eclipse. For the Ganymede version of Eclipse,
 			          you click on <literal>Help->Software Updates-> Available Software </literal>. 
 			          Then click the "Add site"
 			          box to add an update site for a plugin. </para>

@@ -95,7 +95,7 @@
 		
 			public static void  main(String[] args)
 			{
-				Kompics.createAndStart(RootComponentStart.class);
+				Kompics.createAndStart(Root.class);
 			}
 			public Root() {
 				subscribe(handleStart,control);

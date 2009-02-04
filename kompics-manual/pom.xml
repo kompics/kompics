@@ -16,23 +16,24 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>distributed-system-launcher</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+	
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.5</version>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>se.sics.kompics</groupId>
-            <artifactId>kompics-core</artifactId>
-            <version>0.4.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>se.sics.kompics</groupId>
-            <artifactId>distributed-system-launcher</artifactId>
-            <version>0.4.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-core</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-port-timer</artifactId>
@@ -126,7 +127,7 @@
 					<chunkTocsAndLots>0</chunkTocsAndLots>
 					<targetDirectory>src/docbkx/manual</targetDirectory>
 					<htmlStylesheet>styles.css</htmlStylesheet>
-					<chunkedOutput>true</chunkedOutput>
+					<chunkedOutput>false</chunkedOutput>
 					<highlightSource>true</highlightSource>
 					<xincludeSupported>true</xincludeSupported>
 					<entities>
@@ -141,29 +142,7 @@
 					<bodyFontFamily>Helvetica</bodyFontFamily>
 				</configuration>
 			</plugin>
-<!--
-			<plugin>
-			    <groupId>org.jboss.maven.plugins</groupId>
-			    <artifactId>maven-jdocbook-plugin</artifactId>
-			    <version>2.1.2</version>
-			    <extensions>true</extensions>
-			    <configuration>
-					<sourceDocumentName>book.xml</sourceDocumentName>			    
-			        <formats>
-			            <format>
-			                <formatName>pdf</formatName>
-			                <imageCopyingRequired>true</imageCopyingRequired>
-			            </format>
-			            <format>
-			                <formatName>html</formatName>
-			                <imageCopyingRequired>true</imageCopyingRequired>
-			            </format>
-			        </formats>
-	                <imageCopyingRequired>true</imageCopyingRequired>
-			        <imagesDirectory>${basedir}/src/main/images</imagesDirectory>
-			    </configuration>
-			</plugin>
--->	
+
 		</plugins>
 	</build>
 
@@ -244,50 +223,9 @@
 	      <url>http://agilejava.com/maven/</url>
 	    </repository>
 
-		
-        <repository>
-          <id>repository.jboss.org</id>
-          <url>http://repository.jboss.org/maven2</url>
-          <releases>
-            <enabled>true</enabled>
-          </releases>
-          <snapshots>
-            <enabled>false</enabled>
-          </snapshots>
-        </repository>
-        <repository>
-          <id>snapshots.jboss.org</id>
-          <url>http://snapshots.jboss.org/maven2</url>
-          <releases>
-            <enabled>false</enabled>
-          </releases>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-        </repository>	
 	</repositories>
 	
      <pluginRepositories>
-       <pluginRepository>
-         <id>repository.jboss.org</id>
-         <url>http://repository.jboss.org/maven2</url>
-         <releases>
-           <enabled>true</enabled>
-         </releases>
-         <snapshots>
-           <enabled>false</enabled>
-         </snapshots>
-       </pluginRepository>
-       <pluginRepository>
-         <id>snapshots.jboss.org</id>
-         <url>http://snapshots.jboss.org/maven2</url>
-         <releases>
-           <enabled>false</enabled>
-         </releases>
-         <snapshots>
-           <enabled>true</enabled>
-         </snapshots>
-       </pluginRepository>
 
 	    <pluginRepository>
 	      <id>agilejava</id>
