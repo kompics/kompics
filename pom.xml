@@ -24,13 +24,13 @@
 	</licenses>
 
 	<modules>
-		<module>core</module>
-		<module>address</module>
-		<module>port-network</module>
-		<module>port-timer</module>
-		<module>component-mina-network</module>
-		<module>component-java-timer</module>
-		<module>distributed-system-launcher</module>
+		<module>kompics-core</module>
+		<module>kompics-address</module>
+		<module>kompics-port-network</module>
+		<module>kompics-port-timer</module>
+		<module>kompics-component-mina-network</module>
+		<module>kompics-component-java-timer</module>
+		<module>kompics-distributed-system-launcher</module>
 	</modules>
 
 	<dependencies>
