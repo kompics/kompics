@@ -30,6 +30,8 @@ import se.sics.kompics.network.Message;
  */
 public class Prepare extends Message {
 
+	private static final long serialVersionUID = -2976970028371972079L;
+
 	private final Transaction trans;
 	
 	public Prepare(Transaction trans, Address src, Address dest) {

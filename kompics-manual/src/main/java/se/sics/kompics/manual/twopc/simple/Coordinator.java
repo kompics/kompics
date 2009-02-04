@@ -1,6 +1,8 @@
 package se.sics.kompics.manual.twopc.simple;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import se.sics.kompics.ComponentDefinition;
@@ -11,11 +13,17 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.manual.twopc.Coordination;
 import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
+import se.sics.kompics.manual.twopc.event.BeginTransaction;
 import se.sics.kompics.manual.twopc.event.Commit;
+import se.sics.kompics.manual.twopc.event.CommitTransaction;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
+import se.sics.kompics.manual.twopc.event.Operation;
 import se.sics.kompics.manual.twopc.event.Prepare;
+import se.sics.kompics.manual.twopc.event.ReadOperation;
+import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.manual.twopc.event.Transaction;
+import se.sics.kompics.manual.twopc.event.WriteOperation;
 import se.sics.kompics.network.Network;
 
 /**
@@ -64,10 +72,16 @@ public class Coordinator extends ComponentDefinition {
 	
 	private int transactionCount = 0;
 	
+	private Map<Integer,List<Operation>> activeTransactions = new HashMap<Integer,List<Operation>>();
+	
 	public Coordinator() {
 	  subscribe(handleCoordinatorInit,control);
 	  
-	  subscribe(handleStartTransaction, coordinator);
+	  subscribe(handleBeginTransaction, coordinator);
+	  subscribe(handleCommitTransaction, coordinator);
+	  subscribe(handleRollbackTransaction, coordinator);
+	  subscribe(handleReadOperation, coordinator);
+	  subscribe(handleWriteOperation, coordinator);
 	  
 	  subscribe(handleCommit,net);
 	  subscribe(handleAbort,net);
@@ -82,17 +96,55 @@ public class Coordinator extends ComponentDefinition {
 		}
 	};
 	
-	Handler<Transaction> handleStartTransaction = new Handler<Transaction>() {
-		public void handle(Transaction trans) {
-			
-			tranVotes.put(trans.getId(), 0);
+	Handler<BeginTransaction> handleBeginTransaction = new Handler<BeginTransaction>() {
+		public void handle(BeginTransaction trans) {
+			List<Operation> ops = new ArrayList<Operation>();
+			activeTransactions.put(trans.getTransactionId(), ops);
+			tranVotes.put(trans.getTransactionId(), 0);
+		}
+	};
+	
+	Handler<CommitTransaction> handleCommitTransaction = new Handler<CommitTransaction>() {
+		public void handle(CommitTransaction trans) {
+			// Start Two-Phase Commit with Participants
+			List<Operation> ops = activeTransactions.get(trans.getTransactionId());
 			
 			for (Address dest : mapParticipants.values())
 			{
-				trigger(new Prepare(trans,self,dest), net);
+				Transaction t = new Transaction(trans.getTransactionId(),
+						Transaction.CommitType.COMMIT, ops);
+				trigger(new Prepare(t,self,dest), net);
 			}
 		}
 	};
+	
+	Handler<RollbackTransaction> handleRollbackTransaction = new Handler<RollbackTransaction>() {
+		public void handle(RollbackTransaction trans) {
+			
+			for (Address dest : mapParticipants.values())
+			{
+				trigger(new Abort(trans.getTransactionId(), self, dest), net);
+			}
+		}
+	};
+	
+	Handler<ReadOperation> handleReadOperation = new Handler<ReadOperation>() {
+		public void handle(ReadOperation readOp) {
+			// Add operation to its active transaction
+			List<Operation> ops = activeTransactions.get(readOp.getTransactionId());
+			ops.add(readOp);
+			// TODO send read to participants and result to client, read-lock tuple  
+		}
+	};
+	
+	Handler<WriteOperation> handleWriteOperation = new Handler<WriteOperation>() {
+		public void handle(WriteOperation writeOp) {
+			// Add operation to its active transaction
+			List<Operation> ops = activeTransactions.get(writeOp.getTransactionId());
+			ops.add(writeOp);
+		}
+	};
+	
 
 	Handler<Commit> handleCommit = new Handler<Commit>() {
 		public void handle(Commit commit) {
@@ -123,7 +175,15 @@ public class Coordinator extends ComponentDefinition {
 	};
 	
 	Handler<Ack> handleAck = new Handler<Ack>() {
-		public void handle(Ack ack) {
+		public void handle(Ack ack) 
+		{
+			TransResult res = new TransResult(ack.getTransactionId(),true);
+			
+			if (ack.getResponses().size() > 0)
+			{
+				res.setResponses(ack.getResponses());
+			}
+			trigger(res,coordinator);
 		}
 	};
 }

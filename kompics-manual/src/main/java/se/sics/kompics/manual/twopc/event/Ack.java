@@ -20,6 +20,8 @@
  */
 package se.sics.kompics.manual.twopc.event;
 
+import java.util.Map;
+
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 
@@ -30,13 +32,23 @@ import se.sics.kompics.network.Message;
  */
 public class Ack extends Message {
 
+	private static final long serialVersionUID = -2160411310927208910L;
+
 	private final int transactionId;
-	public Ack(int transactionId,  Address src, Address dest) {
+	
+	private final Map<String,String> responses;
+	
+	public Ack(int transactionId, Map<String,String> responses, Address src, Address dest) {
 		super(src, dest);
+		this.responses = responses;
 		this.transactionId = transactionId;
 	}
 	
 	public int getTransactionId() {
 		return transactionId;
+	}
+	
+	public Map<String, String> getResponses() {
+		return responses;
 	}
 }

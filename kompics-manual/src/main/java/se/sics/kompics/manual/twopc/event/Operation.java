@@ -1,26 +1,21 @@
 package se.sics.kompics.manual.twopc.event;
 
+import java.io.Serializable;
+
 import se.sics.kompics.Event;
 
-public abstract class Operation extends Event
+public abstract class Operation extends Event implements Serializable
 {
-	public enum OpType {READ, WRITE};	
+	private static final long serialVersionUID = 3587226473177289006L;
 
-	protected final OpType opType;
-
-	protected int id;
+	protected int transactionId;
 	
-	public Operation(int id, OpType opType) {
-		this.id = id;
-		this.opType = opType;
+	public Operation(int id) {
+		this.transactionId = id;
 	}
 	
-	public int getId() {
-		return id;
-	}
-	
-	public OpType getOpType() {
-		return opType;
+	public int getTransactionId() {
+		return transactionId;
 	}
 	
 	public abstract String getName();

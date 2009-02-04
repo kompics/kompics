@@ -23,7 +23,7 @@ package se.sics.kompics.manual.twopc.event;
 import se.sics.kompics.Event;
 
 /**
- * The <code>Commit</code> class.
+ * The <code>CommitTransaction</code> class.
  * 
  * @author Jim Dowling <jdowling@sics.se>
  */

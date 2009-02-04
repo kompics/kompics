@@ -110,6 +110,8 @@ public final class CommandProcessor extends ComponentDefinition {
 			doBeginTransaction();
 			doNextCommand();
 		} if (cmd.startsWith("R")) {
+			int endOfName = cmd.indexOf(":");
+			
 			doReadOperation(cmd.substring(2));
 			doNextCommand();
 		} if (cmd.startsWith("W")) {
@@ -135,12 +137,12 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 
 	private final void doHelp() {
-		logger.info("Available commands: B, O<t,n,v>, C, A, help, X");
+		logger.info("Available commands: B, R<n>,W<n,v>, C, A, help, X");
 		logger.info("B: Transaction begin");
 		logger.info("C: Transaction commit");
-		logger.info("A: Transaction rollback");		
-		logger.info("R<n>: Read Operation, where n=name");
-		logger.info("W<n,v>: Write Operation, where n=name, v=value");
+		logger.info("A: Transaction abort (rollback)");		
+		logger.info("R<n>: Read Operation for name, e.g., Rkompics:");
+		logger.info("W<n,v>: Write Operation to set name to value, e.g., Wkompics,09:");
 		logger.info("Sn: sleeps 'n' milliseconds before the next command");
 		logger.info("help: shows this help message");
 		logger.info("X: terminates this process");

@@ -1,6 +1,7 @@
 package se.sics.kompics.manual.twopc.event;
 
 
+
 public class ReadOperation	extends Operation 
 {
 	protected static final long serialVersionUID = -3027574709983565623L;
@@ -10,26 +11,15 @@ public class ReadOperation	extends Operation
 	protected String value;
 
 	public ReadOperation(int id, String name) {
-		this(id, Operation.OpType.READ, name);
+		this(id, name, null);
 	}
-	
+
 	public ReadOperation(int id, String name, String value) {
-		this(id, Operation.OpType.READ, name, value);
-	}
-
-	protected ReadOperation(int id, Operation.OpType opType, String name) {
-		this(id, opType, name, null);
-	}
-
-	protected ReadOperation(int id, Operation.OpType opType, String name, String value) {
-		super(id, opType);
+		super(id);
 		this.name = name;
 		this.value = value;
 	}
 
-	public OpType getOpType() {
-		return opType;
-	}
 	public String getName() {
 		return name;
 	}

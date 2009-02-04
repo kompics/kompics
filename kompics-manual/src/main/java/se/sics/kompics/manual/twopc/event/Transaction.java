@@ -24,38 +24,32 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import se.sics.kompics.address.Address;
-import se.sics.kompics.network.Message;
+import se.sics.kompics.Event;
 
 /**
  * The <code>Query</code> class.
  * 
  * @author Jim Dowling <jdowling@sics.se>
  */
-public class Transaction extends Message implements Serializable {
+public class Transaction extends Event implements Serializable {
 
 	private static final long serialVersionUID = 6368923650423064957L;
 
 	public enum CommitType {COMMIT, NO_COMMIT };
 	
 
-	List<Operation> listOperations =  new ArrayList<Operation>();
+	private final List<Operation> listOperations;
 	
 	private final int id;
 	
 	private final CommitType commitType;
 
-	public Transaction(int id, Address source, Address dest, CommitType commitType) {
-		super(source, dest);
+	public Transaction(int id, CommitType commitType, List<Operation> listOperations) {
 		this.id = id;
 		this.commitType = commitType;
+		this.listOperations =  new ArrayList<Operation>(listOperations); 
 	}
 
-	public void addOperation(ReadOperation op)
-	{
-		listOperations.add(op);
-	}
-	
 	public List<Operation> getOperations()
 	{
 		return new ArrayList<Operation>(listOperations);

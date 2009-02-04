@@ -77,7 +77,7 @@ public class ApplicationGroup extends ComponentDefinition {
 		for (Address addr : neighborSet) {
 			pId++;
 			Component p = create(Participant.class);
-			trigger(new ParticipantInit(pId, addr, self), p.getControl());
+			trigger(new ParticipantInit(self), p.getControl());
 			connect(p.getNegative(Network.class), network
 					.getPositive(Network.class));
 			connect(p.getNegative(Timer.class), time.getPositive(Timer.class));

@@ -9,6 +9,7 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
+import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.Commit;
 import se.sics.kompics.manual.twopc.event.Operation;
 import se.sics.kompics.manual.twopc.event.ParticipantInit;
@@ -16,6 +17,7 @@ import se.sics.kompics.manual.twopc.event.Prepare;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
 import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.Transaction;
+import se.sics.kompics.manual.twopc.event.WriteOperation;
 import se.sics.kompics.network.Network;
 
 /**
@@ -23,11 +25,15 @@ import se.sics.kompics.network.Network;
  */
 public class Participant extends ComponentDefinition {
 
-	Positive<Network> net= positive(Network.class);
+	Positive<Network> net = positive(Network.class);
 
+/*
+ * TODO: do proper rollback and logging
+ * 
 	public class LogEntry
 	{
 		private long transactionId;
+		
 		private Operation operation;
 		
 		public LogEntry(long index, Operation operation) {
@@ -44,24 +50,18 @@ public class Participant extends ComponentDefinition {
 			return operation;
 		}		
 	}
-	
-	
-	
 	List<LogEntry> redoLog = new ArrayList<LogEntry>();
 	List<LogEntry> undoLog = new ArrayList<LogEntry>();
-	
 	private long redoLogIndex=0;
 	private long undoLogIndex=0;
-	
-	private int participantId;
+*/	
 	
     private Address self;
-    private Address coordinatorAddress;
     
     private Map<String,String> database = new HashMap<String,String>();
 
-    private Map<Integer,Map<String,String>> outstandingTransactions = new 
-    		HashMap<Integer,Map<String,String>>();
+    private Map<Integer,List<Operation>> activeTransactions = new 
+    		HashMap<Integer,List<Operation>>();
 
     
 	public Participant() {
@@ -73,8 +73,6 @@ public class Participant extends ComponentDefinition {
 	
 	Handler<ParticipantInit> handleParticipantInit = new Handler<ParticipantInit>() {
 		public void handle(ParticipantInit init) {
-			participantId = init.getId();
-			coordinatorAddress = init.getCoordinatorAddress();
 			self = init.getSelf();
 		}
 	};
@@ -83,14 +81,7 @@ public class Participant extends ComponentDefinition {
 		public void handle(Prepare prepare) {
 			Transaction t = prepare.getTrans();
 			int id = t.getId();
-			
-			List<Operation> ops = t.getOperations();
-			Map<String,String> entries = new HashMap<String,String>();
-			for (Operation op : ops)
-			{
-				entries.put(op.getName(), op.getValue());
-			}
-			outstandingTransactions.put(id, entries);
+			activeTransactions.put(id, t.getOperations());
 			
 			trigger(new Commit(id, self, prepare.getSource()), net);
 		}
@@ -98,17 +89,37 @@ public class Participant extends ComponentDefinition {
 	
 	Handler<Commit> handleCommit = new Handler<Commit>() {
 		public void handle(Commit commit) {
-			int tId = commit.getTransactionId();
+			int transactionId = commit.getTransactionId();
 			
-			// copy from outstanding transactions
+			List<Operation> ops = activeTransactions.get(transactionId);
 			
+		    Map<String,String> responses = new HashMap<String,String>();
+			// copy from active transactions to DB
+			for (Operation op : ops)
+			{
+				if (op instanceof ReadOperation)
+				{
+					String name = op.getName();
+					String value = database.get(name);
+					// Return value read to client in a new ReadOperation
+					responses.put(name, value);
+				}
+				else if (op instanceof WriteOperation)
+				{
+					database.put(op.getName(), op.getValue());					
+				}
+			}
+
+			// Send Ack with responses
+			trigger(new Ack(transactionId,responses,self,commit.getSource()),net);
+
 		}
 	};
 
 	Handler<RollbackTransaction> handleRollback = new Handler<RollbackTransaction>() {
 		public void handle(RollbackTransaction rollback) {
-			int tId = rollback.getTransactionId();
-			
+			int id = rollback.getTransactionId();
+			activeTransactions.remove(id);
 		}
 	};
 
