@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-parent-pom</artifactId>
@@ -266,30 +267,30 @@
 	</developers>
 
 	<contributors>
-        <contributor>
-            <name>Ali Ghodsi</name>
-            <email>ali@sics.se</email>
-            <url>http://www.sics.se/~ali</url>
-            <organization>Swedish Institute of Computer Science (SICS)</organization>
-            <organizationUrl>http://www.sics.se/</organizationUrl>
-            <timezone>+1</timezone>
-        </contributor>
-        <contributor>
-            <name>Tallat Shafaat</name>
-            <email>tallat@sics.se</email>
-            <url>http://www.sics.se/~tallat</url>
-            <organization>Swedish Institute of Computer Science (SICS)</organization>
-            <organizationUrl>http://www.sics.se/</organizationUrl>
-            <timezone>+1</timezone>
-        </contributor>
-        <contributor>
-            <name>Roberto Roverso</name>
-            <email>roberto@sics.se</email>
-            <url>http://www.sics.se/~roberto</url>
-            <organization>Swedish Institute of Computer Science (SICS)</organization>
-            <organizationUrl>http://www.sics.se/</organizationUrl>
-            <timezone>+1</timezone>
-        </contributor>
+		<contributor>
+			<name>Ali Ghodsi</name>
+			<email>ali@sics.se</email>
+			<url>http://www.sics.se/~ali</url>
+			<organization>Swedish Institute of Computer Science (SICS)</organization>
+			<organizationUrl>http://www.sics.se/</organizationUrl>
+			<timezone>+1</timezone>
+		</contributor>
+		<contributor>
+			<name>Tallat Shafaat</name>
+			<email>tallat@sics.se</email>
+			<url>http://www.sics.se/~tallat</url>
+			<organization>Swedish Institute of Computer Science (SICS)</organization>
+			<organizationUrl>http://www.sics.se/</organizationUrl>
+			<timezone>+1</timezone>
+		</contributor>
+		<contributor>
+			<name>Roberto Roverso</name>
+			<email>roberto@sics.se</email>
+			<url>http://www.sics.se/~roberto</url>
+			<organization>Swedish Institute of Computer Science (SICS)</organization>
+			<organizationUrl>http://www.sics.se/</organizationUrl>
+			<timezone>+1</timezone>
+		</contributor>
 	</contributors>
 
 </project>
