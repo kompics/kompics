@@ -20,19 +20,18 @@
  */
 package se.sics.kompics.manual.twopc.event;
 
-import se.sics.kompics.address.Address;
-import se.sics.kompics.network.Message;
+import se.sics.kompics.Event;
 
 /**
  * The <code>Commit</code> class.
  * 
  * @author Jim Dowling <jdowling@sics.se>
  */
-public class Rollback extends Message {
+public class CommitTransaction extends Event {
 
 	private final int transactionId;
-	public Rollback(int transactionId,  Address src, Address dest) {
-		super(src, dest);
+	
+	public CommitTransaction(int transactionId) {
 		this.transactionId = transactionId;
 	}
 	

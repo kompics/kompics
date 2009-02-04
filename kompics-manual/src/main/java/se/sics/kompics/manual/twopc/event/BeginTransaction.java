@@ -20,52 +20,21 @@
  */
 package se.sics.kompics.manual.twopc.event;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
-import se.sics.kompics.address.Address;
-import se.sics.kompics.network.Message;
+import se.sics.kompics.Event;
 
 /**
- * The <code>Query</code> class.
+ * The <code>Commit</code> class.
  * 
  * @author Jim Dowling <jdowling@sics.se>
  */
-public class Transaction extends Message implements Serializable {
+public class BeginTransaction extends Event {
 
-	private static final long serialVersionUID = 6368923650423064957L;
-
-	public enum CommitType {COMMIT, NO_COMMIT };
-	
-
-	List<Operation> listOperations =  new ArrayList<Operation>();
-	
-	private final int id;
-	
-	private final CommitType commitType;
-
-	public Transaction(int id, Address source, Address dest, CommitType commitType) {
-		super(source, dest);
-		this.id = id;
-		this.commitType = commitType;
-	}
-
-	public void addOperation(ReadOperation op)
-	{
-		listOperations.add(op);
+	private final int transactionId;
+	public BeginTransaction(int transactionId) {
+		this.transactionId = transactionId;
 	}
 	
-	public List<Operation> getOperations()
-	{
-		return new ArrayList<Operation>(listOperations);
-	}
-	
-	public int getId() {
-		return id;
-	}
-	
-	public CommitType getCommitType() {
-		return commitType;
+	public int getTransactionId() {
+		return transactionId;
 	}
 }

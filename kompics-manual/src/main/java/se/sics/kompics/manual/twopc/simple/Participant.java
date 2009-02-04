@@ -10,11 +10,12 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.manual.twopc.event.Commit;
+import se.sics.kompics.manual.twopc.event.Operation;
 import se.sics.kompics.manual.twopc.event.ParticipantInit;
 import se.sics.kompics.manual.twopc.event.Prepare;
-import se.sics.kompics.manual.twopc.event.Rollback;
+import se.sics.kompics.manual.twopc.event.ReadOperation;
+import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.Transaction;
-import se.sics.kompics.manual.twopc.event.Transaction.Operation;
 import se.sics.kompics.network.Network;
 
 /**
@@ -27,7 +28,7 @@ public class Participant extends ComponentDefinition {
 	public class LogEntry
 	{
 		private long transactionId;
-		private Transaction.Operation operation;
+		private Operation operation;
 		
 		public LogEntry(long index, Operation operation) {
 			super();
@@ -39,7 +40,7 @@ public class Participant extends ComponentDefinition {
 			return transactionId;
 		}
 		
-		public Transaction.Operation getOperation() {
+		public Operation getOperation() {
 			return operation;
 		}		
 	}
@@ -104,8 +105,8 @@ public class Participant extends ComponentDefinition {
 		}
 	};
 
-	Handler<Rollback> handleRollback = new Handler<Rollback>() {
-		public void handle(Rollback rollback) {
+	Handler<RollbackTransaction> handleRollback = new Handler<RollbackTransaction>() {
+		public void handle(RollbackTransaction rollback) {
 			int tId = rollback.getTransactionId();
 			
 		}

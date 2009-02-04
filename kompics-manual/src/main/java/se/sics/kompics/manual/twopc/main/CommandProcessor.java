@@ -13,8 +13,13 @@ import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.manual.twopc.Coordination;
 import se.sics.kompics.manual.twopc.event.ApplicationInit;
+import se.sics.kompics.manual.twopc.event.BeginTransaction;
+import se.sics.kompics.manual.twopc.event.CommitTransaction;
+import se.sics.kompics.manual.twopc.event.ReadOperation;
+import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.manual.twopc.event.Transaction;
+import se.sics.kompics.manual.twopc.event.WriteOperation;
 import se.sics.kompics.manual.twopc.main.event.ApplicationContinue;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
@@ -31,8 +36,10 @@ public final class CommandProcessor extends ComponentDefinition {
 	private int lastCommand;
 	private Address self;
 	
-	private int transCount=0;
+	private int transId=0;
 
+	private Transaction trans;
+	
 	public CommandProcessor() {
 		subscribe(handleInit, control);
 		subscribe(handleStart, control);
@@ -99,8 +106,20 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 
 	private void doCommand(String cmd) {
-		if (cmd.startsWith("T")) {
-			doStartTransaction(Integer.parseInt(cmd.substring(1)));
+		if (cmd.startsWith("B")) {
+			doBeginTransaction();
+			doNextCommand();
+		} if (cmd.startsWith("R")) {
+			doReadOperation(cmd.substring(2));
+			doNextCommand();
+		} if (cmd.startsWith("W")) {
+			doWriteOperation(cmd.substring(2), cmd.substring(2));
+			doNextCommand();
+		} else if (cmd.startsWith("C")) {
+			doCommitTransaction();
+			doNextCommand();
+		} else if (cmd.startsWith("A")) {
+			doRollbackTransaction();
 			doNextCommand();
 		} else if (cmd.startsWith("S")) {
 			doSleep(Integer.parseInt(cmd.substring(1)));
@@ -116,25 +135,39 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 
 	private final void doHelp() {
-		logger.info("Available commands: T<m>, S<n>, help, X");
-		logger.info("Tm: Transaction created with 'm' operations");
+		logger.info("Available commands: B, O<t,n,v>, C, A, help, X");
+		logger.info("B: Transaction begin");
+		logger.info("C: Transaction commit");
+		logger.info("A: Transaction rollback");		
+		logger.info("R<n>: Read Operation, where n=name");
+		logger.info("W<n,v>: Write Operation, where n=name, v=value");
 		logger.info("Sn: sleeps 'n' milliseconds before the next command");
 		logger.info("help: shows this help message");
 		logger.info("X: terminates this process");
 	}
 
-	private void doStartTransaction(int numOps) {
-		logger.info("Creating transaction with {} operations", numOps);
-		
-		Transaction t = new Transaction(transCount++);
-		for (int i=0; i<numOps;i++)
-		{
-				t.addOperation(t.new Operation(new Integer((int)System.currentTimeMillis()).toString(), 
-						new Integer(i).toString()));
-		}
+	private void doBeginTransaction() {
+		BeginTransaction b = new BeginTransaction(transId++);
+		logger.info("Beginning transaction with {} id", transId);
+		trigger(b,coordinator);
+	}
 
-		
-		trigger(t, coordinator);
+	private void doReadOperation(String name) {
+		logger.info("Creating Read Operation with {} as name.", name);
+		trigger(new ReadOperation(transId, name),coordinator);
+	}
+	
+	private void doWriteOperation(String name, String value) {
+		logger.info("Creating Read Operation with {} as name and {} as value.", name, value);
+		trigger(new WriteOperation(transId, name,value),coordinator);
+	}
+	
+	private void doCommitTransaction() {
+		trigger(new CommitTransaction(transId), coordinator);
+	}
+
+	private void doRollbackTransaction() {
+		trigger(new RollbackTransaction(transId), coordinator);		
 	}
 
 	private void doSleep(long delay) {

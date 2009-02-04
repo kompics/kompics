@@ -32,8 +32,8 @@ public class Commit extends Message {
 
 	private final int transactionId;
 	
-	public Commit(int transactionId, Address src, Address dest) {
-		super(src, dest);
+	public Commit(int transactionId, Address source, Address dest) {
+		super(source, dest);
 		this.transactionId = transactionId;
 	}
 	
