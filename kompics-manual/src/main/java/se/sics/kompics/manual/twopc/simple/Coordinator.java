@@ -60,7 +60,7 @@ import se.sics.kompics.network.Network;
 public class Coordinator extends ComponentDefinition {
 	
 	Negative<Coordination> coordinator = negative(Coordination.class);
-	Positive<Network> net= positive(Network.class);
+	Positive<Network> netPort = positive(Network.class);
 
 	private int id;
     
@@ -83,9 +83,9 @@ public class Coordinator extends ComponentDefinition {
 	  subscribe(handleReadOperation, coordinator);
 	  subscribe(handleWriteOperation, coordinator);
 	  
-	  subscribe(handleCommit,net);
-	  subscribe(handleAbort,net);
-	  subscribe(handleAck,net);
+	  subscribe(handleCommit,netPort);
+	  subscribe(handleAbort,netPort);
+	  subscribe(handleAck,netPort);
 	}
 	
 	Handler<CoordinatorInit> handleCoordinatorInit = new Handler<CoordinatorInit>() {
@@ -113,7 +113,7 @@ public class Coordinator extends ComponentDefinition {
 			{
 				Transaction t = new Transaction(trans.getTransactionId(),
 						Transaction.CommitType.COMMIT, ops);
-				trigger(new Prepare(t,self,dest), net);
+				trigger(new Prepare(t,self,dest), netPort);
 			}
 		}
 	};
@@ -123,7 +123,7 @@ public class Coordinator extends ComponentDefinition {
 			
 			for (Address dest : mapParticipants.values())
 			{
-				trigger(new Abort(trans.getTransactionId(), self, dest), net);
+				trigger(new Abort(trans.getTransactionId(), self, dest), netPort);
 			}
 		}
 	};

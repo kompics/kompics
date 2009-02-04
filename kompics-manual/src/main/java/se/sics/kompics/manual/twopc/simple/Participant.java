@@ -1,6 +1,5 @@
 package se.sics.kompics.manual.twopc.simple;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,13 +8,13 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
+import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.Commit;
 import se.sics.kompics.manual.twopc.event.Operation;
 import se.sics.kompics.manual.twopc.event.ParticipantInit;
 import se.sics.kompics.manual.twopc.event.Prepare;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
-import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
 import se.sics.kompics.network.Network;
@@ -116,8 +115,8 @@ public class Participant extends ComponentDefinition {
 		}
 	};
 
-	Handler<RollbackTransaction> handleRollback = new Handler<RollbackTransaction>() {
-		public void handle(RollbackTransaction rollback) {
+	Handler<Abort> handleRollback = new Handler<Abort>() {
+		public void handle(Abort rollback) {
 			int id = rollback.getTransactionId();
 			activeTransactions.remove(id);
 		}

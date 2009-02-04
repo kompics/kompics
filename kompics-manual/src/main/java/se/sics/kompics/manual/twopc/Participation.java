@@ -5,7 +5,6 @@ import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.Commit;
 import se.sics.kompics.manual.twopc.event.Prepare;
-import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 
 public final class Participation extends PortType {
 	{
@@ -15,6 +14,6 @@ public final class Participation extends PortType {
 
 		negative(Prepare.class);
 		negative(Commit.class);
-		negative(RollbackTransaction.class);		
+		negative(Abort.class);		
 	}
 }
