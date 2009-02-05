@@ -6,8 +6,9 @@ import java.util.Map;
 
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
-import se.sics.kompics.Positive;
+import se.sics.kompics.Negative;
 import se.sics.kompics.address.Address;
+import se.sics.kompics.manual.twopc.TwoPhaseCommit;
 import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.Commit;
@@ -18,14 +19,13 @@ import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
 import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
-import se.sics.kompics.network.Network;
 
 /**
  * 
  */
 public class Participant extends ComponentDefinition {
 
-	Positive<Network> net = positive(Network.class);
+	Negative<TwoPhaseCommit> tpcPort = negative(TwoPhaseCommit.class);
 
 /*
  * TODO: do proper rollback and logging
@@ -66,9 +66,9 @@ public class Participant extends ComponentDefinition {
     
 	public Participant() {
 		  subscribe(handleParticipantInit,control);
-		  subscribe(handlePrepare,net);
-		  subscribe(handleCommit,net);
-		  subscribe(handleRollback,net);
+		  subscribe(handlePrepare,tpcPort);
+		  subscribe(handleCommit,tpcPort);
+		  subscribe(handleRollback,tpcPort);
 	}
 	
 	Handler<ParticipantInit> handleParticipantInit = new Handler<ParticipantInit>() {
@@ -83,7 +83,7 @@ public class Participant extends ComponentDefinition {
 			int id = t.getId();
 			activeTransactions.put(id, t.getOperations());
 			
-			trigger(new Prepared(id, self, prepare.getSource()), net);
+			trigger(new Prepared(id, self, prepare.getSource()), tpcPort);
 		}
 	};
 	
@@ -111,7 +111,7 @@ public class Participant extends ComponentDefinition {
 			}
 
 			// Send Ack with responses
-			trigger(new Ack(transactionId,responses,self,commit.getSource()),net);
+			trigger(new Ack(transactionId,responses,self,commit.getSource()),tpcPort);
 
 		}
 	};

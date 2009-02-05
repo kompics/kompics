@@ -49,26 +49,27 @@ public final class Application {
 				node(1, "127.0.0.1", 22031);
 				node(2, "127.0.0.1", 22032);
 				link(1, 2, 3000, 0.5).bidirectional();
+				defaultLinks(1000,0);
 			}
 		};
 
-		Topology topology2 = new Topology() {
-			{
-				node(1, "127.0.0.1", 22031);
-				node(2, "127.0.0.1", 22032);
-				node(3, "127.0.0.1", 22033);
-				node(4, "127.0.0.1", 22034);
-
-				link(1, 2, 3000, 0.5).bidirectional();
-				link(1, 3, 3000, 0.5).bidirectional();
-				link(1, 4, 3000, 0.5).bidirectional();
-//				 defaultLinks(1000, 0);
-			}
-		};
+//		Topology topology2 = new Topology() {
+//			{
+//				node(1, "127.0.0.1", 22031);
+//				node(2, "127.0.0.1", 22032);
+//				node(3, "127.0.0.1", 22033);
+//				node(4, "127.0.0.1", 22034);
+//
+//				link(1, 2, 3000, 0.5).bidirectional();
+//				link(1, 3, 3000, 0.5).bidirectional();
+//				link(1, 4, 3000, 0.5).bidirectional();
+////				 defaultLinks(1000, 0);
+//			}
+//		};
 
 		Scenario scenario1 = new Scenario(ApplicationGroup.class) {
 			{
-				command(1, "T5:X"); //.recover("Prrr", 1000);
+				command(1, "help:B:Wjim,dowling:Rjim:S10000:X"); //.recover("Prrr", 1000);
 			}
 		};
 
@@ -83,8 +84,8 @@ public final class Application {
 
 
 		scenario1.executeOn(topology1);
-		scenario1.executeOn(topology2);
-		scenario2.executeOn(topology2);
+//		scenario1.executeOn(topology2);
+//		scenario2.executeOn(topology2);
 
 		System.exit(0);
 	}

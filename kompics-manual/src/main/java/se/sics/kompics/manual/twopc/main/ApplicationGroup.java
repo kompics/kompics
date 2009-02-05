@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
@@ -33,7 +35,10 @@ public class ApplicationGroup extends ComponentDefinition {
 	}
 	private static int selfId;
 	private static String commandScript;
-	Topology topology = Topology.load(System.getProperty("topology"), selfId);
+	Topology topology;
+
+	private static final Logger logger = LoggerFactory
+	.getLogger(ApplicationGroup.class);
 
 	/**
 	 * The main method.
@@ -42,8 +47,8 @@ public class ApplicationGroup extends ComponentDefinition {
 	 *            the arguments
 	 */
 	public static void main(String[] args) {
-		selfId = Integer.parseInt(args[0]);
-		commandScript = args[1];
+		selfId = 1; // Integer.parseInt(args[0]);
+		commandScript = "B:Wjim,dowling:Rjim:C:S5000:X"; //args[1]
 
 		Kompics.createAndStart(ApplicationGroup.class);
 	}
@@ -53,6 +58,11 @@ public class ApplicationGroup extends ComponentDefinition {
 	 */
 	public ApplicationGroup() {
 
+		String prop = System.getProperty("topology");
+
+		logger.info("Topology filename: " + prop);
+		Topology.load(prop, selfId);
+		
 		// create components
 		Component time = create(JavaTimer.class);
 		Component network = create(MinaNetwork.class);

@@ -11,7 +11,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.manual.twopc.Coordination;
+import se.sics.kompics.manual.twopc.Client;
 import se.sics.kompics.manual.twopc.event.ApplicationInit;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
 import se.sics.kompics.manual.twopc.event.CommitTransaction;
@@ -26,7 +26,7 @@ import se.sics.kompics.timer.Timer;
 
 public final class CommandProcessor extends ComponentDefinition {
 
-	Positive<Coordination> coordinator = positive(Coordination.class);
+	Positive<Client> coordinator = positive(Client.class);
 	Positive<Timer> timer = positive(Timer.class);
 
 	private static final Logger logger = LoggerFactory
@@ -106,16 +106,16 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 
 	private void doCommand(String cmd) {
+		logger.info("Comand:" + cmd.substring(0, 1));
 		if (cmd.startsWith("B")) {
 			doBeginTransaction();
 			doNextCommand();
 		} if (cmd.startsWith("R")) {
-			int endOfName = cmd.indexOf(":");
-			
-			doReadOperation(cmd.substring(2));
+			doReadOperation(cmd.substring(1));
 			doNextCommand();
 		} if (cmd.startsWith("W")) {
-			doWriteOperation(cmd.substring(2), cmd.substring(2));
+			int endOfName = cmd.indexOf(",");
+			doWriteOperation(cmd.substring(1,endOfName), cmd.substring(endOfName+1));
 			doNextCommand();
 		} else if (cmd.startsWith("C")) {
 			doCommitTransaction();
@@ -160,7 +160,7 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 	
 	private void doWriteOperation(String name, String value) {
-		logger.info("Creating Read Operation with {} as name and {} as value.", name, value);
+		logger.info("Creating Write Operation with {} as name and {} as value.", name, value);
 		trigger(new WriteOperation(transId, name,value),coordinator);
 	}
 	

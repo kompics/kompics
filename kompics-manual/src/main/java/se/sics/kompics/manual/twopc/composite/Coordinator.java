@@ -10,8 +10,8 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.manual.twopc.Coordination;
-import se.sics.kompics.manual.twopc.Participation;
+import se.sics.kompics.manual.twopc.Client;
+import se.sics.kompics.manual.twopc.TwoPhaseCommit;
 import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
@@ -59,8 +59,9 @@ import se.sics.kompics.manual.twopc.event.WriteOperation;
  */
 public class Coordinator extends ComponentDefinition {
 	
-	Negative<Coordination> coordinator = negative(Coordination.class);
-	Positive<Participation> netPort = positive(Participation.class);
+	Negative<Client> coordinator = negative(Client.class);
+	
+	Positive<TwoPhaseCommit> tpcPort = positive(TwoPhaseCommit.class);
 
 	private int id;
     
@@ -83,9 +84,9 @@ public class Coordinator extends ComponentDefinition {
 	  subscribe(handleReadOperation, coordinator);
 	  subscribe(handleWriteOperation, coordinator);
 	  
-	  subscribe(handlePrepared,netPort);
-	  subscribe(handleAbort,netPort);
-	  subscribe(handleAck,netPort);
+	  subscribe(handlePrepared,tpcPort);
+	  subscribe(handleAbort,tpcPort);
+	  subscribe(handleAck,tpcPort);
 	}
 	
 	Handler<CoordinatorInit> handleCoordinatorInit = new Handler<CoordinatorInit>() {
@@ -114,7 +115,7 @@ public class Coordinator extends ComponentDefinition {
 			{
 				Transaction t = new Transaction(trans.getTransactionId(),
 						Transaction.CommitType.COMMIT, ops);
-				trigger(new Prepare(t,self,dest), netPort);
+				trigger(new Prepare(t,self,dest), tpcPort);
 			}
 		}
 	};
@@ -124,7 +125,7 @@ public class Coordinator extends ComponentDefinition {
 			
 			for (Address dest : mapParticipants.values())
 			{
-				trigger(new Abort(trans.getTransactionId(), self, dest), netPort);
+				trigger(new Abort(trans.getTransactionId(), self, dest), tpcPort);
 			}
 		}
 	};

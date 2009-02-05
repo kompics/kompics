@@ -7,7 +7,7 @@ import se.sics.kompics.manual.twopc.event.Commit;
 import se.sics.kompics.manual.twopc.event.Prepare;
 import se.sics.kompics.manual.twopc.event.Prepared;
 
-public final class Participation extends PortType {
+public final class TwoPhaseCommit extends PortType {
 	{
 		negative(Prepare.class);
 		negative(Commit.class);

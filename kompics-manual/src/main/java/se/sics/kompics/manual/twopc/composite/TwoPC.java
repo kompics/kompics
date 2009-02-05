@@ -6,8 +6,8 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.manual.twopc.Coordination;
-import se.sics.kompics.manual.twopc.Participation;
+import se.sics.kompics.manual.twopc.Client;
+import se.sics.kompics.manual.twopc.TwoPhaseCommit;
 import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
@@ -29,9 +29,12 @@ public class TwoPC extends ComponentDefinition {
 	Component coordinator;
 	Component participant;
 
-	Negative<Coordination> inputCoordination = negative(Coordination.class);
-	Positive<Coordination> childCoordination = positive(Coordination.class);
-	Positive<Participation> childParticipation= positive(Participation.class);
+	Negative<Client> inputCoordination = negative(Client.class);
+	Positive<Client> childCoordination = positive(Client.class);
+
+	Positive<TwoPhaseCommit> childParticipation= positive(TwoPhaseCommit.class);
+	Negative<TwoPhaseCommit> childCoordinationTwoPC= negative(TwoPhaseCommit.class);
+	
 	Positive<Network> netPort = positive(Network.class);
 
 	Address self;
