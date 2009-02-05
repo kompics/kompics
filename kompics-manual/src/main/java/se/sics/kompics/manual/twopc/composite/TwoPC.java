@@ -1,4 +1,4 @@
-package se.sics.kompics.manual.twopc.simple;
+package se.sics.kompics.manual.twopc.composite;
 
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
@@ -16,6 +16,7 @@ import se.sics.kompics.manual.twopc.event.CommitTransaction;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
 import se.sics.kompics.manual.twopc.event.ParticipantInit;
 import se.sics.kompics.manual.twopc.event.Prepare;
+import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
 import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.TransResult;
@@ -31,52 +32,52 @@ public class TwoPC extends ComponentDefinition {
 	Negative<Coordination> inputCoordination = negative(Coordination.class);
 	Positive<Coordination> childCoordination = positive(Coordination.class);
 	Positive<Participation> childParticipation= positive(Participation.class);
-		
 	Positive<Network> netPort = positive(Network.class);
 
-	private int id;
-
-	private Address self;
+	Address self;
 	
 	public TwoPC() {
 		coordinator = create(Coordinator.class);
 		participant = create(Participant.class);
 		
+		// XXX does this work?
 		connect(inputCoordination,childCoordination);
 		
+		// events from this component's control port
 		subscribe(handleCoordinatorInit, control);
-		subscribe(handleTransResult, childCoordination);
 		
+		// events from inputCoordination Port (local events)
 		subscribe(handleBeginTransaction, inputCoordination);
 		subscribe(handleCommitTransaction, inputCoordination);
 		subscribe(handleRollbackTransaction, inputCoordination);
 		subscribe(handleReadOperation, inputCoordination);
 		subscribe(handleWriteOperation, inputCoordination);
-		
+
+		// events from childCoordination Port
+		subscribe(handleTransResult, childCoordination); // not sent over network
 		subscribe(handleCommit,childCoordination);
 		subscribe(handleAbort,childCoordination);
-		subscribe(handleAck,childCoordination);
-
+		subscribe(handlePrepare,childCoordination);
+		// events from net Port destined for childCoordination Port
 		subscribe(handleCommit,netPort);
 		subscribe(handleAbort,netPort);
-		subscribe(handleAck,netPort);
-		
 		subscribe(handlePrepare,netPort);
-		subscribe(handleCommit,netPort);
-		subscribe(handleRollback,netPort);		
 
-		subscribe(handlePrepare,childParticipation);
-		subscribe(handleCommit,childParticipation);
-		subscribe(handleRollback,childParticipation);		
+		// events from childParticipation Port
+		subscribe(handleAck,childParticipation);
+		subscribe(handlePrepared,childParticipation);
+		subscribe(handleParticipantAbort,childParticipation);		
+		// events from net Port destined for childParticipation Port		
+		subscribe(handlePrepared,netPort);
+		subscribe(handleParticipantAbort,netPort);		
+		subscribe(handleAck,netPort);
 	}
 	
 	Handler<CoordinatorInit> handleCoordinatorInit = new Handler<CoordinatorInit>() {
 		public void handle(CoordinatorInit init) {
-			id = init.getId();
-			self = init.getSelf();
-			
 			trigger(init,coordinator.getControl());
-			trigger(new ParticipantInit(self), participant.getControl());
+			self = init.getSelf();
+			trigger(new ParticipantInit(init.getSelf()), participant.getControl());
 		}
 	};
 	
@@ -116,9 +117,15 @@ public class TwoPC extends ComponentDefinition {
 		}
 	};
 	
+	Handler<Prepared> handlePrepared = new Handler<Prepared>() {
+		public void handle(Prepared prepared) {
+			forwardCoordination(prepared);
+		}
+	};
+	
 	Handler<Commit> handleCommit = new Handler<Commit>() {
 		public void handle(Commit commit) {
-			forwardCoordination(commit);
+			forwardParticipation(commit);
 		}
 	};
 	
@@ -145,13 +152,13 @@ public class TwoPC extends ComponentDefinition {
 	
 	Handler<Commit> handleCommitP = new Handler<Commit>() {
 		public void handle(Commit commit) {
-			forwardParticipation(commit);
+			forwardCoordination(commit);
 		}
 	};
 
-	Handler<Abort> handleRollback = new Handler<Abort>() {
+	Handler<Abort> handleParticipantAbort = new Handler<Abort>() {
 		public void handle(Abort rollback) {
-			forwardParticipation(rollback);
+			forwardCoordination(rollback);
 		}
 	};
 

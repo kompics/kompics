@@ -12,7 +12,6 @@ import se.sics.kompics.manual.twopc.event.TransResult;
 
 public final class Coordination extends PortType {
 	{
-		positive(TransResult.class);
 		negative(BeginTransaction.class);
 		negative(Operation.class);		
 		negative(CommitTransaction.class);
@@ -21,5 +20,6 @@ public final class Coordination extends PortType {
 		positive(Prepare.class);
 		positive(Commit.class);
 		positive(Abort.class);
+		positive(TransResult.class);
 	}
 }

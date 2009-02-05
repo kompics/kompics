@@ -1,4 +1,4 @@
-package se.sics.kompics.manual.twopc.simple;
+package se.sics.kompics.manual.twopc.composite;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +14,7 @@ import se.sics.kompics.manual.twopc.event.Commit;
 import se.sics.kompics.manual.twopc.event.Operation;
 import se.sics.kompics.manual.twopc.event.ParticipantInit;
 import se.sics.kompics.manual.twopc.event.Prepare;
+import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
 import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
@@ -82,7 +83,7 @@ public class Participant extends ComponentDefinition {
 			int id = t.getId();
 			activeTransactions.put(id, t.getOperations());
 			
-			trigger(new Commit(id, self, prepare.getSource()), net);
+			trigger(new Prepared(id, self, prepare.getSource()), net);
 		}
 	};
 	

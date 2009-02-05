@@ -1,4 +1,4 @@
-package se.sics.kompics.manual.twopc.simple;
+package se.sics.kompics.manual.twopc.composite;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,20 +11,20 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.manual.twopc.Coordination;
+import se.sics.kompics.manual.twopc.Participation;
 import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
-import se.sics.kompics.manual.twopc.event.Commit;
 import se.sics.kompics.manual.twopc.event.CommitTransaction;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
 import se.sics.kompics.manual.twopc.event.Operation;
 import se.sics.kompics.manual.twopc.event.Prepare;
+import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
 import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
-import se.sics.kompics.network.Network;
 
 /**
  * <h2>Two-phase-commit protocol</h2>
@@ -60,7 +60,7 @@ import se.sics.kompics.network.Network;
 public class Coordinator extends ComponentDefinition {
 	
 	Negative<Coordination> coordinator = negative(Coordination.class);
-	Positive<Network> netPort = positive(Network.class);
+	Positive<Participation> netPort = positive(Participation.class);
 
 	private int id;
     
@@ -83,7 +83,7 @@ public class Coordinator extends ComponentDefinition {
 	  subscribe(handleReadOperation, coordinator);
 	  subscribe(handleWriteOperation, coordinator);
 	  
-	  subscribe(handleCommit,netPort);
+	  subscribe(handlePrepared,netPort);
 	  subscribe(handleAbort,netPort);
 	  subscribe(handleAck,netPort);
 	}
@@ -92,6 +92,7 @@ public class Coordinator extends ComponentDefinition {
 		public void handle(CoordinatorInit init) {
 			id = init.getId();
 			self = init.getSelf();
+			// mapParticipants can be null
 			mapParticipants = init.getMapParticipants();
 		}
 	};
@@ -146,8 +147,9 @@ public class Coordinator extends ComponentDefinition {
 	};
 	
 
-	Handler<Commit> handleCommit = new Handler<Commit>() {
-		public void handle(Commit commit) {
+	// Commit is sent from Participants to the Coordinator
+	Handler<Prepared> handlePrepared = new Handler<Prepared>() {
+		public void handle(Prepared commit) {
 			
 			int tId = commit.getTransactionId();
 			if (tranVotes.get(tId) == -1)
