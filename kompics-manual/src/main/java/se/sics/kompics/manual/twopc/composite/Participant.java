@@ -4,9 +4,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
+import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.manual.twopc.TwoPhaseCommit;
 import se.sics.kompics.manual.twopc.event.Abort;
@@ -19,6 +23,7 @@ import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
 import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
+import se.sics.kompics.timer.Timer;
 
 /**
  * 
@@ -26,6 +31,11 @@ import se.sics.kompics.manual.twopc.event.WriteOperation;
 public class Participant extends ComponentDefinition {
 
 	Negative<TwoPhaseCommit> tpcPort = negative(TwoPhaseCommit.class);
+
+	Positive<Timer> timer = positive(Timer.class);
+	
+	private static final Logger logger = LoggerFactory
+	.getLogger(Participant.class);
 
 /*
  * TODO: do proper rollback and logging
@@ -79,6 +89,7 @@ public class Participant extends ComponentDefinition {
 
 	Handler<Prepare> handlePrepare = new Handler<Prepare>() {
 		public void handle(Prepare prepare) {
+			logger.info("prepare recvd.");
 			Transaction t = prepare.getTrans();
 			int id = t.getId();
 			activeTransactions.put(id, t.getOperations());
@@ -89,6 +100,7 @@ public class Participant extends ComponentDefinition {
 	
 	Handler<Commit> handleCommit = new Handler<Commit>() {
 		public void handle(Commit commit) {
+			logger.info("commit recvd.");
 			int transactionId = commit.getTransactionId();
 			
 			List<Operation> ops = activeTransactions.get(transactionId);
@@ -118,6 +130,7 @@ public class Participant extends ComponentDefinition {
 
 	Handler<Abort> handleRollback = new Handler<Abort>() {
 		public void handle(Abort rollback) {
+			logger.info("abort recvd.");
 			int id = rollback.getTransactionId();
 			activeTransactions.remove(id);
 		}

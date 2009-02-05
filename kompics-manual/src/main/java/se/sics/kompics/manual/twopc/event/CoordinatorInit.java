@@ -18,7 +18,10 @@ public final class CoordinatorInit extends Init {
 		super();
 		this.id = id;
 		this.self = self;
-		this.mapParticipants.putAll(mapParticipants);
+		if (mapParticipants != null)
+		{
+			this.mapParticipants.putAll(mapParticipants);
+		}
 	}
 
 	public int getId() {

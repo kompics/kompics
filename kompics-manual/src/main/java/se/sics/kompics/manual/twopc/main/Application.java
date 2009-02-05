@@ -69,13 +69,13 @@ public final class Application {
 
 		Scenario scenario1 = new Scenario(ApplicationGroup.class) {
 			{
-				command(1, "help:B:Wjim,dowling:Rjim:S10000:X"); //.recover("Prrr", 1000);
+				command(1, "help:B:Wjim,dowling:Rjim:S10000000:"); //.recover("Prrr", 1000);
 			}
 		};
 
 		Scenario scenario2 = new Scenario(ApplicationGroup.class) {
 			{
-				command(1, "S500:T9:S300:T1:X"); //.recover(1000).recover("S500:Pok", 1000);
+				command(1, "S500:T9:S300:T1"); //.recover(1000).recover("S500:Pok", 1000);
 //				command(2, "S500:Pb2:S300:LB2");
 //				command(3, "S500:Lc3:S300:PC3");
 //				command(4, "S500:Pd4:S300:LD4");

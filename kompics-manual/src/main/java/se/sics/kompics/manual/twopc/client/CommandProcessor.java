@@ -1,7 +1,8 @@
-package se.sics.kompics.manual.twopc.main;
+package se.sics.kompics.manual.twopc.client;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ import se.sics.kompics.timer.Timer;
 public final class CommandProcessor extends ComponentDefinition {
 
 	Positive<Client> coordinator = positive(Client.class);
+	
 	Positive<Timer> timer = positive(Timer.class);
 
 	private static final Logger logger = LoggerFactory
@@ -58,6 +60,8 @@ public final class CommandProcessor extends ComponentDefinition {
 
 	Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
+			logger.info("Starting Command Processor......");
+			trigger(new BeginTransaction(555),coordinator);
 			doNextCommand();
 		}
 	};
@@ -72,6 +76,13 @@ public final class CommandProcessor extends ComponentDefinition {
 		public void handle(TransResult event) {
 			logger.info("Received TransResult for transaction-id {} is {}", 
 					event.getTransactionId(), event.isSuccess());
+			
+			logger.info("Returned tuples:");
+			Map<String,String> results = event.getResponses();
+			for (Map.Entry<String,String> res : results.entrySet())
+			{
+				logger.info("(" + res.getKey() + "," + res.getValue()+")");
+			}
 		}
 	};
 
@@ -165,10 +176,12 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 	
 	private void doCommitTransaction() {
+		logger.info("Sending Commit Transaction {}", transId);
 		trigger(new CommitTransaction(transId), coordinator);
 	}
 
 	private void doRollbackTransaction() {
+		logger.info("Sending Rollback Transaction {}", transId);
 		trigger(new RollbackTransaction(transId), coordinator);		
 	}
 

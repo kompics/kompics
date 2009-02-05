@@ -1,5 +1,8 @@
 package se.sics.kompics.manual.twopc.composite;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
@@ -21,55 +24,64 @@ import se.sics.kompics.manual.twopc.event.ReadOperation;
 import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
+import se.sics.kompics.manual.twopc.main.ApplicationGroup;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
+import se.sics.kompics.timer.Timer;
 
 public class TwoPC extends ComponentDefinition {
 	
 	Component coordinator;
 	Component participant;
 
-	Negative<Client> inputCoordination = negative(Client.class);
-	Positive<Client> childCoordination = positive(Client.class);
+	Negative<Client> inClient = negative(Client.class);
+	Positive<Client> coordinationClient = positive(Client.class);
 
-	Positive<TwoPhaseCommit> childParticipation= positive(TwoPhaseCommit.class);
-	Negative<TwoPhaseCommit> childCoordinationTwoPC= negative(TwoPhaseCommit.class);
+	Positive<TwoPhaseCommit> participationTPC= positive(TwoPhaseCommit.class);
+	Negative<TwoPhaseCommit> coordinationTPC= negative(TwoPhaseCommit.class);
 	
 	Positive<Network> netPort = positive(Network.class);
 
+	Positive<Timer> timer = positive(Timer.class);
+	
 	Address self;
+	
+	private static final Logger logger = LoggerFactory
+	.getLogger(TwoPC.class);
+
 	
 	public TwoPC() {
 		coordinator = create(Coordinator.class);
 		participant = create(Participant.class);
 		
 		// XXX does this work?
-		connect(inputCoordination,childCoordination);
+//		connect(inClient,coordinationClient);
+		
+		connect(participant.getNegative(Timer.class), timer);
+		connect(coordinator.getNegative(Timer.class), timer);
 		
 		// events from this component's control port
 		subscribe(handleCoordinatorInit, control);
 		
 		// events from inputCoordination Port (local events)
-		subscribe(handleBeginTransaction, inputCoordination);
-		subscribe(handleCommitTransaction, inputCoordination);
-		subscribe(handleRollbackTransaction, inputCoordination);
-		subscribe(handleReadOperation, inputCoordination);
-		subscribe(handleWriteOperation, inputCoordination);
+		subscribe(handleBeginTransaction, inClient);
+		subscribe(handleCommitTransaction, inClient);
+		subscribe(handleRollbackTransaction, inClient);
+		subscribe(handleReadOperation, inClient);
+		subscribe(handleWriteOperation, inClient);
 
-		// events from childCoordination Port
-		subscribe(handleTransResult, childCoordination); // not sent over network
-		subscribe(handleCommit,childCoordination);
-		subscribe(handleAbort,childCoordination);
-		subscribe(handlePrepare,childCoordination);
+		subscribe(handleCommit,coordinationTPC);
+		subscribe(handleAbort,coordinationTPC);
+		subscribe(handlePrepare,coordinationTPC);
 		// events from net Port destined for childCoordination Port
 		subscribe(handleCommit,netPort);
 		subscribe(handleAbort,netPort);
 		subscribe(handlePrepare,netPort);
 
 		// events from childParticipation Port
-		subscribe(handleAck,childParticipation);
-		subscribe(handlePrepared,childParticipation);
-		subscribe(handleParticipantAbort,childParticipation);		
+		subscribe(handleAck,participationTPC);
+		subscribe(handlePrepared,participationTPC);
+		subscribe(handleParticipantAbort,participationTPC);		
 		// events from net Port destined for childParticipation Port		
 		subscribe(handlePrepared,netPort);
 		subscribe(handleParticipantAbort,netPort);		
@@ -78,62 +90,65 @@ public class TwoPC extends ComponentDefinition {
 	
 	Handler<CoordinatorInit> handleCoordinatorInit = new Handler<CoordinatorInit>() {
 		public void handle(CoordinatorInit init) {
+			logger.info("Initialising TwoPC: " + init.getId());
 			trigger(init,coordinator.getControl());
 			self = init.getSelf();
 			trigger(new ParticipantInit(init.getSelf()), participant.getControl());
 		}
 	};
 	
-	Handler<TransResult> handleTransResult = new Handler<TransResult>() {
-		public void handle(TransResult event) {
-			trigger(event, inputCoordination);
-		}
-	};
-
 	Handler<BeginTransaction> handleBeginTransaction = new Handler<BeginTransaction>() {
 		public void handle(BeginTransaction trans) {
-			trigger(trans,childCoordination);
+			logger.info("client: begin transaction.");
+			trigger(trans,coordinationClient);
 		}
 	};
 	
 	Handler<CommitTransaction> handleCommitTransaction = new Handler<CommitTransaction>() {
 		public void handle(CommitTransaction trans) {
-			trigger(trans,childCoordination);
+			logger.info("client: commit transaction.");
+			trigger(trans,coordinationClient);
 		}
 	};
 	
 	Handler<RollbackTransaction> handleRollbackTransaction = new Handler<RollbackTransaction>() {
 		public void handle(RollbackTransaction trans) {
-			trigger(trans,childCoordination);
+			logger.info("rollback transaction.");
+			trigger(trans,coordinationClient);
 		}
 	};
 	
 	Handler<ReadOperation> handleReadOperation = new Handler<ReadOperation>() {
 		public void handle(ReadOperation readOp) {
-			trigger(readOp,childCoordination);
+			logger.info("client: read operation.");
+			trigger(readOp,coordinationClient);
 		}
 	};
 	
 	Handler<WriteOperation> handleWriteOperation = new Handler<WriteOperation>() {
 		public void handle(WriteOperation writeOp) {
-			trigger(writeOp,childCoordination);
+			logger.info("client: write operation.");
+			trigger(writeOp,coordinationClient);
 		}
 	};
 	
 	Handler<Prepared> handlePrepared = new Handler<Prepared>() {
 		public void handle(Prepared prepared) {
+			logger.info("prepared.");
 			forwardCoordination(prepared);
 		}
 	};
 	
 	Handler<Commit> handleCommit = new Handler<Commit>() {
 		public void handle(Commit commit) {
+			logger.info("commit");
 			forwardParticipation(commit);
 		}
 	};
 	
 	Handler<Abort> handleAbort = new Handler<Abort>() {
 		public void handle(Abort abort) {
+			logger.info("abort");
 			forwardCoordination(abort);
 		}
 	};
@@ -141,6 +156,7 @@ public class TwoPC extends ComponentDefinition {
 	Handler<Ack> handleAck = new Handler<Ack>() {
 		public void handle(Ack ack) 
 		{
+			logger.info("ack");
 			forwardCoordination(ack);
 		}
 	};
@@ -149,18 +165,21 @@ public class TwoPC extends ComponentDefinition {
 	
 	Handler<Prepare> handlePrepare = new Handler<Prepare>() {
 		public void handle(Prepare prepare) {
+			logger.info("prepare");
 			forwardParticipation(prepare);
 		}
 	};
 	
 	Handler<Commit> handleCommitP = new Handler<Commit>() {
 		public void handle(Commit commit) {
+			logger.info("commitP");
 			forwardCoordination(commit);
 		}
 	};
 
 	Handler<Abort> handleParticipantAbort = new Handler<Abort>() {
 		public void handle(Abort rollback) {
+			logger.info("abortP");
 			forwardCoordination(rollback);
 		}
 	};
@@ -173,7 +192,7 @@ public class TwoPC extends ComponentDefinition {
 		}
 		else
 		{
-			trigger(m,childCoordination);
+			trigger(m,coordinationClient);
 		}
 	}
 
@@ -185,7 +204,7 @@ public class TwoPC extends ComponentDefinition {
 		}
 		else
 		{
-			trigger(m,childParticipation);
+			trigger(m,participationTPC);
 		}
 	}
 }
