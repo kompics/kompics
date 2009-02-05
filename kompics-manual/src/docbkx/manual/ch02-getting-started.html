@@ -1,0 +1,282 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;1.&nbsp;A Minimal Kompics Application</title><link rel="stylesheet" href="styles.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="kompics.getting-started"></a>Chapter&nbsp;1.&nbsp;A Minimal Kompics Application</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="sect1"><a href="#kompics.getting-started.ping">Ping (Example 1)</a></span></dt><dd><dl><dt><span class="sect2"><a href="#d0e82">Ping Event</a></span></dt><dt><span class="sect2"><a href="#d0e87">PingPort Port</a></span></dt><dt><span class="sect2"><a href="#kompics.getting-started.example1">Root Component</a></span></dt><dt><span class="sect2"><a href="#d0e111">Host Component</a></span></dt></dl></dd><dt><span class="sect1"><a href="#kompics.getting-started.example2">Ping-Pong with 2 Ports (Example 2a)</a></span></dt><dd><dl><dt><span class="sect2"><a href="#d0e172">Pong Event</a></span></dt><dt><span class="sect2"><a href="#d0e177">PongPort</a></span></dt><dt><span class="sect2"><a href="#d0e182">Root Component</a></span></dt><dt><span class="sect2"><a href="#d0e187">Host Component</a></span></dt></dl></dd><dt><span class="sect1"><a href="#kompics.getting-started.example3">Ping-Pong with a Single Port (Example 3a)</a></span></dt><dd><dl><dt><span class="sect2"><a href="#d0e217">PingPongPort</a></span></dt><dt><span class="sect2"><a href="#d0e222">Root Component</a></span></dt><dt><span class="sect2"><a href="#d0e227">Host Component</a></span></dt></dl></dd><dt><span class="sect1"><a href="#d0e232">Ping-Pong with a HostPing and a HostPong component (Example 4)</a></span></dt></dl></div><p>This chapter shows you how to build a simple Kompics Ping-Pong
+  		application. The goal of this chapter is to familiarize you with
+  		the basic steps required to build a minimal Kompics application. 
+  		We do not explain very many details of the source code here, as 
+  		these details will be introduced later chapters.</p><p>See <a class="xref" href="#">???</a> for a basic introduction to
+  		Kompics.</p><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.getting-started.ping"></a>Ping (Example 1)</h2></div></div></div><p>In this first example, see <a class="xref" href="#kompics.getting-started.ping-fig" title="Figure&nbsp;1.1.&nbsp;Ping component inside a Root component.">Figure&nbsp;1.1, &#8220;Ping component inside a Root component.&#8221;</a>,
+	  		a <code class="literal">Root</code> component will send a 
+	  		<em class="firstterm">ping</em> message to a <code class="literal">Host</code> 
+	  		component. <code class="literal">Root</code> contains the 
+	  		<code class="literal"> public void static main</code> , where a   
+	  		component that sends a <code class="literal">Ping</code> event to the 
+	  		<code class="literal">Host</code> component. <code class="literal">Host</code> has 
+	  		registered a handler, <code class="literal">handlePing</code>, with its
+	  		<code class="literal">PingPort</code> PortType, so when the <code class="literal">Ping</code>
+	  		event arrives at <code class="literal">PingPort</code> it is forwarded to
+	  		<code class="literal">handlePing</code>. Finally, <code class="literal">handlePing</code>
+	  		prints a message saying received the <code class="literal">Ping</code> event.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>It helps immensely to draw a diagram of your components and their ports along 
+		  with the ports' polarity. In particular, a diagram will aid you in understanding the
+		  polarity of the port based on your context. For example, when you are a client of
+		  a Port you have a reference to the Port the opposite polarity. </p><p>Also, you should keep in mind the <a class="xref" href="#">???</a> (Implements Negative, Positive Uses).</p></div><p>
+     </p><div class="figure"><a name="kompics.getting-started.ping-fig"></a><p class="title"><b>Figure&nbsp;1.1.&nbsp;Ping component inside a Root component.</b></p><div class="figure-contents"><div><img src="images/ch02-ping-component.png" alt="Ping component inside a Root component."></div></div></div><p><br class="figure-break">
+	</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e82"></a>Ping Event</h3></div></div></div><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example1;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Event;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Ping <b class="hl-keyword">extends</b> Event {
+			<b class="hl-keyword">public</b> Ping()
+			{ 
+			}
+		}	
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e87"></a>PingPort Port</h3></div></div></div><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example1;	
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.PortType;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> PingPort <b class="hl-keyword">extends</b> PortType {
+		
+			{
+				negative(Ping.<b class="hl-keyword">class</b>);
+			}
+		}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="kompics.getting-started.example1"></a>Root Component</h3></div></div></div><p>An alternative (and more common) way of starting this
+		program is to write a <code class="literal">startHandler</code> for
+		<code class="literal">Root</code>. When a <code class="literal">Root</code> component
+		is constructed, its <code class="literal">startHandler</code> is automatically
+		called.</p><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example1;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Component;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Kompics;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Start;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Root <b class="hl-keyword">extends</b> ComponentDefinition {
+		
+			<b class="hl-keyword">public</b> <b class="hl-keyword">static</b> <b class="hl-keyword">void</b>  main(String[] args)
+			{
+				Kompics.createAndStart(Root.<b class="hl-keyword">class</b>);
+			}
+			<b class="hl-keyword">public</b> Root() {
+				subscribe(handleStart,control);
+			}
+		
+			<b class="hl-keyword">private</b> Handler&lt;Start&gt; handleStart = <b class="hl-keyword">new</b> Handler&lt;Start&gt;() {
+				<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Start event) {
+					Component hostComponent = create(Host.<b class="hl-keyword">class</b>);
+					trigger(<b class="hl-keyword">new</b> Ping(), hostComponent.getPositive(PingPort.<b class="hl-keyword">class</b>));
+				}
+			};
+		}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e111"></a>Host Component</h3></div></div></div><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example1;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Negative;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Host <b class="hl-keyword">extends</b> ComponentDefinition {
+		
+			Negative&lt;PingPort&gt; pingN = negative(PingPort.<b class="hl-keyword">class</b>);
+			
+			<b class="hl-keyword">public</b> Host() {
+				subscribe(handlePing, pingN);
+			}
+		
+			<b class="hl-keyword">private</b> Handler&lt;Ping&gt; handlePing = <b class="hl-keyword">new</b> Handler&lt;Ping&gt;() {
+				<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Ping event) {
+					System.out.println(<b class="hl-string"><i style="color:red">"Received ping.."</i></b>);
+				}
+			};
+		}	
+		</pre></div></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.getting-started.example2"></a>Ping-Pong with 2 Ports (Example 2a)</h2></div></div></div><p>In this example, a Root component will exchange 
+	  		<em class="firstterm">ping</em> and <em class="firstterm">pong</em> 
+	  		messages with a Host component. The <code class="literal">Root</code> 
+	  		component sends a <code class="literal">Ping</code> event to the 
+	  		<code class="literal">Host</code> component. <code class="literal">Host</code> has 
+	  		registered a handler, <code class="literal">handlePing</code>, with its
+	  		<code class="literal">PingPort</code> PortType, so when the <code class="literal">Ping</code>
+	  		event arrives at <code class="literal">PingPort</code> it is forwarded to
+	  		<code class="literal">handlePing</code>. <code class="literal">handlePing</code> sends a
+	  		<code class="literal">Pong</code> event to its PongPort, which is forwarded to
+	  		handlePong in Root.</p><p>In the examples directory for this manual, you will find a reworking of this example (Example 2b),
+  			where we reverse the event directions for the pong port in <code class="literal">PongPortReversed</code>.
+  			</p><p>
+     </p><div class="figure"><a name="kompics.getting-started.pingpong-two-ports"></a><p class="title"><b>Figure&nbsp;1.2.&nbsp;Ping-Pong component with two Ports inside a Root component.</b></p><div class="figure-contents"><div><img src="images/ch02-ping-pong-two-ports.png" alt="Ping-Pong component with two Ports inside a Root component."></div></div></div><p><br class="figure-break">
+	</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e172"></a>Pong Event</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example2a;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Event;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Pong <b class="hl-keyword">extends</b> Event {
+				<b class="hl-keyword">public</b> Pong()
+				{
+				}
+			}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e177"></a>PongPort</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example2a;
+			
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.PortType;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> PongPort <b class="hl-keyword">extends</b> PortType {
+			
+				{
+					positive(Pong.<b class="hl-keyword">class</b>);
+				}
+			}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e182"></a>Root Component</h3></div></div></div><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example2a;
+
+		<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+		<b class="hl-keyword">import</b> sandbox.manual.example1.PingPort;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Component;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Kompics;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Start;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Root <b class="hl-keyword">extends</b> ComponentDefinition {
+		
+			<b class="hl-keyword">public</b> <b class="hl-keyword">static</b> <b class="hl-keyword">void</b>  main(String[] args)
+			{
+				Kompics.createAndStart(Root.<b class="hl-keyword">class</b>);
+			}
+			<b class="hl-keyword">public</b> Root() {
+				subscribe(handleStart,control);
+			}
+			
+			<b class="hl-keyword">private</b> Handler&lt;Start&gt; handleStart = <b class="hl-keyword">new</b> Handler&lt;Start&gt;() {
+				<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Start event) {
+					Component hostComponent = create(Host.<b class="hl-keyword">class</b>);
+					subscribe(handlePong, hostComponent.getPositive(PongPort.<b class="hl-keyword">class</b>));
+					trigger(<b class="hl-keyword">new</b> Ping(), hostComponent.getPositive(PingPort.<b class="hl-keyword">class</b>));
+				}
+			};
+		
+			<b class="hl-keyword">private</b> Handler&lt;Pong&gt; handlePong = <b class="hl-keyword">new</b> Handler&lt;Pong&gt;() {
+				<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Pong event) {
+					System.out.println(<b class="hl-string"><i style="color:red">"Pong received."</i></b>);
+				}
+			};
+		}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e187"></a>Host Component</h3></div></div></div><pre class="programlisting">
+  			<b class="hl-keyword">package</b> sandbox.manual.example2a;
+
+			<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+			<b class="hl-keyword">import</b> sandbox.manual.example1.PingPort;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Negative;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Host <b class="hl-keyword">extends</b> ComponentDefinition {
+			
+				Negative&lt;PingPort&gt; negPing = negative(PingPort.<b class="hl-keyword">class</b>);
+				Negative&lt;PongPort&gt; negPong = negative(PongPort.<b class="hl-keyword">class</b>);
+				
+				<b class="hl-keyword">public</b> Host() {
+					subscribe(handlePing, negPing);
+				}
+			
+				<b class="hl-keyword">private</b> Handler&lt;Ping&gt; handlePing = <b class="hl-keyword">new</b> Handler&lt;Ping&gt;() {
+					<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Ping event) {
+						System.out.println(<b class="hl-string"><i style="color:red">"Received ping, sending Pong.."</i></b>);
+						trigger(<b class="hl-keyword">new</b> Pong(), negPong);
+					}
+				};	
+			}
+		</pre></div></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.getting-started.example3"></a>Ping-Pong with a Single Port (Example 3a)</h2></div></div></div><p>We now refactor <a class="xref" href="#kompics.getting-started.example2" title="Ping-Pong with 2 Ports (Example 2a)">the section called &#8220;Ping-Pong with 2 Ports (Example 2a)&#8221;</a> so that <code class="literal">Host</code>
+	  	only has a single <code class="literal">PingPong Port</code>, instead of two ports. This example
+	  	demonstrates the concept of "two-way event interfaces" (where events flow in and come out of 
+	  	a component). 
+	  	</p><p>In the examples directory for this manual, you will find a reworking of this example (Example 3b),
+  		where we reverse the event directions in a port called <code class="literal">PingPongPortReversed</code>.
+  		</p><p>
+     </p><div class="figure"><a name="kompics.getting-started.pingpong-one-port"></a><p class="title"><b>Figure&nbsp;1.3.&nbsp;Ping-Pong component with one Port inside a Root component.</b></p><div class="figure-contents"><div><img src="images/ch02-ping-pong-one-port.png" alt="Ping-Pong component with one Port inside a Root component."></div></div></div><p><br class="figure-break">
+	</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e217"></a>PingPongPort</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example3a;
+			
+			<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+			<b class="hl-keyword">import</b> sandbox.manual.example2a.Pong;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.PortType;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> PingPongPort <b class="hl-keyword">extends</b> PortType {
+			
+				{
+					negative(Ping.<b class="hl-keyword">class</b>);
+					positive(Pong.<b class="hl-keyword">class</b>);
+				}
+			}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e222"></a>Root Component</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example3a;
+			
+			<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+			<b class="hl-keyword">import</b> sandbox.manual.example2a.Pong;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Component;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Kompics;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Start;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Root <b class="hl-keyword">extends</b> ComponentDefinition {
+			
+				<b class="hl-keyword">private</b> Component hostComponent;
+				
+				<b class="hl-keyword">public</b> <b class="hl-keyword">static</b> <b class="hl-keyword">void</b>  main(String[] args)
+				{
+					Kompics.createAndStart(Root.<b class="hl-keyword">class</b>);
+				}
+				<b class="hl-keyword">public</b> Root() {
+					hostComponent = create(Host.<b class="hl-keyword">class</b>);
+					subscribe(handleStart,control);
+					subscribe(handlePong, hostComponent.getPositive(PingPongPort.<b class="hl-keyword">class</b>));
+				}
+			
+				<b class="hl-keyword">private</b> Handler&lt;Start&gt; handleStart = <b class="hl-keyword">new</b> Handler&lt;Start&gt;() {
+					<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Start event) {
+						trigger(<b class="hl-keyword">new</b> Ping(), hostComponent.getPositive(PingPongPort.<b class="hl-keyword">class</b>));		}
+				};
+			
+				<b class="hl-keyword">private</b> Handler&lt;Pong&gt; handlePong = <b class="hl-keyword">new</b> Handler&lt;Pong&gt;() {
+					<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Pong event) {
+						System.out.println(<b class="hl-string"><i style="color:red">"Pong received."</i></b>);
+					}
+				};
+			}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e227"></a>Host Component</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example3a;
+			
+			<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+			<b class="hl-keyword">import</b> sandbox.manual.example2a.Pong;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Negative;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Host <b class="hl-keyword">extends</b> ComponentDefinition {
+			
+				Negative&lt;PingPongPort&gt; negPingPong = negative(PingPongPort.<b class="hl-keyword">class</b>);
+				
+				<b class="hl-keyword">public</b> Host() {
+					subscribe(handlePing, negPingPong);
+				}
+			
+				<b class="hl-keyword">private</b> Handler&lt;Ping&gt; handlePing = <b class="hl-keyword">new</b> Handler&lt;Ping&gt;() {
+					<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Ping event) {
+						System.out.println(<b class="hl-string"><i style="color:red">"Received ping, sending Pong.."</i></b>);
+						trigger(<b class="hl-keyword">new</b> Pong(), negPingPong);
+					}
+				};	
+			}
+		</pre></div></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e232"></a>Ping-Pong with a HostPing and a HostPong component (Example 4)</h2></div></div></div><p>The diagram in <a class="xref" href="#kompics.getting-started.pingpong-two-components-two-ports" title="Figure&nbsp;1.4.&nbsp;A PingComponent and a PongComponent with two Ports each, inside a parent Root component.">Figure&nbsp;1.4, &#8220;A PingComponent and a PongComponent with two Ports each, inside a parent Root component.&#8221;</a>
+	shows the same Ping-Pong example factored as two different components, <code class="literal">HostPing</code> 
+	and <code class="literal">HostPong</code>. The application starts by <code class="literal">Root</code> sending a
+	start event to <code class="literal">HostPong</code>, which then sends a <code class="literal">Ping</code> event
+	to  <code class="literal">HostPing</code>, which then replies to <code class="literal">HostPong</code> with a 
+	<code class="literal">Pong</code> event.</p><p>In the code fragment below, we connect the <span class="emphasis"><em>positive side</em></span> of
+		<code class="literal">PingPort</code> on <code class="literal">pingHost</code> to the <span class="emphasis"><em>negative side
+		</em></span> of <code class="literal">PingPort</code> on <code class="literal">pongHost</code>, which returns a 
+		<em class="firstterm">Channel</em> object <code class="literal">x1</code>.</p><p>The code for this example can be found in the examples directory for this manual.</p><a name="kompics.getting-started.connecting-ports"></a><pre class="programlisting">
+		Positive&lt;PingPort&gt; pingPosPort = pingHost.getPositive(PingPort.<b class="hl-keyword">class</b>);
+		Negative&lt;PingPort&gt; pingNegPort = pongHost.getNegative(PingPort.<b class="hl-keyword">class</b>);
+		Channel&lt;PingPort&gt; x1 = connect(pingNegPort, pingPosPort);
+	</pre><p>
+     </p><div class="figure"><a name="kompics.getting-started.pingpong-two-components-two-ports"></a><p class="title"><b>Figure&nbsp;1.4.&nbsp;A PingComponent and a PongComponent with two Ports each, inside a parent Root component.</b></p><div class="figure-contents"><div><img src="images/ch02-ping-pong-two-components-two-ports.png" alt="A PingComponent and a PongComponent with two Ports each, inside a parent Root component."></div></div></div><p><br class="figure-break">
+	</p></div></div></body></html>

@@ -1,0 +1,80 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;1.&nbsp;Fundamental Concepts</title><link rel="stylesheet" href="styles.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="kompics.concepts"></a>Chapter&nbsp;1.&nbsp;Fundamental Concepts</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="sect1"><a href="#kompics.concepts.intro">Kompics: Components, Events, Ports and Channels</a></span></dt></dl></div><p>This chapter is a brief informal introduction to Kompics.
+	We begin with a discussion of the main concepts in Kompics,
+	then describe how to download and install Kompics,
+	and finally cover the build environment, based on Maven2.
+	</p><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.concepts.intro"></a>Kompics: Components, Events, Ports and Channels</h2></div></div></div><p>
+    A component is a reactive unit of computation that communicates with other
+	components asynchronously by passing data-carrying typed events. Events are
+	passive immutable objects that can be serialized and communicated over network
+	links and between different address spaces.
+	</p><p>
+	Components are loosely coupled in the sense that a component does not
+	know the component type, availability or identity of any components with which
+	it communicates. Rather, components are endowed with typed communication
+	ports. A component sends events to and receives events from a local port. Ports
+	of the same type on two different components can be connected by a bidirectional
+	channel. This connection enables the two components to communicate.
+	</p><p>
+	As a reaction to received events, components execute event handlers, procedures
+	specific to the types of events being received. During execution, event handlers
+	may trigger new events, by sending them to one of the component's ports.
+	An event handler is associated with events of a certain type, received though a
+	certain port, by means of a subscription.
+	</p><p>
+          </p><div class="table"><a name="kompics.concepts.tbl-1"></a><p class="title"><b>Table&nbsp;1.1.&nbsp;Kompics Programming Abstractions</b></p><div class="table-contents"><table summary="Kompics Programming Abstractions" border="1"><colgroup><col><col></colgroup><thead><tr><th>Entity</th><th>Description</th></tr></thead><tbody><tr><td><span class="emphasis"><em>Component</em></span></td><td><p>A <em class="firstterm">component</em> is a reactive unit of computation 
+                that communicates with other components asynchronously by passing 
+                data-carrying typed events over ports. Components contain handlers to execute
+                received events, and components can be composed into <em class="firstterm">composite 
+                components</em>.</p></td></tr><tr><td><span class="emphasis"><em>Event</em></span></td><td><p>An <em class="firstterm">event</em> is a passive immutable object that 
+                can be serialized and communicated over network links and between different
+                address spaces.</p></td></tr><tr><td><span class="emphasis"><em>Port</em></span></td><td><p>A port represents a bidirectional event interface of a component and it
+				specifies the types of events that flow into or out of the component. The direction
+				in which an event flows through a port is defined as either <em class="firstterm">positive</em>
+				or <em class="firstterm">negative</em>. A negative event type flows towards the negative side
+				of the port, while a positive event type flows towards teh positive side of the port.
+				 A port is illustrated in <a class="xref" href="#kompics.concepts.fig-port" title="Figure&nbsp;1.1.&nbsp;Example port.">Figure&nbsp;1.1, &#8220;Example port.&#8221;</a>.
+				</p>
+				 
+    			<p>
+				By convention, the positive pole (+) of a port is understood to be the provided
+				direction for events, while the negative pole (&#8722;) of a port is understood to
+				be the required direction for events. When a component implements (or provides) a port, the
+				port is oriented with its + pole to the outside of the component and its &#8722; pole inside. 
+				Conversely, a (required) port that is used by a component is oriented with its &#8722; pole outside
+				and its + pole inside. The types of events flowing through the port from the
+				&#8722; pole to the + pole are tagged with + and the types of events flowing from
+				the + pole to the &#8722; pole are tagged with &#8722;.
+				 </p>
+				 </td></tr><tr><td><span class="emphasis"><em>Event Handler</em></span></td><td><p>An event handler is a procedure that a component executes as a reaction 
+                to receiving a certain event.</p></td></tr><tr><td><span class="emphasis"><em>Subscription</em></span></td><td><p>A subscription binds an event handler to a port pole.</p></td></tr><tr><td><span class="emphasis"><em>Channel</em></span></td><td><p>A channel is a first-class bidirectional connection between two ports
+                of the same type. A channel can connect two ports of the same type and of
+                different polarity.</p></td></tr></tbody></table></div></div><p><br class="table-break">	
+    </p><p> In <a class="xref" href="#kompics.concepts.fig-port" title="Figure&nbsp;1.1.&nbsp;Example port.">Figure&nbsp;1.1, &#8220;Example port.&#8221;</a>, we can see two Ports containing 2 events and 
+      3 events, respectively. For <code class="literal">PortType1</code>, <code class="literal">e1</code> both goes "out"
+      and comes "in". For <code class="literal">PortType2</code>, <code class="literal">e2</code> goes "out", while 
+      <code class="literal">e2</code> and <code class="literal">e3</code> come "in".
+      </p><div class="figure"><a name="kompics.concepts.fig-port"></a><p class="title"><b>Figure&nbsp;1.1.&nbsp;Example port.</b></p><div class="figure-contents"><div><img src="images/ch00-port.png" alt="Example port."></div></div></div><br class="figure-break"><p>A component with two ports (one outgoing, one incoming), two handlers and two subscriptions 
+	is illustrated in <a class="xref" href="#kompics.concepts.fig-component" title="Figure&nbsp;1.2.&nbsp;Example component.">Figure&nbsp;1.2, &#8220;Example component.&#8221;</a>. The ports in this component are from
+	<a class="xref" href="#kompics.concepts.fig-port" title="Figure&nbsp;1.1.&nbsp;Example port.">Figure&nbsp;1.1, &#8220;Example port.&#8221;</a>. <code class="literal">PortType1</code> is provided by the component 
+	and	<code class="literal">PortType2</code> is required by the component. We can see how the 
+	<code class="literal">subscriptions</code> map events from <code class="literal">Ports</code> to <code class="literal">
+	handlers</code>, while handlers can trigger (or send) an <code class="literal">event</code> to a port
+	(if the polarity of that port allows that event to be sent in that direction).</p><p>So, we can see for <code class="literal">PortType1</code>, the event <code class="literal">E1</code> can
+	be both sent and received over this port. For <code class="literal">PortType2</code>, we can see that
+	a handler inside the component can send either <code class="literal">E2</code> or <code class="literal">E3</code>
+	to the port and handler inside the component can subscribe for <code class="literal">E2</code> (but not 
+	<code class="literal">E3</code>). For handlers or components outside this component (handlers would
+	have to be in a parent component), they can send and receive events of the opposite type. So,
+	for <code class="literal">PortType2</code>, they could subscribe for <code class="literal">E2</code> or 
+	<code class="literal">E3</code> events, and send <code class="literal">E2</code> events to the component.
+	</p><p>
+     </p><div class="figure"><a name="kompics.concepts.fig-component"></a><p class="title"><b>Figure&nbsp;1.2.&nbsp;Example component.</b></p><div class="figure-contents"><div><img src="images/ch00-component.png" alt="Example component."></div></div></div><p><br class="figure-break">
+	</p></div><div class="sidebar"><a name="kompics.concepts.INPUT"></a><p class="title"><b>INPUt (Implements Negative, Positive Uses)</b></p><p>An easy way to remember whether a PortType refers to the client-side
+     or server-side is to remember the idiom <span class="emphasis"><em>INPUt</em></span>
+     (Implements Negative, Positive Uses). INPUt reminds you that a negative 
+     PortType is one that is provided or implemented by a component (server-side),
+     while a positive PortType is one that is used by a component (client-side).
+     </p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="kompics.concepts.summary"></a>Summary</h3></div></div></div><p>We introduced a number of concepts for Kompics, and outlined the
+    software requirements for downloading and installing Kompics.</p></div></div></body></html>

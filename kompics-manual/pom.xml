@@ -3,7 +3,7 @@
     <parent>
         <groupId>se.sics.kompics</groupId>
         <artifactId>kompics-parent-pom</artifactId>
-        <version>0.4.2-SNAPSHOT</version>
+        <version>0.4.1</version>
     </parent>
 	<artifactId>kompics-manual</artifactId>
 	<name>Kompics Manual</name>
