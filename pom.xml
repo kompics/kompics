@@ -9,13 +9,13 @@
 	<name>Kompics</name>
 	<url>http://kompics.sics.se</url>
 	<description>
-	   Kompics is a component model for building distributed systems 
-	   by putting together protocols programmed as event-driven components.
+Kompics is a component model for building distributed systems 
+by putting together protocols programmed as event-driven components.
 	</description>
 	<inceptionYear>2008</inceptionYear>
 
 	<issueManagement>
-		<system>Trac</system>
+		<system>trac</system>
 		<url>http://kompics.sics.se/trac</url>
 	</issueManagement>
 
@@ -163,6 +163,22 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-changes-plugin</artifactId>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>changes-report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+				<configuration>
+					<xmlPath>${basedir}/changes.xml</xmlPath>
+					<issueLinkTemplate>%URL%/trac/ticket/%ISSUE%</issueLinkTemplate>
+				</configuration>
+			</plugin>
+
 		</plugins>
 	</reporting>
 
@@ -229,7 +245,7 @@
 		<developer>
 			<id>cosmin</id>
 			<name>Cosmin Arad</name>
-			<email>cosmin@sics.se</email>
+			<email>cosmin->sics.se</email>
 			<url>http://www.sics.se/node/3069</url>
 			<organization>Royal Institute of Technology (KTH)</organization>
 			<organizationUrl>http://www.ict.kth.se/ECS/indexeng.html</organizationUrl>
@@ -242,7 +258,7 @@
 		<developer>
 			<id>jdowling</id>
 			<name>Jim Dowling</name>
-			<email>jdowling@sics.se</email>
+			<email>jdowling->sics.se</email>
 			<url>http://www.sics.se/node/1405</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
@@ -255,7 +271,7 @@
 		<developer>
 			<id>seif</id>
 			<name>Seif Haridi</name>
-			<email>seif@sics.se</email>
+			<email>seif->sics.se</email>
 			<url>http://www.sics.se/~seif</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
@@ -269,7 +285,7 @@
 	<contributors>
 		<contributor>
 			<name>Ali Ghodsi</name>
-			<email>ali@sics.se</email>
+			<email>ali->sics.se</email>
 			<url>http://www.sics.se/~ali</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
@@ -277,7 +293,7 @@
 		</contributor>
 		<contributor>
 			<name>Tallat Shafaat</name>
-			<email>tallat@sics.se</email>
+			<email>tallat->sics.se</email>
 			<url>http://www.sics.se/~tallat</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
@@ -285,7 +301,7 @@
 		</contributor>
 		<contributor>
 			<name>Roberto Roverso</name>
-			<email>roberto@sics.se</email>
+			<email>roberto->sics.se</email>
 			<url>http://www.sics.se/~roberto</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
