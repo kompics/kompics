@@ -30,6 +30,7 @@ import se.sics.kompics.Event;
 public class BeginTransaction extends Event {
 
 	private final int transactionId;
+	
 	public BeginTransaction(int transactionId) {
 		this.transactionId = transactionId;
 	}
