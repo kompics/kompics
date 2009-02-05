@@ -18,6 +18,7 @@
 	<modules>
 		<module>kompics-port-p2p-bootstrap</module>
 		<module>kompics-port-failure-detector</module>
+		<module>kompics-p2p-architecture</module>
 	</modules>
 
 	<dependencies>
