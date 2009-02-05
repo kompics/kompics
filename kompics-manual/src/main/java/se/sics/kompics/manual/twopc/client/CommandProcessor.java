@@ -61,7 +61,6 @@ public final class CommandProcessor extends ComponentDefinition {
 	Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
 			logger.info("Starting Command Processor......");
-			trigger(new BeginTransaction(555),coordinator);
 			doNextCommand();
 		}
 	};

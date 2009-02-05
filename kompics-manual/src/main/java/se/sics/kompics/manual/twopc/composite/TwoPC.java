@@ -31,20 +31,21 @@ import se.sics.kompics.timer.Timer;
 
 public class TwoPC extends ComponentDefinition {
 	
-	Component coordinator;
-	Component participant;
+	private Component coordinator;
+	private Component participant;
 
-	Negative<Client> inClient = negative(Client.class);
-	Positive<Client> coordinationClient = positive(Client.class);
+	private Negative<Client> inClient = negative(Client.class);
+	private Positive<Client> coordinationClient = positive(Client.class);
 
-	Positive<TwoPhaseCommit> participationTPC= positive(TwoPhaseCommit.class);
-	Negative<TwoPhaseCommit> coordinationTPC= negative(TwoPhaseCommit.class);
+	private Positive<TwoPhaseCommit> participationTPC= positive(TwoPhaseCommit.class);
+	private Negative<TwoPhaseCommit> coordinationTPC= negative(TwoPhaseCommit.class);
 	
-	Positive<Network> netPort = positive(Network.class);
+	private Positive<Network> netPort = positive(Network.class);
 
-	Positive<Timer> timer = positive(Timer.class);
+	private Positive<Timer> timer = positive(Timer.class);
 	
-	Address self;
+	private Address self;
+	private int id;
 	
 	private static final Logger logger = LoggerFactory
 	.getLogger(TwoPC.class);
@@ -91,6 +92,7 @@ public class TwoPC extends ComponentDefinition {
 	Handler<CoordinatorInit> handleCoordinatorInit = new Handler<CoordinatorInit>() {
 		public void handle(CoordinatorInit init) {
 			logger.info("Initialising TwoPC: " + init.getId());
+			id = init.getId();
 			trigger(init,coordinator.getControl());
 			self = init.getSelf();
 			trigger(new ParticipantInit(init.getSelf()), participant.getControl());
@@ -99,56 +101,56 @@ public class TwoPC extends ComponentDefinition {
 	
 	Handler<BeginTransaction> handleBeginTransaction = new Handler<BeginTransaction>() {
 		public void handle(BeginTransaction trans) {
-			logger.info("client: begin transaction.");
+			logger.info("client: begin transaction at " + id);
 			trigger(trans,coordinationClient);
 		}
 	};
 	
 	Handler<CommitTransaction> handleCommitTransaction = new Handler<CommitTransaction>() {
 		public void handle(CommitTransaction trans) {
-			logger.info("client: commit transaction.");
+			logger.info("client: commit transaction at " + id);
 			trigger(trans,coordinationClient);
 		}
 	};
 	
 	Handler<RollbackTransaction> handleRollbackTransaction = new Handler<RollbackTransaction>() {
 		public void handle(RollbackTransaction trans) {
-			logger.info("rollback transaction.");
+			logger.info("rollback transaction at " + id);
 			trigger(trans,coordinationClient);
 		}
 	};
 	
 	Handler<ReadOperation> handleReadOperation = new Handler<ReadOperation>() {
 		public void handle(ReadOperation readOp) {
-			logger.info("client: read operation.");
+			logger.info("client: read operation at " + id);
 			trigger(readOp,coordinationClient);
 		}
 	};
 	
 	Handler<WriteOperation> handleWriteOperation = new Handler<WriteOperation>() {
 		public void handle(WriteOperation writeOp) {
-			logger.info("client: write operation.");
+			logger.info("client: write operation at " + id);
 			trigger(writeOp,coordinationClient);
 		}
 	};
 	
 	Handler<Prepared> handlePrepared = new Handler<Prepared>() {
 		public void handle(Prepared prepared) {
-			logger.info("prepared.");
+			logger.info("prepared at " + id);
 			forwardCoordination(prepared);
 		}
 	};
 	
 	Handler<Commit> handleCommit = new Handler<Commit>() {
 		public void handle(Commit commit) {
-			logger.info("commit");
+			logger.info("commit at " + id);
 			forwardParticipation(commit);
 		}
 	};
 	
 	Handler<Abort> handleAbort = new Handler<Abort>() {
 		public void handle(Abort abort) {
-			logger.info("abort");
+			logger.info("abort at " + id);
 			forwardCoordination(abort);
 		}
 	};
@@ -156,7 +158,7 @@ public class TwoPC extends ComponentDefinition {
 	Handler<Ack> handleAck = new Handler<Ack>() {
 		public void handle(Ack ack) 
 		{
-			logger.info("ack");
+			logger.info("ack at " + id);
 			forwardCoordination(ack);
 		}
 	};
@@ -165,21 +167,21 @@ public class TwoPC extends ComponentDefinition {
 	
 	Handler<Prepare> handlePrepare = new Handler<Prepare>() {
 		public void handle(Prepare prepare) {
-			logger.info("prepare");
+			logger.info("prepare at " + id);
 			forwardParticipation(prepare);
 		}
 	};
 	
 	Handler<Commit> handleCommitP = new Handler<Commit>() {
 		public void handle(Commit commit) {
-			logger.info("commitP");
+			logger.info("commitP at " + id);
 			forwardCoordination(commit);
 		}
 	};
 
 	Handler<Abort> handleParticipantAbort = new Handler<Abort>() {
 		public void handle(Abort rollback) {
-			logger.info("abortP");
+			logger.info("abortP at " + id);
 			forwardCoordination(rollback);
 		}
 	};

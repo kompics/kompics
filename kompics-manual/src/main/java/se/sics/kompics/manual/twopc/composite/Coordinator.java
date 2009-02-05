@@ -101,23 +101,15 @@ public class Coordinator extends ComponentDefinition {
 	Handler<CoordinatorInit> handleCoordinatorInit = new Handler<CoordinatorInit>() {
 		public void handle(CoordinatorInit init) {
 			id = init.getId();
+			logger.info("Coordinator with id: " + id);
 			self = init.getSelf();
-			// mapParticipants can be null
 			mapParticipants = init.getMapParticipants();
-			if (mapParticipants != null)
-			{
-				logger.info("Coordinator: I am the leader with id: " + id);
-			}
-			else
-			{
-				logger.info("Coordinator: I am a participant with id: " + id);
-			}
 		}
 	};
 	
 	Handler<BeginTransaction> handleBeginTransaction = new Handler<BeginTransaction>() {
 		public void handle(BeginTransaction trans) {
-			logger.info("Coordinator client: begin transaction.");
+			logger.info("Coordinator client: begin transaction at " + id);
 			List<Operation> ops = new ArrayList<Operation>();
 			activeTransactions.put(trans.getTransactionId(), ops);
 			tranVotes.put(trans.getTransactionId(), 0);
@@ -126,7 +118,7 @@ public class Coordinator extends ComponentDefinition {
 	
 	Handler<CommitTransaction> handleCommitTransaction = new Handler<CommitTransaction>() {
 		public void handle(CommitTransaction trans) {
-			logger.info("Coordinator client: commit transaction.");
+			logger.info("Coordinator client: commit transaction " + id);
 			
 			// Start Two-Phase Commit with Participants
 			List<Operation> ops = activeTransactions.get(trans.getTransactionId());
@@ -142,7 +134,7 @@ public class Coordinator extends ComponentDefinition {
 	
 	Handler<RollbackTransaction> handleRollbackTransaction = new Handler<RollbackTransaction>() {
 		public void handle(RollbackTransaction trans) {
-			logger.info("Coordinator client: rollback transaction.");
+			logger.info("Coordinator client: rollback transaction " + id);
 			for (Address dest : mapParticipants.values())
 			{
 				trigger(new Abort(trans.getTransactionId(), self, dest), tpcPort);
@@ -152,7 +144,7 @@ public class Coordinator extends ComponentDefinition {
 	
 	Handler<ReadOperation> handleReadOperation = new Handler<ReadOperation>() {
 		public void handle(ReadOperation readOp) {
-			logger.info("Coordinator client: read operation.");
+			logger.info("Coordinator client: read operation " + id);
 			// Add operation to its active transaction
 			List<Operation> ops = activeTransactions.get(readOp.getTransactionId());
 			ops.add(readOp);
@@ -162,7 +154,7 @@ public class Coordinator extends ComponentDefinition {
 	
 	Handler<WriteOperation> handleWriteOperation = new Handler<WriteOperation>() {
 		public void handle(WriteOperation writeOp) {
-			logger.info("Coordinator client: write operation.");
+			logger.info("Coordinator client: write operation " + id);
 			// Add operation to its active transaction
 			List<Operation> ops = activeTransactions.get(writeOp.getTransactionId());
 			ops.add(writeOp);
@@ -173,7 +165,7 @@ public class Coordinator extends ComponentDefinition {
 	// Commit is sent from Participants to the Coordinator
 	Handler<Prepared> handlePrepared = new Handler<Prepared>() {
 		public void handle(Prepared commit) {
-			logger.info("Coordinator prepared recvd.");
+			logger.info("Coordinator prepared recvd " + id);
 			
 			int tId = commit.getTransactionId();
 			if (tranVotes.get(tId) == -1)
@@ -194,7 +186,7 @@ public class Coordinator extends ComponentDefinition {
 	
 	Handler<Abort> handleAbort = new Handler<Abort>() {
 		public void handle(Abort abort) {
-			logger.info("Coordinator abort recvd.");
+			logger.info("Coordinator abort recvd " + id);
 			// transaction aborted
 			tranVotes.put(abort.getTransactionId(),-1);
 			trigger(new TransResult(abort.getTransactionId(),false),coordinator);
@@ -204,7 +196,7 @@ public class Coordinator extends ComponentDefinition {
 	Handler<Ack> handleAck = new Handler<Ack>() {
 		public void handle(Ack ack) 
 		{
-			logger.info("Coordinator ack recvd.");
+			logger.info("Coordinator ack recvd " + id);
 			TransResult res = new TransResult(ack.getTransactionId(),true);
 			
 			if (ack.getResponses().size() > 0)
