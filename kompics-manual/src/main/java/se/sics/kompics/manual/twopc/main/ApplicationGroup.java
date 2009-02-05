@@ -23,6 +23,7 @@ import se.sics.kompics.manual.twopc.event.ApplicationInit;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
+import se.sics.kompics.network.mina.MinaNetworkInit;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 
@@ -97,7 +98,7 @@ public class ApplicationGroup extends ComponentDefinition {
 			pId++;
 			mapParticipantsAddrs.put(pId,addr);
 		}
-//		trigger(new MinaNetworkInit(self), network.getControl());
+		trigger(new MinaNetworkInit(self), network.getControl());
 		
 		logger.info("Number of participants is: " + pId);
 		trigger(new CoordinatorInit(selfId, self, mapParticipantsAddrs), twoPc.getControl());
