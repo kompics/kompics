@@ -1,10 +1,10 @@
 <document>
 	<properties>
 		<title>Release History</title>
-		<author email="cosmin->sics.se">Cosmin Arad</author>
+		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
-		<release version="0.4.2" date="2009-02-04" description="Maintenance release">
+		<release version="0.4.1" date="2009-02-04" description="Maintenance release">
             <action dev="cosmin" type="fix">
 [Kompics core]: fixed a scheduling bug on muti-core.
             </action>
