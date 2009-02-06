@@ -246,7 +246,7 @@ by putting together protocols programmed as event-driven components.
 		<developer>
 			<id>cosmin</id>
 			<name>Cosmin Arad</name>
-			<email>cosmin->sics.se</email>
+			<email>cosmin>sics.se</email>
 			<url>http://www.sics.se/node/3069</url>
 			<organization>Royal Institute of Technology (KTH)</organization>
 			<organizationUrl>http://www.ict.kth.se/ECS/indexeng.html</organizationUrl>
@@ -259,7 +259,7 @@ by putting together protocols programmed as event-driven components.
 		<developer>
 			<id>jdowling</id>
 			<name>Jim Dowling</name>
-			<email>jdowling->sics.se</email>
+			<email>jdowling>sics.se</email>
 			<url>http://www.sics.se/node/1405</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
@@ -272,7 +272,7 @@ by putting together protocols programmed as event-driven components.
 		<developer>
 			<id>seif</id>
 			<name>Seif Haridi</name>
-			<email>seif->sics.se</email>
+			<email>seif>sics.se</email>
 			<url>http://www.sics.se/~seif</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
@@ -286,7 +286,7 @@ by putting together protocols programmed as event-driven components.
 	<contributors>
 		<contributor>
 			<name>Ali Ghodsi</name>
-			<email>ali->sics.se</email>
+			<email>ali>sics.se</email>
 			<url>http://www.sics.se/~ali</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
@@ -294,7 +294,7 @@ by putting together protocols programmed as event-driven components.
 		</contributor>
 		<contributor>
 			<name>Tallat Shafaat</name>
-			<email>tallat->sics.se</email>
+			<email>tallat>sics.se</email>
 			<url>http://www.sics.se/~tallat</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
@@ -302,7 +302,7 @@ by putting together protocols programmed as event-driven components.
 		</contributor>
 		<contributor>
 			<name>Roberto Roverso</name>
-			<email>roberto->sics.se</email>
+			<email>roberto>sics.se</email>
 			<url>http://www.sics.se/~roberto</url>
 			<organization>Swedish Institute of Computer Science (SICS)</organization>
 			<organizationUrl>http://www.sics.se/</organizationUrl>
