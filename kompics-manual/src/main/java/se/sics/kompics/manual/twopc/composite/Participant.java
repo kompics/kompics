@@ -124,7 +124,7 @@ public class Participant extends ComponentDefinition {
 
 			// Send Ack with responses
 			trigger(new Ack(transactionId,responses,self,commit.getSource()),tpcPort);
-
+			activeTransactions.remove(transactionId);
 		}
 	};
 

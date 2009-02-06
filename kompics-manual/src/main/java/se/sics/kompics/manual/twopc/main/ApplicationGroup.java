@@ -21,6 +21,7 @@ import se.sics.kompics.manual.twopc.client.CommandProcessor;
 import se.sics.kompics.manual.twopc.composite.TwoPC;
 import se.sics.kompics.manual.twopc.event.ApplicationInit;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
+import se.sics.kompics.manual.twopc.simple.TwoPCblob;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -79,7 +80,14 @@ public class ApplicationGroup extends ComponentDefinition {
 		// create components
 		time = create(JavaTimer.class);
 		network = create(MinaNetwork.class);
-		twoPc = create(TwoPC.class);
+		if (selfId == 0)
+		{
+			twoPc = create(TwoPCblob.class);			
+		}
+		else
+		{
+			twoPc = create(TwoPC.class);
+		}
 		commandProcessor = create(CommandProcessor.class);
 
 		// handle possible faults in the components
@@ -116,7 +124,7 @@ public class ApplicationGroup extends ComponentDefinition {
 		trigger(new ApplicationInit(commandScript, neighborSet, self),
 				commandProcessor.getControl());
 
-		trigger(new Start(), commandProcessor.getControl());
+//		trigger(new Start(), commandProcessor.getControl());
 		
 	}
 

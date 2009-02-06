@@ -48,7 +48,10 @@ public final class Application {
 			{
 				node(1, "127.0.0.1", 22031);
 				node(2, "127.0.0.1", 22032);
-				link(1, 2, 3000, 0.5).bidirectional();
+//				node(2, "127.0.0.1", 22033);
+//				node(3, "127.0.0.1", 22034);
+//				link(1, 2, 3000, 0.5).bidirectional();
+//				link(1, 2, 3000, 0.5).bidirectional();
 				defaultLinks(1000,0);
 			}
 		};
@@ -69,8 +72,10 @@ public final class Application {
 
 		Scenario scenario1 = new Scenario(ApplicationGroup.class) {
 			{
-				command(1, "B:Wjim,dowling:Rjim:S10000:C"); //.recover("Prrr", 1000);
-				command(2, ""); 
+				command(1, "S5000:B:Wjim,dowling:Rjim:S10000:C"); 
+				command(2, "");
+//				command(3, ""); 
+//				command(4, ""); 
 			}
 		};
 
