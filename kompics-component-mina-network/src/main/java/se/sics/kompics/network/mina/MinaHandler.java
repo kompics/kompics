@@ -20,13 +20,12 @@
  */
 package se.sics.kompics.network.mina;
 
-import java.net.InetSocketAddress;
-
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.NetworkException;
 import se.sics.kompics.network.NetworkSessionClosed;
@@ -70,8 +69,7 @@ public class MinaHandler extends IoHandlerAdapter {
 	@Override
 	public void exceptionCaught(IoSession session, Throwable cause)
 			throws Exception {
-		InetSocketAddress address = (InetSocketAddress) session
-				.getAttribute("address");
+		Address address = (Address) session.getAttribute("address");
 
 		if (address != null)
 			logger.debug("Problems with {} connection to {}",
@@ -129,6 +127,7 @@ public class MinaHandler extends IoHandlerAdapter {
 		logger.debug("Connection closed to {}", session.getRemoteAddress());
 		networkComponent.networkSessionClosed(new NetworkSessionClosed(session
 				.getRemoteAddress()));
+		System.err.println("***CLOSED***" + session.getRemoteAddress());
 	}
 
 	/*
@@ -144,5 +143,6 @@ public class MinaHandler extends IoHandlerAdapter {
 		logger.debug("Connection opened to {}", session.getRemoteAddress());
 		networkComponent.networkSessionOpened(new NetworkSessionOpened(session
 				.getRemoteAddress()));
+		System.err.println("***OPENED***" + session.getRemoteAddress());
 	}
 }

@@ -34,6 +34,7 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Transport;
 
@@ -66,7 +67,8 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 	private Transport protocol;
 
 	/** The remote address. */
-	private InetSocketAddress remoteAddress;
+	private Address remoteAddress;
+	private InetSocketAddress remoteSocketAddress;
 
 	/** The pending messages. */
 	private LinkedList<Message> pendingMessages;
@@ -96,11 +98,16 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 	 *            the component
 	 */
 	public MinaSession(IoConnector ioConnector, Transport protocol,
-			InetSocketAddress address, MinaNetwork component) {
+			Address address, MinaNetwork component) {
 		super();
+
+		System.err.println("CREATED MINA_SESSION--------------- " + address);
+
 		this.ioConnector = ioConnector;
 		this.protocol = protocol;
 		this.remoteAddress = address;
+		this.remoteSocketAddress = new InetSocketAddress(address.getIp(),
+				address.getPort()); 
 		this.pendingMessages = new LinkedList<Message>();
 
 		this.component = component;
@@ -179,7 +186,7 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 	 * Connect init.
 	 */
 	public void connectInit() {
-		connectFuture = ioConnector.connect(remoteAddress);
+		connectFuture = ioConnector.connect(remoteSocketAddress);
 		connectFuture.addListener(this);
 	}
 
@@ -203,7 +210,7 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 	 * @return the remote address
 	 */
 	public InetSocketAddress getRemoteAddress() {
-		return remoteAddress;
+		return remoteSocketAddress;
 	}
 
 	/**
