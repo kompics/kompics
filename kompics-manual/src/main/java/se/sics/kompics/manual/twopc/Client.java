@@ -16,6 +16,7 @@ public final class Client extends PortType {
 		negative(CommitTransaction.class);
 		negative(RollbackTransaction.class);
 		
+		positive(BeginTransaction.class);
 		positive(TransResult.class);
 	}
 }

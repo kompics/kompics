@@ -1,8 +1,6 @@
 package se.sics.kompics.manual.twopc.main;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,7 +23,7 @@ import se.sics.kompics.manual.twopc.composite.TwoPC;
 import se.sics.kompics.manual.twopc.event.ApplicationInit;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
-import se.sics.kompics.manual.twopc.event.Operation;
+import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -108,20 +106,21 @@ public class ApplicationGroup extends ComponentDefinition {
 		}
 		trigger(new MinaNetworkInit(self), network.getControl());
 		
-		logger.info("Number of participants is: " + pId);
-		trigger(new CoordinatorInit(selfId, self, mapParticipantsAddrs), twoPc.getControl());
-		trigger(new ApplicationInit(commandScript, neighborSet, self),
-				commandProcessor.getControl());
-
 		connect(twoPc.getNegative(Network.class), network
 				.getPositive(Network.class));
 		connect(twoPc.getNegative(Timer.class), time
 				.getPositive(Timer.class));
 		
 		connect(twoPc.getPositive(Client.class), commandProcessor.getNegative(Client.class));
-
+		
 		connect(commandProcessor.getNegative(Timer.class), time
 				.getPositive(Timer.class));
+
+		
+		trigger(new CoordinatorInit(selfId, self, mapParticipantsAddrs), twoPc.getControl());
+		trigger(new ApplicationInit(commandScript, neighborSet, self),
+				commandProcessor.getControl());
+
 		trigger(new Start(), commandProcessor.getControl());
 	}
 
