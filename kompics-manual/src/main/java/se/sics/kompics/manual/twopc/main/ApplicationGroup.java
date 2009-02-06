@@ -13,7 +13,6 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Fault;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
-import se.sics.kompics.Negative;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.launch.Topology;
@@ -21,9 +20,7 @@ import se.sics.kompics.manual.twopc.Client;
 import se.sics.kompics.manual.twopc.client.CommandProcessor;
 import se.sics.kompics.manual.twopc.composite.TwoPC;
 import se.sics.kompics.manual.twopc.event.ApplicationInit;
-import se.sics.kompics.manual.twopc.event.BeginTransaction;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
-import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -85,8 +82,6 @@ public class ApplicationGroup extends ComponentDefinition {
 		twoPc = create(TwoPC.class);
 		commandProcessor = create(CommandProcessor.class);
 
-		subscribe(handleBeginTransaction, commandProcessor.getNegative(Client.class));
-		
 		// handle possible faults in the components
 		subscribe(handleFault, time.getControl());
 		subscribe(handleFault, network.getControl());
@@ -122,6 +117,7 @@ public class ApplicationGroup extends ComponentDefinition {
 				commandProcessor.getControl());
 
 		trigger(new Start(), commandProcessor.getControl());
+		
 	}
 
 	Handler<Fault> handleFault = new Handler<Fault>() {
@@ -130,9 +126,4 @@ public class ApplicationGroup extends ComponentDefinition {
 		}
 	};
 	
-	Handler<BeginTransaction> handleBeginTransaction = new Handler<BeginTransaction>() {
-		public void handle(BeginTransaction trans) {
-			logger.info("Client application group: begin transaction");
-		}
-	};
 }

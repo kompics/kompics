@@ -159,7 +159,8 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 
 	private void doBeginTransaction() {
-		BeginTransaction b = new BeginTransaction(transId++);
+		transId++;
+		BeginTransaction b = new BeginTransaction(transId);
 		logger.info("Beginning transaction with {} id", transId);
 		trigger(b,coordinator);
 	}

@@ -18,6 +18,7 @@ import se.sics.kompics.manual.twopc.TwoPhaseCommit;
 import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
+import se.sics.kompics.manual.twopc.event.Commit;
 import se.sics.kompics.manual.twopc.event.CommitTransaction;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
 import se.sics.kompics.manual.twopc.event.Operation;
@@ -76,8 +77,7 @@ public class Coordinator extends ComponentDefinition {
 	private Map<Integer,Address> mapParticipants;
 
 	private Map<Integer,Integer> tranVotes = new HashMap<Integer,Integer>();
-	
-	private int transactionCount = 0;
+	private Map<Integer,Integer> tranAcks = new HashMap<Integer,Integer>();
 	
 	private Map<Integer,List<Operation>> activeTransactions = new HashMap<Integer,List<Operation>>();
 	
@@ -109,16 +109,18 @@ public class Coordinator extends ComponentDefinition {
 	
 	Handler<BeginTransaction> handleBeginTransaction = new Handler<BeginTransaction>() {
 		public void handle(BeginTransaction trans) {
-			logger.info("Coordinator client: begin transaction at " + id);
+			logger.info("Coordinator client: begin transaction at " + trans.getTransactionId());
 			List<Operation> ops = new ArrayList<Operation>();
 			activeTransactions.put(trans.getTransactionId(), ops);
+			
+			logger.info("TRANS VOTES is NOW: (" + trans.getTransactionId() + ", 0)");
 			tranVotes.put(trans.getTransactionId(), 0);
 		}
 	};
 	
 	Handler<CommitTransaction> handleCommitTransaction = new Handler<CommitTransaction>() {
 		public void handle(CommitTransaction trans) {
-			logger.info("Coordinator client: commit transaction " + id);
+			logger.info("Coordinator client: commit transaction " + trans.getTransactionId());
 			
 			// Start Two-Phase Commit with Participants
 			List<Operation> ops = activeTransactions.get(trans.getTransactionId());
@@ -127,6 +129,8 @@ public class Coordinator extends ComponentDefinition {
 			{
 				Transaction t = new Transaction(trans.getTransactionId(),
 						Transaction.CommitType.COMMIT, ops);
+				
+				logger.info("Coordinator: sending prepare to: " + dest.toString());
 				trigger(new Prepare(t,self,dest), tpcPort);
 			}
 		}
@@ -134,7 +138,7 @@ public class Coordinator extends ComponentDefinition {
 	
 	Handler<RollbackTransaction> handleRollbackTransaction = new Handler<RollbackTransaction>() {
 		public void handle(RollbackTransaction trans) {
-			logger.info("Coordinator client: rollback transaction " + id);
+			logger.info("Coordinator client: rollback transaction " + trans.getTransactionId());
 			for (Address dest : mapParticipants.values())
 			{
 				trigger(new Abort(trans.getTransactionId(), self, dest), tpcPort);
@@ -144,9 +148,17 @@ public class Coordinator extends ComponentDefinition {
 	
 	Handler<ReadOperation> handleReadOperation = new Handler<ReadOperation>() {
 		public void handle(ReadOperation readOp) {
-			logger.info("Coordinator client: read operation " + id);
+			logger.info("Coordinator client: read operation " + readOp.getTransactionId());
+			
+			List<Operation> ops;
+			if (activeTransactions.containsKey(readOp.getTransactionId()) == false)
+			{
+				ops = new ArrayList<Operation>();
+				activeTransactions.put(readOp.getTransactionId(), ops);
+			}
+
 			// Add operation to its active transaction
-			List<Operation> ops = activeTransactions.get(readOp.getTransactionId());
+			ops = activeTransactions.get(readOp.getTransactionId());			
 			ops.add(readOp);
 			// TODO send read to participants and result to client, read-lock tuple  
 		}
@@ -154,9 +166,16 @@ public class Coordinator extends ComponentDefinition {
 	
 	Handler<WriteOperation> handleWriteOperation = new Handler<WriteOperation>() {
 		public void handle(WriteOperation writeOp) {
-			logger.info("Coordinator client: write operation " + id);
+			logger.info("Coordinator client: write operation " + writeOp.getTransactionId());
+
+			List<Operation> ops;
+			if (activeTransactions.containsKey(writeOp.getTransactionId()) == false)
+			{
+				ops = new ArrayList<Operation>();
+				activeTransactions.put(writeOp.getTransactionId(), ops);
+			}
 			// Add operation to its active transaction
-			List<Operation> ops = activeTransactions.get(writeOp.getTransactionId());
+			ops = activeTransactions.get(writeOp.getTransactionId());
 			ops.add(writeOp);
 		}
 	};
@@ -165,9 +184,16 @@ public class Coordinator extends ComponentDefinition {
 	// Commit is sent from Participants to the Coordinator
 	Handler<Prepared> handlePrepared = new Handler<Prepared>() {
 		public void handle(Prepared commit) {
-			logger.info("Coordinator prepared recvd " + id);
-			
 			int tId = commit.getTransactionId();
+
+			logger.info("Coordinator prepared recvd for trans-id: " + tId);
+			
+			if (tranVotes.get(tId) == null)
+			{
+				logger.error("TRANS VOTES WAS NULL for transaction-id:" + tId);
+				return;
+			}
+			
 			if (tranVotes.get(tId) == -1)
 			{
 				// do nothing - transaction aborted
@@ -178,15 +204,19 @@ public class Coordinator extends ComponentDefinition {
 
 			if (tranVotes.get(tId) == mapParticipants.size())
 			{
-				// transaction committed
-				trigger(new TransResult(tId,true),coordinator);
+				tranAcks.put(commit.getTransactionId(), 0);
+				for (Address dest : mapParticipants.values())
+				{
+					logger.info("Coordinator: sending commit to: " + dest.toString());
+					trigger(new Commit(tId,self,dest), tpcPort);
+				}
 			}
 		}
 	};
 	
 	Handler<Abort> handleAbort = new Handler<Abort>() {
 		public void handle(Abort abort) {
-			logger.info("Coordinator abort recvd " + id);
+			logger.info("Coordinator abort recvd " + abort.getTransactionId());
 			// transaction aborted
 			tranVotes.put(abort.getTransactionId(),-1);
 			trigger(new TransResult(abort.getTransactionId(),false),coordinator);
@@ -196,14 +226,20 @@ public class Coordinator extends ComponentDefinition {
 	Handler<Ack> handleAck = new Handler<Ack>() {
 		public void handle(Ack ack) 
 		{
-			logger.info("Coordinator ack recvd " + id);
-			TransResult res = new TransResult(ack.getTransactionId(),true);
+			int tId = ack.getTransactionId();
+			logger.info("Coordinator ack recvd " + tId);
 			
-			if (ack.getResponses().size() > 0)
+			tranAcks.put(tId, tranAcks.get(tId)+1);
+			if (tranAcks.get(tId) == mapParticipants.size())
 			{
-				res.setResponses(ack.getResponses());
+				TransResult res = new TransResult(ack.getTransactionId(),true);
+				
+				if (ack.getResponses().size() > 0)
+				{
+					res.setResponses(ack.getResponses());
+				}
+				trigger(res,coordinator);
 			}
-			trigger(res,coordinator);
 		}
 	};
 }
