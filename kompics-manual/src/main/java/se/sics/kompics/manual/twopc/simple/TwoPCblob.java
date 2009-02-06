@@ -1,4 +1,4 @@
-package se.sics.kompics.manual.twopc.composite;
+package se.sics.kompics.manual.twopc.simple;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,70 +28,22 @@ import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
+import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 
-/**
- * <h2>Two-phase-commit protocol</h2> 
- * This is a toy implementation of 2PC for showing features of Kompics.
- * Do not use it as a reference for a 2PC implementation.
- * 
- * The coordinator implementation below performs the following: 
- * On receiving a BeginTransaction message, it creates an activeTransaction. Any read
- * or write operations for that transaction are buffered here at the 
- * coordinator (note: this is incorrect 2PC behaviour). When a client sends
- * a CommitTransaction, the set of read/write operations are sent in a Transaction
- * object to the participants as a Prepare message. The participants respond
- * with either a Prepared or Abort messaage. If all participants respond with
- * a Prepared message, the coordinator sends a Commit message to the participants,
- * otherwise the transaction is aborted (and a TransResult failure message is
- * sent to the client). The participants respond to the Commit message with an
- * Ack message, and when all Acks have been received by the coordinator, it sends
- * a Transaction Result message back to the client.
- * 
- * A more correct description of 2PC is given below. 
- * <h3>(Phase 1) Commit-request phase</h3>
- * <ul>
- * <li>1. The coordinator sends a Prepare message to all participants.</li>
- * <li>2. The participants execute the transaction up to the point where they
- * will be asked to commit. They each write an entry to their undo log and an
- * entry to their redo log.</li>
- * <li>3. Each participant replies with an agreement message if the transaction
- * succeeded, or an abort message if the transaction failed.</li>
- * <li>4. The coordinator waits until it has a message from each participant.</li>
- * </ul>
- * 
- * <h3>(Phase 2) Commit phase</h3> If the coordinator received an agreement
- * message from all participants during the commit-request phase:
- * <ul>
- * <li>1. The coordinator writes a commit record into its log.</li>
- * <li>2. The coordinator sends a commit message to all the participants.</li>
- * <li>3. Each participant completes the operation, and releases all the locks
- * and resources held during the transaction.</li>
- * <li>4. Each participant sends an acknowledgement to the coordinator.</li>
- * <li>5. The coordinator completes the transaction when acknowledgements have
- * been received.</li>
- * </ul>
- * If any participant sent an abort message during the commit-request phase:
- * <ul>
- * <li>1. The coordinator sends an rollback message to all the participants.</li>
- * <li>2. Each participant undoes the transaction using the undo log, and
- * releases the resources and locks held during the transaction.</li>
- * <li>3. Each participant sends an acknowledgement to the coordinator.</li>
- * <li>4. The coordinator completes the transaction when acknowledgements have
- * been received.</li>
- * </ul>
- */
-public class Coordinator extends ComponentDefinition {
+public class TwoPCblob extends ComponentDefinition {
+	
+	private Negative<Client> inClient = negative(Client.class);
+	
+	private Positive<Network> network = positive(Network.class);
 
-	Negative<Client> coordinator = negative(Client.class);
-
-	Positive<TwoPhaseCommit> tpcPort = positive(TwoPhaseCommit.class);
-
-	Positive<Timer> timer = positive(Timer.class);
-
-	private int id;
-
+	private Positive<Timer> timer = positive(Timer.class);
+	
 	private Address self;
+	private int id;
+	
+	private static final Logger logger = LoggerFactory
+	.getLogger(TwoPCblob.class);
 
 	private Map<Integer, Address> mapParticipants;
 
@@ -100,49 +52,53 @@ public class Coordinator extends ComponentDefinition {
 
 	private Map<Integer, List<Operation>> activeTransactions = new HashMap<Integer, List<Operation>>();
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(Coordinator.class);
+    private Map<String,String> database = new HashMap<String,String>();
 
-	public Coordinator() {
+	public TwoPCblob() {
+		
+		// events from this component's control port
 		subscribe(handleCoordinatorInit, control);
+		
+		// events from external CommandProcessor (over inClient Port)
+		subscribe(handleBeginTransaction, inClient);
+		subscribe(handleCommitTransaction, inClient);
+		subscribe(handleRollbackTransaction, inClient);
+		subscribe(handleReadOperation, inClient);
+		subscribe(handleWriteOperation, inClient);
 
-		subscribe(handleBeginTransaction, coordinator);
-		subscribe(handleCommitTransaction, coordinator);
-		subscribe(handleRollbackTransaction, coordinator);
-		subscribe(handleReadOperation, coordinator);
-		subscribe(handleWriteOperation, coordinator);
+		// events from Network port for coordination 
+		subscribe(handleCommit,network);
+		subscribe(handleAbort,network);
+		subscribe(handlePrepare,network);
 
-		subscribe(handlePrepared, tpcPort);
-		subscribe(handleAbort, tpcPort);
-		subscribe(handleAck, tpcPort);
+		// events from Network port for participation 		
+		subscribe(handlePrepared,network);
+		subscribe(handleParticipantAbort,network);		
+		subscribe(handleAck,network);
 	}
-
+	
 	Handler<CoordinatorInit> handleCoordinatorInit = new Handler<CoordinatorInit>() {
 		public void handle(CoordinatorInit init) {
 			id = init.getId();
-			logger.info("Coordinator with id: " + id);
 			self = init.getSelf();
 			mapParticipants = init.getMapParticipants();
+			logger.info("Initializing Blob: " + id);
 		}
 	};
-
+	
 	Handler<BeginTransaction> handleBeginTransaction = new Handler<BeginTransaction>() {
 		public void handle(BeginTransaction trans) {
-			logger.info("Coordinator client: begin transaction at "
-					+ trans.getTransactionId());
+			logger.info("Begin transaction: " + trans.getTransactionId());
 			List<Operation> ops = new ArrayList<Operation>();
 			activeTransactions.put(trans.getTransactionId(), ops);
-
-			logger.info("TRANS VOTES is NOW: (" + trans.getTransactionId()
-					+ ", 0)");
+			logger.info("TRANS VOTES is NOW: (" + trans.getTransactionId()+ ", 0)");
 			tranVotes.put(trans.getTransactionId(), 0);
 		}
 	};
-
+	
 	Handler<CommitTransaction> handleCommitTransaction = new Handler<CommitTransaction>() {
 		public void handle(CommitTransaction trans) {
-			logger.info("Coordinator client: commit transaction "
-					+ trans.getTransactionId());
+			logger.info("CommitTransaction: " + trans.getTransactionId());
 
 			// Start Two-Phase Commit with Participants
 			List<Operation> ops = activeTransactions.get(trans
@@ -154,28 +110,24 @@ public class Coordinator extends ComponentDefinition {
 
 				logger.info("Coordinator: sending prepare to: "
 						+ dest.toString());
-				trigger(new Prepare(t, self, dest), tpcPort);
+				trigger(new Prepare(t, self, dest), network);
 			}
 		}
 	};
-
-	// This handler doesn't rollback operations (yet), it just aborts the transaction buffered
-	// here at the coordinator
+	
 	Handler<RollbackTransaction> handleRollbackTransaction = new Handler<RollbackTransaction>() {
 		public void handle(RollbackTransaction trans) {
-			logger.info("Coordinator client: rollback transaction "
-					+ trans.getTransactionId());
+			logger.info("RollbackTransaction: " + trans.getTransactionId());
 			for (Address dest : mapParticipants.values()) {
 				trigger(new Abort(trans.getTransactionId(), self, dest),
-						tpcPort);
+						network);
 			}
 		}
 	};
-
+	
 	Handler<ReadOperation> handleReadOperation = new Handler<ReadOperation>() {
 		public void handle(ReadOperation readOp) {
-			logger.info("Coordinator client: read operation "
-					+ readOp.getTransactionId());
+			logger.info("ReadOperation " + readOp.getTransactionId());
 
 			List<Operation> ops;
 			if (activeTransactions.containsKey(readOp.getTransactionId()) == false) {
@@ -189,10 +141,10 @@ public class Coordinator extends ComponentDefinition {
 			// TODO send read to participants and result to client, acquire read-lock
 		}
 	};
-
+	
 	Handler<WriteOperation> handleWriteOperation = new Handler<WriteOperation>() {
 		public void handle(WriteOperation writeOp) {
-			logger.info("Coordinator client: write operation "
+			logger.info("WriteOperation "
 					+ writeOp.getTransactionId());
 
 			List<Operation> ops;
@@ -204,8 +156,7 @@ public class Coordinator extends ComponentDefinition {
 			ops.add(writeOp);
 		}
 	};
-
-	// Prepared is sent from every Participant to the Coordinator
+	
 	Handler<Prepared> handlePrepared = new Handler<Prepared>() {
 		public void handle(Prepared commit) {
 			int tId = commit.getTransactionId();
@@ -227,22 +178,23 @@ public class Coordinator extends ComponentDefinition {
 				for (Address dest : mapParticipants.values()) {
 					logger.info("Coordinator: sending commit to: "
 							+ dest.toString());
-					trigger(new Commit(tId, self, dest), tpcPort);
+					trigger(new Commit(tId, self, dest), network);
 				}
 			}
 		}
 	};
-
+	
 	Handler<Abort> handleAbort = new Handler<Abort>() {
 		public void handle(Abort abort) {
 			logger.info("Coordinator abort recvd " + abort.getTransactionId());
 			// transaction aborted
 			tranVotes.put(abort.getTransactionId(), -1);
 			trigger(new TransResult(abort.getTransactionId(), false),
-					coordinator);
+					inClient);
 		}
 	};
-
+	
+	
 	Handler<Ack> handleAck = new Handler<Ack>() {
 		public void handle(Ack ack) {
 			int tId = ack.getTransactionId();
@@ -255,8 +207,88 @@ public class Coordinator extends ComponentDefinition {
 				if (ack.getResponses().size() > 0) {
 					res.setResponses(ack.getResponses());
 				}
-				trigger(res, coordinator);
+				trigger(res, inClient);
 			}
 		}
 	};
+	
+	Handler<Prepare> handlePrepare = new Handler<Prepare>() {
+		public void handle(Prepare prepare) {
+			Transaction t = prepare.getTrans();
+			int id = t.getId();
+			logger.info("prepare recvd: " + id);
+			activeTransactions.put(id, t.getOperations());
+			
+			trigger(new Prepared(id, self, prepare.getSource()), network);
+		}
+	};
+	
+	Handler<Commit> handleCommit = new Handler<Commit>() {
+		public void handle(Commit commit) {
+			int tId = commit.getTransactionId();
+			logger.info("commit recvd:" + tId);
+			
+			List<Operation> ops = activeTransactions.get(tId);
+			
+		    Map<String,String> responses = new HashMap<String,String>();
+			// copy from active transactions to DB
+			for (Operation op : ops)
+			{
+				if (op instanceof ReadOperation)
+				{
+					String name = op.getName();
+					String value = database.get(name);
+					// Return value read to client in a new ReadOperation
+					responses.put(name, value);
+				}
+				else if (op instanceof WriteOperation)
+				{
+					database.put(op.getName(), op.getValue());					
+				}
+			}
+
+			// Send Ack with responses
+			trigger(new Ack(tId,responses,self,commit.getSource()),network);
+		}
+	};
+	
+	
+	Handler<Commit> handleCommitP = new Handler<Commit>() {
+		public void handle(Commit commit) {
+			logger.info("commit recvd.");
+			int transactionId = commit.getTransactionId();
+			
+			List<Operation> ops = activeTransactions.get(transactionId);
+			
+		    Map<String,String> responses = new HashMap<String,String>();
+			// copy from active transactions to DB
+			for (Operation op : ops)
+			{
+				if (op instanceof ReadOperation)
+				{
+					String name = op.getName();
+					String value = database.get(name);
+					// Return value read to client in a new ReadOperation
+					responses.put(name, value);
+				}
+				else if (op instanceof WriteOperation)
+				{
+					database.put(op.getName(), op.getValue());					
+				}
+			}
+
+			// Send Ack with responses
+			trigger(new Ack(transactionId,responses,self,commit.getSource()),network);
+			activeTransactions.remove(transactionId);
+		}
+	};
+
+	Handler<Abort> handleParticipantAbort = new Handler<Abort>() {
+		public void handle(Abort rollback) {
+			logger.info("abort recvd.");
+			int id = rollback.getTransactionId();
+			activeTransactions.remove(id);
+		}
+	};
+	
 }

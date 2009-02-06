@@ -12,7 +12,6 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.manual.twopc.TwoPhaseCommit;
 import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.Commit;

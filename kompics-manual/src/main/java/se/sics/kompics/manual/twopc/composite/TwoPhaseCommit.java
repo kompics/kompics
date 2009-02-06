@@ -1,4 +1,4 @@
-package se.sics.kompics.manual.twopc;
+package se.sics.kompics.manual.twopc.composite;
 
 import se.sics.kompics.PortType;
 import se.sics.kompics.manual.twopc.event.Abort;
