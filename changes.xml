@@ -5,11 +5,14 @@
 	</properties>
 	<body>
 		<release version="0.4.2" date="2009-02-04" description="Maintenance release">
-            <action dev="cosmin" type="add">
-[Kompics core]: added dynamic subscriptions
+            <action dev="cosmin" type="fix">
+[Kompics core]: fixed a scheduling bug on muti-core.
             </action>
             <action dev="cosmin" type="add">
-[Kompics core]: added some unit tests and code coverage reporting
+[Kompics core]: added dynamic subscriptions.
+            </action>
+            <action dev="cosmin" type="add">
+[Kompics core]: added some unit tests and code coverage reporting.
             </action>
             <action dev="cosmin" type="fix">
 [MinaNetwork Component]: sockets no longer remain bound when process dies.
