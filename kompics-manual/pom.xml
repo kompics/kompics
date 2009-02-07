@@ -106,12 +106,13 @@
 						<makeValidHtml>true</makeValidHtml>
 						<targetFileExtension>html</targetFileExtension>
 						<targetsFileName>index.html</targetsFileName>
+					<targetDirectory>src/docbkx/manual</targetDirectory>
+						
 					-->
 					<generateSectionTocLevel>0</generateSectionTocLevel>
 					<chunkToc>0</chunkToc>
-					<chunkTocsAndLots>0</chunkTocsAndLots>
-					<targetDirectory>src/docbkx/manual</targetDirectory>
-					<htmlStylesheet>styles.css</htmlStylesheet>
+					<chunkTocsAndLots>0</chunkTocsAndLots>					
+					<htmlStylesheet>css/styles.css</htmlStylesheet>
 					<chunkedOutput>false</chunkedOutput>
 					<highlightSource>true</highlightSource>
 					<xincludeSupported>true</xincludeSupported>
@@ -127,7 +128,29 @@
 					<bodyFontFamily>Helvetica</bodyFontFamily>
 				</configuration>
 			</plugin>
-
+		      <plugin>
+		        <artifactId>maven-resources-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+              <version>2.3</version>
+            <configuration>
+              <outputDirectory>${basedir}/target/docbkx/html/</outputDirectory>
+              <resources> 
+                <resource>
+                  <directory>${basedir}/src/docbkx/resources/</directory>
+                </resource>
+              </resources>              
+            </configuration>            
+		        
+		        <executions>
+		          <execution>
+		            <id>copy-resources</id>
+		            <phase>generate-sources</phase>
+		            <goals>
+		              <goal>copy-resources</goal>
+		            </goals>
+		          </execution>
+		        </executions>
+		      </plugin>
 		</plugins>
 	</build>
 
