@@ -130,7 +130,7 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 
 			// TODO Solve duplicate connection
 
-			ioSession.setAttribute("address", remoteAddress);
+			ioSession.setAttribute("address", remoteSocketAddress);
 			ioSession.setAttribute("protocol", protocol);
 
 			logger.debug("Connected to {}", ioSession.getRemoteAddress());

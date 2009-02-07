@@ -20,6 +20,8 @@
  */
 package se.sics.kompics.network.mina;
 
+import java.net.InetSocketAddress;
+
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
@@ -69,7 +71,8 @@ public class MinaHandler extends IoHandlerAdapter {
 	@Override
 	public void exceptionCaught(IoSession session, Throwable cause)
 			throws Exception {
-		Address address = (Address) session.getAttribute("address");
+		InetSocketAddress address = (InetSocketAddress) session
+				.getAttribute("address");
 
 		if (address != null)
 			logger.debug("Problems with {} connection to {}",
@@ -99,7 +102,7 @@ public class MinaHandler extends IoHandlerAdapter {
 		Transport protocol = (Transport) session.getAttribute("protocol");
 
 		logger.debug("Message received from {}", session.getRemoteAddress());
-		networkComponent.deliverMessage((Message) message, protocol);
+		networkComponent.deliverMessage((Message) message, protocol, session);
 	}
 
 	/*
@@ -143,6 +146,7 @@ public class MinaHandler extends IoHandlerAdapter {
 		logger.debug("Connection opened to {}", session.getRemoteAddress());
 		networkComponent.networkSessionOpened(new NetworkSessionOpened(session
 				.getRemoteAddress()));
+
 		System.err.println("***OPENED***" + session.getRemoteAddress());
 	}
 }
