@@ -91,13 +91,12 @@
 		        </executions>
 	            <configuration>
 	              <encoding>UTF-8</encoding>
-	              <outputDirectory>${basedir}/target/docbkx/</outputDirectory>
+	              <outputDirectory>${basedir}/target/docbkx/html</outputDirectory>
 	              <resources> 
 	                <resource>
-	                  <directory>${basedir}/src/docbkx/</directory>
+	                  <directory>${basedir}/src/docbkx/resources</directory>
 				        <includes>
 				          <include> **/*.png</include>
-				          <include> **/*.jpg</include>			          
 				          <include> **/*.css</include>
 				        </includes>
 	                </resource>
