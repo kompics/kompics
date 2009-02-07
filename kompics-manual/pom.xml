@@ -77,6 +77,34 @@
 					<showDeprecations>true</showDeprecations>
 				</configuration>
 			</plugin>
+		      <plugin>
+		        <artifactId>maven-resources-plugin</artifactId>
+    	        <version>2.3</version>
+ 		        <executions>
+		          <execution>
+		            <id>copy-resources</id>
+		            <phase>generate-sources</phase>
+		            <goals>
+		              <goal>copy-resources</goal>
+		            </goals>
+		          </execution>
+		        </executions>
+	            <configuration>
+	              <encoding>UTF-8</encoding>
+	              <outputDirectory>${basedir}/target/docbkx/</outputDirectory>
+	              <resources> 
+	                <resource>
+	                  <directory>${basedir}/src/docbkx/</directory>
+				        <includes>
+				          <include> **/*.png</include>
+				          <include> **/*.jpg</include>			          
+				          <include> **/*.css</include>
+				        </includes>
+	                </resource>
+	              </resources>              
+	            </configuration> 		        
+	      </plugin>
+			
 			<plugin>
 				<groupId>com.agilejava.docbkx</groupId>
 				<artifactId>docbkx-maven-plugin</artifactId>
@@ -107,11 +135,10 @@
 						<targetFileExtension>html</targetFileExtension>
 						<targetsFileName>index.html</targetsFileName>
 					<targetDirectory>src/docbkx/manual</targetDirectory>
-						
 					-->
-					<generateSectionTocLevel>0</generateSectionTocLevel>
-					<chunkToc>0</chunkToc>
-					<chunkTocsAndLots>0</chunkTocsAndLots>					
+					<generateSectionTocLevel>false</generateSectionTocLevel>
+					<chunkToc>false</chunkToc>
+					<chunkTocsAndLots>false</chunkTocsAndLots>					
 					<htmlStylesheet>css/styles.css</htmlStylesheet>
 					<chunkedOutput>false</chunkedOutput>
 					<highlightSource>true</highlightSource>
@@ -128,29 +155,6 @@
 					<bodyFontFamily>Helvetica</bodyFontFamily>
 				</configuration>
 			</plugin>
-		      <plugin>
-		        <artifactId>maven-resources-plugin</artifactId>
-                <groupId>org.apache.maven.plugins</groupId>
-              <version>2.3</version>
-            <configuration>
-              <outputDirectory>${basedir}/target/docbkx/html/</outputDirectory>
-              <resources> 
-                <resource>
-                  <directory>${basedir}/src/docbkx/resources/</directory>
-                </resource>
-              </resources>              
-            </configuration>            
-		        
-		        <executions>
-		          <execution>
-		            <id>copy-resources</id>
-		            <phase>generate-sources</phase>
-		            <goals>
-		              <goal>copy-resources</goal>
-		            </goals>
-		          </execution>
-		        </executions>
-		      </plugin>
 		</plugins>
 	</build>
 
