@@ -1,0 +1,733 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Kompics Programming Manual</title><link rel="stylesheet" href="styles.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="book" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="d0e2"></a>Kompics Programming Manual</h1></div><div><h2 class="subtitle">For Kompics </h2></div><div><div class="authorgroup"><div class="author"><h3 class="author"><span class="firstname">Jim</span> <span class="surname">Dowling</span></h3></div><div class="author"><h3 class="author"><span class="firstname">Cosmin</span> <span class="surname">Arad</span></h3></div></div></div><div><p class="copyright">Copyright &copy; 2009 Swedish Institute of Computer Science and Kunliga Tekniska H&ouml;gskola</p></div><div><div class="legalnotice"><a name="d0e33"></a><p>This work is licensed under the Creative
+      Commons Attribution License.  To view a copy of this license,
+      visit <a class="ulink" href="http://creativecommons.org/licenses/by/2.0/" target="_top">http://creativecommons.org/licenses/by/2.0/</a>
+      or send a letter to Creative Commons, 559 Nathan Abbott Way,
+      Stanford, California 94305, USA.</p></div></div></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="chapter"><a href="#kompics.concepts">1. Fundamental Concepts</a></span></dt><dd><dl><dt><span class="sect1"><a href="#kompics.concepts.intro">Kompics: Components, Events, Ports and Channels</a></span></dt></dl></dd><dt><span class="chapter"><a href="#kompics.install">2. Installing Kompics</a></span></dt><dd><dl><dt><span class="sect1"><a href="#kompics.install.reqs">Install software required for Kompics</a></span></dt><dt><span class="sect1"><a href="#kompics.install.download-kompics">Download and Install Subversion and Maven2</a></span></dt></dl></dd><dt><span class="chapter"><a href="#kompics.getting-started">3. A Minimal Kompics Application</a></span></dt><dd><dl><dt><span class="sect1"><a href="#kompics.getting-started.ping">Ping (Example 1)</a></span></dt><dd><dl><dt><span class="sect2"><a href="#d0e474">Ping Event</a></span></dt><dt><span class="sect2"><a href="#d0e479">PingPort Port</a></span></dt><dt><span class="sect2"><a href="#kompics.getting-started.example1">Root Component</a></span></dt><dt><span class="sect2"><a href="#d0e503">Host Component</a></span></dt></dl></dd><dt><span class="sect1"><a href="#kompics.getting-started.example2">Ping-Pong with 2 Ports (Example 2a)</a></span></dt><dd><dl><dt><span class="sect2"><a href="#d0e564">Pong Event</a></span></dt><dt><span class="sect2"><a href="#d0e569">PongPort</a></span></dt><dt><span class="sect2"><a href="#d0e574">Root Component</a></span></dt><dt><span class="sect2"><a href="#d0e579">Host Component</a></span></dt></dl></dd><dt><span class="sect1"><a href="#kompics.getting-started.example3">Ping-Pong with a Single Port (Example 3a)</a></span></dt><dd><dl><dt><span class="sect2"><a href="#d0e609">PingPongPort</a></span></dt><dt><span class="sect2"><a href="#d0e614">Root Component</a></span></dt><dt><span class="sect2"><a href="#d0e619">Host Component</a></span></dt></dl></dd><dt><span class="sect1"><a href="#d0e624">Ping-Pong with a HostPing and a HostPong component (Example 4)</a></span></dt></dl></dd><dt><span class="appendix"><a href="#svn.copyright">A. Copyright</a></span></dt></dl></div><div class="list-of-figures"><p><b>List of Figures</b></p><dl><dt>1.1. <a href="#kompics.concepts.fig-port">Example port.</a></dt><dt>1.2. <a href="#kompics.concepts.fig-component">Example component.</a></dt><dt>3.1. <a href="#kompics.getting-started.ping-fig">Ping component inside a Root component.</a></dt><dt>3.2. <a href="#kompics.getting-started.pingpong-two-ports">Ping-Pong component with two Ports inside a Root component.</a></dt><dt>3.3. <a href="#kompics.getting-started.pingpong-one-port">Ping-Pong component with one Port inside a Root component.</a></dt><dt>3.4. <a href="#kompics.getting-started.pingpong-two-components-two-ports">A PingComponent and a PongComponent with two Ports each, inside a parent Root component.</a></dt></dl></div><div class="list-of-tables"><p><b>List of Tables</b></p><dl><dt>1.1. <a href="#kompics.concepts.tbl-1">Kompics Programming Abstractions</a></dt><dt>2.1. <a href="#kompics.install.tbl-1">Install Kompics</a></dt></dl></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="kompics.concepts"></a>Chapter&nbsp;1.&nbsp;Fundamental Concepts</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="sect1"><a href="#kompics.concepts.intro">Kompics: Components, Events, Ports and Channels</a></span></dt></dl></div><p>This chapter is a brief informal introduction to Kompics.
+	We begin with a discussion of the main concepts in Kompics,
+	then describe how to download and install Kompics,
+	and finally cover the build environment, based on Maven2.
+	</p><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.concepts.intro"></a>Kompics: Components, Events, Ports and Channels</h2></div></div></div><p>
+    A component is a reactive unit of computation that communicates with other
+	components asynchronously by passing data-carrying typed events. Events are
+	passive immutable objects that can be serialized and communicated over network
+	links and between different address spaces.
+	</p><p>
+	Components are loosely coupled in the sense that a component does not
+	know the component type, availability or identity of any components with which
+	it communicates. Rather, components are endowed with typed communication
+	ports. A component sends events to and receives events from a local port. Ports
+	of the same type on two different components can be connected by a bidirectional
+	channel. This connection enables the two components to communicate.
+	</p><p>
+	As a reaction to received events, components execute event handlers, procedures
+	specific to the types of events being received. During execution, event handlers
+	may trigger new events, by sending them to one of the component's ports.
+	An event handler is associated with events of a certain type, received though a
+	certain port, by means of a subscription.
+	</p><p>
+          </p><div class="table"><a name="kompics.concepts.tbl-1"></a><p class="title"><b>Table&nbsp;1.1.&nbsp;Kompics Programming Abstractions</b></p><div class="table-contents"><table summary="Kompics Programming Abstractions" border="1"><colgroup><col><col></colgroup><thead><tr><th>Entity</th><th>Description</th></tr></thead><tbody><tr><td><span class="emphasis"><em>Component</em></span></td><td><p>A <em class="firstterm">component</em> is a reactive unit of computation 
+                that communicates with other components asynchronously by passing 
+                data-carrying typed events over ports. Components contain handlers to execute
+                received events, and components can be composed into <em class="firstterm">composite 
+                components</em>.</p></td></tr><tr><td><span class="emphasis"><em>Event</em></span></td><td><p>An <em class="firstterm">event</em> is a passive immutable object that 
+                can be serialized and communicated over network links and between different
+                address spaces.</p></td></tr><tr><td><span class="emphasis"><em>Port</em></span></td><td><p>A port represents a bidirectional event interface of a component and it
+				specifies the types of events that flow into or out of the component. The direction
+				in which an event flows through a port is defined as either <em class="firstterm">positive</em>
+				or <em class="firstterm">negative</em>. A negative event type flows towards the negative side
+				of the port, while a positive event type flows towards teh positive side of the port.
+				 A port is illustrated in <a class="xref" href="#kompics.concepts.fig-port" title="Figure&nbsp;1.1.&nbsp;Example port.">Figure&nbsp;1.1, &#8220;Example port.&#8221;</a>.
+				</p>
+				 
+    			<p>
+				By convention, the positive pole (+) of a port is understood to be the provided
+				direction for events, while the negative pole (&#8722;) of a port is understood to
+				be the required direction for events. When a component implements (or provides) a port, the
+				port is oriented with its + pole to the outside of the component and its &#8722; pole inside. 
+				Conversely, a (required) port that is used by a component is oriented with its &#8722; pole outside
+				and its + pole inside. The types of events flowing through the port from the
+				&#8722; pole to the + pole are tagged with + and the types of events flowing from
+				the + pole to the &#8722; pole are tagged with &#8722;.
+				 </p>
+				 </td></tr><tr><td><span class="emphasis"><em>Event Handler</em></span></td><td><p>An event handler is a procedure that a component executes as a reaction 
+                to receiving a certain event.</p></td></tr><tr><td><span class="emphasis"><em>Subscription</em></span></td><td><p>A subscription binds an event handler to a port pole.</p></td></tr><tr><td><span class="emphasis"><em>Channel</em></span></td><td><p>A channel is a first-class bidirectional connection between two ports
+                of the same type. A channel can connect two ports of the same type and of
+                different polarity.</p></td></tr></tbody></table></div></div><p><br class="table-break">	
+    </p><p> In <a class="xref" href="#kompics.concepts.fig-port" title="Figure&nbsp;1.1.&nbsp;Example port.">Figure&nbsp;1.1, &#8220;Example port.&#8221;</a>, we can see two Ports containing 2 events and 
+      3 events, respectively. For <code class="literal">PortType1</code>, <code class="literal">e1</code> both goes "out"
+      and comes "in". For <code class="literal">PortType2</code>, <code class="literal">e2</code> goes "out", while 
+      <code class="literal">e2</code> and <code class="literal">e3</code> come "in".
+      </p><div class="figure"><a name="kompics.concepts.fig-port"></a><p class="title"><b>Figure&nbsp;1.1.&nbsp;Example port.</b></p><div class="figure-contents"><div><img src="images/ch00-port.png" alt="Example port."></div></div></div><br class="figure-break"><p>A component with two ports (one outgoing, one incoming), two handlers and two subscriptions 
+	is illustrated in <a class="xref" href="#kompics.concepts.fig-component" title="Figure&nbsp;1.2.&nbsp;Example component.">Figure&nbsp;1.2, &#8220;Example component.&#8221;</a>. The ports in this component are from
+	<a class="xref" href="#kompics.concepts.fig-port" title="Figure&nbsp;1.1.&nbsp;Example port.">Figure&nbsp;1.1, &#8220;Example port.&#8221;</a>. <code class="literal">PortType1</code> is provided by the component 
+	and	<code class="literal">PortType2</code> is required by the component. We can see how the 
+	<code class="literal">subscriptions</code> map events from <code class="literal">Ports</code> to <code class="literal">
+	handlers</code>, while handlers can trigger (or send) an <code class="literal">event</code> to a port
+	(if the polarity of that port allows that event to be sent in that direction).</p><p>So, we can see for <code class="literal">PortType1</code>, the event <code class="literal">E1</code> can
+	be both sent and received over this port. For <code class="literal">PortType2</code>, we can see that
+	a handler inside the component can send either <code class="literal">E2</code> or <code class="literal">E3</code>
+	to the port and handler inside the component can subscribe for <code class="literal">E2</code> (but not 
+	<code class="literal">E3</code>). For handlers or components outside this component (handlers would
+	have to be in a parent component), they can send and receive events of the opposite type. So,
+	for <code class="literal">PortType2</code>, they could subscribe for <code class="literal">E2</code> or 
+	<code class="literal">E3</code> events, and send <code class="literal">E2</code> events to the component.
+	</p><p>
+     </p><div class="figure"><a name="kompics.concepts.fig-component"></a><p class="title"><b>Figure&nbsp;1.2.&nbsp;Example component.</b></p><div class="figure-contents"><div><img src="images/ch00-component.png" alt="Example component."></div></div></div><p><br class="figure-break">
+	</p></div><div class="sidebar"><a name="kompics.concepts.INPUT"></a><p class="title"><b>INPUt (Implements Negative, Positive Uses)</b></p><p>An easy way to remember whether a PortType refers to the client-side
+     or server-side is to remember the idiom <span class="emphasis"><em>INPUt</em></span>
+     (Implements Negative, Positive Uses). INPUt reminds you that a negative 
+     PortType is one that is provided or implemented by a component (server-side),
+     while a positive PortType is one that is used by a component (client-side).
+     </p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="kompics.concepts.summary"></a>Summary</h3></div></div></div><p>We introduced a number of concepts for Kompics, and outlined the
+    software requirements for downloading and installing Kompics.</p></div></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="kompics.install"></a>Chapter&nbsp;2.&nbsp;Installing Kompics</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="sect1"><a href="#kompics.install.reqs">Install software required for Kompics</a></span></dt><dt><span class="sect1"><a href="#kompics.install.download-kompics">Download and Install Subversion and Maven2</a></span></dt></dl></div><p>This chapter describes the software requirements for Kompics, 
+  	and the steps required to install Kompics. These instructions cover
+  	the operating systems Windows (XP/Vista), Linux (all distros), Mac (OSX).
+	</p><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.install.reqs"></a>Install software required for Kompics</h2></div></div></div><p>The minimal requirements for downloading and installing Kompics are 
+      	<span class="emphasis"><em>Java (JDK 5.0 update 6 and above)</em></span>,
+      	<span class="emphasis"><em>subversion</em></span> and <span class="emphasis"><em>maven2</em></span>.
+      	However, we recommend building Kompics from an Eclipse environment
+      	(Netbeans should also work fine, but isn't discussed here).</p><p>For tutorials on how to use subversion and maven, we refer you to:
+   </p><div class="itemizedlist"><ul type="disc"><li><a class="ulink" href="http://svnbook.red-bean.com/" target="_top">Subversion red book</a></li><li><a class="ulink" href="http://books.sonatype.com/maven-book/reference/public-book.html" target="_top">Maven2 book</a></li></ul></div><p>	
+		</p></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.install.download-kompics"></a>Download and Install Subversion and Maven2</h2></div></div></div><p>
+	The requirements for installing Kompics are:<span class="emphasis"><em>maven2</em></span> and 
+	<span class="emphasis"><em>subversion</em></span>. We present two ways of installing subversion
+	and maven:  <span class="emphasis"><em>using the command-line</em></span> and <span class="emphasis"><em>as eclipse plugins</em></span>.
+	The easiest way to build Kompics is to use Eclipse plugins. We outline the steps
+	required for installing subversion and maven2 using either approach in the table below,
+	see <a class="xref" href="#kompics.install.tbl-1" title="Table&nbsp;2.1.&nbsp;Install Kompics">Table&nbsp;2.1, &#8220;Install Kompics&#8221;</a>. Please refer to the subversion and maven2 books
+	above for additional help.
+	
+        </p><div class="table"><a name="kompics.install.tbl-1"></a><p class="title"><b>Table&nbsp;2.1.&nbsp;Install Kompics</b></p><div class="table-contents"><table summary="Install Kompics" border="1"><colgroup><col><col></colgroup><thead><tr><th>Command-Line</th><th>Eclipse</th></tr></thead><tbody><tr><td>      
+
+For Ubuntu:
+<pre class="screen">
+$ sudo apt-get install subversion maven2
+$ svn checkout svn://small.sics.se/kompics/tags/0.4
+$ cd 0.4
+$ mvn install
+</pre>
+				<p>
+				For Windows:
+		   	   </p><div class="itemizedlist"><ul type="disc"><li>
+				Go to <a class="ulink" href="http://maven.apache.org/" target="_top">http://maven.apache.org/</a> and download an install Maven2.
+		        </li><li>
+				Download and install a subversion client, such as 
+				<a class="ulink" href="http://tortoisesvn.tigris.org/" target="_top">tortoise/svn</a>, and then checkout 
+				the Kompics code from our subversion server using the address:
+				<pre class="screen">svn://small.sics.se/kompics/tags/0.4</pre>.
+				Once you have checked out the Kompics code, you can build Kompics using maven2, 
+				by running the following command from the Kompics source code root folder:
+				<pre class="screen">c:\...\&gt;mvn install</pre></li><li>
+		        If you prefer Netbeans, you can generate a netbeans project using the following  
+		        plugin <a class="ulink" href="http://wiki.netbeans.org/MavenBestPractices" target="_top">Netbeans plugin for Maven</a>.
+		        </li></ul></div><p>
+				</p>
+                </td><td>
+	                <p>
+					You will need to install the following Eclipse tools to build Kompics:
+			   	   </p><div class="itemizedlist"><ul type="disc"><li><p><span class="emphasis"><em>Eclipse IDE</em></span> (Ganymede version is recommended). You now
+			          need to know how to install plugins for Eclipse. For the Ganymede version of Eclipse,
+			          you click on <code class="literal">Help-&gt;Software Updates-&gt; Available Software </code>. 
+			          Then click the "Add site"
+			          box to add an update site for a plugin. </p></li><li><p><span class="emphasis"><em>subclipse</em></span> - an Eclipse Plugin for Subversion available 
+			          at Eclipse update site <code class="literal">http://subclipse.tigris.org/update_1.4.x</code>. It 
+			          is recommended that you check at least the following boxes for installation: 
+			          "subclipse", "subclipse client adapter" and the "javahl adapter". </p></li><li><p><span class="emphasis"><em>m2eclipse</em></span> - an Eclipse Plugin for Maven2 available 
+			          at Eclipse update site <code class="literal">http://m2eclipse.sonatype.org/update/</code>.
+			          It is recommended that you check at least the following boxes for installation: 
+			          "maven embedder", "maven integration for eclipse",
+			          "Maven SCM handler", and the "Maven SCM handler for Subclipse". </p></li></ul></div><p>
+			        </p>       
+               <p> 
+                In Eclipse, import the maven project from the subversion repository:
+                <code class="literal">File-&gt;Import-&gt;Other-&gt;Checkout Mvn Projects from SCM</code>.
+                </p>
+                   <p> 
+               	Then select 'svn' as SCM type, and enter as SCM URL: 
+               	<code class="literal">svn://small.sics.se/kompics/tags/0.4/</code>
+               	</p>
+               	<p>You should now restart Eclipse, and you will be able to import and build Kompics.
+               	</p>
+                </td></tr></tbody></table></div></div><p><br class="table-break">	
+	</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="kompics.install.summary"></a>Summary</h3></div></div></div><p>We specified the software requirements for Kompics and described how
+    	to download and build Kompics. </p></div></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="kompics.getting-started"></a>Chapter&nbsp;3.&nbsp;A Minimal Kompics Application</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="sect1"><a href="#kompics.getting-started.ping">Ping (Example 1)</a></span></dt><dd><dl><dt><span class="sect2"><a href="#d0e474">Ping Event</a></span></dt><dt><span class="sect2"><a href="#d0e479">PingPort Port</a></span></dt><dt><span class="sect2"><a href="#kompics.getting-started.example1">Root Component</a></span></dt><dt><span class="sect2"><a href="#d0e503">Host Component</a></span></dt></dl></dd><dt><span class="sect1"><a href="#kompics.getting-started.example2">Ping-Pong with 2 Ports (Example 2a)</a></span></dt><dd><dl><dt><span class="sect2"><a href="#d0e564">Pong Event</a></span></dt><dt><span class="sect2"><a href="#d0e569">PongPort</a></span></dt><dt><span class="sect2"><a href="#d0e574">Root Component</a></span></dt><dt><span class="sect2"><a href="#d0e579">Host Component</a></span></dt></dl></dd><dt><span class="sect1"><a href="#kompics.getting-started.example3">Ping-Pong with a Single Port (Example 3a)</a></span></dt><dd><dl><dt><span class="sect2"><a href="#d0e609">PingPongPort</a></span></dt><dt><span class="sect2"><a href="#d0e614">Root Component</a></span></dt><dt><span class="sect2"><a href="#d0e619">Host Component</a></span></dt></dl></dd><dt><span class="sect1"><a href="#d0e624">Ping-Pong with a HostPing and a HostPong component (Example 4)</a></span></dt></dl></div><p>This chapter shows you how to build a simple Kompics Ping-Pong
+  		application. The goal of this chapter is to familiarize you with
+  		the basic steps required to build a minimal Kompics application. 
+  		We do not explain very many details of the source code here, as 
+  		these details will be introduced later chapters.</p><p>See <a class="xref" href="#kompics.concepts" title="Chapter&nbsp;1.&nbsp;Fundamental Concepts">Chapter&nbsp;1, <i>Fundamental Concepts</i></a> for a basic introduction to
+  		Kompics.</p><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.getting-started.ping"></a>Ping (Example 1)</h2></div></div></div><p>In this first example, see <a class="xref" href="#kompics.getting-started.ping-fig" title="Figure&nbsp;3.1.&nbsp;Ping component inside a Root component.">Figure&nbsp;3.1, &#8220;Ping component inside a Root component.&#8221;</a>,
+	  		a <code class="literal">Root</code> component will send a 
+	  		<em class="firstterm">ping</em> message to a <code class="literal">Host</code> 
+	  		component. <code class="literal">Root</code> contains the 
+	  		<code class="literal"> public void static main</code> , where a   
+	  		component that sends a <code class="literal">Ping</code> event to the 
+	  		<code class="literal">Host</code> component. <code class="literal">Host</code> has 
+	  		registered a handler, <code class="literal">handlePing</code>, with its
+	  		<code class="literal">PingPort</code> PortType, so when the <code class="literal">Ping</code>
+	  		event arrives at <code class="literal">PingPort</code> it is forwarded to
+	  		<code class="literal">handlePing</code>. Finally, <code class="literal">handlePing</code>
+	  		prints a message saying received the <code class="literal">Ping</code> event.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>It helps immensely to draw a diagram of your components and their ports along 
+		  with the ports' polarity. In particular, a diagram will aid you in understanding the
+		  polarity of the port based on your context. For example, when you are a client of
+		  a Port you have a reference to the Port the opposite polarity. </p><p>Also, you should keep in mind the <a class="xref" href="#kompics.concepts.INPUT" title="INPUt (Implements Negative, Positive Uses)">INPUt (Implements Negative, Positive Uses)</a> (Implements Negative, Positive Uses).</p></div><p>
+     </p><div class="figure"><a name="kompics.getting-started.ping-fig"></a><p class="title"><b>Figure&nbsp;3.1.&nbsp;Ping component inside a Root component.</b></p><div class="figure-contents"><div><img src="images/ch02-ping-component.png" alt="Ping component inside a Root component."></div></div></div><p><br class="figure-break">
+	</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e474"></a>Ping Event</h3></div></div></div><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example1;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Event;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Ping <b class="hl-keyword">extends</b> Event {
+			<b class="hl-keyword">public</b> Ping()
+			{the 
+			}
+		}	
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e479"></a>PingPort Port</h3></div></div></div><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example1;	
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.PortType;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> PingPort <b class="hl-keyword">extends</b> PortType {
+		
+			{
+				negative(Ping.<b class="hl-keyword">class</b>);
+			}
+		}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="kompics.getting-started.example1"></a>Root Component</h3></div></div></div><p>An alternative (and more common) way of starting this
+		program is to write a <code class="literal">startHandler</code> for
+		<code class="literal">Root</code>. When a <code class="literal">Root</code> component
+		is constructed, its <code class="literal">startHandler</code> is automatically
+		called.</p><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example1;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Component;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Kompics;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Start;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Root <b class="hl-keyword">extends</b> ComponentDefinition {
+		
+			<b class="hl-keyword">public</b> <b class="hl-keyword">static</b> <b class="hl-keyword">void</b>  main(String[] args)
+			{
+				Kompics.createAndStart(Root.<b class="hl-keyword">class</b>);
+			}
+			<b class="hl-keyword">public</b> Root() {
+				subscribe(handleStart,control);
+			}
+		
+			<b class="hl-keyword">private</b> Handler&lt;Start&gt; handleStart = <b class="hl-keyword">new</b> Handler&lt;Start&gt;() {
+				<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Start event) {
+					Component hostComponent = create(Host.<b class="hl-keyword">class</b>);
+					trigger(<b class="hl-keyword">new</b> Ping(), hostComponent.getPositive(PingPort.<b class="hl-keyword">class</b>));
+				}
+			};
+		}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e503"></a>Host Component</h3></div></div></div><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example1;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Negative;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Host <b class="hl-keyword">extends</b> ComponentDefinition {
+		
+			Negative&lt;PingPort&gt; pingN = negative(PingPort.<b class="hl-keyword">class</b>);
+			
+			<b class="hl-keyword">public</b> Host() {
+				subscribe(handlePing, pingN);
+			}
+		
+			<b class="hl-keyword">private</b> Handler&lt;Ping&gt; handlePing = <b class="hl-keyword">new</b> Handler&lt;Ping&gt;() {
+				<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Ping event) {
+					System.out.println(<b class="hl-string"><i style="color:red">"Received ping.."</i></b>);
+				}
+			};
+		}	
+		</pre></div></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.getting-started.example2"></a>Ping-Pong with 2 Ports (Example 2a)</h2></div></div></div><p>In this example, a Root component will exchange 
+	  		<em class="firstterm">ping</em> and <em class="firstterm">pong</em> 
+	  		messages with a Host component. The <code class="literal">Root</code> 
+	  		component sends a <code class="literal">Ping</code> event to the 
+	  		<code class="literal">Host</code> component. <code class="literal">Host</code> has 
+	  		registered a handler, <code class="literal">handlePing</code>, with its
+	  		<code class="literal">PingPort</code> PortType, so when the <code class="literal">Ping</code>
+	  		event arrives at <code class="literal">PingPort</code> it is forwarded to
+	  		<code class="literal">handlePing</code>. <code class="literal">handlePing</code> sends a
+	  		<code class="literal">Pong</code> event to its PongPort, which is forwarded to
+	  		handlePong in Root.</p><p>In the examples directory for this manual, you will find a reworking of this example (Example 2b),
+  			where we reverse the event directions for the pong port in <code class="literal">PongPortReversed</code>.
+  			</p><p>
+     </p><div class="figure"><a name="kompics.getting-started.pingpong-two-ports"></a><p class="title"><b>Figure&nbsp;3.2.&nbsp;Ping-Pong component with two Ports inside a Root component.</b></p><div class="figure-contents"><div><img src="images/ch02-ping-pong-two-ports.png" alt="Ping-Pong component with two Ports inside a Root component."></div></div></div><p><br class="figure-break">
+	</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e564"></a>Pong Event</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example2a;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Event;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Pong <b class="hl-keyword">extends</b> Event {
+				<b class="hl-keyword">public</b> Pong()
+				{
+				}
+			}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e569"></a>PongPort</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example2a;
+			
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.PortType;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> PongPort <b class="hl-keyword">extends</b> PortType {
+			
+				{
+					positive(Pong.<b class="hl-keyword">class</b>);
+				}
+			}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e574"></a>Root Component</h3></div></div></div><pre class="programlisting">
+		<b class="hl-keyword">package</b> sandbox.manual.example2a;
+
+		<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+		<b class="hl-keyword">import</b> sandbox.manual.example1.PingPort;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Component;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Kompics;
+		<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Start;
+		
+		<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Root <b class="hl-keyword">extends</b> ComponentDefinition {
+		
+			<b class="hl-keyword">public</b> <b class="hl-keyword">static</b> <b class="hl-keyword">void</b>  main(String[] args)
+			{
+				Kompics.createAndStart(Root.<b class="hl-keyword">class</b>);
+			}
+			<b class="hl-keyword">public</b> Root() {
+				subscribe(handleStart,control);
+			}
+			
+			<b class="hl-keyword">private</b> Handler&lt;Start&gt; handleStart = <b class="hl-keyword">new</b> Handler&lt;Start&gt;() {
+				<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Start event) {
+					Component hostComponent = create(Host.<b class="hl-keyword">class</b>);
+					subscribe(handlePong, hostComponent.getPositive(PongPort.<b class="hl-keyword">class</b>));
+					trigger(<b class="hl-keyword">new</b> Ping(), hostComponent.getPositive(PingPort.<b class="hl-keyword">class</b>));
+				}
+			};
+		
+			<b class="hl-keyword">private</b> Handler&lt;Pong&gt; handlePong = <b class="hl-keyword">new</b> Handler&lt;Pong&gt;() {
+				<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Pong event) {
+					System.out.println(<b class="hl-string"><i style="color:red">"Pong received."</i></b>);
+				}
+			};
+		}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e579"></a>Host Component</h3></div></div></div><pre class="programlisting">
+  			<b class="hl-keyword">package</b> sandbox.manual.example2a;
+
+			<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+			<b class="hl-keyword">import</b> sandbox.manual.example1.PingPort;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Negative;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Host <b class="hl-keyword">extends</b> ComponentDefinition {
+			
+				Negative&lt;PingPort&gt; negPing = negative(PingPort.<b class="hl-keyword">class</b>);
+				Negative&lt;PongPort&gt; negPong = negative(PongPort.<b class="hl-keyword">class</b>);
+				
+				<b class="hl-keyword">public</b> Host() {
+					subscribe(handlePing, negPing);
+				}
+			
+				<b class="hl-keyword">private</b> Handler&lt;Ping&gt; handlePing = <b class="hl-keyword">new</b> Handler&lt;Ping&gt;() {
+					<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Ping event) {
+						System.out.println(<b class="hl-string"><i style="color:red">"Received ping, sending Pong.."</i></b>);
+						trigger(<b class="hl-keyword">new</b> Pong(), negPong);
+					}
+				};	
+			}
+		</pre></div></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="kompics.getting-started.example3"></a>Ping-Pong with a Single Port (Example 3a)</h2></div></div></div><p>We now refactor <a class="xref" href="#kompics.getting-started.example2" title="Ping-Pong with 2 Ports (Example 2a)">the section called &#8220;Ping-Pong with 2 Ports (Example 2a)&#8221;</a> so that <code class="literal">Host</code>
+	  	only has a single <code class="literal">PingPong Port</code>, instead of two ports. This example
+	  	demonstrates the concept of "two-way event interfaces" (where events flow in and come out of 
+	  	a component). 
+	  	</p><p>In the examples directory for this manual, you will find a reworking of this example (Example 3b),
+  		where we reverse the event directions in a port called <code class="literal">PingPongPortReversed</code>.
+  		</p><p>
+     </p><div class="figure"><a name="kompics.getting-started.pingpong-one-port"></a><p class="title"><b>Figure&nbsp;3.3.&nbsp;Ping-Pong component with one Port inside a Root component.</b></p><div class="figure-contents"><div><img src="images/ch02-ping-pong-one-port.png" alt="Ping-Pong component with one Port inside a Root component."></div></div></div><p><br class="figure-break">
+	</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e609"></a>PingPongPort</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example3a;
+			
+			<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+			<b class="hl-keyword">import</b> sandbox.manual.example2a.Pong;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.PortType;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> PingPongPort <b class="hl-keyword">extends</b> PortType {
+			
+				{
+					negative(Ping.<b class="hl-keyword">class</b>);
+					positive(Pong.<b class="hl-keyword">class</b>);
+				}
+			}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e614"></a>Root Component</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example3a;
+			
+			<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+			<b class="hl-keyword">import</b> sandbox.manual.example2a.Pong;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Component;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Kompics;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Start;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Root <b class="hl-keyword">extends</b> ComponentDefinition {
+			
+				<b class="hl-keyword">private</b> Component hostComponent;
+				
+				<b class="hl-keyword">public</b> <b class="hl-keyword">static</b> <b class="hl-keyword">void</b>  main(String[] args)
+				{
+					Kompics.createAndStart(Root.<b class="hl-keyword">class</b>);
+				}
+				<b class="hl-keyword">public</b> Root() {
+					hostComponent = create(Host.<b class="hl-keyword">class</b>);
+					subscribe(handleStart,control);
+					subscribe(handlePong, hostComponent.getPositive(PingPongPort.<b class="hl-keyword">class</b>));
+				}
+			
+				<b class="hl-keyword">private</b> Handler&lt;Start&gt; handleStart = <b class="hl-keyword">new</b> Handler&lt;Start&gt;() {
+					<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Start event) {
+						trigger(<b class="hl-keyword">new</b> Ping(), hostComponent.getPositive(PingPongPort.<b class="hl-keyword">class</b>));		}
+				};
+			
+				<b class="hl-keyword">private</b> Handler&lt;Pong&gt; handlePong = <b class="hl-keyword">new</b> Handler&lt;Pong&gt;() {
+					<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Pong event) {
+						System.out.println(<b class="hl-string"><i style="color:red">"Pong received."</i></b>);
+					}
+				};
+			}
+		</pre></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="d0e619"></a>Host Component</h3></div></div></div><pre class="programlisting">
+			<b class="hl-keyword">package</b> sandbox.manual.example3a;
+			
+			<b class="hl-keyword">import</b> sandbox.manual.example1.Ping;
+			<b class="hl-keyword">import</b> sandbox.manual.example2a.Pong;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.ComponentDefinition;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Handler;
+			<b class="hl-keyword">import</b> sandbox.se.sics.kompics.Negative;
+			
+			<b class="hl-keyword">public</b> <b class="hl-keyword">class</b> Host <b class="hl-keyword">extends</b> ComponentDefinition {
+			
+				Negative&lt;PingPongPort&gt; negPingPong = negative(PingPongPort.<b class="hl-keyword">class</b>);
+				
+				<b class="hl-keyword">public</b> Host() {
+					subscribe(handlePing, negPingPong);
+				}
+			
+				<b class="hl-keyword">private</b> Handler&lt;Ping&gt; handlePing = <b class="hl-keyword">new</b> Handler&lt;Ping&gt;() {
+					<b class="hl-keyword">public</b> <b class="hl-keyword">void</b> handle(Ping event) {
+						System.out.println(<b class="hl-string"><i style="color:red">"Received ping, sending Pong.."</i></b>);
+						trigger(<b class="hl-keyword">new</b> Pong(), negPingPong);
+					}
+				};	
+			}
+		</pre></div></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e624"></a>Ping-Pong with a HostPing and a HostPong component (Example 4)</h2></div></div></div><p>The diagram in <a class="xref" href="#kompics.getting-started.pingpong-two-components-two-ports" title="Figure&nbsp;3.4.&nbsp;A PingComponent and a PongComponent with two Ports each, inside a parent Root component.">Figure&nbsp;3.4, &#8220;A PingComponent and a PongComponent with two Ports each, inside a parent Root component.&#8221;</a>
+	shows the same Ping-Pong example factored as two different components, <code class="literal">HostPing</code> 
+	and <code class="literal">HostPong</code>. The application starts by <code class="literal">Root</code> sending a
+	start event to <code class="literal">HostPong</code>, which then sends a <code class="literal">Ping</code> event
+	to  <code class="literal">HostPing</code>, which then replies to <code class="literal">HostPong</code> with a 
+	<code class="literal">Pong</code> event.</p><p>In the code fragment below, we connect the <span class="emphasis"><em>positive side</em></span> of
+		<code class="literal">PingPort</code> on <code class="literal">pingHost</code> to the <span class="emphasis"><em>negative side
+		</em></span> of <code class="literal">PingPort</code> on <code class="literal">pongHost</code>, which returns a 
+		<em class="firstterm">Channel</em> object <code class="literal">x1</code>.</p><p>The code for this example can be found in the examples directory for this manual.</p><a name="kompics.getting-started.connecting-ports"></a><pre class="programlisting">
+		Positive&lt;PingPort&gt; pingPosPort = pingHost.getPositive(PingPort.<b class="hl-keyword">class</b>);
+		Negative&lt;PingPort&gt; pingNegPort = pongHost.getNegative(PingPort.<b class="hl-keyword">class</b>);
+		Channel&lt;PingPort&gt; x1 = connect(pingNegPort, pingPosPort);
+	</pre><p>
+     </p><div class="figure"><a name="kompics.getting-started.pingpong-two-components-two-ports"></a><p class="title"><b>Figure&nbsp;3.4.&nbsp;A PingComponent and a PongComponent with two Ports each, inside a parent Root component.</b></p><div class="figure-contents"><div><img src="images/ch02-ping-pong-two-components-two-ports.png" alt="A PingComponent and a PongComponent with two Ports each, inside a parent Root component."></div></div></div><p><br class="figure-break">
+	</p></div></div><div class="appendix" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="svn.copyright"></a>Appendix&nbsp;A.&nbsp;Copyright</h2></div></div></div><pre class="programlisting">
+Authors: Jim Dowling, Cosmin Arad.
+
+Copyright (c) 2009-
+SICS, KTH.  
+
+This work is licensed under the Creative Commons Attribution License.
+To view a copy of this license, visit
+http://creativecommons.org/licenses/by/2.0/ or send a letter to
+Creative Commons, 559 Nathan Abbott Way, Stanford, California 94305,
+USA.
+
+A summary of the license is given below, followed by the full legal
+text.
+
+--------------------------------------------------------------------
+
+You are free:
+
+    * to copy, distribute, display, and perform the work
+    * to make derivative works
+    * to make commercial use of the work
+
+Under the following conditions:
+	
+Attribution. You must give the original author credit.
+
+    * For any reuse or distribution, you must make clear to others the
+      license terms of this work.
+
+    * Any of these conditions can be waived if you get permission from
+      the author.
+
+Your fair use and other rights are in no way affected by the above.
+
+The above is a summary of the full license below.
+
+====================================================================
+
+Creative Commons Legal Code
+Attribution 2.0
+
+CREATIVE COMMONS CORPORATION IS NOT A LAW FIRM AND DOES NOT PROVIDE
+LEGAL SERVICES. DISTRIBUTION OF THIS LICENSE DOES NOT CREATE AN
+ATTORNEY-CLIENT RELATIONSHIP. CREATIVE COMMONS PROVIDES THIS
+INFORMATION ON AN "AS-IS" BASIS. CREATIVE COMMONS MAKES NO WARRANTIES
+REGARDING THE INFORMATION PROVIDED, AND DISCLAIMS LIABILITY FOR
+DAMAGES RESULTING FROM ITS USE.
+
+License
+
+THE WORK (AS DEFINED BELOW) IS PROVIDED UNDER THE TERMS OF THIS
+CREATIVE COMMONS PUBLIC LICENSE ("CCPL" OR "LICENSE"). THE WORK IS
+PROTECTED BY COPYRIGHT AND/OR OTHER APPLICABLE LAW. ANY USE OF THE
+WORK OTHER THAN AS AUTHORIZED UNDER THIS LICENSE OR COPYRIGHT LAW IS
+PROHIBITED.
+
+BY EXERCISING ANY RIGHTS TO THE WORK PROVIDED HERE, YOU ACCEPT AND
+AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE. THE LICENSOR GRANTS
+YOU THE RIGHTS CONTAINED HERE IN CONSIDERATION OF YOUR ACCEPTANCE OF
+SUCH TERMS AND CONDITIONS.
+
+1. Definitions
+
+   a. "Collective Work" means a work, such as a periodical issue,
+      anthology or encyclopedia, in which the Work in its entirety in
+      unmodified form, along with a number of other contributions,
+      constituting separate and independent works in themselves, are
+      assembled into a collective whole. A work that constitutes a
+      Collective Work will not be considered a Derivative Work (as
+      defined below) for the purposes of this License.
+
+   b. "Derivative Work" means a work based upon the Work or upon the
+      Work and other pre-existing works, such as a translation,
+      musical arrangement, dramatization, fictionalization, motion
+      picture version, sound recording, art reproduction, abridgment,
+      condensation, or any other form in which the Work may be recast,
+      transformed, or adapted, except that a work that constitutes a
+      Collective Work will not be considered a Derivative Work for the
+      purpose of this License. For the avoidance of doubt, where the
+      Work is a musical composition or sound recording, the
+      synchronization of the Work in timed-relation with a moving
+      image ("synching") will be considered a Derivative Work for the
+      purpose of this License.
+
+   c. "Licensor" means the individual or entity that offers the Work
+      under the terms of this License.
+
+   d. "Original Author" means the individual or entity who created the Work.
+
+   e. "Work" means the copyrightable work of authorship offered under
+      the terms of this License.
+
+   f. "You" means an individual or entity exercising rights under this
+      License who has not previously violated the terms of this
+      License with respect to the Work, or who has received express
+      permission from the Licensor to exercise rights under this
+      License despite a previous violation.
+
+2. Fair Use Rights. Nothing in this license is intended to reduce,
+   limit, or restrict any rights arising from fair use, first sale or
+   other limitations on the exclusive rights of the copyright owner
+   under copyright law or other applicable laws.
+
+3. License Grant. Subject to the terms and conditions of this License,
+   Licensor hereby grants You a worldwide, royalty-free,
+   non-exclusive, perpetual (for the duration of the applicable
+   copyright) license to exercise the rights in the Work as stated
+   below:
+
+   a. to reproduce the Work, to incorporate the Work into one or more
+      Collective Works, and to reproduce the Work as incorporated in
+      the Collective Works;
+
+   b. to create and reproduce Derivative Works;
+
+   c. to distribute copies or phonorecords of, display publicly,
+      perform publicly, and perform publicly by means of a digital
+      audio transmission the Work including as incorporated in
+      Collective Works;
+
+   d. to distribute copies or phonorecords of, display publicly,
+      perform publicly, and perform publicly by means of a digital
+      audio transmission Derivative Works.
+
+   e.
+
+      For the avoidance of doubt, where the work is a musical composition:
+
+         i. Performance Royalties Under Blanket Licenses. Licensor
+            waives the exclusive right to collect, whether
+            individually or via a performance rights society
+            (e.g. ASCAP, BMI, SESAC), royalties for the public
+            performance or public digital performance (e.g. webcast)
+            of the Work.
+
+        ii. Mechanical Rights and Statutory Royalties. Licensor waives
+            the exclusive right to collect, whether individually or
+            via a music rights agency or designated agent (e.g. Harry
+            Fox Agency), royalties for any phonorecord You create from
+            the Work ("cover version") and distribute, subject to the
+            compulsory license created by 17 USC Section 115 of the US
+            Copyright Act (or the equivalent in other jurisdictions).
+
+   f. Webcasting Rights and Statutory Royalties. For the avoidance of
+      doubt, where the Work is a sound recording, Licensor waives the
+      exclusive right to collect, whether individually or via a
+      performance-rights society (e.g. SoundExchange), royalties for
+      the public digital performance (e.g. webcast) of the Work,
+      subject to the compulsory license created by 17 USC Section 114
+      of the US Copyright Act (or the equivalent in other
+      jurisdictions).
+
+The above rights may be exercised in all media and formats whether now
+known or hereafter devised. The above rights include the right to make
+such modifications as are technically necessary to exercise the rights
+in other media and formats. All rights not expressly granted by
+Licensor are hereby reserved.
+
+4. Restrictions.The license granted in Section 3 above is expressly
+   made subject to and limited by the following restrictions:
+
+   a. You may distribute, publicly display, publicly perform, or
+      publicly digitally perform the Work only under the terms of this
+      License, and You must include a copy of, or the Uniform Resource
+      Identifier for, this License with every copy or phonorecord of
+      the Work You distribute, publicly display, publicly perform, or
+      publicly digitally perform. You may not offer or impose any
+      terms on the Work that alter or restrict the terms of this
+      License or the recipients' exercise of the rights granted
+      hereunder. You may not sublicense the Work. You must keep intact
+      all notices that refer to this License and to the disclaimer of
+      warranties. You may not distribute, publicly display, publicly
+      perform, or publicly digitally perform the Work with any
+      technological measures that control access or use of the Work in
+      a manner inconsistent with the terms of this License
+      Agreement. The above applies to the Work as incorporated in a
+      Collective Work, but this does not require the Collective Work
+      apart from the Work itself to be made subject to the terms of
+      this License. If You create a Collective Work, upon notice from
+      any Licensor You must, to the extent practicable, remove from
+      the Collective Work any reference to such Licensor or the
+      Original Author, as requested. If You create a Derivative Work,
+      upon notice from any Licensor You must, to the extent
+      practicable, remove from the Derivative Work any reference to
+      such Licensor or the Original Author, as requested.
+
+   b. If you distribute, publicly display, publicly perform, or
+      publicly digitally perform the Work or any Derivative Works or
+      Collective Works, You must keep intact all copyright notices for
+      the Work and give the Original Author credit reasonable to the
+      medium or means You are utilizing by conveying the name (or
+      pseudonym if applicable) of the Original Author if supplied; the
+      title of the Work if supplied; to the extent reasonably
+      practicable, the Uniform Resource Identifier, if any, that
+      Licensor specifies to be associated with the Work, unless such
+      URI does not refer to the copyright notice or licensing
+      information for the Work; and in the case of a Derivative Work,
+      a credit identifying the use of the Work in the Derivative Work
+      (e.g., "French translation of the Work by Original Author," or
+      "Screenplay based on original Work by Original Author"). Such
+      credit may be implemented in any reasonable manner; provided,
+      however, that in the case of a Derivative Work or Collective
+      Work, at a minimum such credit will appear where any other
+      comparable authorship credit appears and in a manner at least as
+      prominent as such other comparable authorship credit.
+
+5. Representations, Warranties and Disclaimer
+
+UNLESS OTHERWISE MUTUALLY AGREED TO BY THE PARTIES IN WRITING,
+LICENSOR OFFERS THE WORK AS-IS AND MAKES NO REPRESENTATIONS OR
+WARRANTIES OF ANY KIND CONCERNING THE WORK, EXPRESS, IMPLIED,
+STATUTORY OR OTHERWISE, INCLUDING, WITHOUT LIMITATION, WARRANTIES OF
+TITLE, MERCHANTIBILITY, FITNESS FOR A PARTICULAR PURPOSE,
+NONINFRINGEMENT, OR THE ABSENCE OF LATENT OR OTHER DEFECTS, ACCURACY,
+OR THE PRESENCE OF ABSENCE OF ERRORS, WHETHER OR NOT
+DISCOVERABLE. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OF IMPLIED
+WARRANTIES, SO SUCH EXCLUSION MAY NOT APPLY TO YOU.
+
+6. Limitation on Liability. EXCEPT TO THE EXTENT REQUIRED BY
+   APPLICABLE LAW, IN NO EVENT WILL LICENSOR BE LIABLE TO YOU ON ANY
+   LEGAL THEORY FOR ANY SPECIAL, INCIDENTAL, CONSEQUENTIAL, PUNITIVE
+   OR EXEMPLARY DAMAGES ARISING OUT OF THIS LICENSE OR THE USE OF THE
+   WORK, EVEN IF LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+   DAMAGES.
+
+7. Termination
+
+   a. This License and the rights granted hereunder will terminate
+      automatically upon any breach by You of the terms of this
+      License. Individuals or entities who have received Derivative
+      Works or Collective Works from You under this License, however,
+      will not have their licenses terminated provided such
+      individuals or entities remain in full compliance with those
+      licenses. Sections 1, 2, 5, 6, 7, and 8 will survive any
+      termination of this License.
+
+   b. Subject to the above terms and conditions, the license granted
+      here is perpetual (for the duration of the applicable copyright
+      in the Work). Notwithstanding the above, Licensor reserves the
+      right to release the Work under different license terms or to
+      stop distributing the Work at any time; provided, however that
+      any such election will not serve to withdraw this License (or
+      any other license that has been, or is required to be, granted
+      under the terms of this License), and this License will continue
+      in full force and effect unless terminated as stated above.
+
+8. Miscellaneous
+
+   a. Each time You distribute or publicly digitally perform the Work
+      or a Collective Work, the Licensor offers to the recipient a
+      license to the Work on the same terms and conditions as the
+      license granted to You under this License.
+
+   b. Each time You distribute or publicly digitally perform a
+      Derivative Work, Licensor offers to the recipient a license to
+      the original Work on the same terms and conditions as the
+      license granted to You under this License.
+
+   c. If any provision of this License is invalid or unenforceable
+      under applicable law, it shall not affect the validity or
+      enforceability of the remainder of the terms of this License,
+      and without further action by the parties to this agreement,
+      such provision shall be reformed to the minimum extent necessary
+      to make such provision valid and enforceable.
+
+   d. No term or provision of this License shall be deemed waived and
+      no breach consented to unless such waiver or consent shall be in
+      writing and signed by the party to be charged with such waiver
+      or consent.
+
+   e. This License constitutes the entire agreement between the
+      parties with respect to the Work licensed here. There are no
+      understandings, agreements or representations with respect to
+      the Work not specified here. Licensor shall not be bound by any
+      additional provisions that may appear in any communication from
+      You. This License may not be modified without the mutual written
+      agreement of the Licensor and You.
+
+Creative Commons is not a party to this License, and makes no warranty
+whatsoever in connection with the Work. Creative Commons will not be
+liable to You or any party on any legal theory for any damages
+whatsoever, including without limitation any general, special,
+incidental or consequential damages arising in connection to this
+license. Notwithstanding the foregoing two (2) sentences, if Creative
+Commons has expressly identified itself as the Licensor hereunder, it
+shall have all rights and obligations of Licensor.
+
+Except for the limited purpose of indicating to the public that the
+Work is licensed under the CCPL, neither party will use the trademark
+"Creative Commons" or any related trademark or logo of Creative
+Commons without the prior written consent of Creative Commons. Any
+permitted use will be in compliance with Creative Commons'
+then-current trademark usage guidelines, as may be published on its
+website or otherwise made available upon request from time to time.
+
+Creative Commons may be contacted at http://creativecommons.org/.
+
+====================================================================
+</pre></div></div></body></html>
