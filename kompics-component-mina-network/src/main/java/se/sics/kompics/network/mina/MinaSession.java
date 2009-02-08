@@ -34,7 +34,6 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Transport;
 
@@ -67,7 +66,6 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 	private Transport protocol;
 
 	/** The remote address. */
-	private Address remoteAddress;
 	private InetSocketAddress remoteSocketAddress;
 
 	/** The pending messages. */
@@ -98,22 +96,30 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 	 *            the component
 	 */
 	public MinaSession(IoConnector ioConnector, Transport protocol,
-			Address address, MinaNetwork component) {
+			InetSocketAddress remoteSocketAddress, MinaNetwork component) {
 		super();
-
-		System.err.println("CREATED MINA_SESSION--------------- " + address);
-
 		this.ioConnector = ioConnector;
 		this.protocol = protocol;
-		this.remoteAddress = address;
-		this.remoteSocketAddress = new InetSocketAddress(address.getIp(),
-				address.getPort()); 
+		this.remoteSocketAddress = remoteSocketAddress;
 		this.pendingMessages = new LinkedList<Message>();
 
 		this.component = component;
 		this.retries = 0;
 		lock = new ReentrantLock();
 		connected = false;
+		ioSession = null;
+	}
+
+	public MinaSession(IoSession ioSession, Transport protocol,
+			InetSocketAddress remoteSocketAddress, MinaNetwork component) {
+		super();
+		this.protocol = protocol;
+		this.remoteSocketAddress = remoteSocketAddress;
+		this.component = component;
+		this.retries = 0;
+		lock = new ReentrantLock();
+		connected = true;
+		this.ioSession = ioSession;
 	}
 
 	/*
@@ -124,19 +130,26 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 	 * .mina.core.future.IoFuture)
 	 */
 	public void operationComplete(IoFuture future) {
-		ConnectFuture connFuture = (ConnectFuture) future;
-		if (connFuture.isConnected()) {
-			ioSession = future.getSession();
+		if (future instanceof ConnectFuture) {
+			doConnect((ConnectFuture) future);
+		} else if (future instanceof CloseFuture) {
+			// currently not needed
+		}
+	}
 
-			// TODO Solve duplicate connection
+	public void doConnect(ConnectFuture connectFuture) {
+		if (connectFuture.isConnected()) {
+			lock.lock();
+			if (ioSession == null) {
+				ioSession = connectFuture.getSession();
 
-			ioSession.setAttribute("address", remoteSocketAddress);
-			ioSession.setAttribute("protocol", protocol);
+				ioSession.setAttribute("address", remoteSocketAddress);
+				ioSession.setAttribute("protocol", protocol);
+			}
 
 			logger.debug("Connected to {}", ioSession.getRemoteAddress());
 
 			// send pending messages
-			lock.lock();
 			try {
 				for (Message deliverEvent : pendingMessages) {
 					logger.debug("Sending message {} to {}", deliverEvent
@@ -152,11 +165,11 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 			if (retries < component.connectRetries) {
 				retries++;
 				logger.debug("Retrying {} connection to {}", protocol,
-						remoteAddress);
+						remoteSocketAddress);
 				connectInit();
 			} else {
 				logger.debug("Dropping {} connection to {}", protocol,
-						remoteAddress);
+						remoteSocketAddress);
 				// drop this session
 				component.dropSession(this);
 			}
@@ -182,10 +195,28 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 		}
 	}
 
+	final void replaceIoSession(IoSession newIoSession,
+			InetSocketAddress remoteSocketAddress, Transport protocol) {
+		lock.lock();
+		try {
+			// replace IoSession;
+			if (ioSession != null) {
+				ioSession.close(false /* flush before close */);
+			}
+			ioSession = newIoSession;
+			ioSession.setAttribute("address", remoteSocketAddress);
+			ioSession.setAttribute("protocol", protocol);
+		} finally {
+			lock.unlock();
+		}
+	}
+
 	/**
 	 * Connect init.
 	 */
 	public void connectInit() {
+		if (connected)
+			return;
 		connectFuture = ioConnector.connect(remoteSocketAddress);
 		connectFuture.addListener(this);
 	}
@@ -194,7 +225,12 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 	 * Close init.
 	 */
 	public void closeInit() {
-		closeFuture = ioSession.close(false);
+		lock.lock();
+		try {
+			closeFuture = ioSession.close(false);
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**

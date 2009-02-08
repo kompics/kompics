@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network;
 
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 
 import se.sics.kompics.Event;
 
@@ -34,7 +34,8 @@ import se.sics.kompics.Event;
  */
 public final class NetworkConnectionRefused extends Event {
 
-	private final SocketAddress remoteAddress;
+	private final InetSocketAddress remoteAddress;
+	private final Transport protocol;
 
 	/**
 	 * Instantiates a new network connection refused.
@@ -42,9 +43,11 @@ public final class NetworkConnectionRefused extends Event {
 	 * @param remoteAddress
 	 *            the remote address
 	 */
-	public NetworkConnectionRefused(SocketAddress remoteAddress) {
+	public NetworkConnectionRefused(InetSocketAddress remoteAddress,
+			Transport protocol) {
 		super();
 		this.remoteAddress = remoteAddress;
+		this.protocol = protocol;
 	}
 
 	/**
@@ -52,7 +55,16 @@ public final class NetworkConnectionRefused extends Event {
 	 * 
 	 * @return the remote address
 	 */
-	public final SocketAddress getRemoteAddress() {
+	public final InetSocketAddress getRemoteAddress() {
 		return remoteAddress;
+	}
+
+	/**
+	 * Gets the protocol
+	 * 
+	 * @return the protocol
+	 */
+	public final Transport getProtocol() {
+		return protocol;
 	}
 }

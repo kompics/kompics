@@ -27,11 +27,8 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.NetworkException;
-import se.sics.kompics.network.NetworkSessionClosed;
-import se.sics.kompics.network.NetworkSessionOpened;
 import se.sics.kompics.network.Transport;
 
 /**
@@ -48,7 +45,9 @@ public class MinaHandler extends IoHandlerAdapter {
 			.getLogger(MinaHandler.class);
 
 	/** The network component. */
-	private MinaNetwork networkComponent;
+	private final MinaNetwork networkComponent;
+
+	private final Transport protocol;
 
 	/**
 	 * Instantiates a new mina handler.
@@ -56,9 +55,10 @@ public class MinaHandler extends IoHandlerAdapter {
 	 * @param networkComponent
 	 *            the network component
 	 */
-	public MinaHandler(MinaNetwork networkComponent) {
+	public MinaHandler(MinaNetwork networkComponent, Transport protocol) {
 		super();
 		this.networkComponent = networkComponent;
+		this.protocol = protocol;
 	}
 
 	/*
@@ -75,8 +75,9 @@ public class MinaHandler extends IoHandlerAdapter {
 				.getAttribute("address");
 
 		if (address != null)
-			logger.debug("Problems with {} connection to {}",
-					(Transport) session.getAttribute("protocol"), address);
+			logger
+					.debug("Problems with {} connection to {}", protocol,
+							address);
 
 		logger.warn("Exception caught: {}-{} in {}/{}", new Object[] { cause,
 				cause.getMessage(), address, session });
@@ -85,7 +86,8 @@ public class MinaHandler extends IoHandlerAdapter {
 			logger.warn(" -> {}", stackTrace[i].toString());
 		}
 
-		networkComponent.networkException(new NetworkException(address));
+		networkComponent.networkException(new NetworkException(address,
+				protocol));
 	}
 
 	/*
@@ -99,7 +101,6 @@ public class MinaHandler extends IoHandlerAdapter {
 	public void messageReceived(IoSession session, Object message)
 			throws Exception {
 		super.messageReceived(session, message);
-		Transport protocol = (Transport) session.getAttribute("protocol");
 
 		logger.debug("Message received from {}", session.getRemoteAddress());
 		networkComponent.deliverMessage((Message) message, protocol, session);
@@ -128,9 +129,7 @@ public class MinaHandler extends IoHandlerAdapter {
 	public void sessionClosed(IoSession session) throws Exception {
 		super.sessionClosed(session);
 		logger.debug("Connection closed to {}", session.getRemoteAddress());
-		networkComponent.networkSessionClosed(new NetworkSessionClosed(session
-				.getRemoteAddress()));
-		System.err.println("***CLOSED***" + session.getRemoteAddress());
+		networkComponent.networkSessionClosed(session);
 	}
 
 	/*
@@ -144,9 +143,6 @@ public class MinaHandler extends IoHandlerAdapter {
 	public void sessionOpened(IoSession session) throws Exception {
 		super.sessionOpened(session);
 		logger.debug("Connection opened to {}", session.getRemoteAddress());
-		networkComponent.networkSessionOpened(new NetworkSessionOpened(session
-				.getRemoteAddress()));
-
-		System.err.println("***OPENED***" + session.getRemoteAddress());
+		networkComponent.networkSessionOpened(session);
 	}
 }

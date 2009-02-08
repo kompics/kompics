@@ -21,8 +21,9 @@
 package se.sics.kompics.network.mina;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -91,20 +92,23 @@ public final class MinaNetwork extends ComponentDefinition {
 	private HashSet<InetSocketAddress> knownTcpSession;
 
 	/**
-	 * Map of initiated TCP sessions, indexed by the socket address of the
-	 * remote process .
+	 * Map of initiated TCP sessions, indexed by the server socket address of
+	 * the remote process.
 	 */
 	private HashMap<InetSocketAddress, MinaSession> tcpSession;
+	private HashMap<InetSocketAddress, InetSocketAddress> tcpClient2Server;
 
 	/** The UDP session. */
-	private HashMap<InetSocketAddress, IoSession> acceptedUdpSession;
+	private HashSet<InetSocketAddress> knownUdpSession;
 	private HashMap<InetSocketAddress, MinaSession> udpSession;
+	private HashMap<InetSocketAddress, InetSocketAddress> udpClient2Server;
 
 	/** The network handler. */
-	private MinaHandler networkHandler;
+	private MinaHandler tcpHandler;
+	private MinaHandler udpHandler;
 
 	/** The local socket address. */
-	private SocketAddress localSocketAddress;
+	private InetSocketAddress localSocketAddress;
 
 	/** The connect retries. */
 	int connectRetries;
@@ -115,10 +119,14 @@ public final class MinaNetwork extends ComponentDefinition {
 	public MinaNetwork() {
 		knownTcpSession = new HashSet<InetSocketAddress>();
 		tcpSession = new HashMap<InetSocketAddress, MinaSession>();
-		acceptedUdpSession = new HashMap<InetSocketAddress, IoSession>();
-		udpSession = new HashMap<InetSocketAddress, MinaSession>();
+		tcpClient2Server = new HashMap<InetSocketAddress, InetSocketAddress>();
 
-		networkHandler = new MinaHandler(this);
+		knownUdpSession = new HashSet<InetSocketAddress>();
+		udpSession = new HashMap<InetSocketAddress, MinaSession>();
+		udpClient2Server = new HashMap<InetSocketAddress, InetSocketAddress>();
+
+		tcpHandler = new MinaHandler(this, Transport.TCP);
+		udpHandler = new MinaHandler(this, Transport.UDP);
 
 		subscribe(handleInit, control);
 		subscribe(handleMessage, net);
@@ -133,7 +141,7 @@ public final class MinaNetwork extends ComponentDefinition {
 
 			// UDP Acceptor
 			udpAcceptor = new NioDatagramAcceptor();
-			udpAcceptor.setHandler(networkHandler);
+			udpAcceptor.setHandler(udpHandler);
 			DefaultIoFilterChainBuilder udpAcceptorChain = udpAcceptor
 					.getFilterChain();
 			udpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
@@ -148,7 +156,7 @@ public final class MinaNetwork extends ComponentDefinition {
 
 			// UDP Connector
 			udpConnector = new NioDatagramConnector();
-			udpConnector.setHandler(networkHandler);
+			udpConnector.setHandler(udpHandler);
 			DefaultIoFilterChainBuilder udpConnectorChain = udpConnector
 					.getFilterChain();
 			udpConnectorChain.addLast("protocol", new ProtocolCodecFilter(
@@ -156,7 +164,7 @@ public final class MinaNetwork extends ComponentDefinition {
 
 			// TCP Acceptor
 			tcpAcceptor = new NioSocketAcceptor();
-			tcpAcceptor.setHandler(networkHandler);
+			tcpAcceptor.setHandler(tcpHandler);
 			DefaultIoFilterChainBuilder tcpAcceptorChain = tcpAcceptor
 					.getFilterChain();
 			tcpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
@@ -171,7 +179,7 @@ public final class MinaNetwork extends ComponentDefinition {
 
 			// TCP Connector
 			tcpConnector = new NioSocketConnector();
-			tcpConnector.setHandler(networkHandler);
+			tcpConnector.setHandler(tcpHandler);
 			DefaultIoFilterChainBuilder tcpConnectorChain = tcpConnector
 					.getFilterChain();
 			tcpConnectorChain.addLast("protocol", new ProtocolCodecFilter(
@@ -225,12 +233,12 @@ public final class MinaNetwork extends ComponentDefinition {
 		InetSocketAddress socketAddress = address2SocketAddress(destination);
 		synchronized (tcpSession) {
 			MinaSession session = tcpSession.get(socketAddress);
-
 			if (session == null) {
 				session = new MinaSession(tcpConnector, Transport.TCP,
-						destination, this);
+						address2SocketAddress(destination), this);
 				session.connectInit();
 				tcpSession.put(socketAddress, session);
+				tcpClient2Server.put(socketAddress, socketAddress);
 				knownTcpSession.add(socketAddress);
 			}
 			return session;
@@ -251,10 +259,11 @@ public final class MinaNetwork extends ComponentDefinition {
 			MinaSession session = udpSession.get(socketAddress);
 			if (session == null) {
 				session = new MinaSession(udpConnector, Transport.UDP,
-						destination, this);
+						address2SocketAddress(destination), this);
 				session.connectInit();
-
 				udpSession.put(socketAddress, session);
+				udpClient2Server.put(socketAddress, socketAddress);
+				knownUdpSession.add(socketAddress);
 			}
 			return session;
 		}
@@ -270,16 +279,19 @@ public final class MinaNetwork extends ComponentDefinition {
 		if (s.getProtocol() == Transport.TCP) {
 			synchronized (tcpSession) {
 				tcpSession.remove(s.getRemoteAddress());
+				tcpClient2Server.remove(s.getRemoteAddress());
 			}
+			trigger(new NetworkConnectionRefused(s.getRemoteAddress(),
+					Transport.TCP), netControl);
 		}
 		if (s.getProtocol() == Transport.UDP) {
 			synchronized (udpSession) {
 				udpSession.remove(s.getRemoteAddress());
+				udpClient2Server.remove(s.getRemoteAddress());
 			}
+			trigger(new NetworkConnectionRefused(s.getRemoteAddress(),
+					Transport.UDP), netControl);
 		}
-
-		// save dropped session?
-		trigger(new NetworkConnectionRefused(s.getRemoteAddress()), netControl);
 	}
 
 	/**
@@ -301,18 +313,124 @@ public final class MinaNetwork extends ComponentDefinition {
 		 * i.e., make it our outgoing session for that destination if we do not
 		 * have one already, or, if we do, pick one of the two
 		 */
-		InetSocketAddress remoteSocketAddress = (InetSocketAddress) session.getRemoteAddress();
-		InetSocketAddress sourceSocketAddress = address2SocketAddress();
-		if (!knownTcpSession.contains(remoteSocketAddress)) {
-			// first time we receive a message on an unknown session, we try to
-			// resolve the session
-			Address remoteAddress = message.getSource();
-
-			if (tcpSession)
-		}
+		resolveSession(message, session, protocol);
 
 		message.setProtocol(protocol);
 		trigger(message, net);
+	}
+
+	private void resolveSession(Message message, IoSession session,
+			Transport protocol) {
+		if (protocol == Transport.TCP) {
+			resolveTcpSession(message, session);
+		} else if (protocol == Transport.UDP) {
+			resolveUdpSession(message, session);
+		}
+	}
+
+	private void resolveTcpSession(Message message, IoSession session) {
+		InetSocketAddress sessionSocketAddress = (InetSocketAddress) session
+				.getRemoteAddress();
+		InetSocketAddress messageSocketAddress = address2SocketAddress(message
+				.getSource());
+
+		synchronized (knownTcpSession) {
+			if (knownTcpSession.contains(sessionSocketAddress)) {
+				// we are aware of this session. nothing to resolve
+				return;
+			}
+			// first time we receive a message on an unknown session, we try
+			// to resolve the session
+			knownTcpSession.add(sessionSocketAddress);
+		}
+
+		synchronized (tcpSession) {
+			MinaSession currentMinaSession = tcpSession
+					.get(messageSocketAddress);
+			if (currentMinaSession != null) {
+				// we already have an outgoing session to this peer and now
+				// we received a message on a different session. we need to
+				// resolve
+				if (keepMine(messageSocketAddress)) {
+					// we keep our current MinaSession
+					// the peer will close his
+					;
+				} else {
+					// we replace our current MinaSession to this peer with
+					// one that contains this IoSession
+					currentMinaSession.replaceIoSession(session,
+							messageSocketAddress, Transport.TCP);
+					tcpClient2Server.remove(messageSocketAddress);
+					tcpClient2Server.put(sessionSocketAddress,
+							messageSocketAddress);
+				}
+			} else {
+				// we don't already have a MinaSession to this peer. We use this
+				currentMinaSession = new MinaSession(session, Transport.TCP,
+						address2SocketAddress(message.getSource()), this);
+				tcpSession.put(messageSocketAddress, currentMinaSession);
+				tcpClient2Server
+						.put(sessionSocketAddress, messageSocketAddress);
+			}
+		}
+	}
+
+	private void resolveUdpSession(Message message, IoSession session) {
+		InetSocketAddress sessionSocketAddress = (InetSocketAddress) session
+				.getRemoteAddress();
+		InetSocketAddress messageSocketAddress = address2SocketAddress(message
+				.getSource());
+
+		synchronized (knownUdpSession) {
+			if (knownUdpSession.contains(sessionSocketAddress)) {
+				// we are aware of this session. nothing to resolve
+				return;
+			}
+			// first time we receive a message on an unknown session, we try
+			// to resolve the session
+			knownUdpSession.add(sessionSocketAddress);
+		}
+
+		synchronized (udpSession) {
+			MinaSession currentMinaSession = udpSession
+					.get(messageSocketAddress);
+			if (currentMinaSession != null) {
+				// we already have an outgoing session to this peer and now
+				// we received a message on a different session. we need to
+				// resolve
+				if (keepMine(messageSocketAddress)) {
+					// we keep our current MinaSession
+					// the peer will close his
+					;
+				} else {
+					// we replace our current MinaSession to this peer with
+					// one that contains this IoSession
+					currentMinaSession.replaceIoSession(session,
+							messageSocketAddress, Transport.UDP);
+					udpClient2Server.remove(messageSocketAddress);
+					udpClient2Server.put(sessionSocketAddress,
+							messageSocketAddress);
+				}
+			} else {
+				// we don't already have a MinaSession to this peer. We use this
+				currentMinaSession = new MinaSession(session, Transport.UDP,
+						address2SocketAddress(message.getSource()), this);
+				udpSession.put(messageSocketAddress, currentMinaSession);
+				udpClient2Server
+						.put(sessionSocketAddress, messageSocketAddress);
+			}
+		}
+	}
+
+	private final boolean keepMine(InetSocketAddress remoteSocketAddress) {
+		if (remoteSocketAddress.getPort() > localSocketAddress.getPort()) {
+			return true;
+		}
+		if (ip2long(remoteSocketAddress.getAddress()) > ip2long(localSocketAddress
+				.getAddress())) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -325,27 +443,51 @@ public final class MinaNetwork extends ComponentDefinition {
 		trigger(event, netControl);
 	}
 
-	/**
-	 * Network session closed.
-	 * 
-	 * @param event
-	 *            the event
-	 */
-	final void networkSessionClosed(NetworkSessionClosed event) {
-		trigger(event, netControl);
+	final void networkSessionClosed(IoSession session) {
+		InetSocketAddress clientSocketAddress = (InetSocketAddress) session
+				.getRemoteAddress();
+		Transport protocol = (Transport) session.getAttribute("protocol");
+
+		if (protocol == Transport.TCP) {
+			synchronized (knownTcpSession) {
+				knownTcpSession.remove(clientSocketAddress);
+			}
+			synchronized (tcpSession) {
+				InetSocketAddress serverSocketAddress = tcpClient2Server
+						.get(clientSocketAddress);
+				tcpSession.remove(serverSocketAddress);
+				tcpClient2Server.remove(clientSocketAddress);
+			}
+		} else if (protocol == Transport.UDP) {
+			synchronized (knownUdpSession) {
+				knownUdpSession.remove(clientSocketAddress);
+			}
+			synchronized (udpSession) {
+				InetSocketAddress serverSocketAddress = udpClient2Server
+						.get(clientSocketAddress);
+				udpSession.remove(serverSocketAddress);
+				udpClient2Server.remove(clientSocketAddress);
+			}
+		}
+
+		trigger(new NetworkSessionClosed(clientSocketAddress, protocol),
+				netControl);
 	}
 
-	/**
-	 * Network session opened.
-	 * 
-	 * @param event
-	 *            the event
-	 */
-	final void networkSessionOpened(NetworkSessionOpened event) {
-		trigger(event, netControl);
+	final void networkSessionOpened(IoSession session) {
+		InetSocketAddress clientSocketAddress = (InetSocketAddress) session
+				.getRemoteAddress();
+		Transport protocol = (Transport) session.getAttribute("protocol");
+
+		trigger(new NetworkSessionOpened(clientSocketAddress, protocol),
+				netControl);
 	}
 
-	final InetSocketAddress address2SocketAddress(Address address) {
+	private final InetSocketAddress address2SocketAddress(Address address) {
 		return new InetSocketAddress(address.getIp(), address.getPort());
+	}
+
+	private final long ip2long(InetAddress address) {
+		return new BigInteger(address.getAddress()).longValue();
 	}
 }
