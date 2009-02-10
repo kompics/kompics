@@ -22,6 +22,8 @@ package se.sics.kompics.address;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * The <code>Address</code> class.
@@ -30,7 +32,7 @@ import java.net.InetAddress;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public final class Address implements Serializable {
+public final class Address implements Serializable, Comparable<Address> {
 
 	/**
 	 * 
@@ -86,7 +88,9 @@ public final class Address implements Serializable {
 		return id;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
@@ -94,7 +98,9 @@ public final class Address implements Serializable {
 		return "" + id + ip + ":" + port;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
@@ -107,7 +113,9 @@ public final class Address implements Serializable {
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -129,5 +137,22 @@ public final class Address implements Serializable {
 		if (port != other.port)
 			return false;
 		return true;
+	}
+
+	@Override
+	public int compareTo(Address that) {
+		if (this.id < that.id)
+			return -1;
+		if (this.id > that.id)
+			return 1;
+		if (this.port < that.port)
+			return -1;
+		if (this.port > that.port)
+			return 1;
+		ByteBuffer thisIpBytes = ByteBuffer.wrap(this.ip.getAddress()).order(
+				ByteOrder.BIG_ENDIAN);
+		ByteBuffer thatIpBytes = ByteBuffer.wrap(that.ip.getAddress()).order(
+				ByteOrder.BIG_ENDIAN);
+		return thisIpBytes.compareTo(thatIpBytes);
 	}
 }
