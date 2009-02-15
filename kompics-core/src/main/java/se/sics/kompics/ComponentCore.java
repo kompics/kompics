@@ -209,7 +209,9 @@ public class ComponentCore implements Component {
 		// System.err.println(component + ".workReceived: " + wc + " -> " + (wc
 		// + 1));
 		if (wc == 0) {
-			Scheduler.scheduler.schedule(this, wid);
+			if (scheduler == null)
+				scheduler = Kompics.getScheduler();
+			scheduler.schedule(this, wid);
 		}
 	}
 
@@ -234,7 +236,9 @@ public class ComponentCore implements Component {
 		// System.err.println(component + ".schedule: " + (wc + 1) + " -> " +
 		// wc);
 		if (wc > 0) {
-			Scheduler.scheduler.schedule(this, wid);
+			if (scheduler == null)
+				scheduler = Kompics.getScheduler();
+			scheduler.schedule(this, wid);
 		}
 	}
 

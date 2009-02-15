@@ -40,7 +40,7 @@ public abstract class ComponentDefinition {
 	 * @return the negative
 	 *         < p>
 	 */
-	protected <P extends PortType> Negative<P> negative(Class<P> portType) {
+	protected final <P extends PortType> Negative<P> negative(Class<P> portType) {
 		return core.createNegativePort(portType);
 	}
 
@@ -53,7 +53,7 @@ public abstract class ComponentDefinition {
 	 * @return the positive
 	 *         < p>
 	 */
-	protected <P extends PortType> Positive<P> positive(Class<P> portType) {
+	protected final <P extends PortType> Positive<P> positive(Class<P> portType) {
 		return core.createPositivePort(portType);
 	}
 
@@ -65,7 +65,7 @@ public abstract class ComponentDefinition {
 	 * @param port
 	 *            the port
 	 */
-	protected <P extends PortType> void trigger(Event event, Port<P> port) {
+	protected final <P extends PortType> void trigger(Event event, Port<P> port) {
 		((PortCore<P>) port).doTrigger(event, core.wid);
 	}
 
@@ -75,7 +75,7 @@ public abstract class ComponentDefinition {
 	 * @param filter
 	 *            the filter
 	 */
-	protected void expect(Filter<?>... filter) {
+	protected final void expect(Filter<?>... filter) {
 		// TODO
 	}
 
@@ -87,7 +87,7 @@ public abstract class ComponentDefinition {
 	 * @param port
 	 *            the port
 	 */
-	protected <E extends Event, P extends PortType> void subscribe(
+	protected final <E extends Event, P extends PortType> void subscribe(
 			Handler<E> handler, Port<P> port) {
 		((PortCore<P>) port).doSubscribe(handler);
 	}
@@ -100,7 +100,7 @@ public abstract class ComponentDefinition {
 	 * @param port
 	 *            the port
 	 */
-	protected <E extends Event, P extends PortType> void unsubscribe(
+	protected final <E extends Event, P extends PortType> void unsubscribe(
 			Handler<E> handler, Port<P> port) {
 		((PortCore<P>) port).doUnsubscribe(handler);
 	}
@@ -113,7 +113,7 @@ public abstract class ComponentDefinition {
 	 * 
 	 * @return the component
 	 */
-	protected Component create(Class<? extends ComponentDefinition> definition) {
+	protected final Component create(Class<? extends ComponentDefinition> definition) {
 		return core.doCreate(definition);
 	}
 
@@ -128,7 +128,7 @@ public abstract class ComponentDefinition {
 	 * @return the channel
 	 *         < p>
 	 */
-	protected <P extends PortType> Channel<P> connect(Positive<P> positive,
+	protected final <P extends PortType> Channel<P> connect(Positive<P> positive,
 			Negative<P> negative) {
 		return core.doConnect(positive, negative);
 	}
@@ -144,7 +144,7 @@ public abstract class ComponentDefinition {
 	 * @return the channel
 	 *         < p>
 	 */
-	protected <P extends PortType> Channel<P> connect(Negative<P> negative,
+	protected final <P extends PortType> Channel<P> connect(Negative<P> negative,
 			Positive<P> positive) {
 		return core.doConnect(positive, negative);
 	}
@@ -159,11 +159,11 @@ public abstract class ComponentDefinition {
 	// return null;
 	// }
 
-	protected Negative<ControlPort> control;
+	protected final Negative<ControlPort> control;
 
 	/* === PRIVATE === */
 
-	private ComponentCore core;
+	private final ComponentCore core;
 
 	/**
 	 * Instantiates a new component definition.
@@ -173,7 +173,7 @@ public abstract class ComponentDefinition {
 		control = core.createControlPort();
 	}
 
-	ComponentCore getComponentCore() {
+	final ComponentCore getComponentCore() {
 		return core;
 	}
 }

@@ -23,6 +23,8 @@ package se.sics.kompics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import se.sics.kompics.scheduler.WorkStealingScheduler;
+
 /**
  * The <code>Kompics</code> class.
  * 
@@ -36,11 +38,19 @@ public final class Kompics {
 	// TODO port scheduler including Free List and spin-lock queue.
 	// TODO BUG in execution PortCore.pickWork() returns null.
 
-	static Logger logger = LoggerFactory.getLogger("Kompics");
+	public static Logger logger = LoggerFactory.getLogger("Kompics");
 
 	private static boolean on = false;
 
 	private static Scheduler scheduler;
+
+	public static void setScheduler(Scheduler sched) {
+		scheduler = sched;
+	}
+	
+	public static Scheduler getScheduler() {
+		return scheduler;
+	}
 
 	/**
 	 * Creates the and start.
@@ -66,8 +76,9 @@ public final class Kompics {
 			throw new RuntimeException("Kompics already created");
 		on = true;
 
-		scheduler = new Scheduler(workers);
-		Scheduler.scheduler = scheduler;
+		if (scheduler == null) {
+			scheduler = new WorkStealingScheduler(workers);
+		}
 
 		try {
 			ComponentDefinition mainComponent = main.newInstance();
@@ -85,7 +96,7 @@ public final class Kompics {
 					+ main.getCanonicalName(), e);
 		}
 
-		scheduler.start();
+		scheduler.proceed();
 	}
 
 	private Kompics() {
@@ -100,6 +111,8 @@ public final class Kompics {
 	 * Log stats.
 	 */
 	public static void logStats() {
-		scheduler.logStats();
+		if (scheduler instanceof WorkStealingScheduler) {
+			((WorkStealingScheduler) scheduler).logStats();
+		}
 	}
 }

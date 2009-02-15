@@ -18,9 +18,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package se.sics.kompics;
+package se.sics.kompics.scheduler;
 
 import java.util.concurrent.atomic.AtomicInteger;
+
+import se.sics.kompics.ComponentCore;
+import se.sics.kompics.SpinlockQueue;
 
 /**
  * The <code>Worker</code> class.
@@ -31,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Worker extends Thread {
 
-	private final Scheduler scheduler;
+	private final WorkStealingScheduler scheduler;
 
 	private final int wid;
 
@@ -49,7 +52,7 @@ public class Worker extends Thread {
 	 * @param wid
 	 *            the wid
 	 */
-	public Worker(Scheduler scheduler, int wid) {
+	public Worker(WorkStealingScheduler scheduler, int wid) {
 		super();
 		this.scheduler = scheduler;
 		this.wid = wid;
@@ -92,7 +95,8 @@ public class Worker extends Thread {
 		} while (core == null);
 
 		executionCount++;
-		core.execute(wid);
+		scheduler.execute(core, wid);
+//		core.execute(wid);
 	}
 
 	final ComponentCore getWork() {
