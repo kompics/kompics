@@ -73,7 +73,7 @@ public abstract class PortType {
 	 * @param eventType
 	 *            the event type
 	 */
-	protected void positive(Class<? extends Event> eventType) {
+	protected final void positive(Class<? extends Event> eventType) {
 		positive.add(eventType);
 	}
 
@@ -83,7 +83,7 @@ public abstract class PortType {
 	 * @param eventType
 	 *            the event type
 	 */
-	protected void negative(Class<? extends Event> eventType) {
+	protected final void negative(Class<? extends Event> eventType) {
 		negative.add(eventType);
 	}
 
@@ -95,7 +95,7 @@ public abstract class PortType {
 	 * 
 	 * @return true, if successful
 	 */
-	public boolean hasPositive(Class<? extends Event> eventType) {
+	public final boolean hasPositive(Class<? extends Event> eventType) {
 		if (positive.contains(eventType)) {
 			return true;
 		}
@@ -115,7 +115,7 @@ public abstract class PortType {
 	 * 
 	 * @return true, if successful
 	 */
-	public boolean hasNegative(Class<? extends Event> eventType) {
+	public final boolean hasNegative(Class<? extends Event> eventType) {
 		if (negative.contains(eventType)) {
 			return true;
 		}
@@ -137,7 +137,7 @@ public abstract class PortType {
 	 * 
 	 * @return true, if successful
 	 */
-	public boolean hasEvent(boolean positive, Class<? extends Event> eventType) {
+	public final boolean hasEvent(boolean positive, Class<? extends Event> eventType) {
 		return (positive == true ? hasPositive(eventType)
 				: hasNegative(eventType));
 	}
@@ -146,7 +146,7 @@ public abstract class PortType {
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
-	public String toString() {
+	public final String toString() {
 		return getClass().getCanonicalName() + " = Positive: "
 				+ positive.toString() + ", Negative: " + negative.toString();
 	}
