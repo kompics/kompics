@@ -105,6 +105,7 @@ public final class Kompics {
 	static void shutdown() {
 		// TODO stop and destroy components
 		on = false;
+		scheduler = null;
 	}
 
 	/**
