@@ -1,10 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>se.sics.kompics</groupId>
-        <artifactId>kompics-parent-pom</artifactId>
-        <version>0.4.1</version>
-    </parent>
+	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-manual</artifactId>
 	<name>Kompics Manual</name>
 	<version>0.4.1-SNAPSHOT</version>
@@ -21,28 +17,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-component-mina-network</artifactId>
-			<version>0.4.1</version>
-			<scope>compile</scope>
-		</dependency>	
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-distributed-system-launcher</artifactId>
-			<version>0.4.1</version>
+			<artifactId>distributed-system-launcher</artifactId>
+			<version>0.4.0</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-port-timer</artifactId>
-			<version>0.4.1</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-component-java-timer</artifactId>
-			<version>0.4.1</version>
-			<scope>compile</scope>
-		</dependency>	
+	
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -50,8 +29,44 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-core</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-port-timer</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-port-network</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-component-java-timer</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-component-mina-network</artifactId>
+			<version>0.4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
+			<version>1.5.6</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.5.6</version>
 			<scope>compile</scope>
 		</dependency>
@@ -77,33 +92,6 @@
 					<showDeprecations>true</showDeprecations>
 				</configuration>
 			</plugin>
-		      <plugin>
-		        <artifactId>maven-resources-plugin</artifactId>
-    	        <version>2.3</version>
- 		        <executions>
-		          <execution>
-		            <id>copy-resources</id>
-		            <phase>generate-sources</phase>
-		            <goals>
-		              <goal>copy-resources</goal>
-		            </goals>
-		          </execution>
-		        </executions>
-	            <configuration>
-	              <encoding>UTF-8</encoding>
-	              <outputDirectory>${basedir}/target/docbkx/html</outputDirectory>
-	              <resources> 
-	                <resource>
-	                  <directory>${basedir}/src/docbkx/resources</directory>
-				        <includes>
-				          <include> **/*.png</include>
-				          <include> **/*.css</include>
-				        </includes>
-	                </resource>
-	              </resources>              
-	            </configuration> 		        
-	      </plugin>
-			
 			<plugin>
 				<groupId>com.agilejava.docbkx</groupId>
 				<artifactId>docbkx-maven-plugin</artifactId>
@@ -133,13 +121,13 @@
 						<makeValidHtml>true</makeValidHtml>
 						<targetFileExtension>html</targetFileExtension>
 						<targetsFileName>index.html</targetsFileName>
-					<targetDirectory>src/docbkx/manual</targetDirectory>
 					-->
-					<generateSectionTocLevel>false</generateSectionTocLevel>
-					<chunkToc>false</chunkToc>
-					<chunkTocsAndLots>false</chunkTocsAndLots>					
-					<htmlStylesheet>css/styles.css</htmlStylesheet>
-					<chunkedOutput>false</chunkedOutput>
+					<generateSectionTocLevel>0</generateSectionTocLevel>
+					<chunkToc>0</chunkToc>
+					<chunkTocsAndLots>0</chunkTocsAndLots>
+					<targetDirectory>src/docbkx/manual</targetDirectory>
+					<htmlStylesheet>styles.css</htmlStylesheet>
+					<chunkedOutput>fals</chunkedOutput>
 					<highlightSource>true</highlightSource>
 					<xincludeSupported>true</xincludeSupported>
 					<entities>
@@ -154,6 +142,7 @@
 					<bodyFontFamily>Helvetica</bodyFontFamily>
 				</configuration>
 			</plugin>
+
 		</plugins>
 	</build>
 

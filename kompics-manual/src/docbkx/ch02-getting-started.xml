@@ -49,8 +49,8 @@
 	<sect2>
 		<title>Ping Event</title>	
 		<programlisting language="java">
-		package sandbox.manual.example1;
-		import sandbox.se.sics.kompics.Event;
+		package se.sics.kompics.manual.example1;
+		import se.sics.kompics.se.sics.kompics.Event;
 		
 		public class Ping extends Event {
 			public Ping()
@@ -64,8 +64,8 @@
 		<title>PingPort Port</title>	
 	
 		<programlisting language="java">
-		package sandbox.manual.example1;	
-		import sandbox.se.sics.kompics.PortType;
+		package se.sics.kompics.manual.example1;	
+		import se.sics.kompics.se.sics.kompics.PortType;
 		
 		public class PingPort extends PortType {
 		
@@ -84,12 +84,12 @@
 		is constructed, its <literal>startHandler</literal> is automatically
 		called.</para> 
 		<programlisting language="java">
-		package sandbox.manual.example1;
-		import sandbox.se.sics.kompics.Component;
-		import sandbox.se.sics.kompics.ComponentDefinition;
-		import sandbox.se.sics.kompics.Handler;
-		import sandbox.se.sics.kompics.Kompics;
-		import sandbox.se.sics.kompics.Start;
+		package se.sics.kompics.manual.example1;
+		import se.sics.kompics.se.sics.kompics.Component;
+		import se.sics.kompics.se.sics.kompics.ComponentDefinition;
+		import se.sics.kompics.se.sics.kompics.Handler;
+		import se.sics.kompics.se.sics.kompics.Kompics;
+		import se.sics.kompics.se.sics.kompics.Start;
 		
 		public class Root extends ComponentDefinition {
 		
@@ -114,10 +114,10 @@
 	<sect2>
 		<title>Host Component</title>	
 		<programlisting language="java">
-		package sandbox.manual.example1;
-		import sandbox.se.sics.kompics.ComponentDefinition;
-		import sandbox.se.sics.kompics.Handler;
-		import sandbox.se.sics.kompics.Negative;
+		package se.sics.kompics.manual.example1;
+		import se.sics.kompics.se.sics.kompics.ComponentDefinition;
+		import se.sics.kompics.se.sics.kompics.Handler;
+		import se.sics.kompics.se.sics.kompics.Negative;
 		
 		public class Host extends ComponentDefinition {
 		
@@ -166,8 +166,8 @@
    	<sect2>
 		<title>Pong Event</title>
 		<programlisting language="java">
-			package sandbox.manual.example2a;
-			import sandbox.se.sics.kompics.Event;
+			package se.sics.kompics.manual.example2a;
+			import se.sics.kompics.se.sics.kompics.Event;
 			
 			public class Pong extends Event {
 				public Pong()
@@ -180,9 +180,9 @@
 	<sect2>
 		<title>PongPort</title>
 		<programlisting language="java">
-			package sandbox.manual.example2a;
+			package se.sics.kompics.manual.example2a;
 			
-			import sandbox.se.sics.kompics.PortType;
+			import se.sics.kompics.se.sics.kompics.PortType;
 			
 			public class PongPort extends PortType {
 			
@@ -196,15 +196,15 @@
   	<sect2>
 		<title>Root Component</title>
 		<programlisting language="java">
-		package sandbox.manual.example2a;
+		package se.sics.kompics.manual.example2a;
 
-		import sandbox.manual.example1.Ping;
-		import sandbox.manual.example1.PingPort;
-		import sandbox.se.sics.kompics.Component;
-		import sandbox.se.sics.kompics.ComponentDefinition;
-		import sandbox.se.sics.kompics.Handler;
-		import sandbox.se.sics.kompics.Kompics;
-		import sandbox.se.sics.kompics.Start;
+		import se.sics.kompics.manual.example1.Ping;
+		import se.sics.kompics.manual.example1.PingPort;
+		import se.sics.kompics.se.sics.kompics.Component;
+		import se.sics.kompics.se.sics.kompics.ComponentDefinition;
+		import se.sics.kompics.se.sics.kompics.Handler;
+		import se.sics.kompics.se.sics.kompics.Kompics;
+		import se.sics.kompics.se.sics.kompics.Start;
 		
 		public class Root extends ComponentDefinition {
 		
@@ -236,13 +236,13 @@
 	<sect2>
 		<title>Host Component</title>
 		<programlisting language="java">
-  			package sandbox.manual.example2a;
+  			package se.sics.kompics.manual.example2a;
 
-			import sandbox.manual.example1.Ping;
-			import sandbox.manual.example1.PingPort;
-			import sandbox.se.sics.kompics.ComponentDefinition;
-			import sandbox.se.sics.kompics.Handler;
-			import sandbox.se.sics.kompics.Negative;
+			import se.sics.kompics.manual.example1.Ping;
+			import se.sics.kompics.manual.example1.PingPort;
+			import se.sics.kompics.se.sics.kompics.ComponentDefinition;
+			import se.sics.kompics.se.sics.kompics.Handler;
+			import se.sics.kompics.se.sics.kompics.Negative;
 			
 			public class Host extends ComponentDefinition {
 			
@@ -285,11 +285,11 @@
 	<sect2>
 		<title>PingPongPort</title>
 		<programlisting language="java">
-			package sandbox.manual.example3a;
+			package se.sics.kompics.manual.example3a;
 			
-			import sandbox.manual.example1.Ping;
-			import sandbox.manual.example2a.Pong;
-			import sandbox.se.sics.kompics.PortType;
+			import se.sics.kompics.manual.example1.Ping;
+			import se.sics.kompics.manual.example2a.Pong;
+			import se.sics.kompics.se.sics.kompics.PortType;
 			
 			public class PingPongPort extends PortType {
 			
@@ -305,15 +305,15 @@
   	<sect2>
 		<title>Root Component</title>
 		<programlisting language="java">
-			package sandbox.manual.example3a;
+			package se.sics.kompics.manual.example3a;
 			
-			import sandbox.manual.example1.Ping;
-			import sandbox.manual.example2a.Pong;
-			import sandbox.se.sics.kompics.Component;
-			import sandbox.se.sics.kompics.ComponentDefinition;
-			import sandbox.se.sics.kompics.Handler;
-			import sandbox.se.sics.kompics.Kompics;
-			import sandbox.se.sics.kompics.Start;
+			import se.sics.kompics.manual.example1.Ping;
+			import se.sics.kompics.manual.example2a.Pong;
+			import se.sics.kompics.se.sics.kompics.Component;
+			import se.sics.kompics.se.sics.kompics.ComponentDefinition;
+			import se.sics.kompics.se.sics.kompics.Handler;
+			import se.sics.kompics.se.sics.kompics.Kompics;
+			import se.sics.kompics.se.sics.kompics.Start;
 			
 			public class Root extends ComponentDefinition {
 			
@@ -346,13 +346,13 @@
 	<sect2>
 		<title>Host Component</title>
 		<programlisting language="java">
-			package sandbox.manual.example3a;
+			package se.sics.kompics.manual.example3a;
 			
-			import sandbox.manual.example1.Ping;
-			import sandbox.manual.example2a.Pong;
-			import sandbox.se.sics.kompics.ComponentDefinition;
-			import sandbox.se.sics.kompics.Handler;
-			import sandbox.se.sics.kompics.Negative;
+			import se.sics.kompics.manual.example1.Ping;
+			import se.sics.kompics.manual.example2a.Pong;
+			import se.sics.kompics.se.sics.kompics.ComponentDefinition;
+			import se.sics.kompics.se.sics.kompics.Handler;
+			import se.sics.kompics.se.sics.kompics.Negative;
 			
 			public class Host extends ComponentDefinition {
 			

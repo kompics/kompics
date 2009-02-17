@@ -5,24 +5,17 @@
 <!ENTITY ch00     SYSTEM "ch00-fundamental-concepts.xml">
 <!ENTITY ch01     SYSTEM "ch01-installing-kompics.xml">
 <!ENTITY ch02     SYSTEM "ch02-getting-started.xml">
+<!ENTITY ch03     SYSTEM "ch03-new-project.xml">
 <!ENTITY license  SYSTEM "copyright.xml">
 ]
 >
-
-<!--
-PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" 
-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" 
-SYSTEM "http://docbook.org/xml/4.4/docbookx.dtd" "docbook-4.4/docbookx.dtd"
-SYSTEM "http://docbook.org/xml/4.4/docbookx.dtd" docbook-4.4/docbookx.dtd
-
- -->
 
 <book>
   <title>Kompics Programming Manual</title>
 
   <bookinfo>
 
-    <subtitle>For Kompics </subtitle>
+    <subtitle>For Kompics version &version;</subtitle>
 
     <edition>First</edition>
     <authorgroup>
@@ -59,5 +52,6 @@ SYSTEM "http://docbook.org/xml/4.4/docbookx.dtd" docbook-4.4/docbookx.dtd
   &ch00;
   &ch01;
   &ch02;
+  &ch03;  
   &license;
 </book>
