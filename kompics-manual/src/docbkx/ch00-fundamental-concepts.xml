@@ -1,6 +1,7 @@
 <chapter id="kompics.concepts">
   <title>Fundamental Concepts</title>
 
+
   <para>This chapter is a brief informal introduction to Kompics.
 	We begin with a discussion of the main concepts in Kompics,
 	then describe how to download and install Kompics,
@@ -164,9 +165,3 @@
   </sect2>
 
 </chapter>
-
-<!--
-local variables: 
-sgml-parent-document: ("book.xml" "chapter")
-end:
--->

@@ -122,10 +122,7 @@ public class ApplicationGroup extends ComponentDefinition {
 		
 		trigger(new CoordinatorInit(selfId, self, mapParticipantsAddrs), twoPc.getControl());
 		trigger(new ApplicationInit(commandScript, neighborSet, self),
-				commandProcessor.getControl());
-
-//		trigger(new Start(), commandProcessor.getControl());
-		
+				commandProcessor.getControl());		
 	}
 
 	Handler<Fault> handleFault = new Handler<Fault>() {
