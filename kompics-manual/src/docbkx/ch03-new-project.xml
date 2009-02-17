@@ -1,0 +1,22 @@
+<chapter id="kompics.new-project">
+  <title>Creating a new project</title>
+
+  <para>This chapter shows you how to create a new project using the
+  archetype plugin.</para>
+  <para>See <xref linkend="kompics.concepts"/> for a basic introduction to
+  		Kompics.</para>
+
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+  <!-- ================================================================= -->
+
+  <sect1 id="kompics.new-project.archetype">
+    <title>New Project using archetypes</title>
+
+	  <para></para> 
+
+		
+ </sect1>
+
+
+</chapter>
