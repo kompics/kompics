@@ -92,7 +92,7 @@
 		              <outputDirectory>${basedir}/target/docbkx/html</outputDirectory>
 		              <resources> 
 		                <resource>
-		                  <directory>${basedir}/src/docbkx/manual/</directory>
+		                  <directory>${basedir}/src/docbkx/resources/</directory>
 					        <includes>
 					          <include> **/*.png</include>
 					          <include> **/*.css</include>
@@ -102,6 +102,9 @@
 		            </configuration>
 		          </execution>
 		        </executions>
+	            <configuration>
+	              <encoding>UTF-8</encoding>
+	            </configuration>
 	      </plugin>
 			
 			<plugin>
@@ -112,7 +115,6 @@
 					<execution>
 						<goals>
 							<goal>generate-html</goal>
-							<goal>generate-pdf</goal>
 						</goals>
 						<phase>generate-sources</phase>
 					</execution>
