@@ -7,7 +7,7 @@
 		<version>0.4.1-SNAPSHOT</version>
 	</parent>
 	<groupId>se.sics.kompics</groupId>
-	<artifactId>archetypes</artifactId>
+	<artifactId>kompics-archetypes</artifactId>
 	<packaging>pom</packaging>  
 	<version>0.4.1-SNAPSHOT</version>
 	<name>Parent for Kompics archetypes (archetypes are templates for creating projects).</name>
