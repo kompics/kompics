@@ -8,7 +8,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-archetypes</artifactId>
 	<packaging>pom</packaging>  
-	<version>0.4.1</version>
+	<version>0.4.2-SNAPSHOT</version>
 	<name>Parent for Kompics archetypes (archetypes are templates for creating projects).</name>
 	<modules>
 		<module>kompics-archetype-basic</module>	
@@ -36,12 +36,5 @@
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
-
-
-  <scm>
-    <connection>scm:svn:svn://small.sics.se/kompics/tags/kompics-archetypes-0.4.1</connection>
-    <developerConnection>scm:svn:svn://small.sics.se/kompics/tags/kompics-archetypes-0.4.1</developerConnection>
-    <url>http://kompics.sics.se/trac/browser/tags/kompics-archetypes-0.4.1</url>
-  </scm>
 </project>
 

@@ -3,7 +3,7 @@
   <parent>
     <groupId>se.sics.kompics</groupId>
     <artifactId>kompics-archetypes</artifactId>
-    <version>0.4.1</version>
+    <version>0.4.2-SNAPSHOT</version>
   </parent>
   <artifactId>kompics-archetype-p2p</artifactId>
   <name>Kompics P2P Archetype</name>
