@@ -1,21 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-  
 	<parent>
 		<groupId>se.sics.kompics</groupId>
 		<artifactId>kompics-parent-pom</artifactId>
 		<version>0.4.1-SNAPSHOT</version>
 	</parent>
-	<groupId>se.sics.kompics.archetypes</groupId>
+	<groupId>se.sics.kompics</groupId>
 	<artifactId>archetypes</artifactId>
 	<packaging>pom</packaging>  
 	<version>0.4.1-SNAPSHOT</version>
 	<name>Parent for Kompics archetypes (archetypes are templates for creating projects).</name>
 	<modules>
-		<module>kompics-basic</module>	
-		<module>kompics-p2p</module>
-		<module>kompics-net</module>
+		<module>kompics-archetype-basic</module>	
+		<module>kompics-archetype-p2p</module>
+		<module>kompics-archetype-net</module>
 	</modules>
 
 	<dependencies>

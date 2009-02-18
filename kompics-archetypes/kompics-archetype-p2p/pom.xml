@@ -2,12 +2,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>se.sics.kompics.archetypes</groupId>
+    <groupId>se.sics.kompics</groupId>
     <artifactId>archetypes</artifactId>
-	<version>0.4.1-SNAPSHOT</version>
+    <version>0.4.1-SNAPSHOT</version>
   </parent>
-  <artifactId>kompics-net</artifactId>
-
+  <artifactId>kompics-archetype-p2p</artifactId>
 
 </project>
-
