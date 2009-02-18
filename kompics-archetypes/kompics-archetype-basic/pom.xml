@@ -1,11 +1,59 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>se.sics.kompics</groupId>
-    <artifactId>kompics-archetypes</artifactId>
-    <version>0.4.2-SNAPSHOT</version>
-  </parent>
-  <artifactId>kompics-archetype-basic</artifactId>
-  <name>Kompics Basic Archetype</name>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>se.sics.kompics</groupId>
+		<artifactId>kompics-archetypes</artifactId>
+		<version>0.4.2-SNAPSHOT</version>
+	</parent>
+	<artifactId>kompics-archetype-basic</artifactId>
+	<name>Kompics Basic Archetype</name>
+
+
+	<build>
+		<filters>
+			<filter>${basedir}/src/main/filters/filters.properties</filter>
+		</filters>
+		<resources>
+			<resource>
+				<filtering>true</filtering>
+				<directory>${basedir}/src/main/resources</directory>
+				<includes>
+					<include>**/*.java</include>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<filtering>false</filtering>
+				<directory>${basedir}/src/main/resources/</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+					<exclude>**/*.properties</exclude>
+				</excludes>
+			</resource>
+<!-- 
+			<resource>
+				<filtering>true</filtering>
+				<directory>${basedir}/src/main/resources/archetype-resources/src/main/resources</directory>
+				<includes>
+					<include>pom.xml</include>
+				</includes>
+				<targetPath>${basedir}/src/main/resources/archetype-resources/</targetPath>				
+			</resource>
+ -->
+		</resources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<configuration>
+					<escapeString>\</escapeString>
+				</configuration>
+			</plugin>
+		</plugins>
+
+	</build>
+
 </project>
 

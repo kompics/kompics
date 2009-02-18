@@ -1,4 +1,4 @@
-package se.sics.kompics.main;
+package ${package}.main;
 
 import se.sics.kompics.Component;
 import se.sics.kompics.Kompics;
