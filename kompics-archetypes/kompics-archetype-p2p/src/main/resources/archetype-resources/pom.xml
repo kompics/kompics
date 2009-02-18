@@ -7,37 +7,35 @@
 	<packaging>jar</packaging>
 	<name>${artifactId}</name>
 
+	<properties>
+		<kompics.version>0.4.1</kompics.version>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>distributed-system-launcher
 			</artifactId>
-			<version>${version}</version>
+			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-component-mina-network
 			</artifactId>
-			<version>${version}</version>
+			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>${version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-port-timer</artifactId>
-			<version>${version}</version>
+			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-component-java-timer</artifactId>
-			<version>${version}</version>
+			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>		
 		
@@ -66,7 +64,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>${groupId}.main.Root</mainClass>
+							<mainClass>${package}.main.Root</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
