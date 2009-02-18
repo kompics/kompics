@@ -7,6 +7,10 @@
 	<packaging>jar</packaging>
 	<name>${artifactId}</name>
 
+	<properties>
+		<kompics.version>0.4.1</kompics.version>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
@@ -56,7 +60,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>${groupId}.main.Root</mainClass>
+							<mainClass>${package}.main.Root</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
