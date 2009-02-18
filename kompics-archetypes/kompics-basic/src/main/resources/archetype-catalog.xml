@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archetype-catalog>
+	  <archetypes>
+	    <archetype>
+		    <groupId>se.sics.kompics.archetypes</groupId>
+		    <artifactId>kompics-basic</artifactId>
+		    <version>0.4.1</version>
+		    <repository>http://kompics.sics.se/maven/repository</repository>
+		    <description>Kompics archetype for creating a basic Kompics application</description>
+	    </archetype>
+	    <archetype>
+		    <groupId>se.sics.kompics.archetypes</groupId>
+		    <artifactId>kompics-net</artifactId>
+		    <version>0.4.1</version>
+		    <repository>http://kompics.sics.se/maven/repository</repository>
+		    <description>Kompics archetype for creating a Kompics application with Apache Mina support</description>
+	    </archetype>
+	    <archetype>
+		    <groupId>se.sics.kompics.archetypes</groupId>
+		    <artifactId>kompics-p2p</artifactId>
+		    <version>0.4.1</version>
+		    <repository>http://kompics.sics.se/maven/repository</repository>
+		    <description>Kompics archetype for creating a Kompics application with P2P framework support</description>
+	    </archetype>
+	  </archetypes>
+</archetype-catalog>
