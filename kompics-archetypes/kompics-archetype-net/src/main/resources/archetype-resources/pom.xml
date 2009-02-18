@@ -56,7 +56,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>se.sics.kompics.main.Root</mainClass>
+							<mainClass>${groupId}.main.Root</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
