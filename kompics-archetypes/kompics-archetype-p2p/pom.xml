@@ -7,5 +7,6 @@
     <version>0.4.1-SNAPSHOT</version>
   </parent>
   <artifactId>kompics-archetype-p2p</artifactId>
+  <name>Kompics P2P Archetype</name>
 
 </project>

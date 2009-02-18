@@ -7,7 +7,7 @@
 	<version>0.4.1-SNAPSHOT</version>
   </parent>
   <artifactId>kompics-archetype-net</artifactId>
-
+  <name>Kompics Net Archetype</name>
 
 </project>
 

@@ -7,6 +7,6 @@
     <version>0.4.1-SNAPSHOT</version>
   </parent>
   <artifactId>kompics-archetype-basic</artifactId>
-
+  <name>Kompics Basic Archetype</name>
 </project>
 
