@@ -200,12 +200,23 @@ public final class ProcessLauncher extends Thread {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	public final void input(String string) throws IOException {
+	final void input(String string) throws IOException {
 		input.write(string);
 		input.write("\n");
 		input.flush();
 	}
 
+	final void globalInput(String string) throws IOException {
+		scenario.globalInput(string);
+	}
+
+	final void handleInput(String string) throws IOException {
+		input.write(string);
+		input.write("\n");
+		input.flush();
+		mainFrame.append(string + "\n");
+	}
+	
 	/**
 	 * Sets the process count.
 	 * 

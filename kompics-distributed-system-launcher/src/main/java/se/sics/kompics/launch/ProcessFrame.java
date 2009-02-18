@@ -69,7 +69,8 @@ public class ProcessFrame extends JFrame {
 
 	private JMenuBar menuBar = null;
 	private JPanel inputPanel = null;
-	private JTextField inputTextField = null;
+	private JTextField localInputTextField = null;
+	private JTextField globalInputTextField = null;
 
 	private JTextArea logArea = null;
 	private JScrollPane scrollPane;
@@ -127,7 +128,7 @@ public class ProcessFrame extends JFrame {
 		});
 		this.addWindowFocusListener(new WindowAdapter() {
 		    public void windowGainedFocus(WindowEvent e) {
-		        getInputTextField().requestFocusInWindow();
+		        getLocalInputTextField().requestFocusInWindow();
 		    }
 		});
 
@@ -149,7 +150,7 @@ public class ProcessFrame extends JFrame {
 			init6Frames(screenSize, frameSize);
 		}
 		
-		getInputTextField().requestFocusInWindow(); 
+		getLocalInputTextField().requestFocusInWindow(); 
 	}
 
 	private void init2Frames(Dimension screenSize, Dimension frameSize) {
@@ -288,26 +289,43 @@ public class ProcessFrame extends JFrame {
 			inputPanel = new JPanel();
 			inputPanel.setLayout(new BorderLayout());
 			inputPanel.add(new JLabel(" Input: "), BorderLayout.WEST);
-			inputPanel.add(getInputTextField(), BorderLayout.CENTER);
+			inputPanel.add(getLocalInputTextField(), BorderLayout.CENTER);
+			inputPanel.add(getGlobalInputTextField(), BorderLayout.EAST);
 		}
 		return inputPanel;
 	}
 	
-	private JTextField getInputTextField() {
-		if (inputTextField == null) {
-			inputTextField = new JTextField();
-			inputTextField.addActionListener(new ActionListener() {
+	private JTextField getLocalInputTextField() {
+		if (localInputTextField == null) {
+			localInputTextField = new JTextField();
+			localInputTextField.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
 						processLauncher.input(e.getActionCommand());
 						append(e.getActionCommand() + "\n");
-						inputTextField.setText("");
+						localInputTextField.setText("");
 					} catch (IOException e1) {
 					}
 				}
 			});
 		}
-		return inputTextField;
+		return localInputTextField;
+	}
+
+	private JTextField getGlobalInputTextField() {
+		if (globalInputTextField == null) {
+			globalInputTextField = new JTextField(20);
+			globalInputTextField.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					try {
+						processLauncher.globalInput(e.getActionCommand());
+						globalInputTextField.setText("");
+					} catch (IOException e1) {
+					}
+				}
+			});
+		}
+		return globalInputTextField;
 	}
 
 	private JPanel getLogPanel() {
@@ -330,7 +348,7 @@ public class ProcessFrame extends JFrame {
 			logArea.setForeground(Color.WHITE);
 			logArea.addFocusListener(new FocusAdapter() {
 				public void focusGained(FocusEvent e) {
-			        getInputTextField().requestFocusInWindow();
+			        getLocalInputTextField().requestFocusInWindow();
 				}
 			});
 		}

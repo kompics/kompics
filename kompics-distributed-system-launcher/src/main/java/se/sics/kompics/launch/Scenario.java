@@ -229,6 +229,12 @@ public abstract class Scenario {
 		}).start();
 	}
 
+	final void globalInput(String string) throws IOException {
+		for (ProcessLauncher processLauncher : processes.values()) {
+			processLauncher.handleInput(string);
+		}
+	}
+	
 	private void startInputReaderThread() {
 		Thread inputReader = new Thread("ScenarioInputReader") {
 			public void run() {
