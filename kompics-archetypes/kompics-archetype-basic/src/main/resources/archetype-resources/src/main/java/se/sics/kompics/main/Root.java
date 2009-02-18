@@ -24,7 +24,6 @@ public final class Root extends ComponentDefinition {
 
 	private Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
-			// TODO
 		}
 	};  
 }
