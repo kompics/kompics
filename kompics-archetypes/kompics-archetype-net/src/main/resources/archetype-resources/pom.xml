@@ -11,9 +11,27 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-component-mina-network</artifactId>
-			<version>0.4.0</version>
+			<version>${archetypeVersion}</version>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-core</artifactId>
+			<version>${archetypeVersion}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-port-timer</artifactId>
+			<version>${archetypeVersion}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-component-java-timer</artifactId>
+			<version>${archetypeVersion}</version>
+			<scope>compile</scope>
+		</dependency>		
 	</dependencies>
 
 	<build>
