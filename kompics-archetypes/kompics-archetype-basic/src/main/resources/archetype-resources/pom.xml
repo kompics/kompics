@@ -72,20 +72,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-<!-- 
-		<filters>
-			<filter>src/main/resources/version.properties</filter>
-		</filters>
-		<resources>
-			<resource>
-				<filtering>true</filtering>
-				<directory>${basedir}</directory>
-				<includes>
-					<include>pom.xml</include>
-				</includes>
-			</resource>
-		</resources>
- -->		
 	</build>
 </project>
 
