@@ -7,6 +7,11 @@
 	<packaging>jar</packaging>
 	<name>${artifactId}</name>
 
+	<properties>
+	<!--  To change your version of Kompics, edit the kompics.version value below -->
+			<kompics.version>${kompicsVersion}</kompics.version>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -16,26 +21,8 @@
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-core</artifactId>
-			<version>${kompicsVersion}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-port-network</artifactId>
-			<version>${kompicsVersion}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-port-network</artifactId>
-			<version>${kompicsVersion}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-component-java-timer</artifactId>
-			<version>${kompicsVersion}</version>
+			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>

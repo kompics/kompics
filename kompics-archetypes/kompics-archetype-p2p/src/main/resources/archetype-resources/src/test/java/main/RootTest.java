@@ -36,8 +36,21 @@ public class RootTest
      */
     public void testRoot()
     {
-    	Kompics.createAndStart(Root.class);
-    	
+		Topology topology1 = new Topology() {
+			{
+				node(1, "127.0.0.1", 22031);
+				node(2, "127.0.0.1", 22032);
+				defaultLinks(1000,0);
+			}
+		};
+
+		Scenario scenario1 = new Scenario(ApplicationGroup.class) {
+			{
+				command(1, "S1000:H:S10000:X"); // 
+			}
+		};
+
+		scenario1.executeOn(topology1);
         assertTrue( true );
     }
 }

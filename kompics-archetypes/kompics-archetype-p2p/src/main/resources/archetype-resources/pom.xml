@@ -8,7 +8,8 @@
 	<name>${artifactId}</name>
 
 	<properties>
-		<kompics.version>0.4.1</kompics.version>
+	<!--  To change your version of Kompics, edit the kompics.version value below -->
+			<kompics.version>${kompicsVersion}</kompics.version>
 	</properties>
 	
 	<dependencies>
@@ -28,17 +29,10 @@
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-core</artifactId>
-			<version>${kompics.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-component-java-timer</artifactId>
 			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>		
-		
 	</dependencies>
 
 	<build>
