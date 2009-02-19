@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archetype-descriptor name="kompics-archetype-basic">
+  <requiredProperties>
+    <requiredProperty key="kompics-version">
+      <defaultValue>${kompics.version}</defaultValue>
+    </requiredProperty>
+  </requiredProperties>
+<!-- 
+  <fileSets>
+    <fileSet filtered="true" packaged="true">
+      <directory>src/main/java</directory>
+      <includes>
+        <include>**/*.java</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+ -->  
+</archetype-descriptor>
