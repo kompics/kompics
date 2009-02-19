@@ -2,6 +2,10 @@ package ${package}.main;
 
 import java.util.Map;
 
+import ${package}.main.event.Hello;
+import ${package}.main.event.RootInit;
+import ${package}.main.event.SendHello;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +13,11 @@ import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
+import se.sics.kompics.Negative;
+import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
+import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Network;
 
 /**
  * The <code>Root</code> class
@@ -25,6 +33,8 @@ public final class Root extends ComponentDefinition {
 
 	private Map<Integer, Address> mapNeighbours = null;
 	
+	private Address self;
+	
 	public Root() {
 		subscribe(handleStart, control);
 		subscribe(handleInit, control);
@@ -39,6 +49,7 @@ public final class Root extends ComponentDefinition {
 
 	private Handler<RootInit> handleInit = new Handler<RootInit>() {
 		public void handle(RootInit event) {
+			self = event.getSelf();
 			mapNeighbours = event.getNeighbours();
 		}
 	};  

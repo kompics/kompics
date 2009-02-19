@@ -2,7 +2,11 @@ package ${package}.main;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.Map;
+
+import ${package}.main.event.ApplicationContinue;
+import ${package}.main.event.ApplicationInit;
+import ${package}.main.event.Hello;
+import ${package}.main.event.SendHello;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,16 +16,6 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.manual.twopc.Client;
-import se.sics.kompics.manual.twopc.event.ApplicationInit;
-import se.sics.kompics.manual.twopc.event.BeginTransaction;
-import se.sics.kompics.manual.twopc.event.CommitTransaction;
-import se.sics.kompics.manual.twopc.event.ReadOperation;
-import se.sics.kompics.manual.twopc.event.RollbackTransaction;
-import se.sics.kompics.manual.twopc.event.TransResult;
-import se.sics.kompics.manual.twopc.event.Transaction;
-import se.sics.kompics.manual.twopc.event.WriteOperation;
-import se.sics.kompics.manual.twopc.main.event.ApplicationContinue;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
@@ -98,7 +92,7 @@ public final class CommandProcessor extends ComponentDefinition {
 	private void doCommand(String cmd) {
 		logger.info("Comand:" + cmd.substring(0, 1));
 		if (cmd.startsWith("H")) {
-			doHello();
+			doSendHello(Integer.parseInt(cmd.substring(1)));
 			doNextCommand();
 		} else if (cmd.startsWith("S")) {
 			doSleep(Integer.parseInt(cmd.substring(1)));
@@ -114,15 +108,15 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 
 	private final void doHelp() {
-		logger.info("Available commands: H, S<n>, help, X");
-		logger.info("H: Say Hello");
+		logger.info("Available commands: H<id>, S<n>, help, X");
+		logger.info("H<id>: Say Hello to <id>");
 		logger.info("Sn: sleeps 'n' milliseconds before the next command");
 		logger.info("help: shows this help message");
 		logger.info("X: terminates this process");
 	}
 
-	private void doHello() {
-		Hello h = new Hello();
+	private void doSendHello(int id) {
+		SendHello h = new SendHello(id);
 		logger.info("Sending hello event");
 		trigger(h,hello);
 	}

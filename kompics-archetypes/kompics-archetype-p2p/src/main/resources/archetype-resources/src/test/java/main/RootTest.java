@@ -1,11 +1,10 @@
 package ${package}.main;
 
-import se.sics.kompics.Component;
-import se.sics.kompics.Kompics;
-import se.sics.kompics.main.Root;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import se.sics.kompics.launch.Scenario;
+import se.sics.kompics.launch.Topology;
 
 /**
  * Unit test for simple App.

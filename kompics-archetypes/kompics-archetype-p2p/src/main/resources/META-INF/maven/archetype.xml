@@ -1,6 +1,8 @@
 <archetype>
   <id>kompics-archetype-p2p</id>
   <sources>
+  	<source>src/main/java/**/*.java</source>
+<!-- 
     <source>src/main/java/main/Root.java</source>
     <source>src/main/java/main/Application.java</source>
     <source>src/main/java/main/ApplicationGroup.java</source>
@@ -9,7 +11,9 @@
     <source>src/main/java/main/event/Hello.java</source>    
     <source>src/main/java/main/event/SendHello.java</source>    
     <source>src/main/java/main/event/ApplicationContinue.java</source>    
-    <source>src/main/java/main/event/RootInit.java</source>    
+    <source>src/main/java/main/event/RootInit.java</source>
+    <source>src/main/java/main/event/ApplicationInit.java</source>
+ -->    
   </sources>
   <resources>
     <resource>src/main/resources/log4j.properties</resource>

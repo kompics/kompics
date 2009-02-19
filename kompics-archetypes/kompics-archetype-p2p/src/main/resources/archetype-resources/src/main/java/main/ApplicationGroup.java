@@ -1,8 +1,8 @@
 package ${package}.main;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
+
+import jim.main.event.ApplicationInit;
 
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
@@ -13,15 +13,8 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Fault;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
-import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.launch.Topology;
-import se.sics.kompics.manual.twopc.Client;
-import se.sics.kompics.manual.twopc.client.CommandProcessor;
-import se.sics.kompics.manual.twopc.composite.TwoPC;
-import se.sics.kompics.manual.twopc.event.ApplicationInit;
-import se.sics.kompics.manual.twopc.event.CoordinatorInit;
-import se.sics.kompics.manual.twopc.simple.TwoPCblob;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -60,7 +53,7 @@ public class ApplicationGroup extends ComponentDefinition {
 		if (args.length != 2)
 		{
 			System.out.println("This main is called by the distributed system launcher program.");
-			System.out.printerr("Usage: <prog> id \"commandscript\"");
+			System.out.println("Usage: <prog> id \"commandscript\"");
 			System.out.println("Num of args was " + args.length);
 			System.exit(-1);
 		}
@@ -110,6 +103,8 @@ public class ApplicationGroup extends ComponentDefinition {
 
 		trigger(new ApplicationInit(commandScript, neighborSet, self),
 				commandProcessor.getControl());		
+		trigger(new ApplicationInit(commandScript, neighborSet, self),
+				commandProcessor.getControl());				
 	}
 
 	Handler<Fault> handleFault = new Handler<Fault>() {

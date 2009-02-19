@@ -1,6 +1,7 @@
 package ${package}.main;
 
 import se.sics.kompics.PortType;
+import ${package}.main.event.Hello;
 
 /**
  * The <code>HelloPort</code> class.

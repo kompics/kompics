@@ -56,7 +56,8 @@ public final class Application {
 
 		Scenario scenario1 = new Scenario(ApplicationGroup.class) {
 			{
-				command(1, "S1000:H:S10000:X"); // 
+				command(1, "S1000:H2:S10000:X");
+				command(2, "S100000:X"); 
 			}
 		};
 
