@@ -234,7 +234,7 @@ public abstract class Scenario {
 			processLauncher.handleInput(string);
 		}
 	}
-	
+
 	private void startInputReaderThread() {
 		Thread inputReader = new Thread("ScenarioInputReader") {
 			public void run() {

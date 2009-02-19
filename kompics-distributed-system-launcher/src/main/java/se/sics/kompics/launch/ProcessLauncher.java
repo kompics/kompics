@@ -160,6 +160,7 @@ public final class ProcessLauncher extends Thread {
 					if (line.equals("2DIE")) {
 						if (process != null) {
 							process.destroy();
+							process = null;
 						}
 						break;
 					}
@@ -186,6 +187,7 @@ public final class ProcessLauncher extends Thread {
 	public final void kill(boolean dispose) {
 		if (process != null) {
 			process.destroy();
+			process = null;
 			if (dispose)
 				mainFrame.dispose();
 		}
@@ -211,12 +213,14 @@ public final class ProcessLauncher extends Thread {
 	}
 
 	final void handleInput(String string) throws IOException {
-		input.write(string);
-		input.write("\n");
-		input.flush();
-		mainFrame.append(string + "\n");
+		if (process != null) {
+			input.write(string);
+			input.write("\n");
+			input.flush();
+			mainFrame.append(string + "\n");
+		}
 	}
-	
+
 	/**
 	 * Sets the process count.
 	 * 
