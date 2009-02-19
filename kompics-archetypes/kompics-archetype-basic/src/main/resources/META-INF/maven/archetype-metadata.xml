@@ -2,7 +2,7 @@
 <archetype-descriptor name="kompics-archetype-basic">
   <requiredProperties>
     <requiredProperty key="kompicsVersion">
-      <defaultValue>${kompics.version}</defaultValue>
+      <defaultValue>${version}</defaultValue>
     </requiredProperty>
   </requiredProperties>
  
@@ -19,7 +19,7 @@
         <include>**/*.java</include>
       </includes>
     </fileSet>
-    <fileSet filtered="true" packaged="true">
+    <fileSet filtered="true">
       <directory>src/main/resources</directory>
       <includes>
         <include>**/*.properties</include>

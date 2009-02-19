@@ -30,7 +30,8 @@ public final class Root extends ComponentDefinition {
 
 	private Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
-			logger.info("Root started");
+			logger.info("SUCCESS: Root started");
+			logger.info("Press 'crl-c' to exit.");
 		}
 	};  
 }

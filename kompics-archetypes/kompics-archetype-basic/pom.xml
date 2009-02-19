@@ -9,11 +9,6 @@
 	<artifactId>kompics-archetype-basic</artifactId>
 	<name>Kompics Basic Archetype</name>
 
-    <properties>
-        <kompics.version>${version}</kompics.version>
-    </properties>
-
-
 	<build>
 		<resources>
 			<resource>
