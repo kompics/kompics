@@ -7,10 +7,11 @@
 	<packaging>jar</packaging>
 	<name>${artifactId}</name>
 
+<!-- 
 	<properties>
 		<kompics.version>0.4.1</kompics.version>
 	</properties>
-
+ -->
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
