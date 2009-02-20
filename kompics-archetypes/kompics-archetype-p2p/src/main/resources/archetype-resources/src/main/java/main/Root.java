@@ -2,6 +2,8 @@ package ${package}.main;
 
 import java.util.Map;
 
+import jim.main.event.Hello;
+
 import ${package}.main.event.Hello;
 import ${package}.main.event.RootInit;
 import ${package}.main.event.SendHello;
@@ -9,15 +11,14 @@ import ${package}.main.event.SendHello;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
-import se.sics.kompics.Kompics;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
+import se.sics.kompics.timer.Timer;
 
 /**
  * The <code>Root</code> class
@@ -30,6 +31,7 @@ public final class Root extends ComponentDefinition {
 	
 	private Negative<HelloPort> helloPort = negative(HelloPort.class); 
 	private Positive<Network> net = positive(Network.class); 
+	private Positive<Timer> timer = positive(Timer.class);
 
 	private Map<Integer, Address> mapNeighbours = null;
 	
@@ -39,6 +41,7 @@ public final class Root extends ComponentDefinition {
 		subscribe(handleStart, control);
 		subscribe(handleInit, control);
 		subscribe(handleHello, helloPort);
+		subscribe(handleSendHello, helloPort);
 	}
 
 	private Handler<Start> handleStart = new Handler<Start>() {
@@ -65,7 +68,11 @@ public final class Root extends ComponentDefinition {
 		public void handle(SendHello event) {
 			int id = event.getId();
 			Address dest = mapNeighbours.get(id);
-			trigger(new Hello(self, dest), net);
+			if (dest != null)
+				trigger(new Hello(self, dest), net);
+			else
+				System.err.println("Couldn't send hello to neighbour. Couldn't find id: " + id);
+
 		}
 	};  
 
