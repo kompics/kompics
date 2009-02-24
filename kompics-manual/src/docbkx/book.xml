@@ -117,8 +117,8 @@ end:
 For Ubuntu:
 <screen>
 $ sudo apt-get install subversion maven2
-$ svn checkout svn://small.sics.se/kompics/tags/&version_no;
-$ cd &version_no;
+$ svn checkout svn://small.sics.se/kompics/tags/kompics-manual-&version_no;
+$ cd kompics-manual-&version_no;
 $ mvn install
 </screen>
 				<para>
@@ -131,7 +131,7 @@ $ mvn install
 				Download and install a subversion client, such as 
 				<ulink url="http://tortoisesvn.tigris.org/">tortoise/svn</ulink>, and then checkout 
 				the Kompics code from our subversion server using the address:
-				<screen>svn://small.sics.se/kompics/tags/&version_no;</screen>.
+				<screen>svn://small.sics.se/kompics/tags/kompics-manual-&version_no;</screen>.
 				Once you have checked out the Kompics code, you can build Kompics using maven2, 
 				by running the following command from the Kompics source code root folder:
 				<screen>c:\...\>mvn install</screen>
@@ -175,7 +175,7 @@ $ mvn install
                 </para>
                    <para> 
                	Then select 'svn' as SCM type, and enter as SCM URL: 
-               	<literal>svn://small.sics.se/kompics/tags/&version_no;/</literal>
+               	<literal>svn://small.sics.se/kompics/tags/kompics-manual-&version_no;/</literal>
                	</para>
                	<para>You should now restart Eclipse, and you will be able to import and build Kompics.
                	</para>
