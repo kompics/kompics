@@ -1,7 +1,6 @@
 
 package ${package}.main.event;
 
-import se.sics.kompics.Event;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 

@@ -48,16 +48,16 @@ public final class Application {
 
 		Topology topology1 = new Topology() {
 			{
-				node(1, "127.0.0.1", 22031);
-				node(2, "127.0.0.1", 22032);
+				node(0, "127.0.0.1", 22031);
+				node(1, "127.0.0.1", 22032);
 				defaultLinks(1000,0);
 			}
 		};
 
 		Scenario scenario1 = new Scenario(ApplicationGroup.class) {
 			{
-				command(1, "S1000:H2:S10000:X");
-				command(2, "S100000:X"); 
+				command(0, "S1000:H1:S10000:X");
+				command(1, "S100000:X"); 
 			}
 		};
 

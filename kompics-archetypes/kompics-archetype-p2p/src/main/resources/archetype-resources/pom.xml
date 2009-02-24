@@ -58,7 +58,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>${package}.main.Root</mainClass>
+							<mainClass>${package}.main.Application</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

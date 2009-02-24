@@ -1,9 +1,9 @@
 package ${package}.main;
 
-import java.util.Map;
+import java.util.List;
+import java.util.Set;
 
-import jim.main.event.Hello;
-
+import ${package}.main.HelloPort;
 import ${package}.main.event.Hello;
 import ${package}.main.event.RootInit;
 import ${package}.main.event.SendHello;
@@ -33,14 +33,14 @@ public final class Root extends ComponentDefinition {
 	private Positive<Network> net = positive(Network.class); 
 	private Positive<Timer> timer = positive(Timer.class);
 
-	private Map<Integer, Address> mapNeighbours = null;
+	private List<Address> setNeighbours = null;
 	
 	private Address self;
 	
 	public Root() {
 		subscribe(handleStart, control);
 		subscribe(handleInit, control);
-		subscribe(handleHello, helloPort);
+		subscribe(handleHello, net);
 		subscribe(handleSendHello, helloPort);
 	}
 
@@ -53,7 +53,7 @@ public final class Root extends ComponentDefinition {
 	private Handler<RootInit> handleInit = new Handler<RootInit>() {
 		public void handle(RootInit event) {
 			self = event.getSelf();
-			mapNeighbours = event.getNeighbours();
+			setNeighbours = event.getNeighbours();
 		}
 	};  
 
@@ -67,12 +67,11 @@ public final class Root extends ComponentDefinition {
 	private Handler<SendHello> handleSendHello = new Handler<SendHello>() {
 		public void handle(SendHello event) {
 			int id = event.getId();
-			Address dest = mapNeighbours.get(id);
+			Address dest = setNeighbours.get(id);
 			if (dest != null)
 				trigger(new Hello(self, dest), net);
 			else
 				System.err.println("Couldn't send hello to neighbour. Couldn't find id: " + id);
-
 		}
 	};  
 
