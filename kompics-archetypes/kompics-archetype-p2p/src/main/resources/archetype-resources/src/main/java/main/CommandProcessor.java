@@ -116,6 +116,9 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 
 	private void doSendHello(int id) {
+		// you're not included in your list of neighbours =>
+		// decrement by 1, id of node to send hello msg to.
+		id = id -1;
 		SendHello h = new SendHello(id);
 		logger.info("Sending hello event");
 		trigger(h,hello);
