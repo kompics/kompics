@@ -43,7 +43,7 @@
 	<para>
      <figure id="kompics.getting-started.ping-fig">
       <title>Ping component inside a Root component.</title>
-      <graphic fileref="images/ch02-ping-component.png"/>
+      <graphic fileref="images/ch02/ping-component.png"/>
     </figure>
 	</para>
 
@@ -160,7 +160,7 @@
   	<para>
      <figure id="kompics.getting-started.pingpong-two-ports">
       <title>Ping-Pong component with two Ports inside a Root component.</title>
-      <graphic fileref="images/ch02-ping-pong-two-ports.png"/>
+      <graphic fileref="images/ch02/ping-pong-two-ports.png"/>
     </figure>
 	</para>
 
@@ -278,7 +278,7 @@
   	<para>
      <figure id="kompics.getting-started.pingpong-one-port">
       <title>Ping-Pong component with one Port inside a Root component.</title>
-      <graphic fileref="images/ch02-ping-pong-one-port.png"/>
+      <graphic fileref="images/ch02/ping-pong-one-port.png"/>
     </figure>
 	</para>
 
@@ -400,7 +400,7 @@
   	<para>
      <figure id="kompics.getting-started.pingpong-two-components-two-ports">
       <title>A PingComponent and a PongComponent with two Ports each, inside a parent Root component.</title>
-      <graphic fileref="images/ch02-ping-pong-two-components-two-ports.png"/>
+      <graphic fileref="images/ch02/ping-pong-two-components-two-ports.png"/>
     </figure>
 	</para>
 	

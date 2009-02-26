@@ -17,6 +17,50 @@
 
 	  <para></para> 
 
+
+<screen>
+$ mvn archetype:generate -DarchetypeCatalog=http://korsakov.sics.se/maven
+[INFO] Scanning for projects...
+[INFO] Searching repository for plugin with prefix: 'archetype'.
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Maven Default Project
+[INFO]    task-segment: [archetype:generate] (aggregator-style)
+[INFO] ------------------------------------------------------------------------
+[INFO] Preparing archetype:generate
+[INFO] No goals needed for project - skipping
+[INFO] Setting property: classpath.resource.loader.class => 'org.codehaus.plexus.velocity.ContextClassLoaderResourceLoader'.
+[INFO] Setting property: velocimacro.messages.on => 'false'.
+[INFO] Setting property: resource.loader => 'classpath'.
+[INFO] Setting property: resource.manager.logwhenfound => 'false'.
+[INFO] [archetype:generate]
+[INFO] Generating project in Interactive mode
+[INFO] No archetype defined. Using maven-archetype-quickstart (org.apache.maven.archetypes:maven-archetype-quickstart:1.0)
+Choose archetype:
+1: http://korsakov.sics.se/maven -> kompics-archetype-basic (Kompics archetype for creating a basic Kompics application)
+2: http://korsakov.sics.se/maven -> kompics-archetype-p2p (Kompics archetype for creating a Kompics application with P2P framework support)
+Choose a number:  (1/2): 1
+
+Define value for groupId: : mypackage
+Define value for artifactId: : myproject
+Define value for version:  1.0-SNAPSHOT: : 
+Define value for package:  mypackage: : 
+Confirm properties configuration:
+kompicsVersion: 0.4.2-SNAPSHOT
+groupId: mypackage
+artifactId: myproject
+version: 1.0-SNAPSHOT
+package: mypackage
+ Y: : 
+[WARNING] org.apache.velocity.runtime.exception.ReferenceException: reference : template = archetype-resources/pom.xml [line 25,column 34] : ${kompics.version} is not a valid reference.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESSFUL
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1 minute 18 seconds
+[INFO] Finished at: Thu Feb 26 08:01:30 CET 2009
+[INFO] Final Memory: 15M/172M
+[INFO] ------------------------------------------------------------------------
+
+</screen>
 		
  </sect1>
 

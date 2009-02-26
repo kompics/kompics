@@ -113,7 +113,7 @@
     
      <figure id="kompics.concepts.fig-port">
       <title>Example port.</title>
-      <graphic fileref="images/ch00-port.png"/>
+      <graphic fileref="images/ch00/port.png"/>
     </figure>
 
 
@@ -136,7 +136,7 @@
 	<para>
      <figure id="kompics.concepts.fig-component">
       <title>Example component.</title>
-      <graphic fileref="images/ch00-component.png"/>
+      <graphic fileref="images/ch00/component.png"/>
     </figure>
 	</para>
   </sect1>
