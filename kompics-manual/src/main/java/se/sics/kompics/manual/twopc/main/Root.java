@@ -30,7 +30,7 @@ import se.sics.kompics.launch.Topology;
  * @author Jim Dowling 
  */
 @SuppressWarnings("serial")
-public final class Application {
+public final class Root {
 
 	/**
 	 * The main method.
@@ -70,7 +70,7 @@ public final class Application {
 //			}
 //		};
 
-		Scenario scenario1 = new Scenario(ApplicationGroup.class) {
+		Scenario scenario1 = new Scenario(RootPerProcess.class) {
 			{
 				command(1, "S5000:B:Wjim,dowling:Rjim:S10000:C"); 
 				command(2, "");
@@ -79,7 +79,7 @@ public final class Application {
 			}
 		};
 
-		Scenario scenario2 = new Scenario(ApplicationGroup.class) {
+		Scenario scenario2 = new Scenario(RootPerProcess.class) {
 			{
 				command(1, "S500:T9:S300:T1"); //.recover(1000).recover("S500:Pok", 1000);
 //				command(2, "S500:Pb2:S300:LB2");

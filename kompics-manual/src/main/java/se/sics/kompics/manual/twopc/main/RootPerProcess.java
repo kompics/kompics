@@ -32,7 +32,7 @@ import se.sics.kompics.timer.java.JavaTimer;
  * The <code>ExecutionGroup</code> class.
  * 
  */
-public class ApplicationGroup extends ComponentDefinition {
+public class RootPerProcess extends ComponentDefinition {
 	
 	static {
 		PropertyConfigurator.configureAndWatch("log4j.properties");
@@ -48,7 +48,7 @@ public class ApplicationGroup extends ComponentDefinition {
 
 	
 	private static final Logger logger = LoggerFactory
-	.getLogger(ApplicationGroup.class);
+	.getLogger(RootPerProcess.class);
 
 	/**
 	 * The main method.
@@ -66,13 +66,13 @@ public class ApplicationGroup extends ComponentDefinition {
 		selfId = Integer.parseInt(args[0]);
 		commandScript = args[1];
 
-		Kompics.createAndStart(ApplicationGroup.class);
+		Kompics.createAndStart(RootPerProcess.class);
 	}
 
 	/**
 	 * Instantiates a new assignment0 group0.
 	 */
-	public ApplicationGroup() {
+	public RootPerProcess() {
 		
 		String prop = System.getProperty("topology");
 		topology = Topology.load(prop, selfId);

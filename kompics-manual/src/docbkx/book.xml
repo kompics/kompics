@@ -11,43 +11,155 @@
 >
 
 <book>
-  <title>Kompics Programming Manual</title>
+	<title>Kompics Programming Manual</title>
 
-  <bookinfo>
+	<bookinfo>
 
-    <subtitle>For Kompics version &version;</subtitle>
+		<subtitle>For
+			Kompics version &version;
+		</subtitle>
 
-    <edition>First</edition>
-    <authorgroup>
-      <author>
-        <firstname>Jim</firstname>
-        <surname>Dowling</surname>
-      </author>
-      <author>
-        <firstname>Cosmin</firstname>
-        <surname>Arad</surname>
-      </author>
-    </authorgroup>
+		<edition>First</edition>
+		<authorgroup>
+			<author>
+				<firstname>Jim</firstname>
+				<surname>Dowling</surname>
+			</author>
+			<author>
+				<firstname>Cosmin</firstname>
+				<surname>Arad</surname>
+			</author>
+		</authorgroup>
 
-    <editor>
-      <firstname>Jim</firstname>
-      <surname>Dowling</surname>
-    </editor>
-<!-- 
+		<editor>
+			<firstname>Jim</firstname>
+			<surname>Dowling</surname>
+		</editor>
+		<!-- 
     <pagenums>33 pages (est.)</pagenums>
  -->
-     <copyright>
-      <year>2009</year>
-      <holder>Swedish Institute of Computer Science and Kunliga Tekniska Högskola</holder>
-    </copyright>
-    <legalnotice><para>This work is licensed under the Creative
-      Commons Attribution License.  To view a copy of this license,
-      visit <ulink url="http://creativecommons.org/licenses/by/2.0/"/>
-      or send a letter to Creative Commons, 559 Nathan Abbott Way,
-      Stanford, California 94305, USA.</para></legalnotice>
+		<copyright>
+			<year>2009</year>
+			<holder>Swedish Institute of Computer Science and Kunliga
+				Tekniska Högskola</holder>
+		</copyright>
+		<legalnotice>
+			<para>
+				This work is licensed under the Creative
+				Commons Attribution License.
+				To view a copy of this license,
+				visit
+				<ulink url="http://creativecommons.org/licenses/by/2.0/" />
+				or send a letter to Creative Commons, 559 Nathan Abbott Way,
+				Stanford, California 94305, USA.
+			</para>
+		</legalnotice>
 
-  </bookinfo>
-<!-- 
+	</bookinfo>
+
+	<title>Document Conventions</title>
+		<para>
+			Typographical Conventions
+			<table id="kompics.typographical-conventions">
+				<title>Typographical Conventions</title>
+				<tgroup cols="2">
+					<thead>
+						<row>
+							<entry>Convention</entry>
+							<entry>Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>
+								<code>Fixed Width Font</code>
+							</entry>
+							<entry>
+								Fixed width font indicates source-code and literal names of 
+								classes, methods, and variables, such as the
+								<code>java.util.Set</code> class.
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<code>
+									<emphasis>Fixed Width Italics</emphasis>
+								</code>
+							</entry>
+							<entry>
+								Fixed width italic words in source-code and commands
+								indicates you should supply a variable value, such as
+								<code>
+									% cd /home/<emphasis>YourUserName</emphasis>
+								</code>
+							</entry>
+						</row>
+						<row>
+							<entry>
+								<emphasis>Italics</emphasis>
+							</entry>
+							<entry>
+								Words in italics represent
+								<emphasis>emphasis</emphasis>
+								and introduce <emphasis>new terms</emphasis>.
+							</entry>
+						</row>
+	<!-- 
+						<row>
+							<entry>
+								<command>Bold</command>
+							</entry>
+							<entry>Words highlighted in bold represent menu items 
+							and dialog boxes. For example:
+								in eclipse: <command>New Project -> Maven</command>.
+							</entry>
+						</row>
+ -->						
+					</tbody>
+				</tgroup>
+			</table>
+		</para>
+		<para>
+			Keying conventions This book uses the following keying conventions:
+			<table id="kompics.keying-conventions">
+				<title>Keying Conventions</title>
+				<tgroup cols="2">
+					<thead>
+						<row>
+							<entry>Convention</entry>
+							<entry>Description</entry>
+						</row>
+					</thead>
+
+					<tbody>
+						<row>
+							<entry>No prompt</entry>
+							<entry>No command prompt is shown if a command is the same for
+								all the different supported platforms.</entry>
+						</row>
+						<row>
+							<entry>%</entry>
+							<entry>'%' indicates a UNIX shell prompt for a user-level command (not requiring root privileges).</entry>
+					</row>
+					<row>
+						<entry>></entry>
+						<entry>'>' indicates the MS-DOS or Windows command prompt.</entry>
+					</row>
+					<row>
+						<entry>[ ]</entry>
+						<entry>'[ ]' (brackets) indicate the enclosed item is an optional parameter.</entry>
+					</row>
+					<row>
+						<entry>{ }</entry>
+						<entry>'{ }' (braces) enclose a list of items.</entry>
+					</row>
+					
+				</tbody>
+			</tgroup>
+		</table>
+	</para>
+	
+	<!-- 
 Local Variables:
 version_no: &variable; 
 end:
@@ -57,148 +169,218 @@ end:
 
 
 
-<chapter id="kompics.install">
-  <title>Installing Kompics</title>
+	<chapter id="kompics.install">
+		<title>Installing Kompics</title>
 
-  <para>This chapter describes the software requirements for Kompics version &version_no;, 
-  	and the steps required to install Kompics. These instructions cover
-  	the operating systems Windows (XP/Vista), Linux (all distros), Mac (OSX).
-	</para>
-
-
-  <sect1 id="kompics.install.reqs">
-      <title>Install software required for Kompics</title>
-      
-      	<para>The minimal requirements for downloading and installing Kompics are 
-      	<emphasis>Java (JDK 5.0 update 6 and above)</emphasis>,
-      	<emphasis>subversion</emphasis> and <emphasis>maven2</emphasis>.
-      	However, we recommend building Kompics from an Eclipse environment
-      	(Netbeans should also work fine, but isn't discussed here).</para>
-        <para>For tutorials on how to use subversion and maven, we refer you to:
-   <itemizedlist>
-        <listitem>
-          <ulink url="http://svnbook.red-bean.com/">Subversion red book</ulink>
-        </listitem>
-        <listitem>
-          <ulink url="http://books.sonatype.com/maven-book/reference/public-book.html">Maven2 book</ulink>
-        </listitem>
-	</itemizedlist>	
+		<para>This
+			chapter describes the software requirements for Kompics version &version_no;,
+			and the steps required to install Kompics. These instructions cover
+			the operating systems Windows (XP/Vista), Linux (all distros), Mac
+			(OSX).
 		</para>
-  </sect1>
 
-  <!-- ================================================================= -->
-  <!-- ================================================================= -->
-  <!-- ================================================================= -->
-  <sect1 id="kompics.install.download-kompics">
-      <title>Download and Install Subversion and Maven2</title>
 
-	<para>
-	The requirements for installing Kompics are:<emphasis>maven2</emphasis> and 
-	<emphasis>subversion</emphasis>. We present two ways of installing subversion
-	and maven:  <emphasis>using the command-line</emphasis> and <emphasis>as eclipse plugins</emphasis>.
-	The easiest way to build Kompics is to use Eclipse plugins. We outline the steps
-	required for installing subversion and maven2 using either approach in the table below,
-	see <xref linkend="kompics.install.tbl-1"/>. Please refer to the subversion and maven2 books
-	above for additional help.
-	
-        <table id="kompics.install.tbl-1">
-          <title>Install Kompics</title>
-          <tgroup cols="2">
-            <thead>
-              <row>
-                <entry>Command-Line</entry>
-                <entry>Eclipse</entry>                
-              </row>
-            </thead>
-            <tbody>
-              <row>
-                <entry>      
+		<sect1 id="kompics.install.reqs">
+			<title>Install software required for Kompics</title>
 
-For Ubuntu:
-<screen>
+			<para>
+				The minimal requirements for downloading and installing Kompics are
+				<emphasis>Java (JDK 5.0 update 6 and above)</emphasis>
+				,
+				<emphasis>subversion</emphasis>
+				and
+				<emphasis>maven2</emphasis>
+				.
+				However, we recommend building Kompics from an Eclipse environment
+				(Netbeans should also work fine, but isn't discussed here).
+			</para>
+			<para>
+				For tutorials on how to use subversion and maven, we refer you to:
+				<itemizedlist>
+					<listitem>
+						<ulink url="http://svnbook.red-bean.com/">Subversion red book</ulink>
+					</listitem>
+					<listitem>
+						<ulink
+							url="http://books.sonatype.com/maven-book/reference/public-book.html">Maven2 book</ulink>
+					</listitem>
+				</itemizedlist>
+			</para>
+		</sect1>
+
+		<!--
+			=================================================================
+		-->
+		<!--
+			=================================================================
+		-->
+		<!--
+			=================================================================
+		-->
+		<sect1 id="kompics.install.download-kompics">
+			<title>Download and Install Subversion and Maven2</title>
+
+			<para>
+				The requirements for installing Kompics are:
+				<emphasis>maven2</emphasis>
+				and
+				<emphasis>subversion</emphasis>
+				. We present two ways of installing subversion
+				and maven:
+				<emphasis>using the command-line</emphasis>
+				and
+				<emphasis>as eclipse plugins</emphasis>
+				.
+				The easiest way to build Kompics is to use Eclipse plugins. We outline
+				the steps
+				required for installing subversion and maven2 using either approach in the
+				table below,
+				see
+				<xref linkend="kompics.install.tbl-1" />
+				. Please refer to the subversion and maven2 books
+				above for additional help.
+
+				<table id="kompics.install.tbl-1">
+					<title>Install Kompics</title>
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>Command-Line</entry>
+								<entry>Eclipse</entry>
+							</row>
+						</thead>
+						<tbody>
+							<row>
+								<entry>
+
+									For Ubuntu:
+									<screen>
 $ sudo apt-get install subversion maven2
 $ svn checkout svn://small.sics.se/kompics/tags/kompics-manual-&version_no;
 $ cd kompics-manual-&version_no;
 $ mvn install
 </screen>
-				<para>
-				For Windows:
-		   	   <itemizedlist>
-		        <listitem>
-				Go to <ulink url="http://maven.apache.org/"/> and download an install Maven2.
-		        </listitem>
-		        <listitem>
-				Download and install a subversion client, such as 
-				<ulink url="http://tortoisesvn.tigris.org/">tortoise/svn</ulink>, and then checkout 
-				the Kompics code from our subversion server using the address:
-				<screen>svn://small.sics.se/kompics/tags/kompics-manual-&version_no;</screen>.
-				Once you have checked out the Kompics code, you can build Kompics using maven2, 
-				by running the following command from the Kompics source code root folder:
-				<screen>c:\...\>mvn install</screen>
-		        </listitem>
-		        <listitem>
-		        If you prefer Netbeans, you can generate a netbeans project using the following  
-		        plugin <ulink url="http://wiki.netbeans.org/MavenBestPractices">Netbeans plugin for Maven</ulink>.
-		        </listitem>
-				</itemizedlist>
-				</para>
-                </entry>
-                <entry>
-	                <para>
-					You will need to install the following Eclipse tools to build Kompics:
-			   	   <itemizedlist>
-			        <listitem>
-			          <para><emphasis>Eclipse IDE</emphasis> (Ganymede version is recommended). You now
-			          need to know how to install plugins for Eclipse. For the Ganymede version of Eclipse,
-			          you click on <literal>Help->Software Updates-> Available Software </literal>. 
-			          Then click the "Add site"
-			          box to add an update site for a plugin. </para>
-			        </listitem>
-			        <listitem>
-			          <para><emphasis>subclipse</emphasis> - an Eclipse Plugin for Subversion available 
-			          at Eclipse update site <literal>http://subclipse.tigris.org/update_1.4.x</literal>. It 
-			          is recommended that you check at least the following boxes for installation: 
-			          "subclipse", "subclipse client adapter" and the "javahl adapter". </para>
-			        </listitem>
-			        <listitem>
-			          <para><emphasis>m2eclipse</emphasis> - an Eclipse Plugin for Maven2 available 
-			          at Eclipse update site <literal>http://m2eclipse.sonatype.org/update/</literal>.
-			          It is recommended that you check at least the following boxes for installation: 
-			          "maven embedder", "maven integration for eclipse",
-			          "Maven SCM handler", and the "Maven SCM handler for Subclipse". </para>
-			        </listitem>
-			      </itemizedlist>
-			        </para>       
-               <para> 
-                In Eclipse, import the maven project from the subversion repository:
-                <literal>File->Import->Other->Checkout Mvn Projects from SCM</literal>.
-                </para>
-                   <para> 
-               	Then select 'svn' as SCM type, and enter as SCM URL: 
-               	<literal>svn://small.sics.se/kompics/tags/kompics-manual-&version_no;/</literal>
+									<para>
+										For Windows:
+										<itemizedlist>
+											<listitem>
+												Go to
+												<ulink url="http://maven.apache.org/" />
+												and download an install Maven2.
+											</listitem>
+											<listitem>
+												Download and install a subversion client, such as
+												<ulink url="http://tortoisesvn.tigris.org/">tortoise/svn</ulink>
+												, and then checkout
+												the Kompics code from our subversion server using the address:
+												<screen>svn://small.sics.se/kompics/tags/kompics-manual-&version_no;</screen>
+												.
+												Once you have checked out the Kompics code, you can build
+												Kompics using maven2,
+												by running the following command from the Kompics source code
+												root folder:
+												<screen>c:\...\>mvn install</screen>
+											</listitem>
+											<listitem>
+												If you prefer Netbeans, you can generate a netbeans project
+												using the following
+												plugin
+												<ulink url="http://wiki.netbeans.org/MavenBestPractices">Netbeans plugin for Maven</ulink>
+												.
+											</listitem>
+										</itemizedlist>
+									</para>
+								</entry>
+								<entry>
+									<para>
+										You will need to install the following Eclipse tools to build
+										Kompics:
+										<itemizedlist>
+											<listitem>
+												<para>
+													<emphasis>Eclipse IDE</emphasis>
+													(Ganymede version is recommended). You now
+													need to know how to install plugins for Eclipse. For the
+													Ganymede version of Eclipse,
+													you click on
+													<literal>Help->Software Updates-> Available
+														Software </literal>
+													.
+													Then click the "Add site"
+													box to add an update site for a plugin.
+												</para>
+											</listitem>
+											<listitem>
+												<para>
+													<emphasis>subclipse</emphasis>
+													- an Eclipse Plugin for Subversion available
+													at Eclipse update site
+													<code>http://subclipse.tigris.org/update_1.4.x
+													</code>
+													. It
+													is recommended that you check at least the following boxes
+													for installation:
+													"subclipse", "subclipse client adapter" and the "javahl adapter".
+												</para>
+											</listitem>
+											<listitem>
+												<para>
+													<emphasis>m2eclipse</emphasis>
+													- an Eclipse Plugin for Maven2 available
+													at Eclipse update site
+													<literal>http://m2eclipse.sonatype.org/update/
+													</literal>
+													.
+													It is recommended that you check at least the following boxes
+													for installation:
+													"maven embedder", "maven integration for eclipse",
+													"Maven SCM handler", and the "Maven SCM handler for Subclipse".
+												</para>
+											</listitem>
+										</itemizedlist>
+									</para>
+									<para>
+										In Eclipse, import the maven project from the subversion
+										repository:
+										<literal>File->Import->Other->Checkout
+											Mvn Projects from SCM</literal>
+										.
+									</para>
+									<para>
+										Then select 'svn' as SCM type, and enter as SCM URL:
+										<literal>svn://small.sics.se/kompics/tags/kompics-manual-&version_no;/
+										</literal>
+									</para>
+									<para>You should now restart Eclipse, and you will be able
+										to import and build Kompics.
                	</para>
-               	<para>You should now restart Eclipse, and you will be able to import and build Kompics.
-               	</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </table>	
-	</para>	
-  </sect1>
-  
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</para>
+		</sect1>
 
-  <!-- ================================================================= -->
-  <!-- ================================================================= -->
-  <!-- ================================================================= -->
-  <sect2 id="kompics.install.summary">
-    <title>Summary</title>
-    
-    <para>We specified the software requirements for Kompics and described how
-    	to download and build Kompics. </para>
-  </sect2>
 
-</chapter>
+		<!--
+			=================================================================
+		-->
+		<!--
+			=================================================================
+		-->
+		<!--
+			=================================================================
+		-->
+		<sect2 id="kompics.install.summary">
+			<title>Summary</title>
+
+			<para>We specified the software requirements for Kompics and
+				described how
+				to download and build Kompics. </para>
+		</sect2>
+
+	</chapter>
 
 
   &ch02;
@@ -207,9 +389,7 @@ $ mvn install
 </book>
 
 
-<!-- 
-Local Variables:
-sgml-parent-document: ("book.xml" "chapter")
-end:
- -->
+	<!--
+		Local Variables: sgml-parent-document: ("book.xml" "chapter") end:
+	-->
 
