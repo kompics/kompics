@@ -15,7 +15,11 @@
   <sect1 id="kompics.new-project.archetype">
     <title>New Project using archetypes</title>
 
-	  <para></para> 
+	  <para>
+	  
+	  <graphic fileref="images/ch03/new-project-maven-add-kompics-catalog.png"/>
+	  
+	  </para> 
 
 
 <screen>
