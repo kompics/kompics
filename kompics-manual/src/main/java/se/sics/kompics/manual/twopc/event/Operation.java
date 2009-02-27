@@ -8,7 +8,7 @@ public abstract class Operation extends Event implements Serializable
 {
 	private static final long serialVersionUID = 3587226473177289006L;
 
-	protected int transactionId;
+	protected final int transactionId;
 	
 	public Operation(int id) {
 		this.transactionId = id;

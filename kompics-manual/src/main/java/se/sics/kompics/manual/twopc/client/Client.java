@@ -11,38 +11,36 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
-import se.sics.kompics.address.Address;
-import se.sics.kompics.manual.twopc.Client;
 import se.sics.kompics.manual.twopc.event.ApplicationInit;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
 import se.sics.kompics.manual.twopc.event.CommitTransaction;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
 import se.sics.kompics.manual.twopc.event.RollbackTransaction;
+import se.sics.kompics.manual.twopc.event.SelectAllOperation;
 import se.sics.kompics.manual.twopc.event.TransResult;
-import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
 import se.sics.kompics.manual.twopc.main.event.ApplicationContinue;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
-public final class CommandProcessor extends ComponentDefinition {
+public final class Client extends ComponentDefinition {
 
-	Positive<Client> coordinator = positive(Client.class);
+	Positive<ClientPort> coordinator = positive(ClientPort.class);
 	
 	Positive<Timer> timer = positive(Timer.class);
 
 	private static final Logger logger = LoggerFactory
-			.getLogger(CommandProcessor.class);
+			.getLogger(Client.class);
 
 	private String[] commands;
 	private int lastCommand;
-	private Address self;
+//	private Address self;
 	
 	private int transId=0;
 
-	private Transaction trans;
+//	private Transaction trans;
 	
-	public CommandProcessor() {
+	public Client() {
 		subscribe(handleInit, control);
 		subscribe(handleStart, control);
 		subscribe(handleContinue, timer);
@@ -52,7 +50,7 @@ public final class CommandProcessor extends ComponentDefinition {
 
 	Handler<ApplicationInit> handleInit = new Handler<ApplicationInit>() {
 		public void handle(ApplicationInit event) {
-			self = event.getSelf();
+//			self = event.getSelf();
 			commands = event.getCommandScript().split(":");
 			lastCommand = -1;
 		}
@@ -60,7 +58,7 @@ public final class CommandProcessor extends ComponentDefinition {
 
 	Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
-			logger.info("Starting Command Processor......");
+			logger.debug("Starting Command Processor......");
 			doNextCommand();
 		}
 	};
@@ -73,14 +71,18 @@ public final class CommandProcessor extends ComponentDefinition {
 
 	Handler<TransResult> handleTransResult = new Handler<TransResult>() {
 		public void handle(TransResult event) {
-			logger.info("Received TransResult for transaction-id {} is {}", 
+			logger.debug("{}: Received TransResult is {}", 
 					event.getTransactionId(), event.isSuccess());
 			
-			logger.info("Returned tuples:");
-			Map<String,String> results = event.getResponses();
-			for (Map.Entry<String,String> res : results.entrySet())
+			logger.debug("Returned tuples:");
+			Map<String,String> readValues = event.getResponses();
+			if (readValues.size() > 0)
 			{
-				logger.info("(" + res.getKey() + "," + res.getValue()+")");
+				for (Map.Entry<String,String> res : readValues.entrySet())
+				{
+					logger.info(event.getTransactionId() + ": ReadValue for {} is {}",
+							res.getKey(), res.getValue());
+				}
 			}
 		}
 	};
@@ -93,7 +95,7 @@ public final class CommandProcessor extends ComponentDefinition {
 			return;
 		}
 		if (lastCommand == commands.length) {
-			logger.info("DONE ALL OPERATIONS");
+			logger.debug("DONE ALL OPERATIONS");
 			Thread applicationThread = new Thread("ApplicationThread") {
 				public void run() {
 					BufferedReader in = new BufferedReader(
@@ -116,14 +118,14 @@ public final class CommandProcessor extends ComponentDefinition {
 	}
 
 	private void doCommand(String cmd) {
-		logger.info("Comand:" + cmd.substring(0, 1));
+		logger.debug("Comand:" + cmd.substring(0, 1));
 		if (cmd.startsWith("B")) {
 			doBeginTransaction();
 			doNextCommand();
-		} if (cmd.startsWith("R")) {
+		} else if (cmd.startsWith("R")) {
 			doReadOperation(cmd.substring(1));
 			doNextCommand();
-		} if (cmd.startsWith("W")) {
+		} else if (cmd.startsWith("W")) {
 			int endOfName = cmd.indexOf(",");
 			doWriteOperation(cmd.substring(1,endOfName), cmd.substring(endOfName+1));
 			doNextCommand();
@@ -135,10 +137,16 @@ public final class CommandProcessor extends ComponentDefinition {
 			doNextCommand();
 		} else if (cmd.startsWith("S")) {
 			doSleep(Integer.parseInt(cmd.substring(1)));
+		} else if (cmd.startsWith("*")) {
+			doSelectAllOperation();
+			doNextCommand();
 		} else if (cmd.startsWith("X")) {
 			doShutdown();
 		} else if (cmd.equals("help")) {
 			doHelp();
+			doNextCommand();
+		} else if (cmd.equals("") || cmd.equals(" ")) {
+			// do nothing if no command given
 			doNextCommand();
 		} else {
 			logger.info("Bad command: '{}'. Try 'help'", cmd);
@@ -161,32 +169,37 @@ public final class CommandProcessor extends ComponentDefinition {
 	private void doBeginTransaction() {
 		transId++;
 		BeginTransaction b = new BeginTransaction(transId);
-		logger.info("Beginning transaction with {} id", transId);
+		logger.debug("Beginning transaction with {} id", transId);
 		trigger(b,coordinator);
 	}
 
 	private void doReadOperation(String name) {
-		logger.info("Creating Read Operation with {} as name.", name);
+		logger.debug("Creating Read Operation with {} as name.", name);
 		trigger(new ReadOperation(transId, name),coordinator);
 	}
 	
 	private void doWriteOperation(String name, String value) {
-		logger.info("Creating Write Operation with {} as name and {} as value.", name, value);
+		logger.debug("Creating Write Operation with {} as name and {} as value.", name, value);
 		trigger(new WriteOperation(transId, name,value),coordinator);
+	}
+
+	private void doSelectAllOperation() {
+		logger.debug("Select all values from database.");
+		trigger(new SelectAllOperation(transId),coordinator);
 	}
 	
 	private void doCommitTransaction() {
-		logger.info("Sending Commit Transaction {}", transId);
+		logger.debug("Sending Commit Transaction {}", transId);
 		trigger(new CommitTransaction(transId), coordinator);
 	}
 
 	private void doRollbackTransaction() {
-		logger.info("Sending Rollback Transaction {}", transId);
+		logger.debug("Sending Rollback Transaction {}", transId);
 		trigger(new RollbackTransaction(transId), coordinator);		
 	}
 
 	private void doSleep(long delay) {
-		logger.info("Sleeping {} milliseconds...", delay);
+		logger.debug("Sleeping {} milliseconds...", delay);
 
 		ScheduleTimeout st = new ScheduleTimeout(delay);
 		st.setTimeoutEvent(new ApplicationContinue(st));

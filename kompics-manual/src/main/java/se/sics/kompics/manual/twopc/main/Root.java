@@ -56,42 +56,20 @@ public final class Root {
 			}
 		};
 
-//		Topology topology2 = new Topology() {
-//			{
-//				node(1, "127.0.0.1", 22031);
-//				node(2, "127.0.0.1", 22032);
-//				node(3, "127.0.0.1", 22033);
-//				node(4, "127.0.0.1", 22034);
-//
-//				link(1, 2, 3000, 0.5).bidirectional();
-//				link(1, 3, 3000, 0.5).bidirectional();
-//				link(1, 4, 3000, 0.5).bidirectional();
-////				 defaultLinks(1000, 0);
-//			}
-//		};
 
 		Scenario scenario1 = new Scenario(RootPerProcess.class) {
 			{
-				command(1, "S5000:B:Wjim,dowling:Rjim:S10000:C"); 
+				// Need to do a sleep to ensure that process '2' has started before 
+				// process '1' sends messages to it.
+				command(1, "S1000:B:Wjim,dowling:Rjim:Wlinda,gronqvist:Rjim:C"); // Rjim:  
 				command(2, "");
 //				command(3, ""); 
 //				command(4, ""); 
 			}
 		};
 
-		Scenario scenario2 = new Scenario(RootPerProcess.class) {
-			{
-				command(1, "S500:T9:S300:T1"); //.recover(1000).recover("S500:Pok", 1000);
-//				command(2, "S500:Pb2:S300:LB2");
-//				command(3, "S500:Lc3:S300:PC3");
-//				command(4, "S500:Pd4:S300:LD4");
-			}
-		};
-
 
 		scenario1.executeOn(topology1);
-//		scenario1.executeOn(topology2);
-//		scenario2.executeOn(topology2);
 
 		System.exit(0);
 	}

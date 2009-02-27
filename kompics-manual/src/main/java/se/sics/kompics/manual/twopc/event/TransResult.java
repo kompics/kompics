@@ -20,6 +20,7 @@
  */
 package se.sics.kompics.manual.twopc.event;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import se.sics.kompics.Event;
@@ -35,12 +36,12 @@ public class TransResult extends Event {
 	
 	private final boolean success;
 	
-	private Map<String,String> responses;
+	private Map<String,String> readValues;
 	
 	public TransResult(int transactionId, boolean success) {
 		this.transactionId = transactionId;
 		this.success = success;
-		responses = null;
+		readValues = new HashMap<String,String>();
 	}
 	
 	public int getTransactionId() {
@@ -51,11 +52,11 @@ public class TransResult extends Event {
 		return success;
 	}
 	
-	public void setResponses(Map<String, String> responses) {
-		this.responses = responses;
+	public void addReadValues(Map<String, String> m) {
+		this.readValues.putAll(m);
 	}
 	
 	public Map<String, String> getResponses() {
-		return responses;
+		return readValues;
 	}
 }

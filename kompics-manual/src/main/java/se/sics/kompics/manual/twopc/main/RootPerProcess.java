@@ -16,9 +16,9 @@ import se.sics.kompics.Kompics;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.launch.Topology;
-import se.sics.kompics.manual.twopc.Client;
-import se.sics.kompics.manual.twopc.client.CommandProcessor;
-import se.sics.kompics.manual.twopc.composite.TwoPC;
+import se.sics.kompics.manual.twopc.client.ClientPort;
+import se.sics.kompics.manual.twopc.client.Client;
+import se.sics.kompics.manual.twopc.composite.CompositeTwoPC;
 import se.sics.kompics.manual.twopc.event.ApplicationInit;
 import se.sics.kompics.manual.twopc.event.CoordinatorInit;
 import se.sics.kompics.manual.twopc.simple.TwoPCblob;
@@ -86,9 +86,9 @@ public class RootPerProcess extends ComponentDefinition {
 		}
 		else
 		{
-			twoPc = create(TwoPC.class);
+			twoPc = create(CompositeTwoPC.class);
 		}
-		commandProcessor = create(CommandProcessor.class);
+		commandProcessor = create(Client.class);
 
 		// handle possible faults in the components
 		subscribe(handleFault, time.getControl());
@@ -114,7 +114,7 @@ public class RootPerProcess extends ComponentDefinition {
 		connect(twoPc.getNegative(Timer.class), time
 				.getPositive(Timer.class));
 		
-		connect(twoPc.getPositive(Client.class), commandProcessor.getNegative(Client.class));
+		connect(twoPc.getPositive(ClientPort.class), commandProcessor.getNegative(ClientPort.class));
 		
 		connect(commandProcessor.getNegative(Timer.class), time
 				.getPositive(Timer.class));

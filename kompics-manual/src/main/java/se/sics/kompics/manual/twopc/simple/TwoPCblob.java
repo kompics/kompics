@@ -13,7 +13,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.manual.twopc.Client;
+import se.sics.kompics.manual.twopc.client.ClientPort;
 import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
@@ -33,7 +33,7 @@ import se.sics.kompics.timer.Timer;
 
 public class TwoPCblob extends ComponentDefinition {
 	
-	private Negative<Client> inClient = negative(Client.class);
+	private Negative<ClientPort> inClient = negative(ClientPort.class);
 	
 	private Positive<Network> network = positive(Network.class);
 
@@ -204,8 +204,8 @@ public class TwoPCblob extends ComponentDefinition {
 			if (tranAcks.get(tId) == mapParticipants.size()) {
 				TransResult res = new TransResult(ack.getTransactionId(), true);
 
-				if (ack.getResponses().size() > 0) {
-					res.setResponses(ack.getResponses());
+				if (ack.getReadValues().size() > 0) {
+					res.addReadValues(ack.getReadValues());
 				}
 				trigger(res, inClient);
 			}

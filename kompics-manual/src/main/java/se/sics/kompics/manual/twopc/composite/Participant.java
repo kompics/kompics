@@ -3,6 +3,7 @@ package se.sics.kompics.manual.twopc.composite;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import se.sics.kompics.manual.twopc.event.ParticipantInit;
 import se.sics.kompics.manual.twopc.event.Prepare;
 import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
+import se.sics.kompics.manual.twopc.event.SelectAllOperation;
 import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
 import se.sics.kompics.timer.Timer;
@@ -29,7 +31,7 @@ import se.sics.kompics.timer.Timer;
  */
 public class Participant extends ComponentDefinition {
 
-	Negative<TwoPhaseCommit> tpcPort = negative(TwoPhaseCommit.class);
+	Negative<TwoPCPort> tpcPort = negative(TwoPCPort.class);
 
 	Positive<Timer> timer = positive(Timer.class);
 	
@@ -88,9 +90,9 @@ public class Participant extends ComponentDefinition {
 
 	Handler<Prepare> handlePrepare = new Handler<Prepare>() {
 		public void handle(Prepare prepare) {
-			logger.info("prepare recvd.");
 			Transaction t = prepare.getTrans();
 			int id = t.getId();
+			logger.info("{}: prepare recvd", id);
 			activeTransactions.put(id, t.getOperations());
 			
 			trigger(new Prepared(id, self, prepare.getSource()), tpcPort);
@@ -99,12 +101,11 @@ public class Participant extends ComponentDefinition {
 	
 	Handler<Commit> handleCommit = new Handler<Commit>() {
 		public void handle(Commit commit) {
-			logger.info("commit recvd.");
 			int transactionId = commit.getTransactionId();
+			logger.info("{}: commit recvd", transactionId);
 			
-			List<Operation> ops = activeTransactions.get(transactionId);
-			
-		    Map<String,String> responses = new HashMap<String,String>();
+			List<Operation> ops = activeTransactions.get(transactionId);			
+		    Map<String,String> readResults = new HashMap<String,String>();
 			// copy from active transactions to DB
 			for (Operation op : ops)
 			{
@@ -113,24 +114,32 @@ public class Participant extends ComponentDefinition {
 					String name = op.getName();
 					String value = database.get(name);
 					// Return value read to client in a new ReadOperation
-					responses.put(name, value);
+					readResults.put(name, value);
 				}
 				else if (op instanceof WriteOperation)
 				{
 					database.put(op.getName(), op.getValue());					
 				}
+				else if (op instanceof SelectAllOperation)
+				{
+					readResults.putAll(database);
+				}
+				else
+				{
+					throw new IllegalStateException("Invalid operation type ");
+				}
 			}
 
 			// Send Ack with responses
-			trigger(new Ack(transactionId,responses,self,commit.getSource()),tpcPort);
+			trigger(new Ack(transactionId,readResults,self,commit.getSource()),tpcPort);
 			activeTransactions.remove(transactionId);
 		}
 	};
 
 	Handler<Abort> handleRollback = new Handler<Abort>() {
 		public void handle(Abort rollback) {
-			logger.info("abort recvd.");
 			int id = rollback.getTransactionId();
+			logger.info("abort recvd for {}", id);
 			activeTransactions.remove(id);
 		}
 	};

@@ -36,11 +36,15 @@ public class Ack extends Message {
 
 	private final int transactionId;
 	
-	private final Map<String,String> responses;
+	private final Map<String,String> readValues;
 	
 	public Ack(int transactionId, Map<String,String> responses, Address src, Address dest) {
 		super(src, dest);
-		this.responses = responses;
+		if (responses == null)
+		{
+			throw new IllegalArgumentException("responses was null");
+		}
+		this.readValues = responses;
 		this.transactionId = transactionId;
 	}
 	
@@ -48,7 +52,7 @@ public class Ack extends Message {
 		return transactionId;
 	}
 	
-	public Map<String, String> getResponses() {
-		return responses;
+	public Map<String, String> getReadValues() {
+		return readValues;
 	}
 }

@@ -8,7 +8,7 @@ public class ReadOperation	extends Operation
 
 	protected final String name;
 	
-	protected String value;
+	protected final String value;
 
 	public ReadOperation(int id, String name) {
 		this(id, name, null);

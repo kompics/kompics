@@ -9,7 +9,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.manual.twopc.Client;
+import se.sics.kompics.manual.twopc.client.ClientPort;
 import se.sics.kompics.manual.twopc.event.Abort;
 import se.sics.kompics.manual.twopc.event.Ack;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
@@ -21,18 +21,19 @@ import se.sics.kompics.manual.twopc.event.Prepare;
 import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
 import se.sics.kompics.manual.twopc.event.RollbackTransaction;
+import se.sics.kompics.manual.twopc.event.SelectAllOperation;
 import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 
-public class TwoPC extends ComponentDefinition {
+public class CompositeTwoPC extends ComponentDefinition {
 	
 	private Component coordinator;
 	private Component participant;
 
-	private Negative<Client> inClient = negative(Client.class);
+	private Negative<ClientPort> inClient = negative(ClientPort.class);
 	
 	private Positive<Network> netPort = positive(Network.class);
 
@@ -42,10 +43,10 @@ public class TwoPC extends ComponentDefinition {
 	private int id;
 	
 	private static final Logger logger = LoggerFactory
-	.getLogger(TwoPC.class);
+	.getLogger(CompositeTwoPC.class);
 
 	
-	public TwoPC() {
+	public CompositeTwoPC() {
 		coordinator = create(Coordinator.class);
 		participant = create(Participant.class);
 		
@@ -61,12 +62,13 @@ public class TwoPC extends ComponentDefinition {
 		subscribe(handleRollbackTransaction, inClient);
 		subscribe(handleReadOperation, inClient);
 		subscribe(handleWriteOperation, inClient);
+		subscribe(handleSelectAll, inClient);
 
 		// events from child coordination port
-		subscribe(handleCommit,coordinator.getNegative(TwoPhaseCommit.class));
-		subscribe(handleAbort,coordinator.getNegative(TwoPhaseCommit.class));
-		subscribe(handlePrepare,coordinator.getNegative(TwoPhaseCommit.class));
-		subscribe(handleTransResult,coordinator.getPositive(Client.class));
+		subscribe(handleCommit,coordinator.getNegative(TwoPCPort.class));
+		subscribe(handleAbort,coordinator.getNegative(TwoPCPort.class));
+		subscribe(handlePrepare,coordinator.getNegative(TwoPCPort.class));
+		subscribe(handleTransResult,coordinator.getPositive(ClientPort.class));
 		
 		// events from Network port destined for child coordination port
 		subscribe(handleCommit,netPort);
@@ -74,9 +76,9 @@ public class TwoPC extends ComponentDefinition {
 		subscribe(handlePrepare,netPort);
 
 		// events from child participation Port
-		subscribe(handleAck,participant.getPositive(TwoPhaseCommit.class));
-		subscribe(handlePrepared,participant.getPositive(TwoPhaseCommit.class));
-		subscribe(handleParticipantAbort,participant.getPositive(TwoPhaseCommit.class));
+		subscribe(handleAck,participant.getPositive(TwoPCPort.class));
+		subscribe(handlePrepared,participant.getPositive(TwoPCPort.class));
+		subscribe(handleParticipantAbort,participant.getPositive(TwoPCPort.class));
 		
 		// events from Network port destined for child participation port		
 		subscribe(handlePrepared,netPort);
@@ -95,33 +97,40 @@ public class TwoPC extends ComponentDefinition {
 	
 	Handler<BeginTransaction> handleBeginTransaction = new Handler<BeginTransaction>() {
 		public void handle(BeginTransaction trans) {
-			trigger(trans, coordinator.getPositive(Client.class));
+			trigger(trans, coordinator.getPositive(ClientPort.class));
 		}
 	};
 	
 	Handler<CommitTransaction> handleCommitTransaction = new Handler<CommitTransaction>() {
 		public void handle(CommitTransaction trans) {
-			trigger(trans, coordinator.getPositive(Client.class));
+			trigger(trans, coordinator.getPositive(ClientPort.class));
 		}
 	};
 	
 	Handler<RollbackTransaction> handleRollbackTransaction = new Handler<RollbackTransaction>() {
 		public void handle(RollbackTransaction trans) {
-			trigger(trans, coordinator.getPositive(Client.class));
+			trigger(trans, coordinator.getPositive(ClientPort.class));
 		}
 	};
 	
 	Handler<ReadOperation> handleReadOperation = new Handler<ReadOperation>() {
 		public void handle(ReadOperation trans) {
-			trigger(trans, coordinator.getPositive(Client.class));
+			trigger(trans, coordinator.getPositive(ClientPort.class));
 		}
 	};
 	
 	Handler<WriteOperation> handleWriteOperation = new Handler<WriteOperation>() {
 		public void handle(WriteOperation trans) {
-			trigger(trans, coordinator.getPositive(Client.class));
+			trigger(trans, coordinator.getPositive(ClientPort.class));
 		}
 	};
+
+	Handler<SelectAllOperation> handleSelectAll = new Handler<SelectAllOperation>() {
+		public void handle(SelectAllOperation trans) {
+			trigger(trans, coordinator.getPositive(ClientPort.class));
+		}
+	};
+
 	
 	Handler<Prepared> handlePrepared = new Handler<Prepared>() {
 		public void handle(Prepared prepared) {
@@ -147,8 +156,6 @@ public class TwoPC extends ComponentDefinition {
 			forwardCoordinationTPC(ack);
 		}
 	};
-	
-	
 	
 	Handler<Prepare> handlePrepare = new Handler<Prepare>() {
 		public void handle(Prepare prepare) {
@@ -182,7 +189,7 @@ public class TwoPC extends ComponentDefinition {
 		}
 		else
 		{
-			trigger(m,coordinator.getPositive(Client.class));
+			trigger(m,coordinator.getPositive(ClientPort.class));
 		}
 	}
 
@@ -194,7 +201,7 @@ public class TwoPC extends ComponentDefinition {
 		}
 		else
 		{
-			trigger(m,coordinator.getNegative(TwoPhaseCommit.class));
+			trigger(m,coordinator.getNegative(TwoPCPort.class));
 		}
 	}
 
@@ -207,7 +214,7 @@ public class TwoPC extends ComponentDefinition {
 		}
 		else
 		{
-			trigger(m, participant.getPositive(TwoPhaseCommit.class));
+			trigger(m, participant.getPositive(TwoPCPort.class));
 		}
 	}
 }
