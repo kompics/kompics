@@ -61,7 +61,7 @@ public final class Root {
 			{
 				// Need to do a sleep to ensure that process '2' has started before 
 				// process '1' sends messages to it.
-				command(1, "S1000:B:Wjim,dowling:Rjim:Wlinda,gronqvist:Rjim:C"); // Rjim:  
+				command(1, "S1000:B:Wjim,dowling:Wlinda,gronqvist:*:C"); // Rjim:  
 				command(2, "");
 //				command(3, ""); 
 //				command(4, ""); 

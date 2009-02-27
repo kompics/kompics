@@ -161,6 +161,7 @@ public final class Client extends ComponentDefinition {
 		logger.info("A: Transaction abort (rollback)");		
 		logger.info("R<n>: Read Operation for name, e.g., Rkompics:");
 		logger.info("W<n,v>: Write Operation to set name to value, e.g., Wkompics,09:");
+		logger.info("*: Select All values in the database");
 		logger.info("Sn: sleeps 'n' milliseconds before the next command");
 		logger.info("help: shows this help message");
 		logger.info("X: terminates this process");

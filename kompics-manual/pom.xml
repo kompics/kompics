@@ -16,25 +16,26 @@
 	<properties>
 		<symbolicName>${pom.groupId}.manual</symbolicName>
 		<exportedPackage>${pom.groupId}.manual</exportedPackage>
+		<kompicsVersion>0.4.2-SNAPSHOT</kompicsVersion>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-component-mina-network</artifactId>
-			<version>0.4.1</version>
+			<version>${kompicsVersion}</version>
 			<scope>compile</scope>
 		</dependency>	
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-distributed-system-launcher</artifactId>
-			<version>0.4.1</version>
+			<version>${kompicsVersion}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-component-java-timer</artifactId>
-			<version>0.4.1</version>
+			<version>${kompicsVersion}</version>
 			<scope>compile</scope>
 		</dependency>	
 		<dependency>
