@@ -20,10 +20,12 @@ import se.sics.kompics.manual.twopc.event.ParticipantInit;
 import se.sics.kompics.manual.twopc.event.Prepare;
 import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
+import se.sics.kompics.manual.twopc.event.ReadResult;
 import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.SelectAllOperation;
 import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
+import se.sics.kompics.manual.twopc.event.WriteResult;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
@@ -69,6 +71,8 @@ public class CompositeTwoPC extends ComponentDefinition {
 		subscribe(handleAbort,coordinator.getNegative(TwoPCPort.class));
 		subscribe(handlePrepare,coordinator.getNegative(TwoPCPort.class));
 		subscribe(handleTransResult,coordinator.getPositive(ClientPort.class));
+		subscribe(handleReadResult,coordinator.getPositive(ClientPort.class));
+		subscribe(handleWriteResult,coordinator.getPositive(ClientPort.class));
 		
 		// events from Network port destined for child coordination port
 		subscribe(handleCommit,netPort);
@@ -178,6 +182,18 @@ public class CompositeTwoPC extends ComponentDefinition {
 	Handler<TransResult> handleTransResult = new Handler<TransResult>() {
 		public void handle(TransResult res) {
 			trigger(res,inClient);
+		}
+	};
+	
+	Handler<ReadResult> handleReadResult = new Handler<ReadResult>() {
+		public void handle(ReadResult readResult) {
+			trigger(readResult,inClient);
+		}
+	};
+	
+	Handler<WriteResult> handleWriteResult = new Handler<WriteResult>() {
+		public void handle(WriteResult writeResult) {
+			trigger(writeResult,inClient);
 		}
 	};
 	

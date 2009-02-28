@@ -24,11 +24,13 @@ import se.sics.kompics.manual.twopc.event.Operation;
 import se.sics.kompics.manual.twopc.event.Prepare;
 import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
+import se.sics.kompics.manual.twopc.event.ReadResult;
 import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.SelectAllOperation;
 import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
+import se.sics.kompics.manual.twopc.event.WriteResult;
 import se.sics.kompics.timer.Timer;
 
 /**
@@ -114,6 +116,8 @@ public class Coordinator extends ComponentDefinition {
 		subscribe(handleWriteOperation, coordinator);
 		subscribe(handleSelectAll, coordinator);
 
+		subscribe(handleReadResult, tpcPort);
+		subscribe(handleWriteResult, tpcPort);
 		subscribe(handlePrepared, tpcPort);
 		subscribe(handleAbort, tpcPort);
 		subscribe(handleAck, tpcPort);
@@ -190,6 +194,7 @@ public class Coordinator extends ComponentDefinition {
 					readOp.getName());
 			addToOperationList(readOp);
 			// TODO send read to participants and result to client, acquire read-lock
+			trigger(readOp,tpcPort);
 		}
 	};
 
@@ -198,6 +203,8 @@ public class Coordinator extends ComponentDefinition {
 			logger.info(writeOp.getTransactionId() + ": Write operation ({},{})", 
 					writeOp.getName(), writeOp.getValue());
 			addToOperationList(writeOp);
+			
+			trigger(writeOp,tpcPort);
 		}
 	};
 	
@@ -263,6 +270,20 @@ public class Coordinator extends ComponentDefinition {
 				}
 				trigger(res, coordinator);
 			}
+		}
+	};
+	
+	Handler<ReadResult> handleReadResult = new Handler<ReadResult>() {
+		public void handle(ReadResult readResult) {
+			// TODO receives one from every participant
+			trigger(readResult,coordinator);
+		}
+	};
+	
+	Handler<WriteResult> handleWriteResult = new Handler<WriteResult>() {
+		public void handle(WriteResult writeResult) {
+			// TODO receives one from every participant
+			trigger(writeResult,coordinator);
 		}
 	};
 }

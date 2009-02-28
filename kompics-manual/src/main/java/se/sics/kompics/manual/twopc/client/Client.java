@@ -15,10 +15,12 @@ import se.sics.kompics.manual.twopc.event.ApplicationInit;
 import se.sics.kompics.manual.twopc.event.BeginTransaction;
 import se.sics.kompics.manual.twopc.event.CommitTransaction;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
+import se.sics.kompics.manual.twopc.event.ReadResult;
 import se.sics.kompics.manual.twopc.event.RollbackTransaction;
 import se.sics.kompics.manual.twopc.event.SelectAllOperation;
 import se.sics.kompics.manual.twopc.event.TransResult;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
+import se.sics.kompics.manual.twopc.event.WriteResult;
 import se.sics.kompics.manual.twopc.main.event.ApplicationContinue;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
@@ -46,6 +48,8 @@ public final class Client extends ComponentDefinition {
 		subscribe(handleContinue, timer);
 
 		subscribe(handleTransResult, coordinator);
+		subscribe(handleReadResult, coordinator);
+		subscribe(handleWriteResult, coordinator);
 	}
 
 	Handler<ApplicationInit> handleInit = new Handler<ApplicationInit>() {
@@ -86,6 +90,21 @@ public final class Client extends ComponentDefinition {
 			}
 		}
 	};
+	
+	Handler<ReadResult> handleReadResult = new Handler<ReadResult>() {
+		public void handle(ReadResult readResult) {
+			logger.info("Read Result: ({},{})", readResult.getName(), readResult.getValue());
+			doNextCommand();
+		}
+	};
+	
+	Handler<WriteResult> handleWriteResult = new Handler<WriteResult>() {
+		public void handle(WriteResult writeResult) {
+
+			logger.info("Write Result: ({},{})", writeResult.getName(), writeResult.getValue());
+			doNextCommand();
+		}
+	};
 
 
 	private final void doNextCommand() {
@@ -124,11 +143,11 @@ public final class Client extends ComponentDefinition {
 			doNextCommand();
 		} else if (cmd.startsWith("R")) {
 			doReadOperation(cmd.substring(1));
-			doNextCommand();
+			// don't do next command - wait for ReadResult
 		} else if (cmd.startsWith("W")) {
 			int endOfName = cmd.indexOf(",");
 			doWriteOperation(cmd.substring(1,endOfName), cmd.substring(endOfName+1));
-			doNextCommand();
+			// don't do next command - wait for ReadResult
 		} else if (cmd.startsWith("C")) {
 			doCommitTransaction();
 			doNextCommand();

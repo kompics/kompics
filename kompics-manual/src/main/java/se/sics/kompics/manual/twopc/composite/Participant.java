@@ -1,9 +1,11 @@
 package se.sics.kompics.manual.twopc.composite;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +23,11 @@ import se.sics.kompics.manual.twopc.event.ParticipantInit;
 import se.sics.kompics.manual.twopc.event.Prepare;
 import se.sics.kompics.manual.twopc.event.Prepared;
 import se.sics.kompics.manual.twopc.event.ReadOperation;
+import se.sics.kompics.manual.twopc.event.ReadResult;
 import se.sics.kompics.manual.twopc.event.SelectAllOperation;
 import se.sics.kompics.manual.twopc.event.Transaction;
 import se.sics.kompics.manual.twopc.event.WriteOperation;
+import se.sics.kompics.manual.twopc.event.WriteResult;
 import se.sics.kompics.timer.Timer;
 
 /**
@@ -66,10 +70,21 @@ public class Participant extends ComponentDefinition {
 	private long redoLogIndex=0;
 	private long undoLogIndex=0;
 */	
+	public enum RowLock { READ_LOCK, WRITE_LOCK, NO_LOCK };
+	
 	
     private Address self;
     
     private Map<String,String> database = new HashMap<String,String>();
+    
+   /**
+    *  LinkedHashMap is a Hash table and linked list implementation of the Map interface, 
+    *  with predictable iteration order.
+    *  See http://www.roseindia.net/javatutorials/linkedhashmap.shtml
+    *  
+    */
+    private Map<String,LinkedHashMap<Operation,RowLock>> lockQueue = 
+	   new HashMap<String,LinkedHashMap<Operation,RowLock>>();
 
     private Map<Integer,List<Operation>> activeTransactions = new 
     		HashMap<Integer,List<Operation>>();
@@ -80,7 +95,10 @@ public class Participant extends ComponentDefinition {
 		  subscribe(handlePrepare,tpcPort);
 		  subscribe(handleCommit,tpcPort);
 		  subscribe(handleRollback,tpcPort);
-	}
+
+		  subscribe(handleRead,tpcPort);
+		  subscribe(handleWrite,tpcPort);
+}
 	
 	Handler<ParticipantInit> handleParticipantInit = new Handler<ParticipantInit>() {
 		public void handle(ParticipantInit init) {
@@ -107,7 +125,11 @@ public class Participant extends ComponentDefinition {
 			List<Operation> ops = activeTransactions.get(transactionId);			
 		    Map<String,String> readResults = new HashMap<String,String>();
 			// copy from active transactions to DB
-			for (Operation op : ops)
+
+		    // Ops waiting on locks to be triggered when this transaction commits
+		    List<Operation> triggerOps = new ArrayList<Operation>();
+		    
+		    for (Operation op : ops)
 			{
 				if (op instanceof ReadOperation)
 				{
@@ -115,10 +137,15 @@ public class Participant extends ComponentDefinition {
 					String value = database.get(name);
 					// Return value read to client in a new ReadOperation
 					readResults.put(name, value);
+					releaseLock(op);
+					
+					triggerOps.add(op);
 				}
 				else if (op instanceof WriteOperation)
 				{
-					database.put(op.getName(), op.getValue());					
+					database.put(op.getName(), op.getValue());
+					
+					triggerOps.add(op);
 				}
 				else if (op instanceof SelectAllOperation)
 				{
@@ -133,6 +160,11 @@ public class Participant extends ComponentDefinition {
 			// Send Ack with responses
 			trigger(new Ack(transactionId,readResults,self,commit.getSource()),tpcPort);
 			activeTransactions.remove(transactionId);
+
+			// TODO: Release all locks for the transaction!
+			// THEN, schedule next operations on queue for execution
+			triggerNextOpOnLockQueue(triggerOps);
+
 		}
 	};
 
@@ -143,5 +175,143 @@ public class Participant extends ComponentDefinition {
 			activeTransactions.remove(id);
 		}
 	};
+	
+	Handler<ReadOperation> handleRead = new Handler<ReadOperation>() {
+		public void handle(ReadOperation readOp) {
+			int id = readOp.getTransactionId();
+			logger.info("{}: read Op for {}", id, readOp.getName());
+			boolean noLock = acquireLock(readOp, RowLock.READ_LOCK);
+			
+			if (noLock == true)
+			{
+				String value = database.get(readOp.getName());
+				ReadResult r = new ReadResult(id,readOp.getName(), value);
+				trigger(r, tpcPort);
+			}
+			else
+			{
+				logger.info("Placed on Lock Queue waiting for {}", readOp.getName());
+			}
+		}
+	};
+	
+	Handler<WriteOperation> handleWrite = new Handler<WriteOperation>() {
+		public void handle(WriteOperation writeOp) {
+			int id = writeOp.getTransactionId();
+			logger.info("{}: writeOp for {}", id, writeOp.getName());
+			boolean noLock = acquireLock(writeOp, RowLock.WRITE_LOCK);
+			
+			if (noLock == true)
+			{
+				String value = database.get(writeOp.getName());
+				WriteResult r = new WriteResult(id,writeOp.getName(), value);
+				trigger(r, tpcPort);
+			}
+			else
+			{
+				logger.info("Waiting for write lock on {}", writeOp.getName());
+			}
+		}
+	};
+	
+	
+	private void addToLockQueue(String name, Operation op, RowLock lock)
+	{
+		LinkedHashMap<Operation,RowLock> ops = lockQueue.get(name);
+		if (ops == null)
+		{
+			ops = new LinkedHashMap<Operation,RowLock>();
+			lockQueue.put(name, ops);
+		}
+		ops.put(op,lock);
+	}
+	
+	private boolean acquireLock(Operation op, RowLock lock)
+	{
+		boolean acquired = true;
+		String name = op.getName();
+		Map<Operation,RowLock> ops = lockQueue.get(name);
 
+		
+		if (ops != null)
+		{
+			if (lock == RowLock.READ_LOCK)
+			{
+				// scan for write locks
+				for (RowLock l : ops.values())
+				{
+					if (l == RowLock.WRITE_LOCK)
+					{
+						acquired = false;
+						break;
+					}
+				}
+			}
+			else if (lock == RowLock.WRITE_LOCK)
+			{
+				if (ops.size() > 0)
+				{
+					acquired = false;
+				}
+				
+			}
+		}
+		addToLockQueue(name, op, lock);
+		return acquired;
+	}
+	
+	private void releaseLock(Operation op)
+	{
+		int id = op.getTransactionId();
+		String name = op.getName();
+		
+		LinkedHashMap<Operation,RowLock> locks = lockQueue.get(name);
+		
+		boolean foundLock = false;
+		for (Operation o : locks.keySet())
+		{
+			if (o == op)
+			{
+				foundLock = true;
+				locks.remove(op);
+			}
+		}
+		
+		if (foundLock == false)
+		{
+			throw new IllegalStateException("Couldn't find lock for operation" + op.getName());
+		}
+	}
+
+	private void triggerNextOpOnLockQueue(List<Operation> listOps)
+	{
+		for (Operation op : listOps)
+		{
+			LinkedHashMap<Operation,RowLock> locks = lockQueue.get(op.getName());
+			if (locks.size() > 0)
+			{
+				// TODO: for values, locks are ordered, not sure about keys
+				Iterator<Operation> it = locks.keySet().iterator(); 
+				if (it.hasNext())
+				{
+					Operation nextOp = it.next();
+					if (nextOp instanceof ReadOperation)
+					{
+						String value = database.get(nextOp.getName());
+						ReadResult r = new ReadResult(nextOp.getTransactionId(), 
+								nextOp.getName(), value);
+						trigger(r, tpcPort);						
+					}
+					else if (nextOp instanceof WriteOperation)
+					{
+						String value = database.get(nextOp.getName());
+						WriteResult r = new WriteResult(nextOp.getTransactionId(),
+								nextOp.getName(), value);
+						trigger(r, tpcPort);
+					}
+	
+				}
+			}
+		}
+	}
 }
