@@ -89,6 +89,9 @@ public class Participant extends ComponentDefinition {
     private Map<Integer,List<Operation>> activeTransactions = new 
     		HashMap<Integer,List<Operation>>();
 
+    private Map<Integer,Map<String,String>> transactionUpdates = new 
+	HashMap<Integer,Map<String,String>>();
+
     
 	public Participant() {
 		  subscribe(handleParticipantInit,control);
@@ -190,6 +193,14 @@ public class Participant extends ComponentDefinition {
 			}
 			else
 			{
+				// if I have the lock
+				
+//				if (id == )
+//				{
+//					// check if the data is in myUpdates first, if not then in database
+//					
+//				}
+				
 				logger.info("Placed on Lock Queue waiting for {}", readOp.getName());
 			}
 		}
