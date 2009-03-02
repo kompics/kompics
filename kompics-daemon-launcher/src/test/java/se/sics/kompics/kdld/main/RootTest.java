@@ -50,11 +50,12 @@ public class RootTest extends TestCase {
 	 */
 	public void testRoot() {
 		String mavenHome = System.getProperty("maven.home");
+		String userHome = System.getProperty("user.home");
 		if (mavenHome != null) {
-			System.setProperty("maven.home", new File("~/.m2/")
+			System.setProperty("maven.home", new File(userHome + "/.m2/")
 					.getAbsolutePath());
 		} else {
-			mavenHome = new File("~/", ".m2").getAbsolutePath();
+			mavenHome = new File(userHome, ".m2").getAbsolutePath();
 		}
 
 		String projectName = "blah";
@@ -98,9 +99,9 @@ public class RootTest extends TestCase {
 			URI uriJar = null;
 			try {
 				uriPom = new URI(
-						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kdld/pom.xml");
+						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kompics-manual/0.4.0/kompics-manual-0.4.0.pom");
 				uriJar = new URI(
-						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kdld/kdld.jar");
+						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kompics-manual/0.4.0/kompics-manual-0.4.0.jar");
 			} catch (URISyntaxException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -115,7 +116,7 @@ public class RootTest extends TestCase {
 			}
 
 			File remoteJarFile = new File(uriJar);
-			File localJarFile = new File(tmpDir, "kdld.jar");
+			File localJarFile = new File(tmpDir, "kompics-manual-0.4.0.jar");
 			try {
 				copy(remoteJarFile, localJarFile);
 			} catch (IOException e1) {
@@ -123,14 +124,11 @@ public class RootTest extends TestCase {
 				e1.printStackTrace();
 			}
 
-			request.setPom(remotePom);
+			request.setPom(localPom);
 
-			// This doesn't work!
-			// request.setProperty("file",
-			// "http://korsakov.sics.se/maven/repository/se/sics/kompics/kdld/kdld.jar");
 			request
-					.setProperty("pomFile",
-							"http://korsakov.sics.se/maven/repository/se/sics/kompics/kdld/kdld.jar");
+					.setProperty("file",
+							tmpDir + "/kompics-manual-0.4.0.jar");
 
 			// ArtifactRepository repo =
 			// request.addRemoteRepository();
