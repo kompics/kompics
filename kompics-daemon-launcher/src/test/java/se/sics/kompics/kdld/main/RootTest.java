@@ -88,47 +88,48 @@ public class RootTest extends TestCase {
 				e1.printStackTrace();
 			}
 
+			File manualDir = new File(tmpDirectory , "manual");
 			// INSTALL a jar in the local repository after downloading from sics
 			MavenExecutionRequest request = new DefaultMavenExecutionRequest()
-					.setBaseDirectory(tmpDir)
+					.setBaseDirectory(manualDir)
 					.setGoals(
 							Arrays
-									.asList(new String[] { "install:install-file" }));
-
-			URI uriPom = null;
-			URI uriJar = null;
-			try {
-				uriPom = new URI(
-						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kompics-manual/0.4.0/kompics-manual-0.4.0.pom");
-				uriJar = new URI(
-						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kompics-manual/0.4.0/kompics-manual-0.4.0.jar");
-			} catch (URISyntaxException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			File remotePom = new File(uriPom);
-			File localPom = new File(tmpDir, "pom.xml");
-			try {
-				copy(remotePom, localPom);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
-			File remoteJarFile = new File(uriJar);
-			File localJarFile = new File(tmpDir, "kompics-manual-0.4.0.jar");
-			try {
-				copy(remoteJarFile, localJarFile);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
-			request.setPom(localPom);
-
-			request
-					.setProperty("file",
-							tmpDir + "/kompics-manual-0.4.0.jar");
+									.asList(new String[] { "compile" }));
+// install:install-file
+//			URI uriPom = null;
+//			URI uriJar = null;
+//			try {
+//				uriPom = new URI(
+//						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kompics-manual/0.4.0/kompics-manual-0.4.0.pom");
+//				uriJar = new URI(
+//						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kompics-manual/0.4.0/kompics-manual-0.4.0.jar");
+//			} catch (URISyntaxException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
+//			File remotePom = new File(uriPom);
+//			File localPom = new File(tmpDir, "pom.xml");
+//			try {
+//				copy(remotePom, localPom);
+//			} catch (IOException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
+//
+//			File remoteJarFile = new File(uriJar);
+//			File localJarFile = new File(tmpDir, "kompics-manual-0.4.0.jar");
+//			try {
+//				copy(remoteJarFile, localJarFile);
+//			} catch (IOException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
+//
+//			request.setPom(localPom);
+//
+//			request
+//					.setProperty("file",
+//							tmpDir + "/kompics-manual-0.4.0.jar");
 
 			// ArtifactRepository repo =
 			// request.addRemoteRepository();
