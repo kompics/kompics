@@ -21,9 +21,9 @@
 package se.sics.kompics;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -47,9 +47,11 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 	private ReentrantReadWriteLock rwLock;
 
-	private HashMap<Class<? extends Event>, LinkedList<Handler<?>>> subs;
+	private HashMap<Class<? extends Event>, ArrayList<Handler<?>>> subs;
 
-	private LinkedList<ChannelCore<?>> channels;
+	private ArrayList<ChannelCore<?>> allChannels;
+	private ArrayList<ChannelCore<?>> unfilteredChannels;
+	private ChannelFilterSet filteredChannels;
 
 	private SpinlockQueue<Event> eventQueue;
 
@@ -59,8 +61,10 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		this.positive = positive;
 		this.portType = portType;
 		this.rwLock = new ReentrantReadWriteLock();
-		this.subs = new HashMap<Class<? extends Event>, LinkedList<Handler<?>>>();
-		this.channels = new LinkedList<ChannelCore<?>>();
+		this.subs = new HashMap<Class<? extends Event>, ArrayList<Handler<?>>>();
+		this.allChannels = new ArrayList<ChannelCore<?>>();
+		this.unfilteredChannels = new ArrayList<ChannelCore<?>>();
+		this.filteredChannels = new ChannelFilterSet();
 		this.remotePorts = new HashSet<PortCore<P>>();
 		this.owner = owner;
 	}
@@ -84,11 +88,49 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 		rwLock.writeLock().lock();
 		try {
-			channels.add(channel);
+			allChannels.add(channel);
+			unfilteredChannels.add(channel);
 			remotePorts.add(remotePort);
 		} finally {
 			rwLock.writeLock().unlock();
 		}
+	}
+
+	void addChannelFilter(ChannelCore<P> channel, ChannelFilter<?, ?> filter) {
+		rwLock.writeLock().lock();
+		try {
+			// channels.contains(channel)
+			unfilteredChannels.remove(channel);
+			filteredChannels.addChannelFilter(channel, filter);
+		} finally {
+			rwLock.writeLock().unlock();
+		}
+	}
+
+	// delivers the event to the connected channels (called holding read lock)
+	private boolean deliverToChannels(Event event, int wid) {
+		boolean delivered = false;
+		for (ChannelCore<?> channel : unfilteredChannels) {
+			if (positive) {
+				channel.forwardToNegative(event, wid);
+			} else {
+				channel.forwardToPositive(event, wid);
+			}
+			delivered = true;
+		}
+		
+		ArrayList<ChannelCore<?>> channels = filteredChannels.get(event);
+		if (channels != null) {
+			for (int i = 0; i < channels.size(); i++) {
+				if (positive) {
+					channels.get(i).forwardToNegative(event, wid);
+				} else {
+					channels.get(i).forwardToPositive(event, wid);
+				}
+				delivered = true;
+			}
+		}
+		return delivered;
 	}
 
 	<E extends Event> void doSubscribe(Handler<E> handler) {
@@ -108,9 +150,9 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 		rwLock.writeLock().lock();
 		try {
-			LinkedList<Handler<?>> handlers = subs.get(eventType);
+			ArrayList<Handler<?>> handlers = subs.get(eventType);
 			if (handlers == null) {
-				handlers = new LinkedList<Handler<?>>();
+				handlers = new ArrayList<Handler<?>>();
 				subs.put(eventType, handlers);
 			}
 			handlers.add(handler);
@@ -132,7 +174,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 		rwLock.writeLock().lock();
 		try {
-			LinkedList<Handler<?>> handlers = subs.get(eventType);
+			ArrayList<Handler<?>> handlers = subs.get(eventType);
 			if (handlers == null) {
 				throw new RuntimeException("Handler " + handler
 						+ " is not subscribed to "
@@ -157,13 +199,13 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		}
 	}
 
-	LinkedList<Handler<?>> getSubscribedHandlers(Event event) {
+	ArrayList<Handler<?>> getSubscribedHandlers(Event event) {
 		Class<? extends Event> eventType = event.getClass();
-		LinkedList<Handler<?>> ret = new LinkedList<Handler<?>>();
+		ArrayList<Handler<?>> ret = new ArrayList<Handler<?>>();
 
 		for (Class<? extends Event> eType : subs.keySet()) {
 			if (eType.isAssignableFrom(eventType)) {
-				LinkedList<Handler<?>> handlers = subs.get(eType);
+				ArrayList<Handler<?>> handlers = subs.get(eType);
 				if (handlers != null) {
 					ret.addAll(handlers);
 				}
@@ -184,40 +226,14 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 		rwLock.readLock().lock();
 		try {
-			for (Class<? extends Event> eType : subs.keySet()) {
-				if (eType.isAssignableFrom(eventType)) {
-					// there is at least one subscription
-					doDeliver(event, wid);
-					delivered = true;
-					break;
-				}
-			}
+			delivered = deliverToSubscribers(event, wid, eventType);
 
 			ChannelCore<?> caller = (ChannelCore<?>) event.getTopChannel();
 			if (caller != null) {
-				Kompics.logger
-						.debug(
-								"Caller +{}-{} in {} fwd {}",
-								new Object[] {
-										caller.getPositivePort().pair.owner.component,
-										caller.getNegativePort().pair.owner.component,
-										caller.getNegativePort().owner.component,
-										event });
-				if (positive) {
-					caller.forwardToNegative(event, wid);
-				} else {
-					caller.forwardToPositive(event, wid);
-				}
+				deliverToCallerChannel(event, wid, caller);
 				delivered = true;
 			} else {
-				for (ChannelCore<?> channel : channels) {
-					if (positive) {
-						channel.forwardToNegative(event, wid);
-					} else {
-						channel.forwardToPositive(event, wid);
-					}
-					delivered = true;
-				}
+				delivered |= deliverToChannels(event, wid);
 			}
 		} finally {
 			rwLock.readLock().unlock();
@@ -250,6 +266,34 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 						+ portType.getClass().getCanonicalName());
 			}
 		}
+	}
+
+	// delivers this response event to the channel through which the
+	// corresponding request event came (called holding read lock)
+	private void deliverToCallerChannel(Event event, int wid,
+			ChannelCore<?> caller) {
+		Kompics.logger.debug("Caller +{}-{} in {} fwd {}", new Object[] {
+				caller.getPositivePort().pair.owner.component,
+				caller.getNegativePort().pair.owner.component,
+				caller.getNegativePort().owner.component, event });
+		if (positive) {
+			caller.forwardToNegative(event, wid);
+		} else {
+			caller.forwardToPositive(event, wid);
+		}
+	}
+
+	// deliver event to the local component (called holding read lock)
+	private boolean deliverToSubscribers(Event event, int wid,
+			Class<? extends Event> eventType) {
+		for (Class<? extends Event> eType : subs.keySet()) {
+			if (eType.isAssignableFrom(eventType)) {
+				// there is at least one subscription
+				doDeliver(event, wid);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void doDeliver(Event event, int wid) {

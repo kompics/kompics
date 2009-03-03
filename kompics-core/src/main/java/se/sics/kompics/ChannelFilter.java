@@ -27,6 +27,24 @@ package se.sics.kompics;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public class ChannelFilter {
+public abstract class ChannelFilter<E extends Event, F> {
 
+	private final Class<E> eventType;
+
+	private final F value;
+
+	protected ChannelFilter(Class<E> eventType, F value) {
+		this.eventType = eventType;
+		this.value = value;
+	}
+
+	public abstract F getValue(E event);
+
+	public final F getValue() {
+		return value;
+	}
+
+	public final Class<E> getEventType() {
+		return eventType;
+	}
 }

@@ -56,4 +56,8 @@ public interface Channel<P extends PortType> {
 	 * @return the port type
 	 */
 	public P getPortType();
+	
+	public Channel<P> filterPositive(ChannelFilter<?, ?> filter);
+	
+	public Channel<P> filterNegative(ChannelFilter<?, ?> filter);
 }

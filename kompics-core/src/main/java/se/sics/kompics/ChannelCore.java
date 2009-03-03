@@ -30,7 +30,9 @@ package se.sics.kompics;
  */
 public class ChannelCore<P extends PortType> implements Channel<P> {
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.Channel#hold()
 	 */
 	public void hold() {
@@ -38,7 +40,9 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.Channel#plug()
 	 */
 	public void plug() {
@@ -46,7 +50,9 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.Channel#resume()
 	 */
 	public void resume() {
@@ -54,7 +60,9 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.Channel#unplug()
 	 */
 	public void unplug() {
@@ -62,7 +70,9 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see se.sics.kompics.Channel#getPortType()
 	 */
 	public P getPortType() {
@@ -97,5 +107,30 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 	void forwardToNegative(Event event, int wid) {
 		event.forwardedBy(this);
 		negativePort.doTrigger(event, wid);
+	}
+
+	public Channel<P> filterPositive(ChannelFilter<?, ?> filter) {
+		Class<? extends Event> eventType = filter.getEventType();
+		if (!portType.hasPositive(eventType)) {
+			throw new RuntimeException("Port type " + portType
+					+ " has no positive " + eventType);
+		}
+		positivePort.addChannelFilter(this, filter);
+		return this;
+	}
+
+	public Channel<P> filterNegative(ChannelFilter<?, ?> filter) {
+		Class<? extends Event> eventType = filter.getEventType();
+		if (!portType.hasNegative(eventType)) {
+			throw new RuntimeException("Port type " + portType
+					+ " has no negative " + eventType);
+		}
+		negativePort.addChannelFilter(this, filter);
+		return this;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return this == obj;
 	}
 }

@@ -20,6 +20,7 @@
  */
 package se.sics.kompics;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -224,11 +225,11 @@ public class ComponentCore implements Component {
 		PortCore<?> nextPort = readyPorts.poll();
 
 		Event event = nextPort.pickFirstEvent();
-		LinkedList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
+		ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
 
 		if (handlers != null) {
-			for (Handler<?> handler : handlers) {
-				executeEvent(event, handler);
+			for (int i = 0; i < handlers.size(); i++) {
+				executeEvent(event, handlers.get(i));
 			}
 		}
 
