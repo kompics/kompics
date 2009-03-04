@@ -49,12 +49,6 @@ public class ClientRoot extends ComponentDefinition {
 	private static final Logger logger = LoggerFactory
 	.getLogger(ClientRoot.class);
 
-	private static String repoUri;
-	private static String groupId;
-	private static String artifactId;
-	private static String versionId;	
-	
-	
 	private final int ID = 0;
 	
 	private int numDeployResponses = 0;
@@ -75,23 +69,6 @@ public class ClientRoot extends ComponentDefinition {
 	 *            the arguments
 	 */
 	public static void main(String[] args) {
-		
-//		if (args.length != 5)
-//		{
-//			logger.info("usage: <prog> hostsFilename repoUri groupId artifactId versionId");
-//			System.exit(0);
-//		}
-//		try {
-//			listHosts = parseHostsFile(args[0]);
-//		} catch (FileNotFoundException e) {
-//			logger.error("Hosts file {} not found", args[0]);
-//			System.exit(0);
-//		}
-//		repoUri = args[1];
-//		groupId = args[2];
-//		artifactId = args[3];
-//		versionId = args[4];
-
 		
 		if (args.length != 2)
 		{
