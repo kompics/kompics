@@ -1,8 +1,9 @@
 package se.sics.kompics.kdld.main.event;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Message;
 
-public class DeployResponse extends Event {
+public class DeployResponse extends Message {
 
 	public enum Status { SUCCESS, FAIL };
 	
@@ -11,12 +12,13 @@ public class DeployResponse extends Event {
 	private String msg;
  
 	
-	public DeployResponse(Status status) {
+	public DeployResponse(Status status, Address src, Address dest) {
+		super(src, dest);
 		this.status = status;
 	}
 	
-	public DeployResponse(Status status, String msg) {
-		this(status);
+	public DeployResponse(Status status, String msg, Address src, Address dest) {
+		this(status, src, dest);
 		this.msg = msg;
 	}
 
