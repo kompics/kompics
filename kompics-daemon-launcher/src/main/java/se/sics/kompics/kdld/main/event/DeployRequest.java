@@ -15,26 +15,42 @@ public class DeployRequest extends Message {
 
 	private static final long serialVersionUID = 1710717688555956452L;
 	
+	private final String repoUri;
 	private final String groupId;
 	private final String artifactId;
-	private final String repoId;
+	private final String versionId;
 	
-	public DeployRequest(String groupId, String artifactId, String repoId, 
-			Address source, Address dest) {
-		super(source, dest);
+	public DeployRequest(String repoId, String groupId, String artifactId, String versionId,
+			Address src, Address dest) {
+		super(src, dest);
+		this.repoUri = repoId;
 		this.groupId = groupId;
 		this.artifactId = artifactId;
-		this.repoId = repoId;		
+		this.versionId = versionId;
 	}
-	
+
+	public String getRepoUri() {
+		return repoUri;
+	}
+
 	public String getGroupId() {
 		return groupId;
 	}
 	public String getArtifactId() {
 		return artifactId;
 	}
+	public String getVersionId() {
+		return versionId;
+	}
 	
-	public String getRepoId() {
-		return repoId;
+	public String getJarUri()
+	{
+		String groups[] = groupId.split(".");
+		String jarUri = repoUri;
+		for (String group : groups)
+		{
+			jarUri += "/" + group;
+		}
+		return jarUri + "/" + versionId + "/" + artifactId + "-" + versionId + ".jar";
 	}
 }

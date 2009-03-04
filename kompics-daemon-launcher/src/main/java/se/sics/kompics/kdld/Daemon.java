@@ -1,10 +1,12 @@
-package se.sics.kompics.kdld.main;
+package se.sics.kompics.kdld;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,7 +32,7 @@ import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.main.event.Deploy;
 import se.sics.kompics.kdld.main.event.DeployRequest;
-import se.sics.kompics.kdld.main.event.RootInit;
+import se.sics.kompics.kdld.main.event.DaemonInit;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 
@@ -43,19 +45,23 @@ public final class Daemon extends ComponentDefinition {
 	private static final Logger logger = LoggerFactory
 	.getLogger(Daemon.class);
 	
-	private static final String KOMPICS_REPOSITORY = "svn://korsakov.sics.se/maven";
+//	private static final String KOMPICS_REPOSITORY = "svn://korsakov.sics.se/maven";
 	
-	private Negative<Kdl> helloPort = negative(Kdl.class); 
+	private Negative<Maven> mavenPort = negative(Maven.class); 
 	private Positive<Network> net = positive(Network.class); 
 	private Positive<Timer> timer = positive(Timer.class);
 
 	private Address self;
 	
+	private int lastCommand;
+	private String[] commands;
+	
 	public Daemon() {
 		subscribe(handleStart, control);
 		subscribe(handleInit, control);
+//		subscribe(handleDeploy, mavenPort);
+
 		subscribe(handleDeployRequest, net);
-		subscribe(handleDeploy, helloPort);
 	}
 
 	private Handler<Start> handleStart = new Handler<Start>() {
@@ -64,8 +70,8 @@ public final class Daemon extends ComponentDefinition {
 		}
 	};  
 
-	private Handler<RootInit> handleInit = new Handler<RootInit>() {
-		public void handle(RootInit event) {
+	private Handler<DaemonInit> handleInit = new Handler<DaemonInit>() {
+		public void handle(DaemonInit event) {
 			self = event.getSelf();
 			
 			 String mavenHome = System.getProperty( "maven.home" );
@@ -211,21 +217,11 @@ public final class Daemon extends ComponentDefinition {
 	
 	private Handler<DeployRequest> handleDeployRequest = new Handler<DeployRequest>() {
 		public void handle(DeployRequest event) {
-			logger.info("Hello Event Received");
+			logger.info("DeployRequest Event Received");
 		}
 	};  
 
-	private Handler<Deploy> handleDeploy = new Handler<Deploy>() {
-		public void handle(Deploy event) {
-			String pomUri = event.getPomUri();
-			
-//			Address dest = new Address(repoId)
-//			if (dest != null)
-//				trigger(new DeployRequest(self, dest), net);
-//			else
-//				System.err.println("Couldn't send hello to neighbour. Couldn't find id: " + id);
-		}
-	};  
+ 
 
 	
     private void copy(File src, File dst) throws IOException {
@@ -242,4 +238,64 @@ public final class Daemon extends ComponentDefinition {
         out.close();
     }
 
+    
+	private final void doNextCommand() {
+		lastCommand++;
+
+		if (lastCommand > commands.length) {
+			return;
+		}
+		if (lastCommand == commands.length) {
+			logger.info("DONE ALL OPERATIONS");
+			Thread applicationThread = new Thread("ApplicationThread") {
+				public void run() {
+					BufferedReader in = new BufferedReader(
+							new InputStreamReader(System.in));
+					while (true) {
+						try {
+							String line = in.readLine();
+							doCommand(line);
+						} catch (Throwable e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			};
+			applicationThread.start();
+			return;
+		}
+		String op = commands[lastCommand];
+		doCommand(op);
+	}
+	
+	private void doCommand(String cmd) {
+		logger.info("Comand:" + cmd.substring(0, 1));
+		if (cmd.startsWith("D")) {
+//			doDeploy(cmd.substring(1));
+			doNextCommand();
+		} else if (cmd.startsWith("S")) {
+		} else if (cmd.startsWith("X")) {
+			doShutdown();
+		} else if (cmd.equals("help")) {
+			doHelp();
+			doNextCommand();
+		} else {
+			logger.info("Bad command: '{}'. Try 'help'", cmd);
+			doNextCommand();
+		}
+	}
+	
+	private void doShutdown() {
+		System.out.close();
+		System.err.close();
+		System.exit(0);
+	}
+	
+	private final void doHelp() {
+		logger.info("Available commands: H<id>, S<n>, help, X");
+		logger.info("D<groupId,artifactId,repoId>: Deploy artifact using repoId and groupId");
+		logger.info("Sn: sleeps 'n' milliseconds before the next command");
+		logger.info("help: shows this help message");
+		logger.info("X: terminates this process");
+	}
 }

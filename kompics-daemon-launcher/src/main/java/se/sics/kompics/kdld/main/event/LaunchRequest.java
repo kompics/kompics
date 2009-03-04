@@ -13,28 +13,34 @@ import se.sics.kompics.network.Message;
  */
 public class LaunchRequest extends Message {
 
-	private static final long serialVersionUID = 1710717688555956452L;
+	private static final long serialVersionUID = 1711231235956452L;
 	
+	private final String repoUri;
 	private final String groupId;
 	private final String artifactId;
-	private final String repoId;
+	private final String versionId;
 	
-	public LaunchRequest(String groupId, String artifactId, String repoId, 
+	public LaunchRequest(String repoId, String groupId, String artifactId, String versionId,
 			Address source, Address dest) {
 		super(source, dest);
+		this.repoUri = repoId;
 		this.groupId = groupId;
 		this.artifactId = artifactId;
-		this.repoId = repoId;		
+		this.versionId = versionId;
 	}
-	
+
+	public String getRepoUri() {
+		return repoUri;
+	}
+
 	public String getGroupId() {
 		return groupId;
 	}
 	public String getArtifactId() {
 		return artifactId;
 	}
-	
-	public String getRepoId() {
-		return repoId;
+	public String getVersionId() {
+		return versionId;
 	}
+
 }

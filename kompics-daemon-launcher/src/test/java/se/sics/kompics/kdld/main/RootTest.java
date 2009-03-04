@@ -1,28 +1,20 @@
 package se.sics.kompics.kdld.main;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import org.apache.maven.embedder.Configuration;
-import org.apache.maven.embedder.ConfigurationValidationResult;
-import org.apache.maven.embedder.DefaultConfiguration;
-import org.apache.maven.embedder.MavenEmbedder;
-import org.apache.maven.embedder.MavenEmbedderException;
-import org.apache.maven.execution.DefaultMavenExecutionRequest;
-import org.apache.maven.execution.MavenExecutionRequest;
-import org.apache.maven.execution.MavenExecutionResult;
-import org.apache.maven.project.MavenProject;
+import se.sics.kompics.address.Address;
 
 /**
  * Unit test for simple App.
@@ -45,9 +37,7 @@ public class RootTest extends TestCase {
 		return new TestSuite(RootTest.class);
 	}
 
-	/**
-	 * Rigourous Test :-)
-	 */
+	/*
 	public void testRoot() {
 		String mavenHome = System.getProperty("maven.home");
 		String userHome = System.getProperty("user.home");
@@ -96,40 +86,7 @@ public class RootTest extends TestCase {
 							Arrays
 									.asList(new String[] { "compile" }));
 // install:install-file
-//			URI uriPom = null;
-//			URI uriJar = null;
-//			try {
-//				uriPom = new URI(
-//						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kompics-manual/0.4.0/kompics-manual-0.4.0.pom");
-//				uriJar = new URI(
-//						"http://korsakov.sics.se/maven/repository/se/sics/kompics/kompics-manual/0.4.0/kompics-manual-0.4.0.jar");
-//			} catch (URISyntaxException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			}
-//			File remotePom = new File(uriPom);
-//			File localPom = new File(tmpDir, "pom.xml");
-//			try {
-//				copy(remotePom, localPom);
-//			} catch (IOException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			}
-//
-//			File remoteJarFile = new File(uriJar);
-//			File localJarFile = new File(tmpDir, "kompics-manual-0.4.0.jar");
-//			try {
-//				copy(remoteJarFile, localJarFile);
-//			} catch (IOException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			}
-//
-//			request.setPom(localPom);
-//
-//			request
-//					.setProperty("file",
-//							tmpDir + "/kompics-manual-0.4.0.jar");
+
 
 			// ArtifactRepository repo =
 			// request.addRemoteRepository();
@@ -182,10 +139,49 @@ public class RootTest extends TestCase {
 			}
 		}
 	}
+	*/
 	
-    private void copy(File src, File dst) throws IOException {
-        InputStream in = new FileInputStream(src);
-        OutputStream out = new FileOutputStream(dst);
+	public void testHostsFileParser()
+	{
+		try {
+			File f = File.createTempFile("hosts", "dat");
+			
+			String[] hosts = { "lucan", "evgsics1", "evgsics2"};
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f)));
+			
+			for (String host : hosts)
+			{
+				bw.write(host);
+				bw.newLine();
+			}
+			String filename = f.getPath();
+			
+			bw.flush();
+			bw.close();
+			
+			List<Address> addrs = Root.parseHostsFile(filename);
+			
+			int i = 0;
+			
+			assertEquals(true, hosts.length == addrs.size());
+			for (Address a : addrs)
+			{
+				System.out.println(a.getIp().getHostName());
+				assertEquals(true, a.getIp().getHostName().compareTo(hosts[i++]) == 0);
+			}
+						
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			assertEquals(true, false);
+		}
+		
+	}
+	
+	
+    private void copy(InputStream in, OutputStream out) throws IOException {
+//        InputStream in = new FileInputStream(src);
+//        OutputStream out = new FileOutputStream(dst);
     
         // Transfer bytes from in to out
         byte[] buf = new byte[1024];
@@ -193,7 +189,50 @@ public class RootTest extends TestCase {
         while ((len = in.read(buf)) > 0) {
             out.write(buf, 0, len);
         }
+        out.flush();
         in.close();
         out.close();
+    }
+    
+    
+    public void testJarDownload()
+    {
+    	String repo = "http://korsakov.sics.se/maven/repository/";
+    	String group = "se/sics/kompics/";
+    	String artifact = "kompics-manual";
+    	String version = "0.4.0";
+    	
+    	String tmpDirectory = System.getProperty("java.io.tmpdir");
+    	File projDir = new File(tmpDirectory, artifact);
+    	projDir.mkdir();
+    	
+    	URL pomRemote = null;
+		URL jarRemote = null;
+		try {
+			pomRemote = new URL( repo + group + artifact + "/" + version 
+						+ "/" + artifact + "-" + version + ".pom");
+			jarRemote = new URL(repo + group + artifact + "/" + version 
+					+ "/" + artifact + "-" + version + ".jar");
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		File localPom = new File(projDir, "pom.xml");
+		try {
+			
+			localPom.createNewFile();
+			copy(pomRemote.openStream(), new FileOutputStream(localPom));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+
+		File localJarFile = new File(projDir, artifact + "-" + version + ".jar");
+		try {
+			localJarFile.createNewFile();
+			copy(jarRemote.openStream(), new FileOutputStream(localJarFile));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
     }
 }

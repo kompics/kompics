@@ -12,7 +12,7 @@
 			To change your version of Kompics, edit the kompics.version value
 			below
 		-->
-		<kompics.version>0.4.1-SNAPSHOT</kompics.version>
+		<kompics.version>0.4.2-SNAPSHOT</kompics.version>
 	</properties>
 
 	<dependencies>
@@ -24,8 +24,7 @@
 
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-distributed-system-launcher
-			</artifactId>
+			<artifactId>kompics-distributed-system-launcher</artifactId>
 			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>

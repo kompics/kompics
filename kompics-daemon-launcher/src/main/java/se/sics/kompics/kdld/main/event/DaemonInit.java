@@ -5,7 +5,7 @@ import java.util.List;
 import se.sics.kompics.Init;
 import se.sics.kompics.address.Address;
 
-public final class RootInit extends Init {
+public final class DaemonInit extends Init {
 
 	private final int id;
 	
@@ -13,7 +13,7 @@ public final class RootInit extends Init {
 	
     private final Address self;
 	
-	public RootInit(int id, Address self, List<Address> neighbours) {
+	public DaemonInit(int id, Address self, List<Address> neighbours) {
 		super();
 		this.id = id;
 		this.self = self;
