@@ -14,8 +14,7 @@
       <defaultValue>${version}</defaultValue>
     </requiredProperty>
     <requiredProperty key="mainClass">
-    </requiredProperty>
-    
+    </requiredProperty>    
   </requiredProperties>
  
   <fileSets>

@@ -7,11 +7,6 @@
 	<packaging>jar</packaging>
 	<name>${artifactId}</name>
 
-	<properties>
-	<!--  To change your version of Kompics, edit the kompics.version value below -->
-			<kompics.version>${kompicsVersion}</kompics.version>
-	</properties>
-	
 	<dependencies>
 		<dependency>
 			<groupId>${myGroup}</groupId>
@@ -61,18 +56,15 @@
 				<configuration>
 					<executable>java</executable>
 					<arguments>
-<!--
-This doesn't work in setting classpath. mvn exec:exec appears to work. 
 						<argument>-classpath</argument>
-						<classpath>target/${myProject}-${myVersion}-jar-with-dependencies.jar</classpath>
- -->						
-						<argument>-classpath</argument>
-						<classpath/>
+						<classpath />
 						<argument>${mainClass}</argument>
+<!-- add extra arguments at the command line using:
+	mvn exec:exec -Darg1 -Darg2 .. -DargN
+ -->
 					</arguments>
-					<mainClass>${mainClass}</mainClass>
 				</configuration>
-			</plugin>			
+			</plugin>
 		</plugins>
 	</build>
 </project>
