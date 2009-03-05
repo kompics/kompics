@@ -21,7 +21,11 @@
 			<artifactId>maven-embedder</artifactId>
 			<version>3.0-alpha-2</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.svnkit</groupId>
+			<artifactId>svnkit</artifactId>
+			<version>1.1.0</version>
+		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-distributed-system-launcher</artifactId>
@@ -73,8 +77,8 @@
 			</plugin>
 		</plugins>
 	</build>
-	
-		<repositories>
+
+	<repositories>
 		<repository>
 			<id>sics-release</id>
 			<name>SICS Repository</name>
@@ -98,6 +102,6 @@
 			</snapshots>
 		</repository>
 	</repositories>
-	
+
 </project>
 

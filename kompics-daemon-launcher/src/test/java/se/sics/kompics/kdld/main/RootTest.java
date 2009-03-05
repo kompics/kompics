@@ -1,5 +1,6 @@
 package se.sics.kompics.kdld.main;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,11 +10,24 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
+import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
+import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
+import org.tmatesoft.svn.core.io.SVNRepository;
+import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNUpdateClient;
+import org.tmatesoft.svn.core.wc.SVNWCUtil;
+
 import se.sics.kompics.address.Address;
 
 /**
@@ -194,8 +208,57 @@ public class RootTest extends TestCase {
         out.close();
     }
     
+    public void testBinaryFileDownload() throws Exception
+    {
+    	String repo = "http://korsakov.sics.se/maven/repository/";
+    	String group = "se/sics/kompics/";
+    	String artifact = "kompics-manual";
+    	String version = "0.4.0";
+
+    	   URL u = new URL(repo + group + artifact + "/" + version 
+					+ "/" + artifact + "-" + version + ".jar");
+    	    URLConnection uc = u.openConnection();
+    	    String contentType = uc.getContentType();
+    	    int contentLength = uc.getContentLength();
+    	    
+    	    System.out.println("Length: " + contentLength);
+    	    
+    	    if (contentType.startsWith("text/") || contentLength == -1) {
+    	      throw new IOException("This is not a binary file.");
+    	    }
+    	    InputStream raw = uc.getInputStream();
+    	    InputStream in = new BufferedInputStream(raw);
+    	    byte[] data = new byte[contentLength];
+    	    int bytesRead = 0;
+    	    int offset = 0;
+    	    while (offset < contentLength) {
+    	      bytesRead = in.read(data, offset, data.length - offset);
+    	      if (bytesRead == -1)
+    	        break;
+    	      offset += bytesRead;
+    	    }
+    	    in.close();
+
+    	    if (offset != contentLength) {
+    	      throw new IOException("Only read " + offset + " bytes; Expected " + contentLength + " bytes");
+    	    }
+
+        	String tmpDirectory = System.getProperty("java.io.tmpdir");
+        	File projDir = new File(tmpDirectory, artifact);
+        	projDir.mkdir();
+
+    	    String filename = u.getFile().substring(u.getFile().lastIndexOf('/') + 1);
+    	    File outFile = new File(projDir, filename);
+    	    
+    	    System.out.println("File: " + outFile.getPath());
+    	    FileOutputStream out = new FileOutputStream(outFile);
+    	    out.write(data);
+    	    out.flush();
+    	    out.close();
+    }
     
-    public void testJarDownload()
+    
+    public void jarDownload()
     {
     	String repo = "http://korsakov.sics.se/maven/repository/";
     	String group = "se/sics/kompics/";
@@ -234,5 +297,46 @@ public class RootTest extends TestCase {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+    }
+    
+    public void testSvnKit() throws SVNException
+    {
+    	SVNRepositoryFactoryImpl.setup();
+        DAVRepositoryFactory.setup();
+
+
+        String username = "anonymous";
+        String password = "anonymous";
+    	String repo = "svn://small.sics.se/kompics/trunk/";
+    	String artifact = "kompics-manual";
+
+    	
+    	
+        String srcRepositoryURL = repo + artifact ;
+        SVNURL repoUrl = SVNURL.parseURIDecoded(srcRepositoryURL);
+        System.out.println(repoUrl.toDecodedString());
+        
+        SVNRepository repository = null;
+        repository = 
+        	SVNRepositoryFactory.create(SVNURL.parseURIDecoded(srcRepositoryURL));
+
+        ISVNAuthenticationManager authManager = 
+        	SVNWCUtil.createDefaultAuthenticationManager( username , password );
+        repository.setAuthenticationManager( authManager );
+        
+        repository.testConnection();
+
+        long latestRevision = repository.getLatestRevision( );
+
+    	String tmpDirectory = System.getProperty("java.io.tmpdir");
+    	File projDir = new File(tmpDirectory, artifact);
+
+    	
+        SVNUpdateClient client =
+                new SVNUpdateClient(authManager , SVNWCUtil.createDefaultOptions(true));
+        
+		client.doCheckout(SVNURL.parseURIDecoded( srcRepositoryURL) , projDir, 
+					SVNRevision.HEAD, SVNRevision.HEAD, true);
+
     }
 }
