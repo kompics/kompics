@@ -4,6 +4,7 @@
     <requiredProperty key="kompicsVersion">
       <defaultValue>${version}</defaultValue>
     </requiredProperty>
+    <!-- 
     <requiredProperty key="myGroup">
       <defaultValue>se.sics.kompics</defaultValue>
     </requiredProperty>
@@ -13,8 +14,10 @@
     <requiredProperty key="myVersion">
       <defaultValue>${version}</defaultValue>
     </requiredProperty>
+     -->
     <requiredProperty key="mainClass">
-    </requiredProperty>    
+    </requiredProperty>
+    
   </requiredProperties>
  
   <fileSets>

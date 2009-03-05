@@ -1,17 +1,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>${groupId}</groupId>
-	<version>${version}</version>
-	<artifactId>${artifactId}</artifactId>
+	<groupId>se.sics.kompics</groupId>
+	<version>0.1</version>
+	<artifactId>dummy</artifactId>
 	<packaging>jar</packaging>
-	<name>${artifactId}</name>
+	<name>Dummy used by kompics-daemon-launcher</name>
 
 	<dependencies>
 		<dependency>
-			<groupId>${myGroup}</groupId>
-			<artifactId>${myArtifact}</artifactId>
-			<version>${myVersion}</version>
+			<groupId>${groupId}</groupId>
+			<artifactId>${artifactId}</artifactId>
+			<version>${version}</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
@@ -59,13 +59,39 @@
 						<argument>-classpath</argument>
 						<classpath />
 						<argument>${mainClass}</argument>
-<!-- add extra arguments at the command line using:
-	mvn exec:exec -Darg1 -Darg2 .. -DargN
- -->
+						<!--
+							add extra arguments at the command line using: mvn exec:exec
+							-Darg1 -Darg2 .. -DargN
+						-->
 					</arguments>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
+	<repositories>
+		<repository>
+			<id>sics-release</id>
+			<name>SICS Release Repository</name>
+			<url>http://kompics.sics.se/maven/repository</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>sics-snapshot</id>
+			<name>SICS Snapshot Repository</name>
+			<url>http://kompics.sics.se/maven/snapshotrepository</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 </project>
 
