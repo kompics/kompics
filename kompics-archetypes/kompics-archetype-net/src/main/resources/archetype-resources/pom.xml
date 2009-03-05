@@ -14,17 +14,11 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-component-mina-network</artifactId>
-			<version>${kompics.version}</version>
+			<groupId>${myGroup}</groupId>
+			<artifactId>${myArtifact}</artifactId>
+			<version>${myVersion}</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-component-java-timer</artifactId>
-			<version>${kompics.version}</version>
-			<scope>compile</scope>
-		</dependency>		
 	</dependencies>
 
 	<build>
@@ -49,11 +43,36 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>${package}.main.Root</mainClass>
+							<mainClass>${mainClass}</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<executable>java</executable>
+					<arguments>
+<!--
+This doesn't work in setting classpath. mvn exec:exec appears to work. 
+						<argument>-classpath</argument>
+						<classpath>target/${myProject}-${myVersion}-jar-with-dependencies.jar</classpath>
+ -->						
+						<argument>-classpath</argument>
+						<classpath/>
+						<argument>${mainClass}</argument>
+					</arguments>
+					<mainClass>${mainClass}</mainClass>
+				</configuration>
+			</plugin>			
 		</plugins>
 	</build>
 </project>

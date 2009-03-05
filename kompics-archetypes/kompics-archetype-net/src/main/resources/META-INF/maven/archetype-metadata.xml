@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<archetype-descriptor name="kompics-archetype-basic">
+<archetype-descriptor name="kompics-archetype-net">
   <requiredProperties>
     <requiredProperty key="kompicsVersion">
       <defaultValue>${version}</defaultValue>
     </requiredProperty>
+    <requiredProperty key="myGroup">
+      <defaultValue>se.sics.kompics</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="myArtifact">
+    	<defaultValue>dummy</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="myVersion">
+      <defaultValue>${version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="mainClass">
+    </requiredProperty>
+    
   </requiredProperties>
  
   <fileSets>
