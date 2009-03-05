@@ -21,6 +21,7 @@ import se.sics.kompics.kdld.main.event.Deploy;
 import se.sics.kompics.kdld.main.event.DeployRequest;
 import se.sics.kompics.kdld.main.event.DeployResponse;
 import se.sics.kompics.kdld.main.event.LaunchResponse;
+import se.sics.kompics.kdld.main.event.SetupEnvRequest;
 import se.sics.kompics.launch.Topology;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
@@ -34,7 +35,11 @@ public class ClientRoot extends ComponentDefinition {
 	static {
 		PropertyConfigurator.configureAndWatch("log4j.properties");
 	}
-
+	
+	private static final String DEPLOY = "deploy";
+	private static final String LAUNCH = "launch";
+	private static final String ENV = "env";
+	
 	private static final int PORT = 4444;
 	private static int id = 0;
 	
@@ -191,12 +196,14 @@ public class ClientRoot extends ComponentDefinition {
 	
 	private void doCommand(String cmd) {
 		logger.info("Comand:" + cmd.substring(0, 1));
-		if (cmd.startsWith("deploy")) {
-			doDeploy(cmd.substring(6));
+		if (cmd.startsWith(DEPLOY)) {
+			doDeploy(cmd.substring(DEPLOY.length()));
 			// wait for DeployResponses
-		} else if (cmd.startsWith("launch")) {
-			doLaunch(cmd.substring(6));
+		} else if (cmd.startsWith(LAUNCH)) {
+			doLaunch(cmd.substring(LAUNCH.length()));
 			// wait for LaunchResponses
+		} else if (cmd.startsWith(ENV)) {
+			doSetEnvVariable(cmd.substring(ENV.length()));
 		} else if (cmd.startsWith("X")) {
 			doShutdown();
 		} else if (cmd.equals("help")) {
@@ -208,6 +215,22 @@ public class ClientRoot extends ComponentDefinition {
 		}
 	}
 	
+	private void doSetEnvVariable(String command)
+	{
+		String[] params = command.split(",");
+		
+		if (params.length != 2)
+		{
+			logger.error("Wrong no. of params calling set environment variable");
+			return;
+		}
+		
+		for (Address dest : listHosts)
+		{
+			SetupEnvRequest evt = new SetupEnvRequest(params[0], params[1],self,dest);
+			trigger(evt, network.getPositive(Network.class));
+		}
+	}
 	private void doLaunch(String launch)
 	{
 		numLaunchResponses = 0;
@@ -241,6 +264,7 @@ public class ClientRoot extends ComponentDefinition {
 		logger.info("Available commands: deploy<uri>, launch<uri>, help, X");
 		logger.info("deploy<repoUri,groupId,artifactId,versionId>: Deploy jar file for artifact.");
 		logger.info("launch<repoUri,groupId,artifactId,versionId>: Launch artifact.");		
+		logger.info("env<ENV_VAR,VAL>: Set an environment variable.");
 		logger.info("Sn: sleeps 'n' milliseconds before the next command");
 		logger.info("help: shows this help message");
 		logger.info("X: terminates this process");
