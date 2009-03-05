@@ -11,17 +11,89 @@ import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.apache.maven.embedder.Configuration;
+import org.apache.maven.embedder.ConfigurationValidationResult;
+import org.apache.maven.embedder.DefaultConfiguration;
+import org.apache.maven.embedder.MavenEmbedder;
+import org.apache.maven.embedder.MavenEmbedderException;
+import org.apache.maven.execution.DefaultMavenExecutionRequest;
+import org.apache.maven.execution.MavenExecutionRequest;
+import org.apache.maven.execution.MavenExecutionResult;
+import org.apache.maven.project.MavenProject;
+
 import se.sics.kompics.address.Address;
 
 /**
  * Unit test for simple App.
  */
 public class RootTest extends TestCase {
+	
+	
+//	private String dummyPOM = 
+//		"<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"			xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd\">
+//			<modelVersion>4.0.0</modelVersion>
+//			<groupId>jim</groupId>
+//			<version>1.0-SNAPSHOT</version>
+//			<artifactId>jim</artifactId>
+//			<packaging>jar</packaging>
+//
+//			<dependencies>
+//				<dependency>
+//					<groupId>se.sics.kompics</groupId>
+//					<artifactId>kompics-component-java-timer</artifactId>
+//					<version>0.4.2-SNAPSHOT</version>
+//					<scope>compile</scope>
+//				</dependency>
+//			</dependencies>
+//
+//			<build>
+//				<plugins>
+//					<plugin>
+//						<groupId>org.apache.maven.plugins</groupId>
+//						<artifactId>maven-compiler-plugin</artifactId>
+//						<configuration>
+//							<encoding>UTF-8</encoding>
+//							<source>1.6</source>
+//							<target>1.6</target>
+//							<debug>true</debug>
+//							<optimize>true</optimize>
+//							<showDeprecations>true</showDeprecations>
+//						</configuration>
+//					</plugin>
+//					<plugin>
+//						<artifactId>maven-assembly-plugin</artifactId>
+//						<configuration>
+//							<descriptorRefs>
+//								<descriptorRef>jar-with-dependencies</descriptorRef>
+//							</descriptorRefs>
+//							<archive>
+//								<manifest>
+//									<mainClass>jim.main.Root</mainClass>
+//								</manifest>
+//							</archive>
+//						</configuration>
+//					</plugin>
+//					<plugin>
+//						<groupId>org.codehaus.mojo</groupId>
+//						<artifactId>exec-maven-plugin</artifactId>
+//						<configuration>
+//							<executable>java</executable>
+//		                                        <mainClass>se.sics.kompics.manual.example1.Root</mainClass>
+//						</configuration>
+//					</plugin>	
+//
+//				</plugins>
+//			</build>
+//		</project>
+//		";
+	
 	/**
 	 * Create the test case
 	 * 
@@ -39,7 +111,7 @@ public class RootTest extends TestCase {
 		return new TestSuite(RootTest.class);
 	}
 
-	/*
+	
 	public void testRoot() {
 		String mavenHome = System.getProperty("maven.home");
 		String userHome = System.getProperty("user.home");
@@ -50,6 +122,22 @@ public class RootTest extends TestCase {
 			mavenHome = new File(userHome, ".m2").getAbsolutePath();
 		}
 
+		// mvn archetype:generate -DinteractiveMode=false 
+		// -DarchetypeCatalog=http://korsakov.sics.se/maven 
+		// -DarchetypeGroupId=se.sics.kompics -DarchetypeArtifactId=kompics-archetype-p2p 
+		// -DarchetypeVersion=0.4.1-SNAPSHOT 
+		// -DgroupId=mypackage -DartifactId=myproj -Dpackage=mypackage
+		
+		// TODO add project we want to execute as dependency to dummy pom. 
+
+		String archetype = 
+		"mvn archetype:generate -DarchetypeCatalog=http://korsakov.sics.se/maven/daemon-launcher-catalog.xml" +
+		"-DarchetypeGroupId=se.sics.kompics -DarchetypeArtifactId=kompics-archetype-net " +
+		"-DarchetypeVersion=0.4.2-SNAPSHOT" +
+		"-DmainClass=se.sics.kompics.manual.example1.Root";
+		
+		String dummyPom = "";
+		
 		String projectName = "blah";
 
 		String tmpDirectory = System.getProperty("java.io.tmpdir");
@@ -141,7 +229,7 @@ public class RootTest extends TestCase {
 			}
 		}
 	}
-	*/
+
 	
 	public void testHostsFileParser()
 	{
