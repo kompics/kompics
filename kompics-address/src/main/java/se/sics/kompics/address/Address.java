@@ -95,7 +95,7 @@ public final class Address implements Serializable, Comparable<Address> {
 	 */
 	@Override
 	public final String toString() {
-		return "" + id + ip + ":" + port;
+		return id + "@" + ip.getCanonicalHostName() + ":" + port;
 	}
 
 	/*
