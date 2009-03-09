@@ -31,8 +31,6 @@ public class ChannelFilterSet {
 			filterTypesByEventType.put(eventType, filterTypes);
 		}
 		if (!filterTypes.contains(filterType)) {
-			System.err.println("ADDED " + filter.getValue() + filter.getClass());
-			
 			filterTypes.add(filterType);
 		}
 
@@ -65,9 +63,27 @@ public class ChannelFilterSet {
 	@SuppressWarnings("unchecked")
 	ArrayList<ChannelCore<?>> get(Event event) {
 		ArrayList<ChannelCore<?>> result = new ArrayList<ChannelCore<?>>();
+		Class<? extends Event> eventType = event.getClass();
 		ArrayList<Class<? extends ChannelFilter<?, ?>>> filterTypes = filterTypesByEventType
-				.get(event.getClass());
+				.get(eventType);
+
+		if (filterTypes == null) {
+			// no filter types found for this event type. we try to add this
+			// event type since it may be a sub-type of a filtered event type.
+			for (Class<? extends Event> eType : filterTypesByEventType.keySet()) {
+				if (eType.isAssignableFrom(eventType)) {
+					// I have a filter for a super-type, so I copy the filter
+					// structure for the super-type to this event type
+					filterTypes = new ArrayList<Class<? extends ChannelFilter<?, ?>>>(
+							filterTypesByEventType.get(eType));
+					filterTypesByEventType.put(eventType, filterTypes);
+					break;
+				}
+			}
+		}
+
 		if (filterTypes != null) {
+			// filterTypes may still be null for unfiltered event types
 			for (int i = 0; i < filterTypes.size(); i++) {
 				// for each type of filter
 				ChannelFilter<?, ?> f = filtersByFilterType.get(
@@ -76,12 +92,19 @@ public class ChannelFilterSet {
 
 				HashMap<Object, ArrayList<ChannelCore<?>>> channelsByValue = channelsByFilterType
 						.get(filterTypes.get(i));
-				result.addAll(channelsByValue.get(attValue));
+
+				ArrayList<ChannelCore<?>> chans = channelsByValue.get(attValue);
+				if (chans != null) {
+					result.addAll(chans);
+				}
 			}
-			System.err.println("SIZE= " + result.size() + " FOR " + event);
 		}
-		if (result.size() > 1)
+
+		if (result.size() > 0)
+			System.err.println("SIZE= " + result.size() + " FOR " + event);
+		if (result.size() > 1) {
 			return distinct(result);
+		}
 		return result;
 	}
 

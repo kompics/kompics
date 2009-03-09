@@ -118,7 +118,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 			}
 			delivered = true;
 		}
-		
+
 		ArrayList<ChannelCore<?>> channels = filteredChannels.get(event);
 		if (channels != null) {
 			for (int i = 0; i < channels.size(); i++) {
