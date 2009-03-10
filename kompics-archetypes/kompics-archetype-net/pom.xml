@@ -5,8 +5,8 @@
     <artifactId>kompics-archetypes</artifactId>
 	<version>0.4.2-SNAPSHOT</version>
   </parent>
-  <artifactId>kompics-archetype-net</artifactId>
-  <name>Kompics Net Archetype</name>
+  <artifactId>kompics-archetype-dl</artifactId>
+  <name>Kompics Daemon Launcher Archetype</name>
 
 	<build>
 		<resources>
