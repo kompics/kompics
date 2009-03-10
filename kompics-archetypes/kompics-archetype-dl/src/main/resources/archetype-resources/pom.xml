@@ -51,6 +51,7 @@
 						<goals>
 							<goal>java</goal>
 						</goals>
+						<phase>verify</phase>
 					</execution>
 				</executions>
 				<configuration>
