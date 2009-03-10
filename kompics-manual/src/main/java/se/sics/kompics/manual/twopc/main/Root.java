@@ -71,6 +71,5 @@ public final class Root {
 
 		scenario1.executeOn(topology1);
 
-		System.exit(0);
 	}
 }
