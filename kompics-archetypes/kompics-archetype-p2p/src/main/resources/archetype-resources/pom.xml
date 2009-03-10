@@ -15,7 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
-			<artifactId>distributed-system-launcher
+			<artifactId>kompics-distributed-system-launcher
 			</artifactId>
 			<version>${kompics.version}</version>
 			<scope>compile</scope>
@@ -58,11 +58,23 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>${package}.main.Application</mainClass>
+							<mainClass>${package}.main.Root</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+					<executable>java</executable>
+					<arguments>
+						<argument>-classpath</argument>
+						<classpath />
+						<argument>${package}.main.Root</argument>
+					</arguments>
+				</configuration>
+			</plugin>			
 		</plugins>
 	</build>
 </project>

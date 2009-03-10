@@ -8,7 +8,8 @@
 	<name>${artifactId}</name>
 
 	<properties>
-	<!--  To change your version of Kompics, edit the kompics.version value below -->
+	<!--  To change your version of Kompics, edit the kompics.version value below
+-->
 			<kompics.version>${kompicsVersion}</kompics.version>
 	</properties>
 

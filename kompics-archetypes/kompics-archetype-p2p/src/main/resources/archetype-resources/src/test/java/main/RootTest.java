@@ -1,5 +1,7 @@
 package ${package}.main;
 
+import ${package}.main.RootPerProcess;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -43,13 +45,13 @@ public class RootTest
 			}
 		};
 
-		Scenario scenario1 = new Scenario(ApplicationGroup.class) {
+		Scenario scenario1 = new Scenario(RootPerProcess.class) {
 			{
-				command(1, "S1000:H:S10000:X"); // 
+				command(1, "S1000:D:S10000:X"); // 
 			}
 		};
 
-		scenario1.executeOn(topology1);
+//		scenario1.executeOn(topology1);
         assertTrue( true );
     }
 }

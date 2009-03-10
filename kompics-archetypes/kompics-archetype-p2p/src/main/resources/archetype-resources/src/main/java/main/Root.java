@@ -1,78 +1,67 @@
+/**
+ * This file is part of the ID2203 course assignments kit.
+ * 
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package ${package}.main;
 
-import java.util.List;
-import java.util.Set;
+import javax.swing.UnsupportedLookAndFeelException;
 
-import ${package}.main.HelloPort;
-import ${package}.main.event.Hello;
-import ${package}.main.event.RootInit;
-import ${package}.main.event.SendHello;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
-import se.sics.kompics.Start;
-import se.sics.kompics.address.Address;
-import se.sics.kompics.network.Network;
-import se.sics.kompics.timer.Timer;
+import se.sics.kompics.launch.Scenario;
+import se.sics.kompics.launch.Topology;
 
 /**
- * The <code>Root</code> class
-
+ * The <code>Application</code> class.
+ * 
+ * @author Jim Dowling 
  */
-public final class Root extends ComponentDefinition {
+@SuppressWarnings("serial")
+public final class Root {
 
-	private static final Logger logger = LoggerFactory
-	.getLogger(Root.class);
-	
-	private Negative<HelloPort> helloPort = negative(HelloPort.class); 
-	private Positive<Network> net = positive(Network.class); 
-	private Positive<Timer> timer = positive(Timer.class);
+	/**
+	 * The main method.
+	 * Execute using:
+	 * mvn exec:java -Dexec.mainClass=[package].main.Root
+	 * 
+	 * @param args
+	 *            the arguments
+	 * @throws UnsupportedLookAndFeelException
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
+	 * @throws ClassNotFoundException
+	 */
+	public static final void main(String[] args) {
 
-	private List<Address> setNeighbours = null;
-	
-	private Address self;
-	
-	public Root() {
-		subscribe(handleStart, control);
-		subscribe(handleInit, control);
-		subscribe(handleHello, net);
-		subscribe(handleSendHello, helloPort);
+		Topology topology1 = new Topology() {
+			{
+				node(0, "127.0.0.1", 22031);
+				node(1, "127.0.0.1", 22032);
+				defaultLinks(1000,0);
+			}
+		};
+
+		Scenario scenario1 = new Scenario(RootPerProcess.class) {
+			{
+				command(0, "S1000:H1:S10000:X");
+				command(1, "S100000:X"); 
+			}
+		};
+
+		scenario1.executeOn(topology1);
+		System.exit(0);
 	}
-
-	private Handler<Start> handleStart = new Handler<Start>() {
-		public void handle(Start event) {
-			logger.info("Root started. Waiting for Commands.");
-		}
-	};  
-
-	private Handler<RootInit> handleInit = new Handler<RootInit>() {
-		public void handle(RootInit event) {
-			self = event.getSelf();
-			setNeighbours = event.getNeighbours();
-		}
-	};  
-
-	
-	private Handler<Hello> handleHello = new Handler<Hello>() {
-		public void handle(Hello event) {
-			logger.info("Hello Event Received");
-		}
-	};  
-
-	private Handler<SendHello> handleSendHello = new Handler<SendHello>() {
-		public void handle(SendHello event) {
-			int id = event.getId();
-			Address dest = setNeighbours.get(id);
-			if (dest != null)
-				trigger(new Hello(self, dest), net);
-			else
-				System.err.println("Couldn't send hello to neighbour. Couldn't find id: " + id);
-		}
-	};  
-
 }
