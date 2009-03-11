@@ -76,6 +76,7 @@ public class ProcessFrame extends JFrame {
 	private JScrollPane scrollPane;
 
 	private String processId;
+	private int idx;
 	private String command;
 
 	private int count;
@@ -98,13 +99,14 @@ public class ProcessFrame extends JFrame {
 	 *            the launcher
 	 */
 	public ProcessFrame(ProcessLauncher processLauncher, String command,
-			String processID, int count, Scenario launcher) {
+			String processID, int idx, int count, Scenario launcher) {
 		super();
 		this.processLauncher = processLauncher;
 		this.processId = processID;
 		this.command = command;
 		this.count = count;
 		this.launcher = launcher;
+		this.idx = idx;
 		initialize();
 	}
 
@@ -127,9 +129,9 @@ public class ProcessFrame extends JFrame {
 			}
 		});
 		this.addWindowFocusListener(new WindowAdapter() {
-		    public void windowGainedFocus(WindowEvent e) {
-		        getLocalInputTextField().requestFocusInWindow();
-		    }
+			public void windowGainedFocus(WindowEvent e) {
+				getLocalInputTextField().requestFocusInWindow();
+			}
 		});
 
 		if (frameSize.height > screenSize.height) {
@@ -149,8 +151,8 @@ public class ProcessFrame extends JFrame {
 		} else {
 			init6Frames(screenSize, frameSize);
 		}
-		
-		getLocalInputTextField().requestFocusInWindow(); 
+
+		getLocalInputTextField().requestFocusInWindow();
 	}
 
 	private void init2Frames(Dimension screenSize, Dimension frameSize) {
@@ -158,9 +160,9 @@ public class ProcessFrame extends JFrame {
 		HEIGHT = (screenSize.height - 20);
 		this.setSize(WIDTH, HEIGHT);
 
-		if (processId.equals("1")) {
+		if (idx == 1) {
 			setLocation(0, 0);
-		} else if (processId.equals("2")) {
+		} else if (idx == 2) {
 			setLocation(WIDTH, 0);
 		} else {
 			setLocation(WIDTH / 2, HEIGHT / 2);
@@ -172,13 +174,13 @@ public class ProcessFrame extends JFrame {
 		HEIGHT = (screenSize.height - 20) / 2;
 		this.setSize(WIDTH, HEIGHT);
 
-		if (processId.equals("1")) {
+		if (idx == 1) {
 			setLocation(0, 0);
-		} else if (processId.equals("2")) {
+		} else if (idx == 2) {
 			setLocation(WIDTH, 0);
-		} else if (processId.equals("3")) {
+		} else if (idx == 3) {
 			setLocation(0, HEIGHT);
-		} else if (processId.equals("4")) {
+		} else if (idx == 4) {
 			setLocation(WIDTH, HEIGHT);
 		} else {
 			setLocation(WIDTH / 2, HEIGHT / 2);
@@ -190,21 +192,21 @@ public class ProcessFrame extends JFrame {
 		HEIGHT = (screenSize.height - 20) / 2;
 		this.setSize(WIDTH, HEIGHT);
 
-		if (processId.equals("1")) {
+		if (idx == 1) {
 			setLocation(0, 0);
-		} else if (processId.equals("2")) {
+		} else if (idx == 2) {
 			setLocation(WIDTH, 0);
-		} else if (processId.equals("3")) {
+		} else if (idx == 3) {
 			setLocation(2 * WIDTH, 0);
-		} else if (processId.equals("4")) {
+		} else if (idx == 4) {
 			setLocation(0, HEIGHT);
-		} else if (processId.equals("5")) {
+		} else if (idx == 5) {
 			setLocation(WIDTH, HEIGHT);
-		} else if (processId.equals("6")) {
+		} else if (idx == 6) {
 			setLocation(2 * WIDTH, HEIGHT);
-		} else if (processId.equals("7")) {
+		} else if (idx == 7) {
 			setLocation(WIDTH / 2, HEIGHT / 2);
-		} else if (processId.equals("8")) {
+		} else if (idx == 8) {
 			setLocation(WIDTH * 3 / 2, HEIGHT / 2);
 		} else {
 			setLocation(WIDTH, HEIGHT / 2);
@@ -294,7 +296,7 @@ public class ProcessFrame extends JFrame {
 		}
 		return inputPanel;
 	}
-	
+
 	private JTextField getLocalInputTextField() {
 		if (localInputTextField == null) {
 			localInputTextField = new JTextField();
@@ -348,7 +350,7 @@ public class ProcessFrame extends JFrame {
 			logArea.setForeground(Color.WHITE);
 			logArea.addFocusListener(new FocusAdapter() {
 				public void focusGained(FocusEvent e) {
-			        getLocalInputTextField().requestFocusInWindow();
+					getLocalInputTextField().requestFocusInWindow();
 				}
 			});
 		}

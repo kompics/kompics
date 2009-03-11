@@ -163,12 +163,13 @@ public abstract class Scenario {
 
 		long now = System.currentTimeMillis();
 		Semaphore semaphore = new Semaphore(0, false);
+		int idx = 1;
 
 		// create process launchers
 		for (int pid : commands.keySet()) {
 			Command command = commands.get(pid);
-			ProcessLauncher processLauncher = createProcess(pid, command, now,
-					semaphore);
+			ProcessLauncher processLauncher = createProcess(pid, idx++,
+					command, now, semaphore);
 			processes.put(pid, processLauncher);
 
 			processLauncher.setProcessCount(processCount);
@@ -208,11 +209,11 @@ public abstract class Scenario {
 		}
 	}
 
-	private ProcessLauncher createProcess(int id, Command command, long now,
-			Semaphore semaphore) {
+	private ProcessLauncher createProcess(int id, int idx, Command command,
+			long now, Semaphore semaphore) {
 		ProcessLauncher processLauncher = new ProcessLauncher(classPath,
 				mainClass, "-Dlog4j.properties=log4j.properties", command, id,
-				this, now, semaphore);
+				idx, this, now, semaphore);
 		return processLauncher;
 	}
 

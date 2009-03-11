@@ -43,6 +43,7 @@ public final class ProcessLauncher extends Thread {
 	private final String mainClass;
 	private final String log4jProperties;
 	private final int id;
+	private final int idx;
 	private final Command command;
 	private final Semaphore semaphore;
 	private final AtomicBoolean busy;
@@ -71,13 +72,14 @@ public final class ProcessLauncher extends Thread {
 	 *            the launcher
 	 */
 	public ProcessLauncher(String classpath, String mainClass,
-			String log4jProperties, Command command, int id, Scenario launcher,
-			long now, Semaphore semaphore) {
+			String log4jProperties, Command command, int id, int idx,
+			Scenario launcher, long now, Semaphore semaphore) {
 		this.classpath = classpath;
 		this.mainClass = mainClass;
 		this.log4jProperties = log4jProperties;
 		this.command = command;
 		this.id = id;
+		this.idx = idx;
 		this.scenario = launcher;
 		this.semaphore = semaphore;
 		this.startedAt = now;
@@ -90,7 +92,7 @@ public final class ProcessLauncher extends Thread {
 	 * @see java.lang.Runnable#run()
 	 */
 	public final void run() {
-		mainFrame = new ProcessFrame(this, command.command, "" + id,
+		mainFrame = new ProcessFrame(this, command.command, "" + id, idx,
 				processCount, scenario);
 
 		Command cmd = command;
