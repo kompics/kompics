@@ -100,8 +100,8 @@ public class ChannelFilterSet {
 			}
 		}
 
-		if (result.size() > 0)
-			System.err.println("SIZE= " + result.size() + " FOR " + event);
+//		if (result.size() > 0)
+//			System.err.println("SIZE= " + result.size() + " FOR " + event);
 		if (result.size() > 1) {
 			return distinct(result);
 		}
