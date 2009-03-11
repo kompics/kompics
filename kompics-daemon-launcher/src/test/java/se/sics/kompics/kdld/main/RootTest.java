@@ -39,6 +39,7 @@ import org.apache.maven.settings.Server;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 
 import se.sics.kompics.address.Address;
+import se.sics.kompics.kdld.ScriptBuilder;
 
 /**
  * Unit test for simple App.
@@ -46,64 +47,7 @@ import se.sics.kompics.address.Address;
 public class RootTest extends TestCase {
 	
 	
-//	private String dummyPOM = 
-//		"<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"			xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd\">
-//			<modelVersion>4.0.0</modelVersion>
-//			<groupId>jim</groupId>
-//			<version>1.0-SNAPSHOT</version>
-//			<artifactId>jim</artifactId>
-//			<packaging>jar</packaging>
-//
-//			<dependencies>
-//				<dependency>
-//					<groupId>se.sics.kompics</groupId>
-//					<artifactId>kompics-component-java-timer</artifactId>
-//					<version>0.4.2-SNAPSHOT</version>
-//					<scope>compile</scope>
-//				</dependency>
-//			</dependencies>
-//
-//			<build>
-//				<plugins>
-//					<plugin>
-//						<groupId>org.apache.maven.plugins</groupId>
-//						<artifactId>maven-compiler-plugin</artifactId>
-//						<configuration>
-//							<encoding>UTF-8</encoding>
-//							<source>1.6</source>
-//							<target>1.6</target>
-//							<debug>true</debug>
-//							<optimize>true</optimize>
-//							<showDeprecations>true</showDeprecations>
-//						</configuration>
-//					</plugin>
-//					<plugin>
-//						<artifactId>maven-assembly-plugin</artifactId>
-//						<configuration>
-//							<descriptorRefs>
-//								<descriptorRef>jar-with-dependencies</descriptorRef>
-//							</descriptorRefs>
-//							<archive>
-//								<manifest>
-//									<mainClass>jim.main.Root</mainClass>
-//								</manifest>
-//							</archive>
-//						</configuration>
-//					</plugin>
-//					<plugin>
-//						<groupId>org.codehaus.mojo</groupId>
-//						<artifactId>exec-maven-plugin</artifactId>
-//						<configuration>
-//							<executable>java</executable>
-//		                                        <mainClass>se.sics.kompics.manual.example1.Root</mainClass>
-//						</configuration>
-//					</plugin>	
-//
-//				</plugins>
-//			</build>
-//		</project>
-//		";
-	
+
 	/**
 	 * Create the test case
 	 * 
@@ -121,95 +65,72 @@ public class RootTest extends TestCase {
 		return new TestSuite(RootTest.class);
 	}
 
-	
-	public void testRoot() {
-		String mavenHome = System.getProperty("maven.home");
-		String userHome = System.getProperty("user.home");
-		if (mavenHome != null) {
-			System.setProperty("maven.home", new File(userHome + "/.m2/")
-					.getAbsolutePath());
-		} else {
-			mavenHome = new File(userHome, ".m2").getAbsolutePath();
-		}
+	public void testRoot() throws IOException {
+//		String mavenHome = System.getProperty("maven.home");
+//		String userHome = System.getProperty("user.home");
+//		if (mavenHome != null) {
+//			System.setProperty("maven.home", new File(userHome + "/.m2/")
+//					.getAbsolutePath());
+//		} else {
+//			mavenHome = new File(userHome, ".m2").getAbsolutePath();
+//		}
 
-		//	 archetype:generate 
-		// 		-DarchetypeCatalog=http://korsakov.sics.se/maven/daemon-launcher-catalog.xml 
-		// 		-DarchetypeGroupId=se.sics.kompics 
-		//		-DarchetypeArtifactId=kompics-archetype-dl 
-		//		-DarchetypeVersion=0.4.2-SNAPSHOT 
-		//		-DgroupId=se.sics.kompics
-		//		-DartifactId=kompics-manual
-		//		-DmainClass=se.sics.kompics.manual.example1.Root 
-		//		-DversionId=0.4.2-SNAPSHOT 
-		//		-DinteractiveMode=false
-		
-
-		String groupId = "se.sics.kompics";
-		String artifactId = "kompics-manual";
-//		String version = "0.4.2-SNAPSHOT";
-		String version = "2.0-alpha-4";
-		
-
-//		String[] props = {
-//				"-DarchetypeCatalog=http://korsakov.sics.se/maven/daemon-launcher-catalog.xml",
-//				"-DarchetypeGroupId=se.sics.kompics ",
-//				"-DarchetypeArtifactId=kompics-archetype-dl " ,
-//				"-DarchetypeVersion=0.4.2-SNAPSHOT " ,
-//				"-DgroupId=" + groupId + " " ,
-//				"-DartifactId=" + artifactId + " " ,
-//				"-Dversion=" + version + " " ,
-//				"-DinteractiveMode=false " ,
-//				"-DmainClass=se.sics.kompics.manual.example1.Root"
-//				};
-		
-		String[] keyVals = {
-				"archetypeCatalog", "http://korsakov.sics.se/maven/daemon-launcher-catalog.xml",
-				"archetypeGroupId", "se.sics.kompics",
-				"archetypeArtifactId" , "kompics-archetype-dl",
-				"archetypeVersion" , "0.4.2-SNAPSHOT",
-				"groupId", groupId,
-				"artifactId", artifactId,
-				"version", version,
-				"interactiveMode" , "false",
-				"mainClass", "se.sics.kompics.manual.example1.Root",
-				};
-
-		Properties p = new Properties();
-		for (int i=0; i<keyVals.length; i+=2)
-		{
-			p.setProperty(keyVals[i],keyVals[i+1]);			
-		}
-		
-//		/home/jdowling/.m2/repository/org/apache/maven/plugins/maven-archetype-plugin/
 		
 		String tmpDirName = System.getProperty("java.io.tmpdir");
-
 		System.out.println("Tmp dir = " + tmpDirName);
-
-		System.out.println("MAVEN_HOME = " + mavenHome);
-
 		File tmpDir = new File(tmpDirName); // , artifactId
 
-		File user = new File(mavenHome, "settings.xml");
-		File global = new File("/etc/maven2/settings.xml");
-
-		System.out.println("Settings file = " + user.toString());
 		
-		// TODO specify korsakov as a localRepository, otherwise will not 
-		// find archetype.
-
-		// embedder.getUserSettingsPath( null ), embedder.getGlobalSettingsPath(), false, false, false, Boolean.FALSE 
-//		Settings settings = 
-	
-//	     Configuration configuration = new DefaultConfiguration()
-//         .setUserSettingsFile( MavenEmbedder.DEFAULT_USER_SETTINGS_FILE )
-//         .setGlobalSettingsFile( MavenEmbedder.DEFAULT_GLOBAL_SETTINGS_FILE )
-//         .setClassLoader( Thread.currentThread().getContextClassLoader() );
+//		 archetype:generate 
+// 		-DarchetypeCatalog=http://korsakov.sics.se/maven/daemon-launcher-catalog.xml 
+// 		-DarchetypeGroupId=se.sics.kompics 
+//		-DarchetypeArtifactId=kompics-archetype-dl 
+//		-DarchetypeVersion=0.4.2-SNAPSHOT 
+//		-DgroupId=se.sics.kompics
+//		-DartifactId=kompics-manual
+//		-DmainClass=se.sics.kompics.manual.example1.Root 
+//		-DversionId=0.4.2-SNAPSHOT 
+//		-DinteractiveMode=false
 		
-		List<EventMonitor> l = new ArrayList<EventMonitor>();
-		EventMonitor e = new DefaultEventMonitor(new ConsoleLogger(
-					ConsoleLogger.LEVEL_DEBUG, "logger"));
-		l.add(e);
+		ScriptBuilder sb;
+		sb = new ScriptBuilder("/tmp/", "archer.sh", "0.4.2-SNAPSHOT", "se.sics.kompics",
+				"kompics-manual", "0.4.2-SNAPSHOT", "se.sics.kompics.manual.example1.Root");
+		assertEquals(sb.runScript(),0);
+		
+		
+//		String groupId = "se.sics.kompics";
+//		String artifactId = "kompics-manual";
+//		String version = "0.4.2-SNAPSHOT";
+
+		
+//		String[] keyVals = {
+//				"archetypeCatalog", "http://korsakov.sics.se/maven/daemon-launcher-catalog.xml",
+//				"archetypeGroupId", "se.sics.kompics",
+//				"archetypeArtifactId" , "kompics-archetype-dl",
+//				"archetypeVersion" , "0.4.2-SNAPSHOT",
+//				"groupId", groupId,
+//				"artifactId", artifactId,
+//				"version", version,
+//				"interactiveMode" , "false",
+//				"mainClass", "se.sics.kompics.manual.example1.Root",
+//				};
+
+//		Properties p = new Properties();
+//		for (int i=0; i<keyVals.length; i+=2)
+//		{
+//			p.setProperty(keyVals[i],keyVals[i+1]);			
+//		}
+		
+
+//		File user = new File(mavenHome, "settings.xml");
+//		File global = new File("/etc/maven2/settings.xml");
+
+//		System.out.println("Settings file = " + user.toString());
+		
+//		List<EventMonitor> l = new ArrayList<EventMonitor>();
+//		EventMonitor e = new DefaultEventMonitor(new ConsoleLogger(
+//					ConsoleLogger.LEVEL_DEBUG, "logger"));
+//		l.add(e);
 		
 		
 		Configuration configuration = new DefaultConfiguration()
@@ -218,7 +139,7 @@ public class RootTest extends TestCase {
 				.setClassLoader(Thread.currentThread().getContextClassLoader())
 				.setGlobalSettingsFile( MavenEmbedder.DEFAULT_GLOBAL_SETTINGS_FILE )
 //				.setGlobalSettingsFile( global )
-				.setEventMonitors(l)
+//				.setEventMonitors(l)
 				;
 		// 					.setLocalRepository(kompicsRepo)
 
@@ -246,14 +167,13 @@ public class RootTest extends TestCase {
 			
 			File manualDir = new File(tmpDirName , "kompics-manual");
 			// INSTALL a jar in the local repository after downloading from sics
-			MavenExecutionRequest request1 = new DefaultMavenExecutionRequest()
+			MavenExecutionRequest requestCompile = new DefaultMavenExecutionRequest()
 //					.setBaseDirectory(tmpDir)
 					.setBaseDirectory(manualDir)
 					.setGoals(
 							Arrays
-									.asList(new String[] {"archetype:generate"}))
-//									.asList(new String[] {"compile"})) 
-					.setProperties(p)
+									.asList(new String[] {"compile"})) 
+//					.setProperties(p)
 					.setInteractiveMode(false)
 					.addEventMonitor(
 	 						new DefaultEventMonitor(new ConsoleLogger(
@@ -265,55 +185,42 @@ public class RootTest extends TestCase {
 	 				.setShowErrors(true)
 					;
 			
-//			String[] goals = {"archetype:generate"};
-//	 		MavenExecutionRequest request = new DefaultMavenExecutionRequest()
-//	 				.setBaseDirectory(manualDir).setGoals(Arrays.asList(goals))
 //	 				.setLocalRepositoryPath(
 //	 						embedder.getLocalRepository().getUrl()).setSettings(arg0)
 //	 						.setSettings(
 //	 						settings).setProperties(properties).addEventMonitor(
 //	 						new DefaultEventMonitor(new ConsoleLogger(
 //	 								ConsoleLogger.LEVEL_DISABLED, "logger")));
+// 				ArtifactRepository repo = request.addRemoteRepository();
 
+			mavenExec(requestCompile, embedder);
 			
-			// new String[] { "compile" }
-			// ArtifactRepository repo = request.addRemoteRepository();
 
-			mavenExec(request1, embedder);
-			
-//			MavenExecutionRequest request2 = new DefaultMavenExecutionRequest()
-//			.setBaseDirectory(manualDir)
-//			.setGoals(
-//					Arrays
-//							.asList(new String[] {"compile"}));
-//			mavenExec(request2, embedder);
-
-			MavenExecutionRequest request3 = new DefaultMavenExecutionRequest()
+			MavenExecutionRequest requestExec = new DefaultMavenExecutionRequest()
 			.setBaseDirectory(manualDir)
 			.setGoals(
 					Arrays
 							.asList(new String[] {"exec:exec"}));
-//			mavenExec(request3, embedder);
+			mavenExec(requestExec, embedder);
 
 
 //		} else {
-			if (!validationResult.isUserSettingsFilePresent()) {
-				System.out.println("The specific user settings file '" + user
-						+ "' is not present.");
-			} else if (!validationResult.isUserSettingsFileParses()) {
-				System.out
-						.println("Please check your settings file, it is not well formed XML.");
-			}
-			else if (! validationResult.isGlobalSettingsFilePresent())
-			{
-				System.err.println("No global settings file present");
-				
-			}
-			else
-			{
-				System.err.println("Some unknown validation problem: ");
-				
-			}
+//			if (!validationResult.isUserSettingsFilePresent()) {
+//				System.out.println("The user settings file is not present.");
+//			} else if (!validationResult.isUserSettingsFileParses()) {
+//				System.out
+//						.println("Please check your settings file, it is not well formed XML.");
+//			}
+//			else if (! validationResult.isGlobalSettingsFilePresent())
+//			{
+//				System.err.println("No global settings file present");
+//				
+//			}
+//			else
+//			{
+//				System.err.println("Some unknown validation problem: ");
+//				
+//			}
 //		}
 	}
 
@@ -510,5 +417,7 @@ public class RootTest extends TestCase {
 		}
     }
     
-  
+
 }
+
+
