@@ -70,7 +70,7 @@ public abstract class Timeout extends Response implements Cloneable {
 	 * @see se.sics.kompics.Response#clone()
 	 */
 	@Override
-	public final Object clone() throws CloneNotSupportedException {
+	public final Object clone() {
 		Timeout timeout = (Timeout) super.clone();
 		timeout.timeoutId = timeoutId;
 		return timeout;

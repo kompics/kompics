@@ -51,15 +51,13 @@ final class PeriodicTimerSignalTask extends TimerTask {
 		this.timeout = timeout;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.util.TimerTask#run()
 	 */
 	@Override
 	public final void run() {
-		try {
-			timerComponent.periodicTimeout((Timeout)timeout.clone());
-		} catch (CloneNotSupportedException e) {
-			throw new RuntimeException(e);
-		}
+		timerComponent.periodicTimeout((Timeout) timeout.clone());
 	}
 }
