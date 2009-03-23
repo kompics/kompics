@@ -27,12 +27,14 @@ package se.sics.kompics;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public abstract class Event {
+public abstract class Event implements Cloneable {
 
-	void forwardedBy(Channel<?> channel) {
-	}
-
-	Channel<?> getTopChannel() {
-		return null;
+	@Override
+	public Object clone() {
+		try {
+			return super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException("Cannot clone event", e);
+		}
 	}
 }

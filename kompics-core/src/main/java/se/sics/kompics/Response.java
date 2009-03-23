@@ -32,8 +32,8 @@ import java.util.ArrayDeque;
  */
 public abstract class Response extends Event {
 
-	private ArrayDeque<Channel<?>> channelStack;
-	
+	private ArrayDeque<RequestPathElement> requestPath;
+
 	/**
 	 * Instantiates a new response.
 	 * 
@@ -41,26 +41,22 @@ public abstract class Response extends Event {
 	 *            the request
 	 */
 	protected Response(Request request) {
-		channelStack = request.channelStack;
+		requestPath = request.requestPath;
 	}
 
-	@Override
-	void forwardedBy(Channel<?> channel) {
-		channelStack.pop();
+	RequestPathElement getTopPathElement() {
+		return requestPath.poll();
 	}
 
-	@Override
-	Channel<?> getTopChannel() {
-		return channelStack.peek();
-	}
-	
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#clone()
 	 */
 	@Override
-	public Object clone() throws CloneNotSupportedException {
+	public Object clone() {
 		Response response = (Response) super.clone();
-		response.channelStack = channelStack.clone();
+		response.requestPath = requestPath.clone();
 		return response;
 	}
 }

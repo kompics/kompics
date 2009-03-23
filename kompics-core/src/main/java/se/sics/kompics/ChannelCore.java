@@ -100,13 +100,11 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 	}
 
 	void forwardToPositive(Event event, int wid) {
-		event.forwardedBy(this);
-		positivePort.doTrigger(event, wid);
+		positivePort.doTrigger(event, wid, this);
 	}
 
 	void forwardToNegative(Event event, int wid) {
-		event.forwardedBy(this);
-		negativePort.doTrigger(event, wid);
+		negativePort.doTrigger(event, wid, this);
 	}
 
 	public Channel<P> filterPositive(ChannelFilter<?, ?> filter) {
@@ -132,5 +130,10 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 	@Override
 	public boolean equals(Object obj) {
 		return this == obj;
+	}
+	
+	@Override
+	public String toString() {
+		return portType.getClass().getCanonicalName();
 	}
 }

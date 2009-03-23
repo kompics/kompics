@@ -47,7 +47,7 @@ public final class Kompics {
 	public static void setScheduler(Scheduler sched) {
 		scheduler = sched;
 	}
-	
+
 	public static Scheduler getScheduler() {
 		return scheduler;
 	}
@@ -87,7 +87,7 @@ public final class Kompics {
 
 			// start Main
 			((PortCore<ControlPort>) mainCore.getControl()).doTrigger(
-					Start.event, 0);
+					Start.event, 0, mainCore);
 		} catch (InstantiationException e) {
 			throw new RuntimeException("Cannot create main component "
 					+ main.getCanonicalName(), e);

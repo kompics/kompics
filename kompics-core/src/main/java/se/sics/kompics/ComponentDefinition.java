@@ -65,7 +65,7 @@ public abstract class ComponentDefinition {
 	 *            the port
 	 */
 	protected final <P extends PortType> void trigger(Event event, Port<P> port) {
-		((PortCore<P>) port).doTrigger(event, core.wid);
+		((PortCore<P>) port).doTrigger(event, core.wid, core);
 	}
 
 	/**

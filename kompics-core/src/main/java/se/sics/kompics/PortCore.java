@@ -216,7 +216,19 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 	// TODO optimize trigger/subscribe
 
-	void doTrigger(Event event, int wid) {
+	void doTrigger(Event event, int wid, ChannelCore<?> channel) {
+		if (event instanceof Request) {
+			Request request = (Request) event;
+			request.pushPathElement(channel);
+		}
+		pair.deliver(event, wid);
+	}
+
+	void doTrigger(Event event, int wid, ComponentCore component) {
+		if (event instanceof Request) {
+			Request request = (Request) event;
+			request.pushPathElement(component);
+		}
 		pair.deliver(event, wid);
 	}
 
@@ -226,13 +238,37 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 		rwLock.readLock().lock();
 		try {
-			delivered = deliverToSubscribers(event, wid, eventType);
-
-			ChannelCore<?> caller = (ChannelCore<?>) event.getTopChannel();
-			if (caller != null) {
-				deliverToCallerChannel(event, wid, caller);
-				delivered = true;
+			if (event instanceof Response) {
+				Response response = (Response) event;
+				RequestPathElement pe = response.getTopPathElement();
+				if (pe != null) {
+					if (pe.isChannel()) {
+						ChannelCore<?> caller = (ChannelCore<?>) pe
+								.getChannel();
+						deliverToCallerChannel(event, wid, caller);
+						delivered = true;
+					} else {
+						ComponentCore component = pe.getComponent();
+						if (component == owner) {
+							delivered = deliverToSubscribers(event, wid,
+									eventType);
+						} else {
+							throw new RuntimeException(
+									"Response path invalid: expected to arrive to component "
+											+ component.component
+											+ " but instead arrived at "
+											+ owner.component);
+						}
+					}
+				} else {
+					// response event has arrived to request origin and was
+					// triggered further. We treat it as a regular event
+					delivered = deliverToSubscribers(event, wid, eventType);
+					delivered |= deliverToChannels(event, wid);
+				}
 			} else {
+				// event is not a response event
+				delivered = deliverToSubscribers(event, wid, eventType);
 				delivered |= deliverToChannels(event, wid);
 			}
 		} finally {
@@ -245,7 +281,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 					// forward fault to parent component
 					if (owner.parent != null) {
 						((PortCore<?>) owner.component.control).doTrigger(
-								event, wid);
+								event, wid, owner.component.getComponentCore());
 					} else {
 						owner.handleFault(((Fault) event).getFault());
 					}

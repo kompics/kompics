@@ -255,7 +255,7 @@ public class ComponentCore implements Component {
 
 	void handleFault(Throwable throwable) {
 		if (parent != null) {
-			negativeControl.doTrigger(new Fault(throwable), wid);
+			negativeControl.doTrigger(new Fault(throwable), wid, this);
 		} else {
 			StackTraceElement[] stackTrace = throwable.getStackTrace();
 			Kompics.logger.error("Kompics isolated fault: {}", throwable
@@ -283,7 +283,7 @@ public class ComponentCore implements Component {
 				for (ComponentCore child : children) {
 					// start child
 					((PortCore<ControlPort>) child.getControl()).doTrigger(
-							Start.event, wid);
+							Start.event, wid, component.getComponentCore());
 				}
 			}
 		}
@@ -296,7 +296,7 @@ public class ComponentCore implements Component {
 				for (ComponentCore child : children) {
 					// stop child
 					((PortCore<ControlPort>) child.getControl()).doTrigger(
-							Stop.event, wid);
+							Stop.event, wid, component.getComponentCore());
 				}
 			}
 		}

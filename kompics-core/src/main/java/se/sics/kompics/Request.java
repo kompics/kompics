@@ -31,15 +31,15 @@ import java.util.ArrayDeque;
  */
 public abstract class Request extends Event {
 
-	ArrayDeque<Channel<?>> channelStack = new ArrayDeque<Channel<?>>();
+	ArrayDeque<RequestPathElement> requestPath = new ArrayDeque<RequestPathElement>();
 
-	@Override
-	void forwardedBy(Channel<?> channel) {
-		channelStack.push(channel);
+	void pushPathElement(ChannelCore<?> channel) {
+		RequestPathElement pe = new RequestPathElement(channel);
+		requestPath.push(pe);
 	}
 
-	@Override
-	Channel<?> getTopChannel() {
-		return null;
+	void pushPathElement(ComponentCore component) {
+		RequestPathElement pe = new RequestPathElement(component);
+		requestPath.push(pe);
 	}
 }
