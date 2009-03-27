@@ -257,22 +257,48 @@ public class ComponentCore implements Component {
 		if (parent != null) {
 			negativeControl.doTrigger(new Fault(throwable), wid, this);
 		} else {
-			StackTraceElement[] stackTrace = throwable.getStackTrace();
-			Kompics.logger.error("Kompics isolated fault: {}", throwable
-					.getMessage());
-			do {
-				for (int i = 0; i < stackTrace.length; i++) {
-					Kompics.logger.error("    {}", stackTrace[i]);
-				}
-				throwable = throwable.getCause();
-				if (throwable != null) {
-					stackTrace = throwable.getStackTrace();
-					Kompics.logger.error("Caused by: {}: {}", throwable,
-							throwable.getMessage());
-				}
-			} while (throwable != null);
+//			StackTraceElement[] stackTrace = throwable.getStackTrace();
+//			System.err.println("Kompics isolated fault: "
+//					+ throwable.getMessage());
+//			do {
+//				for (int i = 0; i < stackTrace.length; i++) {
+//					System.err.println("    " + stackTrace[i]);
+//				}
+//				throwable = throwable.getCause();
+//				if (throwable != null) {
+//					stackTrace = throwable.getStackTrace();
+//					System.err.println("Caused by: " + throwable + ": "
+//							+ throwable.getMessage());
+//				}
+//			} while (throwable != null);
+			throw new RuntimeException("Kompics isolated fault ", throwable);
+			// System.exit(1);
 		}
 	}
+
+	// fault handler that swallows exceptions and logs them instead of printing
+	// them to stderr and halting
+
+	// void handleFault(Throwable throwable) {
+	// if (parent != null) {
+	// negativeControl.doTrigger(new Fault(throwable), wid, this);
+	// } else {
+	// StackTraceElement[] stackTrace = throwable.getStackTrace();
+	// Kompics.logger.error("Kompics isolated fault: {}", throwable
+	// .getMessage());
+	// do {
+	// for (int i = 0; i < stackTrace.length; i++) {
+	// Kompics.logger.error("    {}", stackTrace[i]);
+	// }
+	// throwable = throwable.getCause();
+	// if (throwable != null) {
+	// stackTrace = throwable.getStackTrace();
+	// Kompics.logger.error("Caused by: {}: {}", throwable,
+	// throwable.getMessage());
+	// }
+	// } while (throwable != null);
+	// }
+	// }
 
 	/* === LIFECYCLE === */
 
