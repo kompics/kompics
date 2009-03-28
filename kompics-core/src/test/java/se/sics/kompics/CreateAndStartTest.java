@@ -38,10 +38,12 @@ public class CreateAndStartTest {
 	private static class TestRoot0 extends ComponentDefinition {
 		public TestRoot0() {
 			root0Created = true;
+			semaphore0.release();
 		}
 	}
 
 	private static boolean root0Created;
+	private static Semaphore semaphore0;
 
 	/**
 	 * Tests the creation of the main component.
@@ -52,7 +54,11 @@ public class CreateAndStartTest {
 	@Test
 	public void testBootstrap() throws Exception {
 		root0Created = false;
+		semaphore0 = new Semaphore(0);
+		
 		Kompics.createAndStart(TestRoot0.class, 1);
+		
+		semaphore0.acquire();
 		assertTrue(root0Created);
 		Kompics.shutdown();
 	}
@@ -67,11 +73,13 @@ public class CreateAndStartTest {
 	private static class TestComponent1 extends ComponentDefinition {
 		public TestComponent1() {
 			comp1Created = true;
+			semaphore1.release();
 		}
 	}
 
 	private static boolean root1Created;
 	private static boolean comp1Created;
+	private static Semaphore semaphore1;
 
 	/**
 	 * Test the creation of a subcomponent.
@@ -82,7 +90,13 @@ public class CreateAndStartTest {
 	@Test
 	public void testCreate() throws Exception {
 		root1Created = false;
+		comp1Created = false;
+		semaphore1 = new Semaphore(0);
+
 		Kompics.createAndStart(TestRoot1.class, 1);
+
+		semaphore1.acquire();
+		Thread.sleep(500);
 		assertTrue(root1Created);
 		assertTrue(comp1Created);
 		Kompics.shutdown();

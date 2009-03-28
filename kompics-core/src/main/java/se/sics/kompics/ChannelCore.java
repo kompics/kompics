@@ -107,26 +107,6 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 		negativePort.doTrigger(event, wid, this);
 	}
 
-	public Channel<P> filterPositive(ChannelFilter<?, ?> filter) {
-		Class<? extends Event> eventType = filter.getEventType();
-		if (!portType.hasPositive(eventType)) {
-			throw new RuntimeException("Port type " + portType
-					+ " has no positive " + eventType);
-		}
-		positivePort.addChannelFilter(this, filter);
-		return this;
-	}
-
-	public Channel<P> filterNegative(ChannelFilter<?, ?> filter) {
-		Class<? extends Event> eventType = filter.getEventType();
-		if (!portType.hasNegative(eventType)) {
-			throw new RuntimeException("Port type " + portType
-					+ " has no negative " + eventType);
-		}
-		negativePort.addChannelFilter(this, filter);
-		return this;
-	}
-	
 	@Override
 	public boolean equals(Object obj) {
 		return this == obj;

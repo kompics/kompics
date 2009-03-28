@@ -112,7 +112,8 @@ public abstract class ComponentDefinition {
 	 * 
 	 * @return the component
 	 */
-	protected final Component create(Class<? extends ComponentDefinition> definition) {
+	protected final Component create(
+			Class<? extends ComponentDefinition> definition) {
 		return core.doCreate(definition);
 	}
 
@@ -127,8 +128,8 @@ public abstract class ComponentDefinition {
 	 * @return the channel
 	 *         < p>
 	 */
-	protected final <P extends PortType> Channel<P> connect(Positive<P> positive,
-			Negative<P> negative) {
+	protected final <P extends PortType> Channel<P> connect(
+			Positive<P> positive, Negative<P> negative) {
 		return core.doConnect(positive, negative);
 	}
 
@@ -143,20 +144,20 @@ public abstract class ComponentDefinition {
 	 * @return the channel
 	 *         < p>
 	 */
-	protected final <P extends PortType> Channel<P> connect(Negative<P> negative,
-			Positive<P> positive) {
+	protected final <P extends PortType> Channel<P> connect(
+			Negative<P> negative, Positive<P> positive) {
 		return core.doConnect(positive, negative);
 	}
 
-	// protected <E extends PortType> Channel<E> connect(Positive<E> p,
-	// Negative<E> q, ChannelFilter filter) {
-	// return null;
-	// } TODO
-	//
-	// protected <E extends PortType> Channel<E> connect(Negative<E> p,
-	// Positive<E> q, ChannelFilter filter) {
-	// return null;
-	// }
+	protected <E extends PortType> Channel<E> connect(Positive<E> positive,
+			Negative<E> negative, ChannelFilter<?, ?> filter) {
+		return core.doConnect(positive, negative, filter);
+	}
+
+	protected <E extends PortType> Channel<E> connect(Negative<E> negative,
+			Positive<E> positive, ChannelFilter<?, ?> filter) {
+		return core.doConnect(positive, negative, filter);
+	}
 
 	protected final Negative<ControlPort> control;
 

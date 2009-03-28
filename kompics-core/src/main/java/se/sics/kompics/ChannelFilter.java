@@ -33,9 +33,12 @@ public abstract class ChannelFilter<E extends Event, F> {
 
 	private final F value;
 
-	protected ChannelFilter(Class<E> eventType, F value) {
+	private final boolean positive;
+
+	protected ChannelFilter(Class<E> eventType, F value, boolean positive) {
 		this.eventType = eventType;
 		this.value = value;
+		this.positive = positive;
 	}
 
 	public abstract F getValue(E event);
@@ -46,5 +49,9 @@ public abstract class ChannelFilter<E extends Event, F> {
 
 	public final Class<E> getEventType() {
 		return eventType;
+	}
+	
+	public final boolean isPositive() {
+		return positive;
 	}
 }

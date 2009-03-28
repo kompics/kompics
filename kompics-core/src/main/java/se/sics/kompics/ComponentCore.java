@@ -187,6 +187,34 @@ public class ComponentCore implements Component {
 		return channel;
 	}
 
+	<P extends PortType> Channel<P> doConnect(Positive<P> positive,
+			Negative<P> negative, ChannelFilter<?, ?> filter) {
+		PortCore<P> positivePort = (PortCore<P>) positive;
+		PortCore<P> negativePort = (PortCore<P>) negative;
+		ChannelCore<P> channel = new ChannelCore<P>(positivePort, negativePort,
+				negativePort.getPortType());
+
+		Class<? extends Event> eventType = filter.getEventType();
+		P portType = positivePort.getPortType();
+		if (filter.isPositive()) {
+			if (!portType.hasPositive(eventType)) {
+				throw new RuntimeException("Port type " + portType
+						+ " has no positive " + eventType);
+			}
+			positivePort.addChannel(channel, filter);
+			negativePort.addChannel(channel);
+		} else {
+			if (!portType.hasNegative(eventType)) {
+				throw new RuntimeException("Port type " + portType
+						+ " has no negative " + eventType);
+			}
+			positivePort.addChannel(channel);
+			negativePort.addChannel(channel, filter);
+		}
+
+		return channel;
+	}
+
 	/* === SCHEDULING === */
 
 	private AtomicInteger workCount = new AtomicInteger(0);
@@ -257,20 +285,20 @@ public class ComponentCore implements Component {
 		if (parent != null) {
 			negativeControl.doTrigger(new Fault(throwable), wid, this);
 		} else {
-//			StackTraceElement[] stackTrace = throwable.getStackTrace();
-//			System.err.println("Kompics isolated fault: "
-//					+ throwable.getMessage());
-//			do {
-//				for (int i = 0; i < stackTrace.length; i++) {
-//					System.err.println("    " + stackTrace[i]);
-//				}
-//				throwable = throwable.getCause();
-//				if (throwable != null) {
-//					stackTrace = throwable.getStackTrace();
-//					System.err.println("Caused by: " + throwable + ": "
-//							+ throwable.getMessage());
-//				}
-//			} while (throwable != null);
+			// StackTraceElement[] stackTrace = throwable.getStackTrace();
+			// System.err.println("Kompics isolated fault: "
+			// + throwable.getMessage());
+			// do {
+			// for (int i = 0; i < stackTrace.length; i++) {
+			// System.err.println("    " + stackTrace[i]);
+			// }
+			// throwable = throwable.getCause();
+			// if (throwable != null) {
+			// stackTrace = throwable.getStackTrace();
+			// System.err.println("Caused by: " + throwable + ": "
+			// + throwable.getMessage());
+			// }
+			// } while (throwable != null);
 			throw new RuntimeException("Kompics isolated fault ", throwable);
 			// System.exit(1);
 		}

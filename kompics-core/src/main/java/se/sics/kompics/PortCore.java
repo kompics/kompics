@@ -96,12 +96,24 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		}
 	}
 
-	void addChannelFilter(ChannelCore<P> channel, ChannelFilter<?, ?> filter) {
+	void addChannel(ChannelCore<P> channel, ChannelFilter<?, ?> filter) {
+		PortCore<P> remotePort = (positive ? channel.getNegativePort()
+				: channel.getPositivePort());
+
+		if (remotePorts.contains(remotePort)) {
+			throw new RuntimeException((positive ? "Positive " : "Negative ")
+					+ portType.getClass().getCanonicalName() + " of "
+					+ pair.owner.component + " is already connected to "
+					+ (!positive ? "positive " : "negative ")
+					+ portType.getClass().getCanonicalName() + " of "
+					+ remotePort.pair.owner.component);
+		}
+
 		rwLock.writeLock().lock();
 		try {
-			// channels.contains(channel)
-			unfilteredChannels.remove(channel);
+			allChannels.add(channel);
 			filteredChannels.addChannelFilter(channel, filter);
+			remotePorts.add(remotePort);
 		} finally {
 			rwLock.writeLock().unlock();
 		}
