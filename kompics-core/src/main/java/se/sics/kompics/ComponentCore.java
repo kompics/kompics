@@ -174,6 +174,11 @@ public class ComponentCore implements Component {
 		}
 	}
 
+	void doDestroy(Component component) {
+		ComponentCore child = (ComponentCore) component;
+		children.remove(child);
+	}
+
 	<P extends PortType> Channel<P> doConnect(Positive<P> positive,
 			Negative<P> negative) {
 		PortCore<P> positivePort = (PortCore<P>) positive;
@@ -213,6 +218,15 @@ public class ComponentCore implements Component {
 		}
 
 		return channel;
+	}
+
+	<P extends PortType> void doDisconnect(Positive<P> positive,
+			Negative<P> negative) {
+		PortCore<P> positivePort = (PortCore<P>) positive;
+		PortCore<P> negativePort = (PortCore<P>) negative;
+
+		positivePort.removeChannelTo(negativePort);
+		negativePort.removeChannelTo(positivePort);
 	}
 
 	/* === SCHEDULING === */
@@ -355,4 +369,10 @@ public class ComponentCore implements Component {
 			}
 		}
 	};
+
+	@Override
+	public boolean equals(Object obj) {
+		return this == obj;
+	}
 }
+

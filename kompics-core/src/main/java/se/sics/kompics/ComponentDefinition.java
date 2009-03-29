@@ -117,6 +117,10 @@ public abstract class ComponentDefinition {
 		return core.doCreate(definition);
 	}
 
+	protected final void destroy(Component component) {
+		core.doDestroy(component);
+	}
+
 	/**
 	 * Connect.
 	 * 
@@ -149,14 +153,24 @@ public abstract class ComponentDefinition {
 		return core.doConnect(positive, negative);
 	}
 
-	protected <E extends PortType> Channel<E> connect(Positive<E> positive,
-			Negative<E> negative, ChannelFilter<?, ?> filter) {
+	protected <P extends PortType> Channel<P> connect(Positive<P> positive,
+			Negative<P> negative, ChannelFilter<?, ?> filter) {
 		return core.doConnect(positive, negative, filter);
 	}
 
-	protected <E extends PortType> Channel<E> connect(Negative<E> negative,
-			Positive<E> positive, ChannelFilter<?, ?> filter) {
+	protected <P extends PortType> Channel<P> connect(Negative<P> negative,
+			Positive<P> positive, ChannelFilter<?, ?> filter) {
 		return core.doConnect(positive, negative, filter);
+	}
+
+	protected final <P extends PortType> void disconnect(Negative<P> negative,
+			Positive<P> positive) {
+		core.doDisconnect(positive, negative);
+	}
+
+	protected final <P extends PortType> void disconnect(Positive<P> positive,
+			Negative<P> negative) {
+		core.doDisconnect(positive, negative);
 	}
 
 	protected final Negative<ControlPort> control;

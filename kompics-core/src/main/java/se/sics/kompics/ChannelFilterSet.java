@@ -11,10 +11,15 @@ public class ChannelFilterSet {
 
 	private HashMap<Class<? extends ChannelFilter<?, ?>>, HashMap<Object, ArrayList<ChannelCore<?>>>> channelsByFilterType;
 
+	// for removal
+	private HashMap<ChannelCore<?>, ChannelFilter<?, ?>> filtersByChannel;
+
 	public ChannelFilterSet() {
 		filterTypesByEventType = new HashMap<Class<? extends Event>, ArrayList<Class<? extends ChannelFilter<?, ?>>>>();
 		filtersByFilterType = new HashMap<Class<? extends ChannelFilter<?, ?>>, ArrayList<ChannelFilter<?, ?>>>();
 		channelsByFilterType = new HashMap<Class<? extends ChannelFilter<?, ?>>, HashMap<Object, ArrayList<ChannelCore<?>>>>();
+
+		filtersByChannel = new HashMap<ChannelCore<?>, ChannelFilter<?, ?>>();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -58,6 +63,51 @@ public class ChannelFilterSet {
 			channelsByValue.put(filter.getValue(), channels);
 		}
 		channels.add(channel);
+
+		// keep it in filtersByChannel for removal
+		filtersByChannel.put(channel, filter);
+	}
+
+	@SuppressWarnings("unchecked")
+	void removeChannel(ChannelCore<?> channel) {
+		ChannelFilter<?, ?> filter = filtersByChannel.get(channel);
+		if (filter == null) {
+			// not a filtered channel
+			return;
+		}
+
+		filtersByChannel.remove(channel);
+
+		// undo add
+		Class<? extends Event> eventType = filter.getEventType();
+		Class<? extends ChannelFilter<?, ?>> filterType = (Class<? extends ChannelFilter<?, ?>>) filter
+				.getClass();
+
+		ArrayList<Class<? extends ChannelFilter<?, ?>>> filterTypes = filterTypesByEventType
+				.get(eventType);
+
+		// remove filter
+		ArrayList<ChannelFilter<?, ?>> filters = filtersByFilterType
+				.get(filterType);
+		filters.remove(filter);
+		if (filters.size() == 0) {
+			filtersByFilterType.remove(filterType);
+		}
+
+		// remove channel
+		HashMap<Object, ArrayList<ChannelCore<?>>> channelsByValue = channelsByFilterType
+				.get(filterType);
+		ArrayList<ChannelCore<?>> channels = channelsByValue.get(filter
+				.getValue());
+
+		channels.remove(channel);
+		if (channels.isEmpty()) {
+			channelsByValue.remove(filter.getValue());
+			if (channelsByValue.isEmpty()) {
+				channelsByFilterType.remove(filterType);
+				filterTypes.remove(filterType);
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -100,8 +150,8 @@ public class ChannelFilterSet {
 			}
 		}
 
-//		if (result.size() > 0)
-//			System.err.println("SIZE= " + result.size() + " FOR " + event);
+		// if (result.size() > 0)
+		// System.err.println("SIZE= " + result.size() + " FOR " + event);
 		if (result.size() > 1) {
 			return distinct(result);
 		}
