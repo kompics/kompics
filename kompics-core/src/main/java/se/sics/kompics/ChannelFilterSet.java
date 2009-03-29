@@ -6,13 +6,12 @@ import java.util.HashMap;
 public class ChannelFilterSet {
 
 	private HashMap<Class<? extends Event>, ArrayList<Class<? extends ChannelFilter<?, ?>>>> filterTypesByEventType;
-
 	private HashMap<Class<? extends ChannelFilter<?, ?>>, ArrayList<ChannelFilter<?, ?>>> filtersByFilterType;
-
 	private HashMap<Class<? extends ChannelFilter<?, ?>>, HashMap<Object, ArrayList<ChannelCore<?>>>> channelsByFilterType;
 
 	// for removal
 	private HashMap<ChannelCore<?>, ChannelFilter<?, ?>> filtersByChannel;
+	private HashMap<Class<? extends Event>, ArrayList<Class<? extends Event>>> inheritedFilters;
 
 	public ChannelFilterSet() {
 		filterTypesByEventType = new HashMap<Class<? extends Event>, ArrayList<Class<? extends ChannelFilter<?, ?>>>>();
@@ -20,6 +19,7 @@ public class ChannelFilterSet {
 		channelsByFilterType = new HashMap<Class<? extends ChannelFilter<?, ?>>, HashMap<Object, ArrayList<ChannelCore<?>>>>();
 
 		filtersByChannel = new HashMap<ChannelCore<?>, ChannelFilter<?, ?>>();
+		inheritedFilters = new HashMap<Class<? extends Event>, ArrayList<Class<? extends Event>>>();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -106,6 +106,18 @@ public class ChannelFilterSet {
 			if (channelsByValue.isEmpty()) {
 				channelsByFilterType.remove(filterType);
 				filterTypes.remove(filterType);
+				if (filterTypes.isEmpty()) {
+					filterTypesByEventType.remove(eventType);
+
+					ArrayList<Class<? extends Event>> inheritants = inheritedFilters
+							.get(eventType);
+					if (inheritants != null) {
+						for (Class<? extends Event> eType : inheritants) {
+							filterTypesByEventType.remove(eType);
+						}
+						inheritedFilters.remove(eventType);
+					}
+				}
 			}
 		}
 	}
@@ -127,6 +139,14 @@ public class ChannelFilterSet {
 					filterTypes = new ArrayList<Class<? extends ChannelFilter<?, ?>>>(
 							filterTypesByEventType.get(eType));
 					filterTypesByEventType.put(eventType, filterTypes);
+
+					ArrayList<Class<? extends Event>> inheritants = inheritedFilters
+							.get(eType);
+					if (inheritants == null) {
+						inheritants = new ArrayList<Class<? extends Event>>();
+						inheritedFilters.put(eType, inheritants);
+					}
+					inheritants.add(eventType);
 					break;
 				}
 			}
