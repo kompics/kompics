@@ -35,6 +35,8 @@ public class CancelTimeout extends Event {
 
 	private UUID timeoutId;
 
+	public StackTraceElement[] stackTrace;
+	
 	/**
 	 * Instantiates a new cancel timeout.
 	 * 
@@ -43,6 +45,7 @@ public class CancelTimeout extends Event {
 	 */
 	public CancelTimeout(UUID timeoutId) {
 		this.timeoutId = timeoutId;
+		stackTrace = Thread.currentThread().getStackTrace();
 	}
 
 	/**
@@ -52,5 +55,9 @@ public class CancelTimeout extends Event {
 	 */
 	public final UUID getTimeoutId() {
 		return timeoutId;
+	}
+	
+	public StackTraceElement[] getStackTrace() {
+		return stackTrace;
 	}
 }
