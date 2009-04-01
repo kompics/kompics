@@ -24,9 +24,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-// TODO: Auto-generated Javadoc
 /**
  * The <code>ComponentCore</code> class.
  * 
@@ -52,6 +53,10 @@ public class ComponentCore implements Component {
 
 	private Scheduler scheduler;
 
+	boolean initSubscriptionInConstructor;
+	AtomicBoolean initDone;
+	private AtomicReference<Init> firstInitEvent;
+
 	int wid;
 
 	/**
@@ -65,6 +70,9 @@ public class ComponentCore implements Component {
 		this.negativePorts = new HashMap<Class<? extends PortType>, PortCore<? extends PortType>>();
 		this.parent = parentThreadLocal.get();
 		this.component = componentDefinition;
+		this.initSubscriptionInConstructor = false;
+		this.initDone = new AtomicBoolean(false);
+		this.firstInitEvent = new AtomicReference<Init>(null);
 	}
 
 	/*
@@ -158,6 +166,11 @@ public class ComponentCore implements Component {
 			parentThreadLocal.set(this);
 			component = definition.newInstance();
 			ComponentCore child = component.getComponentCore();
+
+			if (!child.initSubscriptionInConstructor) {
+				child.initDone.set(true);
+			}
+
 			child.setScheduler(scheduler);
 			if (children == null) {
 				children = new LinkedList<ComponentCore>();
@@ -245,21 +258,61 @@ public class ComponentCore implements Component {
 		this.scheduler = scheduler;
 	}
 
-	void eventReceived(PortCore<?> port, int wid) {
-		readyPorts.offer(port);
+	void eventReceived(PortCore<?> port, int wid, Init initEvent) {
+		// upon the first event received, we schedule the component. However, if
+		// the component needs to execute an Init event first, we don't schedule
+		// the component until it receives and handles an Init event.
+		if (initDone.get()) {
+			// default case
+			readyPorts.offer(port);
+			int wc = workCount.getAndIncrement();
+			if (wc == 0) {
+				if (scheduler == null)
+					scheduler = Kompics.getScheduler();
+				scheduler.schedule(this, wid);
+			}
+		} else {
+			// init is not yet done. we only schedule this component for
+			// execution if the received event is an Init event
+			if (initEvent != null) {
+				if (scheduler == null)
+					scheduler = Kompics.getScheduler();
 
-		int wc = workCount.getAndIncrement();
-		// System.err.println(component + ".workReceived: " + wc + " -> " + (wc
-		// + 1));
-		if (wc == 0) {
-			if (scheduler == null)
-				scheduler = Kompics.getScheduler();
-			scheduler.schedule(this, wid);
+				firstInitEvent.set(initEvent);
+				scheduler.schedule(this, wid);
+			} else {
+				// we received some other event before Init
+				readyPorts.offer(port);
+				workCount.getAndIncrement();
+			}
 		}
 	}
 
 	void execute(int wid) {
 		this.wid = wid;
+
+		// if init is not yet done it means we were scheduled to run the first
+		// Init event. We do not touch readyPorts and workCount.
+		if (!initDone.get()) {
+			ArrayList<Handler<?>> handlers = negativeControl
+					.getSubscribedHandlers(firstInitEvent.get());
+			if (handlers != null) {
+				for (int i = 0; i < handlers.size(); i++) {
+					executeEvent(firstInitEvent.get(), handlers.get(i));
+				}
+			}
+			initDone.set(true);
+
+			// if other events arrived before the Init we schedule the component
+			// to execute them
+			if (workCount.get() > 0) {
+				if (scheduler == null)
+					scheduler = Kompics.getScheduler();
+				scheduler.schedule(this, wid);
+			}
+			return;
+		}
+
 		// 1. pick a port with a non-empty event queue
 		// 2. execute the first event
 		// 3. make component ready
@@ -276,8 +329,6 @@ public class ComponentCore implements Component {
 		}
 
 		int wc = workCount.decrementAndGet();
-		// System.err.println(component + ".schedule: " + (wc + 1) + " -> " +
-		// wc);
 		if (wc > 0) {
 			if (scheduler == null)
 				scheduler = Kompics.getScheduler();
@@ -375,4 +426,3 @@ public class ComponentCore implements Component {
 		return this == obj;
 	}
 }
-

@@ -35,7 +35,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
-	private boolean positive;
+	private boolean isPositive;
+
+	private boolean isControlPort;
 
 	private P portType;
 
@@ -56,7 +58,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 	private HashMap<PortCore<P>, ChannelCore<P>> remotePorts;
 
 	PortCore(boolean positive, P portType, ComponentCore owner) {
-		this.positive = positive;
+		this.isPositive = positive;
 		this.portType = portType;
 		this.rwLock = new ReentrantReadWriteLock();
 		this.subs = new HashMap<Class<? extends Event>, ArrayList<Handler<?>>>();
@@ -65,6 +67,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		this.filteredChannels = new ChannelFilterSet();
 		this.remotePorts = new HashMap<PortCore<P>, ChannelCore<P>>();
 		this.owner = owner;
+		this.isControlPort = (portType instanceof ControlPort);
 	}
 
 	void setPair(PortCore<P> pair) {
@@ -72,14 +75,14 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 	}
 
 	void addChannel(ChannelCore<P> channel) {
-		PortCore<P> remotePort = (positive ? channel.getNegativePort()
+		PortCore<P> remotePort = (isPositive ? channel.getNegativePort()
 				: channel.getPositivePort());
 
 		if (remotePorts.containsKey(remotePort)) {
-			throw new RuntimeException((positive ? "Positive " : "Negative ")
+			throw new RuntimeException((isPositive ? "Positive " : "Negative ")
 					+ portType.getClass().getCanonicalName() + " of "
 					+ pair.owner.component + " is already connected to "
-					+ (!positive ? "positive " : "negative ")
+					+ (!isPositive ? "positive " : "negative ")
 					+ portType.getClass().getCanonicalName() + " of "
 					+ remotePort.pair.owner.component);
 		}
@@ -95,14 +98,14 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 	}
 
 	void addChannel(ChannelCore<P> channel, ChannelFilter<?, ?> filter) {
-		PortCore<P> remotePort = (positive ? channel.getNegativePort()
+		PortCore<P> remotePort = (isPositive ? channel.getNegativePort()
 				: channel.getPositivePort());
 
 		if (remotePorts.containsKey(remotePort)) {
-			throw new RuntimeException((positive ? "Positive " : "Negative ")
+			throw new RuntimeException((isPositive ? "Positive " : "Negative ")
 					+ portType.getClass().getCanonicalName() + " of "
 					+ pair.owner.component + " is already connected to "
-					+ (!positive ? "positive " : "negative ")
+					+ (!isPositive ? "positive " : "negative ")
 					+ portType.getClass().getCanonicalName() + " of "
 					+ remotePort.pair.owner.component);
 		}
@@ -119,10 +122,10 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 	void removeChannelTo(PortCore<P> remotePort) {
 		if (!remotePorts.containsKey(remotePort)) {
-			throw new RuntimeException((positive ? "Positive " : "Negative ")
+			throw new RuntimeException((isPositive ? "Positive " : "Negative ")
 					+ portType.getClass().getCanonicalName() + " of "
 					+ pair.owner.component + " is not connected to "
-					+ (!positive ? "positive " : "negative ")
+					+ (!isPositive ? "positive " : "negative ")
 					+ portType.getClass().getCanonicalName() + " of "
 					+ remotePort.pair.owner.component);
 		}
@@ -142,7 +145,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 	private boolean deliverToChannels(Event event, int wid) {
 		boolean delivered = false;
 		for (ChannelCore<?> channel : unfilteredChannels) {
-			if (positive) {
+			if (isPositive) {
 				channel.forwardToNegative(event, wid);
 			} else {
 				channel.forwardToPositive(event, wid);
@@ -153,7 +156,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		ArrayList<ChannelCore<?>> channels = filteredChannels.get(event);
 		if (channels != null) {
 			for (int i = 0; i < channels.size(); i++) {
-				if (positive) {
+				if (isPositive) {
 					channels.get(i).forwardToNegative(event, wid);
 				} else {
 					channels.get(i).forwardToPositive(event, wid);
@@ -172,11 +175,17 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		}
 
 		// check that the port type carries the event type in this direction
-		if (!portType.hasEvent(positive, eventType)) {
+		if (!portType.hasEvent(isPositive, eventType)) {
 			throw new RuntimeException("Cannot subscribe handler " + handler
-					+ " to " + (positive ? "positive " : "negative ")
+					+ " to " + (isPositive ? "positive " : "negative ")
 					+ portType.getClass().getCanonicalName() + " for "
 					+ eventType.getCanonicalName() + " events.");
+		}
+
+		if (isControlPort && Init.class.isAssignableFrom(eventType)) {
+			// we are dealing with a subscription for an Init event on a control
+			// port. Mark that the owner component needs to handle Init first.
+			owner.initSubscriptionInConstructor = true;
 		}
 
 		rwLock.writeLock().lock();
@@ -209,7 +218,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 			if (handlers == null) {
 				throw new RuntimeException("Handler " + handler
 						+ " is not subscribed to "
-						+ (positive ? "positive " : "negative ")
+						+ (isPositive ? "positive " : "negative ")
 						+ portType.getClass().getCanonicalName() + " for "
 						+ eventType.getCanonicalName() + " events.");
 			}
@@ -217,7 +226,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 			if (!handlers.remove(handler)) {
 				throw new RuntimeException("Handler " + handler
 						+ " is not subscribed to "
-						+ (positive ? "positive " : "negative ")
+						+ (isPositive ? "positive " : "negative ")
 						+ portType.getClass().getCanonicalName() + " for "
 						+ eventType.getCanonicalName() + " events.");
 			}
@@ -307,7 +316,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		}
 
 		if (!delivered) {
-			if (portType.hasEvent(positive, eventType)) {
+			if (portType.hasEvent(isPositive, eventType)) {
 				if (event instanceof Fault) {
 					// forward fault to parent component
 					if (owner.parent != null) {
@@ -329,7 +338,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 				// error, event type doesn't flow on this port in this direction
 				throw new RuntimeException(eventType.getCanonicalName()
 						+ " events cannot be triggered on "
-						+ (!positive ? "positive " : "negative ")
+						+ (!isPositive ? "positive " : "negative ")
 						+ portType.getClass().getCanonicalName());
 			}
 		}
@@ -343,7 +352,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		// caller.getPositivePort().pair.owner.component,
 		// caller.getNegativePort().pair.owner.component,
 		// caller.getNegativePort().owner.component, event });
-		if (positive) {
+		if (isPositive) {
 			caller.forwardToNegative(event, wid);
 		} else {
 			caller.forwardToPositive(event, wid);
@@ -365,7 +374,11 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 	private void doDeliver(Event event, int wid) {
 		eventQueue.offer(event);
-		owner.eventReceived(this, wid);
+		if (isControlPort && event instanceof Init) {
+			owner.eventReceived(this, wid, (Init) event);
+		} else {
+			owner.eventReceived(this, wid, null);
+		}
 	}
 
 	Event pickFirstEvent() {
@@ -407,7 +420,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 	public P getPortType() {
 		return portType;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		return this == obj;
