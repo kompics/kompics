@@ -4,32 +4,32 @@
 	<parent>
 		<groupId>se.sics.kompics</groupId>
 		<artifactId>kompics-parent-pom</artifactId>
-		<version>0.4.2-SNAPSHOT</version>
+		<version>0.4.2</version>
 	</parent>
 
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-component-mina-network</artifactId>
 	<packaging>jar</packaging>
 	<name>MinaNetwork Kompics Component</name>
-	<version>0.4.2-SNAPSHOT</version>
+	<version>0.4.2</version>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2-SNAPSHOT</version>
+			<version>0.4.2</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-address</artifactId>
-			<version>0.4.2-SNAPSHOT</version>
+			<version>0.4.2</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-port-network</artifactId>
-			<version>0.4.2-SNAPSHOT</version>
+			<version>0.4.2</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
