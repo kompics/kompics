@@ -318,12 +318,12 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 					}
 				} else {
 					// warning, dropped event
-					Kompics.logger.warn("Warning: {} event dropped by {} {} in"
-							+ " component {}", new Object[] {
-							eventType.getCanonicalName(),
-							(positive ? "positive " : "negative "),
-							portType.getClass().getCanonicalName(),
-							owner.component });
+					// Kompics.logger.warn("Warning: {} event dropped by {} {} in"
+					// + " component {}", new Object[] {
+					// eventType.getCanonicalName(),
+					// (positive ? "positive " : "negative "),
+					// portType.getClass().getCanonicalName(),
+					// owner.component });
 				}
 			} else {
 				// error, event type doesn't flow on this port in this direction
@@ -339,10 +339,10 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 	// corresponding request event came (called holding read lock)
 	private void deliverToCallerChannel(Event event, int wid,
 			ChannelCore<?> caller) {
-		Kompics.logger.debug("Caller +{}-{} in {} fwd {}", new Object[] {
-				caller.getPositivePort().pair.owner.component,
-				caller.getNegativePort().pair.owner.component,
-				caller.getNegativePort().owner.component, event });
+		// Kompics.logger.debug("Caller +{}-{} in {} fwd {}", new Object[] {
+		// caller.getPositivePort().pair.owner.component,
+		// caller.getNegativePort().pair.owner.component,
+		// caller.getNegativePort().owner.component, event });
 		if (positive) {
 			caller.forwardToNegative(event, wid);
 		} else {
