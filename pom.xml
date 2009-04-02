@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-parent-pom</artifactId>
 	<packaging>pom</packaging>
-	<version>0.4.3-SNAPSHOT</version>
+	<version>0.4.2.1</version>
 
 	<name>Kompics</name>
 	<url>http://kompics.sics.se</url>
@@ -222,9 +222,9 @@ by putting together protocols programmed as event-driven components.
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/trunk</connection>
-		<url>http://kompics.sics.se/trac/browser/trunk</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk</developerConnection>
+		<connection>scm:svn:svn://small.sics.se/kompics/tags/kompics-parent-pom-0.4.2.1</connection>
+		<url>http://kompics.sics.se/trac/browser/tags/kompics-parent-pom-0.4.2.1</url>
+		<developerConnection>scm:svn:svn://small.sics.se/kompics/tags/kompics-parent-pom-0.4.2.1</developerConnection>
 	</scm>
 
 	<distributionManagement>
