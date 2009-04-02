@@ -4,9 +4,23 @@
 		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
-        <release version="0.4.2-SNAPSHOT" date="2009-02-08" description="Snapshot release towards 0.4.2">
+        <release version="0.4.2" date="2009-04-02" description="Maintenance release">
+            <action dev="cosmin" type="fix">
+[Kompics core]: components with init subscriptions in their constructor execute Init before any other event.
+            </action>
+        </release>
+        <release version="0.4.2" date="2009-04-01" description="Maintenance release">
+            <action dev="cosmin" type="fix">
+[Kompics core]: halt execution on unhandled exception.
+            </action>
             <action dev="cosmin" type="add">
 [Kompics core]: added support for pluggable schedulers.
+            </action>
+            <action dev="cosmin" type="add">
+[Kompics core]: added channel filters.
+            </action>
+            <action dev="cosmin" type="add">
+[Kompics core]: added destroy() and disconnect().
             </action>
             <action dev="cosmin" type="update">
 [DistributedSystemLauncher]: added an input to all field to the process frame.
