@@ -130,7 +130,7 @@ by putting together protocols programmed as event-driven components.
 					<locale>en_US</locale>
 				</configuration>
 			</plugin>
-
+<!--
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>findbugs-maven-plugin</artifactId>
@@ -139,7 +139,7 @@ by putting together protocols programmed as event-driven components.
 					<linkXref>true</linkXref>
 				</configuration>
 			</plugin>
-
+ -->
 			<plugin>
 				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
