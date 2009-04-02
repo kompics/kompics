@@ -55,9 +55,9 @@ public class CreateAndStartTest {
 	public void testBootstrap() throws Exception {
 		root0Created = false;
 		semaphore0 = new Semaphore(0);
-		
+
 		Kompics.createAndStart(TestRoot0.class, 1);
-		
+
 		semaphore0.acquire();
 		assertTrue(root0Created);
 		Kompics.shutdown();

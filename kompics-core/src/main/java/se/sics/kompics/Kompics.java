@@ -85,6 +85,10 @@ public final class Kompics {
 			ComponentCore mainCore = mainComponent.getComponentCore();
 			mainCore.setScheduler(scheduler);
 
+			if (!mainCore.initSubscriptionInConstructor) {
+				mainCore.initDone.set(true);
+			}
+
 			// start Main
 			((PortCore<ControlPort>) mainCore.getControl()).doTrigger(
 					Start.event, 0, mainCore);

@@ -37,14 +37,14 @@ public class ChannelRequestResponseTest {
 			subscribe(testResponse, component1.getPositive(TestPort.class));
 
 			TestRequest request = new TestRequest(12);
-			System.err.println("Root triggered request " + request.id);
+			// System.err.println("Root triggered request " + request.id);
 
 			trigger(request, component1.getPositive(TestPort.class));
 		}
 
 		Handler<TestResponse> testResponse = new Handler<TestResponse>() {
 			public void handle(TestResponse event) {
-				System.err.println("Root got response " + event.id);
+				// System.err.println("Root got response " + event.id);
 				semaphore.release(1);
 			}
 		};
@@ -58,8 +58,8 @@ public class ChannelRequestResponseTest {
 			child = create(TestComponent2.class);
 
 			connect(testPort, child.getPositive(TestPort.class));
-			
-//			trigger(new TestRequest(13), child.getPositive(TestPort.class));
+
+			// trigger(new TestRequest(13), child.getPositive(TestPort.class));
 		}
 	}
 
@@ -72,9 +72,9 @@ public class ChannelRequestResponseTest {
 
 		Handler<TestRequest> testRequest = new Handler<TestRequest>() {
 			public void handle(TestRequest event) {
-				
-				System.err.println("Handling request " + event.id);
-				
+
+				// System.err.println("Handling request " + event.id);
+
 				TestResponse response = new TestResponse(event, event.id);
 				trigger(response, testPort);
 			}

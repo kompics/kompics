@@ -35,16 +35,16 @@ public class HandlerRequestResponseTest {
 			Component component1 = create(TestComponent1.class);
 
 			subscribe(testResponse, component1.getPositive(TestPort.class));
-			
+
 			TestRequest request = new TestRequest(12);
-			System.err.println("Root triggered request " + request.id);
+			// System.err.println("Root triggered request " + request.id);
 
 			trigger(request, component1.getPositive(TestPort.class));
 		}
 
 		Handler<TestResponse> testResponse = new Handler<TestResponse>() {
 			public void handle(TestResponse event) {
-				System.err.println("Root got response " + event.id);
+				// System.err.println("Root got response " + event.id);
 				semaphore.release(1);
 			}
 		};

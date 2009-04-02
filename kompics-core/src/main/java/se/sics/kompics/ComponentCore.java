@@ -54,8 +54,8 @@ public class ComponentCore implements Component {
 	private Scheduler scheduler;
 
 	boolean initSubscriptionInConstructor;
-	AtomicBoolean initDone;
-	private AtomicReference<Init> firstInitEvent;
+	AtomicBoolean initDone, initReceived;
+	private AtomicReference<Event> firstInitEvent;
 
 	int wid;
 
@@ -72,7 +72,8 @@ public class ComponentCore implements Component {
 		this.component = componentDefinition;
 		this.initSubscriptionInConstructor = false;
 		this.initDone = new AtomicBoolean(false);
-		this.firstInitEvent = new AtomicReference<Init>(null);
+		this.initReceived = new AtomicBoolean(false);
+		this.firstInitEvent = new AtomicReference<Event>(null);
 	}
 
 	/*
@@ -258,7 +259,7 @@ public class ComponentCore implements Component {
 		this.scheduler = scheduler;
 	}
 
-	void eventReceived(PortCore<?> port, int wid, Init initEvent) {
+	void eventReceived(PortCore<?> port, int wid, boolean isInitEvent) {
 		// upon the first event received, we schedule the component. However, if
 		// the component needs to execute an Init event first, we don't schedule
 		// the component until it receives and handles an Init event.
@@ -274,16 +275,25 @@ public class ComponentCore implements Component {
 		} else {
 			// init is not yet done. we only schedule this component for
 			// execution if the received event is an Init event
-			if (initEvent != null) {
-				if (scheduler == null)
-					scheduler = Kompics.getScheduler();
+			if (isInitEvent) {
+				if (!initReceived.get()) {
+					initReceived.set(true);
+					// for the first Init received
+					// we schedule the component directly
+					if (scheduler == null)
+						scheduler = Kompics.getScheduler();
 
-				firstInitEvent.set(initEvent);
-				scheduler.schedule(this, wid);
+					firstInitEvent.set(port.pickFirstEvent());
+					scheduler.schedule(this, wid);
+				} else {
+					// next Init event we schedule in the regular way
+					readyPorts.offer(port);
+					workCount.incrementAndGet();
+				}
 			} else {
 				// we received some other event before Init
 				readyPorts.offer(port);
-				workCount.getAndIncrement();
+				workCount.incrementAndGet();
 			}
 		}
 	}
@@ -320,6 +330,11 @@ public class ComponentCore implements Component {
 		PortCore<?> nextPort = readyPorts.poll();
 
 		Event event = nextPort.pickFirstEvent();
+
+		if (event == null) {
+			System.err.println("TTTTTTTTTTTT " + nextPort + " in " + this);
+		}
+
 		ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
 
 		if (handlers != null) {

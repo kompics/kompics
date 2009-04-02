@@ -83,6 +83,7 @@ public class InitFirstTest {
 
 		Handler<TestInit> handleInit = new Handler<TestInit>() {
 			public void handle(TestInit event) {
+				Assert.assertFalse(initDone); // init runs only once
 				initDone = true;
 				semaphore.release();
 			}
@@ -90,7 +91,7 @@ public class InitFirstTest {
 
 		Handler<TestEvent> handleEvent = new Handler<TestEvent>() {
 			public void handle(TestEvent event) {
-				Assert.assertTrue(initDone);
+				Assert.assertTrue(initDone); // init runs before anything else
 				semaphore.release();
 			}
 		};

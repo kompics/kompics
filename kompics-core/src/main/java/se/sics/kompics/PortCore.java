@@ -374,11 +374,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 	private void doDeliver(Event event, int wid) {
 		eventQueue.offer(event);
-		if (isControlPort && event instanceof Init) {
-			owner.eventReceived(this, wid, (Init) event);
-		} else {
-			owner.eventReceived(this, wid, null);
-		}
+		owner.eventReceived(this, wid, isControlPort && event instanceof Init);
 	}
 
 	Event pickFirstEvent() {
