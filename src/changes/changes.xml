@@ -4,7 +4,7 @@
 		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
-        <release version="0.4.2" date="2009-04-02" description="Maintenance release">
+        <release version="0.4.2.1" date="2009-04-02" description="Maintenance release">
             <action dev="cosmin" type="fix">
 [Kompics core]: components with init subscriptions in their constructor execute Init before any other event.
             </action>
