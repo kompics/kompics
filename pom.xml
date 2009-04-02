@@ -132,6 +132,15 @@ by putting together protocols programmed as event-driven components.
 			</plugin>
 
 			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<configuration>
+					<threshold>Normal</threshold>
+					<linkXref>true</linkXref>
+				</configuration>
+			</plugin>
+
+			<plugin>
 				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jxr-plugin</artifactId>
