@@ -42,4 +42,11 @@ public abstract class Request extends Event {
 		RequestPathElement pe = new RequestPathElement(component);
 		requestPath.push(pe);
 	}
+
+	@Override
+	public Object clone() {
+		Request request = (Request) super.clone();
+		request.requestPath = requestPath.clone();
+		return request;
+	}
 }
