@@ -2,48 +2,17 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
-	<version>0.0.1-SNAPSHOT</version>
-	<artifactId>kompics-daemon-launcher</artifactId>
+	<version>0.1</version>
+	<artifactId>dummy</artifactId>
 	<packaging>jar</packaging>
-	<name>kompics-daemon-launcher</name>
-
-	<properties>
-		<!--
-			To change your version of Kompics, edit the kompics.version value
-			below
-		-->
-		<kompics.version>0.4.2-SNAPSHOT</kompics.version>
-	</properties>
+	<name>Dummy used by kompics-daemon-launcher</name>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-embedder</artifactId>
-			<version>3.0-alpha-2</version>
-		</dependency>
-		<dependency>
 			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-distributed-system-launcher</artifactId>
-			<version>${kompics.version}</version>
+			<artifactId>kompics-manual</artifactId>
+			<version>0.4.2-SNAPSHOT</version>
 			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-component-mina-network
-			</artifactId>
-			<version>${kompics.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-component-java-timer</artifactId>
-			<version>${kompics.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>se.kth.id2210</groupId>
-			<artifactId>lab2</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
@@ -65,14 +34,39 @@
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
 					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies
-						</descriptorRef>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>se.sics.kompics.kdld.main.Application</mainClass>
+							<mainClass>se.sics.kompics.manual.example1.Root</mainClass>
 						</manifest>
 					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<phase>verify</phase>
+					</execution>
+				</executions>
+				<configuration>
+					<executable>java</executable>
+					<mainClass>se.sics.kompics.manual.example1.Root</mainClass>
+					<arguments>
+						<argument>-classpath</argument>
+						<classpath />
+						<argument>se.sics.kompics.manual.example1.Root</argument>
+						<!--
+							add extra arguments at the command line using: mvn exec:exec
+							-Darg1 -Darg2 .. -DargN
+						-->
+					</arguments>
+					<phase>verify</phase>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -81,7 +75,7 @@
 	<repositories>
 		<repository>
 			<id>sics-release</id>
-			<name>SICS Repository</name>
+			<name>SICS Release Repository</name>
 			<url>http://kompics.sics.se/maven/repository</url>
 			<releases>
 				<enabled>true</enabled>
@@ -90,6 +84,7 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+	<!-- 
 		<repository>
 			<id>sics-snapshot</id>
 			<name>SICS Snapshot Repository</name>
@@ -101,7 +96,7 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+    -->		
 	</repositories>
-
 </project>
 

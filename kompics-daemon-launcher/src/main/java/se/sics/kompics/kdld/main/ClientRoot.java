@@ -16,8 +16,6 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.kdld.Daemon;
-import se.sics.kompics.kdld.main.event.Deploy;
 import se.sics.kompics.kdld.main.event.DeployRequest;
 import se.sics.kompics.kdld.main.event.DeployResponse;
 import se.sics.kompics.kdld.main.event.LaunchResponse;
@@ -103,7 +101,7 @@ public class ClientRoot extends ComponentDefinition {
 		// create components
 		time = create(JavaTimer.class);
 		network = create(MinaNetwork.class);
-		daemon = create(Daemon.class);			
+		daemon = create(DaemonMain.class);			
 
 		// handle possible faults in the components
 		subscribe(handleFault, time.getControl());

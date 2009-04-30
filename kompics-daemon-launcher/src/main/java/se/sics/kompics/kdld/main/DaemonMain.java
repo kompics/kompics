@@ -10,7 +10,7 @@ import se.sics.kompics.Fault;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.kdld.Daemon;
+import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -18,7 +18,7 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 
 
-public class DaemonRoot extends ComponentDefinition {
+public class DaemonMain extends ComponentDefinition {
 	
 	static {
 		PropertyConfigurator.configureAndWatch("log4j.properties");
@@ -33,7 +33,7 @@ public class DaemonRoot extends ComponentDefinition {
 	private Address self;
 	
 	private static final Logger logger = LoggerFactory
-	.getLogger(DaemonRoot.class);
+	.getLogger(DaemonMain.class);
 
 	/**
 	 * The main method.
@@ -43,13 +43,13 @@ public class DaemonRoot extends ComponentDefinition {
 	 */
 	public static void main(String[] args) {
 		
-		Kompics.createAndStart(DaemonRoot.class);
+		Kompics.createAndStart(DaemonMain.class);
 	}
 
 	/**
 	 * Instantiates a new assignment0 group0.
 	 */
-	public DaemonRoot() {
+	public DaemonMain() {
 		
 		// create components
 		time = create(JavaTimer.class);
