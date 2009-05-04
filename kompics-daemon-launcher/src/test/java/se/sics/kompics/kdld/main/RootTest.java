@@ -19,8 +19,8 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
-import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.job.JobAssembly;
+import se.sics.kompics.kdld.job.JobToDummyPom;
 
 /**
  * Unit test for simple App.
@@ -58,9 +58,8 @@ public class RootTest extends TestCase {
 		try {
 			List<String> args = new ArrayList<String>();
 			args.add("jim");
-			Job dp = new JobAssembly(1, repoId, repoUrl, repoName, groupId, artifactId, version, mainClass, args);
-			dp.writeToFile();
-//			dp.execExec();
+			JobToDummyPom dp = new JobToDummyPom(1, repoId, repoUrl, repoName, groupId, artifactId, version, mainClass, args);
+			dp.createDummyPomFile();
 		} catch (DummyPomConstructionException e) {
 			System.err.println(e.getMessage());
 		}

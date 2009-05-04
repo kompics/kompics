@@ -16,7 +16,6 @@ import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.Daemon;
-import se.sics.kompics.kdld.daemon.SimulationScenarioLoadException;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
@@ -41,6 +40,7 @@ import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorInit;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorPort;
 import se.sics.kompics.p2p.simulator.cyclon.ReceivedMessage;
 import se.sics.kompics.simulator.SimulationScenario;
+import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
@@ -81,13 +81,13 @@ public final class CyclonSimulator extends ComponentDefinition {
 		peers = new HashMap<BigInteger, Component>();
 		cyclonView = new ConsistentHashtable<BigInteger>();
 
-//		 try {
+		 try {
 			scenario = SimulationScenario.load(System
 						.getProperty(Daemon.SCENARIO_FILENAME));
-//		} catch (SimulationScenarioLoadException e) {
-//			e.printStackTrace();
-//			System.exit(-1);
-//		}
+		} catch (SimulationScenarioLoadException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 		
 		subscribe(handleInit, control);
 

@@ -11,6 +11,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.Daemon;
+import se.sics.kompics.kdld.job.Indexer;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -29,6 +30,7 @@ public class DaemonMain extends ComponentDefinition {
 	private Component time;
 	private Component network;
 	private Component daemon;
+	private Component indexer;
 
 	private Address self;
 	
@@ -43,7 +45,7 @@ public class DaemonMain extends ComponentDefinition {
 	 */
 	public static void main(String[] args) {
 		
-		Kompics.createAndStart(DaemonMain.class);
+		Kompics.createAndStart(DaemonMain.class,2);
 	}
 
 	/**
@@ -54,7 +56,8 @@ public class DaemonMain extends ComponentDefinition {
 		// create components
 		time = create(JavaTimer.class);
 		network = create(MinaNetwork.class);
-		daemon = create(Daemon.class);			
+		daemon = create(Daemon.class);		
+		indexer = create(Indexer.class);
 
 		// handle possible faults in the components
 		subscribe(handleFault, time.getControl());

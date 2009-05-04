@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.PropertyConfigurator;
@@ -15,130 +17,144 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
-import se.sics.kompics.Kompics;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
+import se.sics.kompics.kdld.job.Index;
+import se.sics.kompics.kdld.job.Indexer;
+import se.sics.kompics.kdld.job.IndexerInit;
 import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.job.JobAssembly;
 import se.sics.kompics.kdld.job.JobAssemblyResponse;
 import se.sics.kompics.kdld.job.JobExec;
 import se.sics.kompics.kdld.job.JobExecResponse;
+import se.sics.kompics.kdld.job.JobFoundLocally;
 import se.sics.kompics.kdld.job.Maven;
 import se.sics.kompics.kdld.job.MavenLauncher;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.epfd.diamondp.FailureDetector;
-import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
 public class Daemon extends ComponentDefinition {
 
 	public static final String KOMPICS_HOME;
-	
+
+	public static final String MAVEN_REPO_HOME;
+
 	public static final String SCENARIO_FILENAME = "scenario";
-	
+
 	static {
 		String kHome = System.getProperty("kompics.home");
 		String userHome = System.getProperty("user.home");
 		if (userHome != null && kHome == null) {
-			System.setProperty("kompics.home", new File(userHome + "/.kompics/")
-					.getAbsolutePath());
-		} 
+			System.setProperty("kompics.home", new File(userHome + "/.kompics/").getAbsolutePath());
+		} else {
+			throw new IllegalStateException(
+					"kompics.home and user.home environment variables not set.");
+		}
 		KOMPICS_HOME = System.getProperty("kompics.home");
+
+		if (new File(Daemon.KOMPICS_HOME).exists() == false) {
+			if (new File(Daemon.KOMPICS_HOME).mkdirs() == false) {
+				throw new IllegalStateException("Could not create directory: "
+						+ Daemon.KOMPICS_HOME);
+			}
+		}
+
+		if (new File(Daemon.KOMPICS_HOME).exists() == false) {
+
+			if ((new File(Daemon.KOMPICS_HOME).mkdirs()) == false) {
+				throw new IllegalStateException("Couldn't directory for Kompics Home: "
+						+ Daemon.KOMPICS_HOME + "\nCheck file permissions for this directory.");
+			}
+		}
+
+		String mavenHome = System.getProperty("maven.home");
+		if (mavenHome == null) {
+			System.setProperty("maven.home", new File(userHome + "/.m2/repository/")
+					.getAbsolutePath());
+
+		} else {
+			throw new IllegalStateException(
+					"maven.home and user.home environment variables not set.");
+		}
+		MAVEN_REPO_HOME = System.getProperty("maven.home");
+
+		if (new File(Daemon.MAVEN_REPO_HOME).exists() == false) {
+
+			if ((new File(Daemon.MAVEN_REPO_HOME).mkdirs()) == false) {
+				throw new IllegalStateException("Couldn't directory for Maven Home: "
+						+ Daemon.MAVEN_REPO_HOME + "\nCheck file permissions for this directory.");
+			}
+		}
+
 		PropertyConfigurator.configureAndWatch("log4j.properties");
 	}
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(Daemon.class);
 
 	private Positive<Network> net = positive(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
-	
-	private Component mavenLauncher;
 
-	int daemonId;
-	private Address self;
+	private Component mavenLauncher;
+	private Component indexer;
+
+	private DaemonAddress self;
 	private Address masterAddress;
 
-	private Map<Integer,JobAssembly> loadingJobs = new HashMap<Integer,JobAssembly>();
-	private Map<Integer,JobAssembly> loadedJobs = new HashMap<Integer,JobAssembly>();
-	private Map<Integer,JobExec> executingJobs = new HashMap<Integer,JobExec>();
-	private Map<Integer,JobExec> completedJobs = new HashMap<Integer,JobExec>();
+	private Map<Integer, Job> loadingJobs = new HashMap<Integer, Job>();
+	private Map<Integer, Job> loadedJobs = new HashMap<Integer, Job>();
+	private Map<Integer, JobExec> executingJobs = new HashMap<Integer, JobExec>();
+	private Map<Integer, JobExec> completedJobs = new HashMap<Integer, JobExec>();
 
-	private Map<Integer,ProcessWrapper> executingProcesses = 
-		new ConcurrentHashMap<Integer, ProcessWrapper>();
+	private Map<Integer, ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, ProcessWrapper>();
 
 	private int masterRetryTimeout;
 	private int masterRetryCount;
-	
-	private long indexingPeriod;
-	
+
 	private Component fd;
-	
-	
-	public static void main(String[] args) {
-		Kompics.createAndStart(Daemon.class, 2);
-	}
 
 	public Daemon() {
 
 		fd = create(FailureDetector.class);
 		mavenLauncher = create(MavenLauncher.class);
-		
-		
+		indexer = create(Indexer.class);
+		// XXX connect NET port on mavenLauncher apacheMina component
+
 		subscribe(handleInit, control);
 		subscribe(handleJobLoadRequest, net);
 		subscribe(handleJobStartRequest, net);
 		subscribe(handleShutdown, net);
 		subscribe(handleJobStopRequest, net);
-	
+		subscribe(handleListJobsLoadedRequest, net);
+
 		subscribe(handleJobAssemblyResponse, mavenLauncher.getNegative(Maven.class));
 		subscribe(handleJobExecResponse, mavenLauncher.getNegative(Maven.class));
-		
+
 		subscribe(handleShutdownTimeout, timer);
-		subscribe(handleIndexerTimeout, timer);
+
+		subscribe(handleJobFoundLocally, indexer.getPositive(Index.class));
 	}
 
 	public Handler<DaemonInit> handleInit = new Handler<DaemonInit>() {
 		public void handle(DaemonInit event) {
-			daemonId = event.getId();
-			self = event.getSelf();
+			self = new DaemonAddress(event.getId(), event.getSelf());
 			masterAddress = event.getMasterAddr();
 			masterRetryTimeout = event.getMasterRetryTimeout();
 			masterRetryCount = event.getMasterRetryCount();
-			indexingPeriod = event.getIndexingPeriod();
-			
-			// set the indexing timer
-			SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(
-					0, indexingPeriod);
-			spt.setTimeoutEvent(new IndexerTimeout(spt));
-			trigger(spt, timer);
+
+			trigger(new IndexerInit(event.getIndexingPeriod()), indexer.getControl());
+
 		}
 	};
 
-	
-	private Handler<IndexerTimeout> handleIndexerTimeout = new Handler<IndexerTimeout>() {
-		public void handle(IndexerTimeout event) {
-			logger.debug("Indexer running...");
-
-			// check KOMPICS_HOME for newly downloaded dummy pom projects
-			
-			
-			// set the indexing timer
-			SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(
-					0, indexingPeriod);
-			spt.setTimeoutEvent(new IndexerTimeout(spt));
-			trigger(spt, timer);
-		}
-	};
-	
 	public Handler<JobAssemblyResponse> handleJobAssemblyResponse = new Handler<JobAssemblyResponse>() {
 		public void handle(JobAssemblyResponse event) {
 
 			// if success then remove from loadingJobs, add to loadedJobs
-			if (event.getStatus() == JobAssemblyResponse.Status.ASSEMBLED)
-			{
-				JobAssembly job = loadingJobs.get(event.getJobId());
+			if (event.getStatus() == JobAssemblyResponse.Status.ASSEMBLED) {
+				Job job = loadingJobs.get(event.getJobId());
 				loadedJobs.put(event.getJobId(), job);
 			}
 			// remove job from loadingJobs whatever the result.
@@ -149,16 +165,15 @@ public class Daemon extends ComponentDefinition {
 	public Handler<JobExecResponse> handleJobExecResponse = new Handler<JobExecResponse>() {
 		public void handle(JobExecResponse event) {
 			// if success remove from loadedJobs, add to executingJobs
-			if (event.getStatus() == JobExecResponse.Status.SUCCESS)
-			{
+			if (event.getStatus() == JobExecResponse.Status.SUCCESS) {
 				JobExec job = executingJobs.get(event.getJobId());
-				completedJobs.put(event.getJobId(),job);
+				completedJobs.put(event.getJobId(), job);
 			}
 			// remove job from loadingJobs whatever the result.
 			executingJobs.remove(event.getJobId());
 		}
 	};
-	
+
 	public Handler<JobLoadRequest> handleJobLoadRequest = new Handler<JobLoadRequest>() {
 		public void handle(JobLoadRequest event) {
 			logger.info("DeployRequest Event Received");
@@ -167,100 +182,90 @@ public class Daemon extends ComponentDefinition {
 			JobLoadResponse.Status status = JobLoadResponse.Status.LOADING;
 
 			// If msg not a duplicate
-			if (loadingJobs.containsKey(id) == false)
-			{
+			if (loadingJobs.containsKey(id) == false) {
 				JobAssembly job;
 				try {
-					job = new JobAssembly(event.getJobId(), event.getRepoId(), event.getRepoUrl(), event
-							.getRepoName(), event.getGroupId(), event.getArtifactId(), event
-							.getVersion(), event.getMainClass(), event.getArgs());
-	
-					job.writeToFile(); 
+					job = new JobAssembly(event.getJobId(), event.getRepoId(), event.getRepoUrl(),
+							event.getRepoName(), event.getGroupId(), event.getArtifactId(), event
+									.getVersion(), event.getMainClass(), event.getArgs());
+
+					job.createDummyPomFile();
 					status = JobLoadResponse.Status.POM_CREATED;
 					loadingJobs.put(id, job);
-					trigger(job,mavenLauncher.getNegative(Maven.class));
-					
+					trigger(job, mavenLauncher.getNegative(Maven.class));
+
 				} catch (DummyPomConstructionException e) {
 					e.printStackTrace();
 					status = JobLoadResponse.Status.FAIL;
 				}
-			}
-			else
-			{
+			} else {
 				status = JobLoadResponse.Status.DUPLICATE;
 			}
 
-			trigger(new JobLoadResponse(id, status, new DaemonAddress(daemonId, event
-					.getDestination()), event.getSource()), net);
+			trigger(new JobLoadResponse(id, status, self, event.getSource()), net);
 		}
 	};
-	
+
 	public Handler<JobStartRequest> handleJobStartRequest = new Handler<JobStartRequest>() {
 		public void handle(JobStartRequest event) {
 			int id = event.getId();
 			Job job = loadedJobs.get(id);
-			
+
 			JobStartResponse.Status status = JobStartResponse.Status.SUCCESS;
-			if (job == null)
-			{
+			if (job == null) {
 				// see if job is loading, if yes, then wait
-				 job = loadingJobs.get(id);
-				 if (job == null)
-				 {
-					 // need to load job first
-					 
-				 }
-				
-			}
-			else
-			{
+				job = loadingJobs.get(id);
+				if (job == null) {
+					// need to load job first
+
+				}
+
+			} else {
 				JobExec jobExec;
 				try {
-					jobExec = new JobExec(job,event.getSimulationScenario());
-					trigger(jobExec,mavenLauncher.getNegative(Maven.class));
-					executingJobs.put(id,jobExec);
+					jobExec = new JobExec(job, event.getSimulationScenario());
+					trigger(jobExec, mavenLauncher.getNegative(Maven.class));
+					executingJobs.put(id, jobExec);
 				} catch (DummyPomConstructionException e) {
 					e.printStackTrace();
 					status = JobStartResponse.Status.FAIL;
 				}
-				
+
 			}
-			
-			
-			JobStartResponse response = new JobStartResponse(id,status, 
-					new DaemonAddress(daemonId, event.getDestination()),
-					event.getSource());
-			trigger(response,net);
+
+			JobStartResponse response = new JobStartResponse(id, status, self, event.getSource());
+			trigger(response, net);
 		}
 	};
 
-//	private JobLoadResponse.Status mvnAssemblyAssembly(Job job)
-//	{
-//		JobLoadResponse.Status status;
-//		int res = forkProcess(job, null, true);
-//		switch (res)
-//		{
-//		case 0: status = JobLoadResponse.Status.ASSEMBLED; break;
-//		case -1: status = JobLoadResponse.Status.FAIL; break;
-//		default:
-//			status = JobLoadResponse.Status.FAIL; break;
-//		}
-//		return status;
-//	}
-//
-//	private JobStartResponse.Status mvnExecExec(Job job, SimulationScenario scenario)
-//	{
-//		JobStartResponse.Status status;
-//		int res = forkProcess(job, scenario, false);
-//		switch (res)
-//		{
-//		case 0: status = JobStartResponse.Status.SUCCESS; break;
-//		case -1: status = JobStartResponse.Status.FAIL; break;
-//		default: status = JobStartResponse.Status.FAIL; break;
-//		}
-//		return status;
-//	}
-	
+	// private JobLoadResponse.Status mvnAssemblyAssembly(Job job)
+	// {
+	// JobLoadResponse.Status status;
+	// int res = forkProcess(job, null, true);
+	// switch (res)
+	// {
+	// case 0: status = JobLoadResponse.Status.ASSEMBLED; break;
+	// case -1: status = JobLoadResponse.Status.FAIL; break;
+	// default:
+	// status = JobLoadResponse.Status.FAIL; break;
+	// }
+	// return status;
+	// }
+	//
+	// private JobStartResponse.Status mvnExecExec(Job job, SimulationScenario
+	// scenario)
+	// {
+	// JobStartResponse.Status status;
+	// int res = forkProcess(job, scenario, false);
+	// switch (res)
+	// {
+	// case 0: status = JobStartResponse.Status.SUCCESS; break;
+	// case -1: status = JobStartResponse.Status.FAIL; break;
+	// default: status = JobStartResponse.Status.FAIL; break;
+	// }
+	// return status;
+	// }
+
 	/**
 	 * @param id
 	 * @param job
@@ -268,92 +273,89 @@ public class Daemon extends ComponentDefinition {
 	 * @param assembly
 	 * @return 0 on success, -1 on failure.
 	 */
-//	private int forkProcess(Job job, SimulationScenario scenario,
-//			boolean assembly)
-//	{
-//		int res=0;
-//		String[] args = {};
-//		
-//	
-//		String classPath = System.getProperty("java.class.path");
-//		java.util.List<String> command = new ArrayList<String>();
-//		command.add("java");
-//		command.add("-classpath");
-//		command.add(classPath); // the Slave jar file should be on this path
-//		command.add("-Dlog4j.properties=log4j.properties");
-//		command.add("-DKOMPICS_HOME="
-//				+ KOMPICS_HOME);
-//		command.add(job.getMainClass());
-//		command.add(job.getGroupId());
-//		command.add(job.getArtifactId());
-//		String assembleC;
-//		assembleC = assembly ? "assemble=true" : "assemble=false"; 
-//		command.add(assembleC);
-//		command.addAll(job.getArgs());
-//
-//
-//		ProcessBuilder processBuilder = new ProcessBuilder(command);
-//		
-//		processBuilder.redirectErrorStream(true);
-//		Map<String,String> env = processBuilder.environment();
-//		env.put("KOMPICS_HOME", KOMPICS_HOME);
-//		
-//		if (scenario != null)
-//		{
-//			try {
-//				File file = File.createTempFile(SCENARIO_FILENAME, ".bin");
-//				ObjectOutputStream oos = new ObjectOutputStream(
-//						new FileOutputStream(file));
-//				oos.writeObject(scenario);
-//				oos.flush();
-//				oos.close();
-//				env.put(SCENARIO_FILENAME, file.getAbsolutePath());
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		
-//		try {
-//			Process p = processBuilder.start();
-//			ProcessWrapper pw = new ProcessWrapper(job.getId(), p);
-//			executingProcesses.put(job.getId(), pw);
-//			new Thread(pw).start();
-//			
-//		} catch (IOException e1) {
-//			e1.printStackTrace();
-//			res = -1;
-//		}
-//		
-//		loadingJobs.remove(job.getId());
-//		executingJobs.put(job.getId(), job);
-//
-//		return res;
-//	}
-//	
-	
+	// private int forkProcess(Job job, SimulationScenario scenario,
+	// boolean assembly)
+	// {
+	// int res=0;
+	// String[] args = {};
+	//		
+	//	
+	// String classPath = System.getProperty("java.class.path");
+	// java.util.List<String> command = new ArrayList<String>();
+	// command.add("java");
+	// command.add("-classpath");
+	// command.add(classPath); // the Slave jar file should be on this path
+	// command.add("-Dlog4j.properties=log4j.properties");
+	// command.add("-DKOMPICS_HOME="
+	// + KOMPICS_HOME);
+	// command.add(job.getMainClass());
+	// command.add(job.getGroupId());
+	// command.add(job.getArtifactId());
+	// String assembleC;
+	// assembleC = assembly ? "assemble=true" : "assemble=false";
+	// command.add(assembleC);
+	// command.addAll(job.getArgs());
+	//
+	//
+	// ProcessBuilder processBuilder = new ProcessBuilder(command);
+	//		
+	// processBuilder.redirectErrorStream(true);
+	// Map<String,String> env = processBuilder.environment();
+	// env.put("KOMPICS_HOME", KOMPICS_HOME);
+	//		
+	// if (scenario != null)
+	// {
+	// try {
+	// File file = File.createTempFile(SCENARIO_FILENAME, ".bin");
+	// ObjectOutputStream oos = new ObjectOutputStream(
+	// new FileOutputStream(file));
+	// oos.writeObject(scenario);
+	// oos.flush();
+	// oos.close();
+	// env.put(SCENARIO_FILENAME, file.getAbsolutePath());
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// }
+	// }
+	//		
+	// try {
+	// Process p = processBuilder.start();
+	// ProcessWrapper pw = new ProcessWrapper(job.getId(), p);
+	// executingProcesses.put(job.getId(), pw);
+	// new Thread(pw).start();
+	//			
+	// } catch (IOException e1) {
+	// e1.printStackTrace();
+	// res = -1;
+	// }
+	//		
+	// loadingJobs.remove(job.getId());
+	// executingJobs.put(job.getId(), job);
+	//
+	// return res;
+	// }
+	//	
 	public Handler<DaemonShutdown> handleShutdown = new Handler<DaemonShutdown>() {
 		public void handle(DaemonShutdown event) {
-			
+
 			int timeout = event.getTimeout();
 			ScheduleTimeout st = new ScheduleTimeout(timeout);
 			st.setTimeoutEvent(new TimerDaemonShutdown(st));
-			trigger(st, timer);				
+			trigger(st, timer);
 		}
 	};
-	
+
 	public Handler<TimerDaemonShutdown> handleShutdownTimeout = new Handler<TimerDaemonShutdown>() {
 		public void handle(TimerDaemonShutdown event) {
 			System.exit(0);
 		}
 	};
 
-	
 	public final void execute(Class<? extends ComponentDefinition> main) {
 		File file = null;
 		try {
 			file = File.createTempFile("scenario", ".bin");
-			ObjectOutputStream oos = new ObjectOutputStream(
-					new FileOutputStream(file));
+			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file));
 			oos.writeObject(this);
 			oos.flush();
 			oos.close();
@@ -363,82 +365,86 @@ public class Daemon extends ComponentDefinition {
 		}
 		try {
 			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-//			cl.run(main.getCanonicalName(), null);
+			// cl.run(main.getCanonicalName(), null);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 	}
 
-	
 	public Handler<JobStopRequest> handleJobStopRequest = new Handler<JobStopRequest>() {
 		public void handle(JobStopRequest event) {
 
 			int id = event.getJobId();
 			JobStopResponse.Status status;
-			
+
 			ProcessWrapper pw = executingProcesses.get(id);
-			if (pw == null)
-			{
+			if (pw == null) {
 				status = JobStopResponse.Status.FAILED_TO_STOP;
-			}
-			else
-			{
+			} else {
 				if (pw.destroy() == true) {
 					status = JobStopResponse.Status.STOPPED;
-				}
-				else {
+				} else {
 					status = JobStopResponse.Status.ALREADY_STOPPED;
 				}
 			}
-			
-			JobStopResponse response = new JobStopResponse(id,status, 
-					new DaemonAddress(daemonId, event.getDestination()),
-					event.getSource());
-			trigger(response,net);
+
+			JobStopResponse response = new JobStopResponse(id, status, self, event.getSource());
+			trigger(response, net);
+		}
+	};
+
+	public Handler<ListJobsLoadedRequest> handleListJobsLoadedRequest = new Handler<ListJobsLoadedRequest>() {
+		public void handle(ListJobsLoadedRequest event) {
+
+			Set<Job> listJobsLoaded = new HashSet<Job>(loadedJobs.values());
+
+			trigger(new ListJobsLoadedResponse(listJobsLoaded, self, event.getDestination()), net);
 		}
 	};
 	
+
+	public Handler<JobFoundLocally> handleJobFoundLocally = new Handler<JobFoundLocally>() {
+		public void handle(JobFoundLocally event) {
+			int id = event.getId();
+
+			if (loadedJobs.containsKey(id) == false) {
+				loadedJobs.put(id, event);
+			}
+		}
+	};
 	
 	public Handler<JobMessageRequest> handleJobMessageRequest = new Handler<JobMessageRequest>() {
 		public void handle(JobMessageRequest event) {
 			int id = event.getJobId();
 			JobMessageResponse.Status status;
 			ProcessWrapper pw = executingProcesses.get(id);
-			if (pw == null)
-			{
+			if (pw == null) {
 				status = JobMessageResponse.Status.STOPPED;
-			}
-			else
-			{
+			} else {
 				try {
 					pw.input(event.getMsg());
-				
+
 					status = JobMessageResponse.Status.SUCCESS;
-				}
-				catch (IOException e)
-				{
+				} catch (IOException e) {
 					status = JobMessageResponse.Status.FAIL;
 				}
 			}
-			
-			JobMessageResponse response = new JobMessageResponse(id,status, 
-					new DaemonAddress(daemonId, event.getDestination()),
-					event.getSource());
-			trigger(response,net);
+
+			JobMessageResponse response = new JobMessageResponse(id, status, self, event.getSource());
+			trigger(response, net);
 		}
 	};
-	
-	
-//	private ProcessLauncher createProcess(int id, int idx, 
-//			String classPath,
-//			Class<? extends ComponentDefinition> main,
-//			long now, Semaphore semaphore) {
-//		ProcessLauncher processLauncher = new ProcessLauncher(classPath,
-//				main, "-Dlog4j.properties=log4j.properties", id,
-//				idx, this, now, semaphore);
-//		return processLauncher;
-//	}
-	
+
+	// private ProcessLauncher createProcess(int id, int idx,
+	// String classPath,
+	// Class<? extends ComponentDefinition> main,
+	// long now, Semaphore semaphore) {
+	// ProcessLauncher processLauncher = new ProcessLauncher(classPath,
+	// main, "-Dlog4j.properties=log4j.properties", id,
+	// idx, this, now, semaphore);
+	// return processLauncher;
+	// }
+
 	/*
 	 * 
 	 * public void jarDownload(String jarFileName, String artifact) { // String

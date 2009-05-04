@@ -45,12 +45,9 @@ public class MavenLauncher extends ComponentDefinition {
 	private static final Logger logger = LoggerFactory.getLogger(MavenLauncher.class);
 
 	private Positive<Network> net = positive(Network.class);
-	private Positive<Timer> timer = positive(Timer.class);
 
 	private Negative<Maven> maven = negative(Maven.class);
 	
-//	int daemonId;
-
 	private Map<Integer,Job> waitingJobs = new HashMap<Integer,Job>();
 	private Map<Integer,Job> executingJobs = new HashMap<Integer,Job>();
 
@@ -59,18 +56,12 @@ public class MavenLauncher extends ComponentDefinition {
 	
 	public MavenLauncher() {
 
-//		subscribe(handleInit, control);
 		subscribe(handleJobAssembleRequest, maven);
 		subscribe(handleJobExecRequest, maven);
 		subscribe(handleJobStopRequest, maven);
 	
 	}
 	
-//	public Handler<MavenInit> handleInit = new Handler<MavenInit>() {
-//		public void handle(MavenInit event) {
-//		}
-//	};
-
 	public Handler<JobAssembly> handleJobAssembleRequest = new Handler<JobAssembly>() {
 		public void handle(JobAssembly event) {
 
@@ -81,17 +72,10 @@ public class MavenLauncher extends ComponentDefinition {
 			if (waitingJobs.containsKey(id) == false)
 			{
 				try {
-					event.writeToFile(); 
+					event.createDummyPomFile(); 
 					status = JobAssemblyResponse.Status.POM_CREATED;
-//					if (event.isAssemble() == true)
-//					{
-//						job.assemblyAssembly();
-//						status = JobLoadedResponse.Status.ASSEMBLED;
-//					}	
 					waitingJobs.put(id, event);
-					
 					status = mvnAssemblyAssembly(event);
-					
 				} catch (DummyPomConstructionException e) {
 					e.printStackTrace();
 					status = JobAssemblyResponse.Status.FAIL;

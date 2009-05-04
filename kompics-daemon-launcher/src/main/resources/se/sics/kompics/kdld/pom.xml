@@ -6,6 +6,10 @@
 	<artifactId>dummy</artifactId>
 	<packaging>jar</packaging>
 	<name>Dummy used by kompics-daemon-launcher</name>
+	
+	<properties>
+		<jobId>0</jobId>
+	</properties>
 
 	<dependencies>
 		<dependency>
