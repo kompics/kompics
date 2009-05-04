@@ -18,6 +18,9 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.Daemon;
+import se.sics.kompics.kdld.daemon.SimulationScenarioLoadException;
+import se.sics.kompics.kdld.master.Master;
+import se.sics.kompics.kdld.master.MasterInit;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
@@ -34,10 +37,7 @@ import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulator;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorInit;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorPort;
 import se.sics.kompics.simulator.SimulationScenario;
-import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.timer.Timer;
-import se.sics.kompics.wan.master.Master;
-import se.sics.kompics.wan.master.MasterInit;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.jetty.JettyWebServer;
@@ -106,7 +106,7 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 
 	public CyclonWanMasterMain() throws UnknownHostException,
 			InterruptedException {
-		Master.setSimulationPortType(CyclonSimulatorPort.class);
+//		Master.setSimulationPortType(CyclonSimulatorPort.class);
 		// create
 		Component master = create(Master.class);
 		Component jettyWebServer = create(JettyWebServer.class);
@@ -121,19 +121,19 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 		final P2pMonitorConfiguration monitorConfiguration = config.monitorConfiguration;
 		final CyclonConfiguration cyclonConfiguration = config.cyclonConfiguration;
 
-		 try {
+//		 try {
 				scenario = SimulationScenario.load(System
 							.getProperty(Daemon.SCENARIO_FILENAME));
-			} catch (SimulationScenarioLoadException e) {
-				e.printStackTrace();
-				System.exit(-1);
-			}
+//			} catch (SimulationScenarioLoadException e) {
+//				e.printStackTrace();
+//				System.exit(-1);
+//			}
 		
 		System.out.println("For web access please go to " + config.webAddress);
 		Thread.sleep(2000);
 
-		trigger(new MasterInit(scenario, new KingLatencyMap()),
-				master.getControl());
+//		trigger(new MasterInit(scenario, new KingLatencyMap()),
+//				master.getControl());
 		trigger(config.jettyWebServerInit, jettyWebServer.getControl());
 		trigger(new BootstrapServerInit(bootConfiguration), bootstrapServer
 				.getControl());

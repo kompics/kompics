@@ -16,13 +16,14 @@ import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.Daemon;
+import se.sics.kompics.kdld.daemon.SimulationScenarioLoadException;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.p2p.overlay.random.cyclon.CyclonConfiguration;
-import se.sics.kompics.p2p.overlay.random.cyclon.CyclonGetPeerRequest;
-import se.sics.kompics.p2p.overlay.random.cyclon.CyclonGetPeerResponse;
+import se.sics.kompics.p2p.overlay.random.cyclon.CyclonGetPeersRequest;
+import se.sics.kompics.p2p.overlay.random.cyclon.CyclonGetPeersResponse;
 import se.sics.kompics.p2p.overlay.random.cyclon.CyclonNeighborsResponse;
 import se.sics.kompics.p2p.overlay.structured.ring.NumericRingKey;
 import se.sics.kompics.p2p.peer.cyclon.CyclonPeer;
@@ -33,7 +34,6 @@ import se.sics.kompics.p2p.simulator.P2pSimulator;
 import se.sics.kompics.p2p.simulator.cyclon.CollectCyclonData;
 import se.sics.kompics.p2p.simulator.cyclon.ConsistentHashtable;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonDataPoint;
-import se.sics.kompics.p2p.simulator.cyclon.CyclonDataSet;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonPeerFail;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonPeerGetPeer;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonPeerJoin;
@@ -41,7 +41,6 @@ import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorInit;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorPort;
 import se.sics.kompics.p2p.simulator.cyclon.ReceivedMessage;
 import se.sics.kompics.simulator.SimulationScenario;
-import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
@@ -76,19 +75,19 @@ public final class CyclonSimulator extends ComponentDefinition {
 	private long totalPeerLifetime = 0;
 	private long currentPeriodStartedAt = 0;
 	private int currentPeriodPeerCount = 0;
-	private CyclonDataSet dataSet;
+	private CyclonDataPoint dataSet;
 
 	public CyclonSimulator() {
 		peers = new HashMap<BigInteger, Component>();
 		cyclonView = new ConsistentHashtable<BigInteger>();
 
-		 try {
+//		 try {
 			scenario = SimulationScenario.load(System
 						.getProperty(Daemon.SCENARIO_FILENAME));
-		} catch (SimulationScenarioLoadException e) {
-			e.printStackTrace();
-			System.exit(-1);
-		}
+//		} catch (SimulationScenarioLoadException e) {
+//			e.printStackTrace();
+//			System.exit(-1);
+//		}
 		
 		subscribe(handleInit, control);
 
@@ -165,14 +164,14 @@ public final class CyclonSimulator extends ComponentDefinition {
 
 			logger.debug("{} GET_PEER@{}", ++lcnt, id);
 
-			CyclonGetPeerRequest getPeerRequest = new CyclonGetPeerRequest();
+			CyclonGetPeersRequest getPeerRequest = new CyclonGetPeersRequest(6);
 			trigger(getPeerRequest, peers.get(id).getPositive(
 					CyclonPeerPort.class));
 		}
 	};
 
-	Handler<CyclonGetPeerResponse> handleGetPeerResponse = new Handler<CyclonGetPeerResponse>() {
-		public void handle(CyclonGetPeerResponse event) {
+	Handler<CyclonGetPeersResponse> handleGetPeerResponse = new Handler<CyclonGetPeersResponse>() {
+		public void handle(CyclonGetPeersResponse event) {
 			// if (dataSet == null) {
 			// return;
 			// }
@@ -217,14 +216,14 @@ public final class CyclonSimulator extends ComponentDefinition {
 			}
 			rm.incrementCount();
 
-			if (dataSet != null) {
-				rm = dataSet.messageHistogram.get(event.getClass());
-				if (rm == null) {
-					rm = new ReceivedMessage(event.getClass(), 0);
-					dataSet.messageHistogram.put(event.getClass(), rm);
-				}
-				rm.incrementCount();
-			}
+//			if (dataSet != null) {
+//				rm = dataSet.messageHistogram.get(event.getClass());
+//				if (rm == null) {
+//					rm = new ReceivedMessage(event.getClass(), 0);
+//					dataSet.messageHistogram.put(event.getClass(), rm);
+//				}
+//				rm.incrementCount();
+//			}
 
 			// lookup load
 			// if (event instanceof FindSuccessorRequest) {
@@ -254,19 +253,19 @@ public final class CyclonSimulator extends ComponentDefinition {
 
 	Handler<CollectCyclonData> handleCollectData = new Handler<CollectCyclonData>() {
 		public void handle(CollectCyclonData event) {
-			if (dataSet == null) {
-				dataSet = new CyclonDataSet();
-				dataSet.beganAt = System.currentTimeMillis();
-				logger.info("Started data collection...");
-			} else {
-				dataSet.endedAt = System.currentTimeMillis();
-				logger.info("Stopped data collection...");
+//			if (dataSet == null) {
+//				dataSet = new CyclonDataSet();
+//				dataSet.beganAt = System.currentTimeMillis();
+//				logger.info("Started data collection...");
+//			} else {
+//				dataSet.endedAt = System.currentTimeMillis();
+//				logger.info("Stopped data collection...");
 
-				updatedPeerCount(0);
+//				updatedPeerCount(0);
 //				CyclonDataPoint dataPoint = new CyclonDataPoint(
 //						currentPeriodPeerCount, dataSet);
 //				logger.info("DataPoint: \n{}", dataPoint);
-			}
+//			}
 
 			// updatedPeerCount(0);
 

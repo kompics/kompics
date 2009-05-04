@@ -1,7 +1,5 @@
 package se.sics.kompics.kdld.daemon;
 
-import java.math.BigInteger;
-
 import se.sics.kompics.Init;
 import se.sics.kompics.address.Address;
 

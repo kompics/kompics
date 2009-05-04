@@ -1,7 +1,6 @@
 package se.sics.kompics.kdld.daemon;
 
 import se.sics.kompics.address.Address;
-import se.sics.kompics.network.Message;
 
 /**
  * 

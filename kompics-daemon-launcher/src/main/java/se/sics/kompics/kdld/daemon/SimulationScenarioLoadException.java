@@ -1,4 +1,4 @@
-package se.sics.kompics.simulator;
+package se.sics.kompics.kdld.daemon;
 
 public class SimulationScenarioLoadException extends Exception {
 

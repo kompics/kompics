@@ -1,14 +1,9 @@
 package se.sics.kompics.kdld.daemon;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,9 +28,6 @@ import se.sics.kompics.kdld.job.Maven;
 import se.sics.kompics.kdld.job.MavenLauncher;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.epfd.diamondp.FailureDetector;
-import se.sics.kompics.p2p.overlay.structured.chord.ring.GetPredecessorRequest;
-import se.sics.kompics.p2p.overlay.structured.chord.ring.StabilizeTimeout;
-import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;

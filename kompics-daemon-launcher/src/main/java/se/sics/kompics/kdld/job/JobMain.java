@@ -15,10 +15,6 @@ import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.kompics.kdld.daemon.Daemon;
-import se.sics.kompics.simulator.SimulationScenario;
-import se.sics.kompics.simulator.SimulationScenarioLoadException;
-
 public final class JobMain {
 	static {
 		PropertyConfigurator.configureAndWatch("log4j.properties");
