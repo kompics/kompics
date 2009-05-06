@@ -1,4 +1,4 @@
-package se.sics.kompics.kdld.job;
+package se.sics.kompics.kdld.daemon.indexer;
 
 public class PomIndexingException extends Exception {
 	/**

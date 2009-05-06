@@ -1,4 +1,4 @@
-package se.sics.kompics.kdld.main.util;
+package se.sics.kompics.kdld.util;
 
 import java.net.Inet6Address;
 import java.net.InetAddress;

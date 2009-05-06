@@ -13,7 +13,7 @@ import java.util.List;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import se.sics.kompics.address.Address;
-import se.sics.kompics.kdld.main.util.LocalNetworkConfiguration;
+import se.sics.kompics.kdld.util.LocalNetworkConfiguration;
 import se.sics.kompics.launch.Scenario;
 import se.sics.kompics.launch.Topology;
 
@@ -77,12 +77,12 @@ public final class Root {
 			}
 		};
 
-		Scenario scenario1 = new Scenario(ClientRoot.class) {
-				{
-					command(0, "H1:");
-				}
-			};
-		scenario1.executeOn(topology1);
+//		Scenario scenario1 = new Scenario(MavenExecMain.class) {
+//				{
+//					command(0, "H1:");
+//				}
+//			};
+//		scenario1.executeOn(topology1);
 		System.exit(0);
 	}
 	

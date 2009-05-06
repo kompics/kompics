@@ -19,18 +19,18 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
+import se.sics.kompics.kdld.daemon.indexer.Index;
+import se.sics.kompics.kdld.daemon.indexer.Indexer;
+import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
+import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
+import se.sics.kompics.kdld.daemon.maven.Maven;
+import se.sics.kompics.kdld.daemon.maven.MavenLauncher;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
-import se.sics.kompics.kdld.job.Index;
-import se.sics.kompics.kdld.job.Indexer;
-import se.sics.kompics.kdld.job.IndexerInit;
 import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.job.JobAssembly;
 import se.sics.kompics.kdld.job.JobAssemblyResponse;
 import se.sics.kompics.kdld.job.JobExec;
 import se.sics.kompics.kdld.job.JobExecResponse;
-import se.sics.kompics.kdld.job.JobFoundLocally;
-import se.sics.kompics.kdld.job.Maven;
-import se.sics.kompics.kdld.job.MavenLauncher;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.epfd.diamondp.FailureDetector;
 import se.sics.kompics.timer.ScheduleTimeout;
@@ -42,6 +42,8 @@ public class Daemon extends ComponentDefinition {
 
 	public static final String MAVEN_REPO_HOME;
 
+	public static final String MAVEN_HOME;
+
 	public static final String SCENARIO_FILENAME = "scenario";
 
 	static {
@@ -49,9 +51,8 @@ public class Daemon extends ComponentDefinition {
 		String userHome = System.getProperty("user.home");
 		if (userHome != null && kHome == null) {
 			System.setProperty("kompics.home", new File(userHome + "/.kompics/").getAbsolutePath());
-		} else {
-			throw new IllegalStateException(
-					"kompics.home and user.home environment variables not set.");
+		} else if (userHome == null && kHome == null) {
+			throw new IllegalStateException("kompics.home and user.home environment variables not set.");
 		}
 		KOMPICS_HOME = System.getProperty("kompics.home");
 
@@ -72,24 +73,30 @@ public class Daemon extends ComponentDefinition {
 
 		String mavenHome = System.getProperty("maven.home");
 		if (mavenHome == null) {
-			System.setProperty("maven.home", new File(userHome + "/.m2/repository/")
-					.getAbsolutePath());
+			System.setProperty("maven.home", new File(userHome + "/.m2/")
+			.getAbsolutePath());
+		} 
+		MAVEN_HOME = System.getProperty("maven.home");
 
-		} else {
-			throw new IllegalStateException(
-					"maven.home and user.home environment variables not set.");
+		if (new File(Daemon.MAVEN_HOME).exists() == false) {
+			if ((new File(Daemon.MAVEN_HOME).mkdirs()) == false) {
+				throw new IllegalStateException("Couldn't directory for Maven Home: "
+						+ Daemon.MAVEN_HOME + "\nCheck file permissions for this directory.");
+			}
 		}
-		MAVEN_REPO_HOME = System.getProperty("maven.home");
-
+		
+		String mavenRepoHome = System.getProperty("maven.repo");
+		if (mavenRepoHome == null) {
+			System.setProperty("maven.repo", new File(MAVEN_HOME + "/repository/")
+			.getAbsolutePath());
+		} 
+		MAVEN_REPO_HOME = System.getProperty("maven.repo");
 		if (new File(Daemon.MAVEN_REPO_HOME).exists() == false) {
-
 			if ((new File(Daemon.MAVEN_REPO_HOME).mkdirs()) == false) {
 				throw new IllegalStateException("Couldn't directory for Maven Home: "
 						+ Daemon.MAVEN_REPO_HOME + "\nCheck file permissions for this directory.");
 			}
 		}
-
-		PropertyConfigurator.configureAndWatch("log4j.properties");
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(Daemon.class);
@@ -108,7 +115,8 @@ public class Daemon extends ComponentDefinition {
 	private Map<Integer, JobExec> executingJobs = new HashMap<Integer, JobExec>();
 	private Map<Integer, JobExec> completedJobs = new HashMap<Integer, JobExec>();
 
-	private Map<Integer, ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, ProcessWrapper>();
+	private Map<Integer, MavenLauncher.ProcessWrapper> executingProcesses = 
+		new ConcurrentHashMap<Integer, MavenLauncher.ProcessWrapper>();
 
 	private int masterRetryTimeout;
 	private int masterRetryCount;
@@ -217,20 +225,14 @@ public class Daemon extends ComponentDefinition {
 				job = loadingJobs.get(id);
 				if (job == null) {
 					// need to load job first
-
+					status = JobStartResponse.Status.NOT_LOADED; 
 				}
 
 			} else {
 				JobExec jobExec;
-				try {
-					jobExec = new JobExec(job, event.getSimulationScenario());
-					trigger(jobExec, mavenLauncher.getNegative(Maven.class));
-					executingJobs.put(id, jobExec);
-				} catch (DummyPomConstructionException e) {
-					e.printStackTrace();
-					status = JobStartResponse.Status.FAIL;
-				}
-
+				jobExec = new JobExec(job, event.getSimulationScenario());
+				trigger(jobExec, mavenLauncher.getNegative(Maven.class));
+				executingJobs.put(id, jobExec);
 			}
 
 			JobStartResponse response = new JobStartResponse(id, status, self, event.getSource());
@@ -377,7 +379,7 @@ public class Daemon extends ComponentDefinition {
 			int id = event.getJobId();
 			JobStopResponse.Status status;
 
-			ProcessWrapper pw = executingProcesses.get(id);
+			MavenLauncher.ProcessWrapper pw = executingProcesses.get(id);
 			if (pw == null) {
 				status = JobStopResponse.Status.FAILED_TO_STOP;
 			} else {
@@ -401,7 +403,6 @@ public class Daemon extends ComponentDefinition {
 			trigger(new ListJobsLoadedResponse(listJobsLoaded, self, event.getDestination()), net);
 		}
 	};
-	
 
 	public Handler<JobFoundLocally> handleJobFoundLocally = new Handler<JobFoundLocally>() {
 		public void handle(JobFoundLocally event) {
@@ -412,12 +413,12 @@ public class Daemon extends ComponentDefinition {
 			}
 		}
 	};
-	
+
 	public Handler<JobMessageRequest> handleJobMessageRequest = new Handler<JobMessageRequest>() {
 		public void handle(JobMessageRequest event) {
 			int id = event.getJobId();
 			JobMessageResponse.Status status;
-			ProcessWrapper pw = executingProcesses.get(id);
+			MavenLauncher.ProcessWrapper pw = executingProcesses.get(id);
 			if (pw == null) {
 				status = JobMessageResponse.Status.STOPPED;
 			} else {
@@ -430,10 +431,13 @@ public class Daemon extends ComponentDefinition {
 				}
 			}
 
-			JobMessageResponse response = new JobMessageResponse(id, status, self, event.getSource());
+			JobMessageResponse response = new JobMessageResponse(id, status, self, event
+					.getSource());
 			trigger(response, net);
 		}
 	};
+
+	public static final String POM_FILENAME = "pom.xml";
 
 	// private ProcessLauncher createProcess(int id, int idx,
 	// String classPath,

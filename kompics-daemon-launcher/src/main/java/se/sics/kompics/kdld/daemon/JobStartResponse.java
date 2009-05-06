@@ -8,7 +8,7 @@ public class JobStartResponse extends DaemonResponseMessage {
 	private static final long serialVersionUID = -8081345362548135164L;
 
 	public enum Status {
-		SUCCESS, FAIL
+		SUCCESS, NOT_LOADED, ERROR
 	};
 
 	private final Status status;

@@ -12,21 +12,19 @@ public class JobExec extends Job {
 	
 	public JobExec(int id, String repoId, String repoUrl, String repoName, String groupId,
 			String artifactId, String version, String mainClass, List<String> args,
-			SimulationScenario scenario)
-			throws DummyPomConstructionException {
+			SimulationScenario scenario) {
 		super(id, repoId, repoUrl, repoName, groupId, artifactId, version, mainClass, args);
 		this.scenario = scenario;
 	}
 	
-	public JobExec(Job job, SimulationScenario scenario)
-			throws DummyPomConstructionException {
-		super(job.getId(), job.getRepoId(), job.getRepoUrl(), job.getRepoName(), 
+	public JobExec(Job job, SimulationScenario scenario) {
+		this(job.getId(), job.getRepoId(), job.getRepoUrl(), job.getRepoName(), 
 				job.getGroupId(), job.getArtifactId(), job.getVersion(), job.getMainClass(), 
-				job.getArgs());
-		this.scenario = scenario;
+				job.getArgs(),scenario);
 	}
 
 	public SimulationScenario getScenario() {
 		return scenario;
 	}
+
 }

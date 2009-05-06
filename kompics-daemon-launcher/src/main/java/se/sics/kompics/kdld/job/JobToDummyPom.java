@@ -26,6 +26,7 @@ import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.SAXException;
 
 import se.sics.kompics.kdld.daemon.Daemon;
+import se.sics.kompics.kdld.util.PomUtils;
 
 import com.sun.org.apache.xpath.internal.XPathAPI;
 
@@ -34,16 +35,14 @@ public class JobToDummyPom extends Job implements Serializable {
 
 	private static final long serialVersionUID = -6014083364061777714L;
 
-	private final String DUMMY_POM = "src/main/resources/se/sics/kompics/kdld/pom.xml";
+	protected final String DUMMY_POM = "src/main/resources/se/sics/kompics/kdld/pom.xml";
 
-	private final String POM_FILENAME = "pom.xml";
+	protected final String filePath;
+	protected final String sepStr;
 
-	private final String filePath;
-	private final String sepStr;
+	protected final File xmlFile = new File(DUMMY_POM);
 
-	private final File xmlFile = new File(DUMMY_POM);
-
-	private final Document xmlDoc;
+	protected final Document xmlDoc;
 
 	public JobToDummyPom(int id, String repoId, String repoUrl, String repoName, String groupId,
 			String artifactId, String version, String mainClass, List<String> args)
@@ -51,11 +50,11 @@ public class JobToDummyPom extends Job implements Serializable {
 		super(id,repoId,repoUrl,repoName,groupId,artifactId, version, mainClass,args);
 
 
-		String groupPath = groupId.replace('.', File.separatorChar);
+		String groupPath = PomUtils.groupIdToPath(groupId);
 		char[] separator = new char[1];
 		separator[0] = File.separatorChar;
 		sepStr = new String(separator);
-		filePath = groupPath + sepStr + artifactId;
+		filePath = groupPath + sepStr + artifactId + sepStr + version;
 
 		// Setup Dom Object
 
@@ -92,7 +91,14 @@ public class JobToDummyPom extends Job implements Serializable {
 		updateJobId(id);
 		// printElements("root", root, 6);
 	}
-
+	
+	public JobToDummyPom(Job job)
+			throws DummyPomConstructionException {
+		this(job.getId(), job.getRepoId(), job.getRepoUrl(), job.getRepoName(),
+				job.getGroupId(), job.getArtifactId(), job.getVersion(), job.getMainClass(),
+				job.getArgs());
+	}
+	
 	public boolean createDummyPomFile() throws DummyPomConstructionException {
 
 		try {
@@ -108,7 +114,7 @@ public class JobToDummyPom extends Job implements Serializable {
 									+ "\nCheck file permissions for this directory.");
 				}
 			}
-			String fileName = filePath + sepStr + POM_FILENAME;
+			String fileName = filePath + sepStr + Daemon.POM_FILENAME;
 			File file = new File(Daemon.KOMPICS_HOME, fileName);
 
 			file.createNewFile();
@@ -236,4 +242,10 @@ public class JobToDummyPom extends Job implements Serializable {
 		}			
 	}
 
+	public File getPomFile()
+	{
+		String fullName = Daemon.KOMPICS_HOME + sepStr + filePath + sepStr 
+		+ Daemon.POM_FILENAME;
+		return new File(fullName);
+	}
 }

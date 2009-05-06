@@ -1,9 +1,12 @@
 package se.sics.kompics.kdld.job;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 
 import se.sics.kompics.Request;
+import se.sics.kompics.kdld.daemon.Daemon;
+import se.sics.kompics.kdld.util.PomUtils;
 
 public abstract class Job extends Request implements Serializable {
 
@@ -24,8 +27,7 @@ public abstract class Job extends Request implements Serializable {
 
 
 	public Job(int id, String repoId, String repoUrl, String repoName, String groupId,
-			String artifactId, String version, String mainClass, List<String> args)
-			throws DummyPomConstructionException {
+			String artifactId, String version, String mainClass, List<String> args) {
 		this.id = id;
 		this.repoId = repoId;
 		this.repoUrl = repoUrl;
@@ -36,6 +38,18 @@ public abstract class Job extends Request implements Serializable {
 		this.mainClass = mainClass;
 		this.args = args;
 
+	}
+	public Job(Job job)
+	{
+		this.id = job.getId();
+		this.repoId = job.getRepoId();
+		this.repoUrl = job.getRepoUrl();
+		this.repoName = job.getRepoName();
+		this.groupId = job.getGroupId();
+		this.artifactId = job.getArtifactId();
+		this.version = job.getVersion();
+		this.mainClass = job.getMainClass();
+		this.args = job.getArgs();
 	}
 
 	public int getId() {
@@ -76,5 +90,35 @@ public abstract class Job extends Request implements Serializable {
 
 	public String[] getArgsAsArray() {
 		return args.toArray(new String[args.size()]);
+	}
+	
+	public File getPomFile()
+	{
+		return new File(getPomFilename());
+	}
+	
+	public String getPomFilename()
+	{
+		String groupPath = PomUtils.groupIdToPath(groupId);
+		String sepStr = PomUtils.sepStr();
+    	String pomFileName = Daemon.KOMPICS_HOME + sepStr + groupPath + sepStr +
+		artifactId + sepStr + version + sepStr + Daemon.POM_FILENAME;
+    	return pomFileName;
+	}
+	
+	public File getJarFile()
+	{
+		return new File(getJarFilename());
+	}
+	
+	public String getJarFilename()
+	{
+		String sepStr = PomUtils.sepStr();
+		String jarFileName = Daemon.MAVEN_REPO_HOME + sepStr 
+		+ PomUtils.groupIdToPath(groupId) + sepStr +
+		getArtifactId() + sepStr + getVersion() + sepStr 
+		+ getArtifactId() + "-" + getVersion() + ".jar";
+		
+		return jarFileName;
 	}
 }

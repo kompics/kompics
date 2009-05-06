@@ -1,6 +1,9 @@
-package se.sics.kompics.kdld.job;
+package se.sics.kompics.kdld.daemon.indexer;
 
 import java.util.List;
+
+import se.sics.kompics.kdld.job.DummyPomConstructionException;
+import se.sics.kompics.kdld.job.Job;
 
 public class JobFoundLocally extends Job {
 	

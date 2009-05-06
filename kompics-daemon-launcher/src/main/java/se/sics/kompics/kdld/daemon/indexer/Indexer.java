@@ -1,4 +1,4 @@
-package se.sics.kompics.kdld.job;
+package se.sics.kompics.kdld.daemon.indexer;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +34,8 @@ import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequest;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedResponse;
+import se.sics.kompics.kdld.job.DummyPomConstructionException;
+import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.Timer;
@@ -44,7 +46,7 @@ public class Indexer extends ComponentDefinition {
 
 	public static final char PACKAGE_SEPARATOR = '.';	
 	
-	private static final File POM_FILE = new File("pom.xml");
+	private static final String POM_FILE = "pom.xml";
 	
 	
 	static {
@@ -67,21 +69,29 @@ public class Indexer extends ComponentDefinition {
 
 		subscribe(handleIndexStop, indexPort);
 		subscribe(handleIndexStart, indexPort);
+		subscribe(handleListJobsLoadedRequest, indexPort);
+
 		subscribe(handleIndexerTimeout, timer);
+
 		subscribe(handleIndexerInit, control);
 		subscribe(handleStart, control);
-		subscribe(handleListJobsLoadedRequest, indexPort);
+
 	}
 
 	public Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
-//			trigger(new IndexStart(), indexPort);
+			logger.info("Starting Indexer...");
+			
+			SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(
+					0, indexingPeriod);
+			spt.setTimeoutEvent(new IndexerTimeout(spt));
+			trigger(spt, timer);
 		}
 	};
 	
 	public Handler<IndexerInit> handleIndexerInit = new Handler<IndexerInit>() {
 		public void handle(IndexerInit event) {
-
+		logger.info("Initializing...");
 		indexingPeriod = event.getIndexingPeriod();
 		}
 	};
@@ -107,7 +117,7 @@ public class Indexer extends ComponentDefinition {
 			
 			Set<Job> setJobs = new HashSet<Job>(localJobs.values());
 			DaemonAddress src = new DaemonAddress(event.getDaemonId(), event.getDestination());
-			trigger(new ListJobsLoadedResponse(setJobs, src, event.getDestination()), net);
+			trigger(new ListJobsLoadedResponse(setJobs, src, event.getDestination()), indexPort);
 		}
 	};
 	
@@ -123,9 +133,10 @@ public class Indexer extends ComponentDefinition {
 	
 	private Handler<IndexerTimeout> handleIndexerTimeout = new Handler<IndexerTimeout>() {
 		public void handle(IndexerTimeout event) {
-			logger.debug("Indexer running...");
+			logger.info("Indexer timeout expired. Now indexing...");
 
-			// check KOMPICS_HOME for newly downloaded dummy pom projects
+			File kHome = new File(Daemon.KOMPICS_HOME);
+			visitAllDirsAndFiles(kHome, "");
 			
 			
 			// set the indexing timer to index again
@@ -140,34 +151,34 @@ public class Indexer extends ComponentDefinition {
 	
 	
 	   // Process all files and directories under dir
-    public void visitAllDirsAndFiles(File dir, String groupVersion) {
+    public void visitAllDirsAndFiles(File dir, String groupArtifactVersion) {
         if (dir.isDirectory()) {
         	
             // XXX GroupId, Version, Artifact
         	
-        	if (groupVersion.compareTo("") == 0)
+        	if (groupArtifactVersion.compareTo("") == 0)
         	{
-        		groupVersion = dir.getName();
+        		groupArtifactVersion = dir.getName();
         	}
         	else
         	{
-            	groupVersion = groupVersion + PACKAGE_SEPARATOR + dir.getName();
+        		groupArtifactVersion = groupArtifactVersion + PACKAGE_SEPARATOR + dir.getName();
         	}
         	
             String[] children = dir.list();
             for (int i=0; i<children.length; i++) {
-                visitAllDirsAndFiles(new File(dir, children[i]), groupVersion);
+                visitAllDirsAndFiles(new File(dir, children[i]), groupArtifactVersion);
             }
         }
         else
         {
-        	if (dir.compareTo(POM_FILE) == 0)
+        	
+        	if (dir.getName().compareTo(POM_FILE) == 0) // Found a pom file locally.
         	{
-        		// Found a pom file locally.
         		try {
-        			if (localJobs.containsKey(dir.getAbsolutePath()) == false)
+        			if (localJobs.containsKey(groupArtifactVersion) == false) // Found a pom file locally.
         			{
-        				loadPom(dir, groupVersion); 
+        				loadPom(dir, groupArtifactVersion); 
         			}
 				} catch (PomIndexingException e) {
 					e.printStackTrace();
@@ -180,7 +191,7 @@ public class Indexer extends ComponentDefinition {
  * Test if the jar for Pom file is downloaded (assume dependent jars also downloaded if true).
  * If jar file found then send a JobFoundLocally event to Daemon    
  */
-    private void loadPom(File pom, String groupVersion) throws PomIndexingException
+    private void loadPom(File pom, String groupArtifactVersion) throws PomIndexingException
     {
 //    	String version = groupVersion.substring(groupVersion.lastIndexOf(PACKAGE_SEPARATOR));
     	// XXX read in using XPath as XML file
@@ -213,8 +224,8 @@ public class Indexer extends ComponentDefinition {
 		String repoUrl = getElementText(xmlDoc, "/project/repositories/repository/url");
 
 		String groupId = getElementText(xmlDoc, "/project/dependencies/dependency/groupId");
-		String version = getElementText(xmlDoc, "/project/dependencies/dependency/artifactId");
-		String artifactId = getElementText(xmlDoc, "/project/dependencies/dependency/version");
+		String version = getElementText(xmlDoc, "/project/dependencies/dependency/version");
+		String artifactId = getElementText(xmlDoc, "/project/dependencies/dependency/artifactId");
     	
 		
 		String groupPath = groupId.replace('.', File.separatorChar);
@@ -222,7 +233,7 @@ public class Indexer extends ComponentDefinition {
 		separator[0] = File.separatorChar;
 		String sepStr = new String(separator);
     	String jarFileName = Daemon.MAVEN_REPO_HOME + sepStr + groupPath + sepStr +
-    						version + sepStr + artifactId + "-" + version + ".jar";
+    					artifactId + sepStr + version + sepStr + artifactId + "-" + version + ".jar";
     	File jarFile = new File(jarFileName);
     	
     	JobFoundLocally job;
@@ -239,7 +250,7 @@ public class Indexer extends ComponentDefinition {
 				throw new PomIndexingException(e.getMessage());
 			}
 			
-			localJobs.put(pom.getAbsolutePath(), job);    		
+			localJobs.put(groupArtifactVersion, job);    		
     		trigger(job, indexPort);
     	}
     }

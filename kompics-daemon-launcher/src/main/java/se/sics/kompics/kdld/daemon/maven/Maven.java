@@ -1,7 +1,12 @@
-package se.sics.kompics.kdld.job;
+package se.sics.kompics.kdld.daemon.maven;
 
 import se.sics.kompics.PortType;
 import se.sics.kompics.kdld.daemon.JobStopRequest;
+import se.sics.kompics.kdld.job.JobAssembly;
+import se.sics.kompics.kdld.job.JobAssemblyResponse;
+import se.sics.kompics.kdld.job.JobExec;
+import se.sics.kompics.kdld.job.JobExecResponse;
+import se.sics.kompics.kdld.job.JobExited;
 
 
 /**
@@ -18,5 +23,7 @@ public class Maven extends PortType {
 		negative(JobStopRequest.class);
 		positive(JobAssemblyResponse.class);
 		positive(JobExecResponse.class);
+		
+		positive(JobExited.class);
 	}
 }

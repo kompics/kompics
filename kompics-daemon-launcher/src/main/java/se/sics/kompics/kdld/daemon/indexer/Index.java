@@ -1,4 +1,4 @@
-package se.sics.kompics.kdld.job;
+package se.sics.kompics.kdld.daemon.indexer;
 
 import se.sics.kompics.PortType;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequest;

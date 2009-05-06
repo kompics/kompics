@@ -10,7 +10,10 @@ public class JobAssembly extends JobToDummyPom {
 			String artifactId, String version, String mainClass, List<String> args)
 			throws DummyPomConstructionException {
 		super(id, repoId, repoUrl, repoName, groupId, artifactId, version, mainClass, args);
-
 	}
-
+	
+	public JobAssembly(Job job)
+			throws DummyPomConstructionException {
+		super(job);
+	}
 }
