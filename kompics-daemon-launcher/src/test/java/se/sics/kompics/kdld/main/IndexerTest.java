@@ -1,10 +1,11 @@
 package se.sics.kompics.kdld.main;
 
-import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
@@ -27,11 +28,13 @@ import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
 import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
 import se.sics.kompics.kdld.daemon.maven.Maven;
 import se.sics.kompics.kdld.daemon.maven.MavenLauncher;
+import se.sics.kompics.kdld.daemon.maven.MavenLauncher.ProcessWrapper;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.job.JobAssembly;
 import se.sics.kompics.kdld.job.JobAssemblyResponse;
 import se.sics.kompics.kdld.job.JobExec;
+import se.sics.kompics.kdld.job.JobExecResponse;
 import se.sics.kompics.kdld.job.JobToDummyPom;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.timer.Timer;
@@ -81,10 +84,11 @@ public class IndexerTest {
 			subscribe(handleJobFoundLocally, indexer.getPositive(Index.class));
 			
 			subscribe(handleJobAssemblyResponse, mavenLauncher.getPositive(Maven.class));
+			subscribe(handleJobExecResponse, mavenLauncher.getPositive(Maven.class));
 			
 			subscribe(handleStart, control);
 
-			trigger(new IndexerInit(10000), indexer.getControl());
+			trigger(new IndexerInit(5000), indexer.getControl());
 
 			logger.info("Initializing the Indexer");
 		}
@@ -98,11 +102,12 @@ public class IndexerTest {
 				logger.info("Starting TestIndexer");
 
 				try {
-					JobToDummyPom dummy = new JobToDummyPom(11, "sics-snapshot",
-							"http://kompics.sics.se/maven/snapshotrepository",
-							"SICS Snapshot Repository", "se.sics.kompics", "kompics-manual",
+					JobToDummyPom dummy = new JobToDummyPom(11, 
+							"se.sics.kompics", "kompics-manual",
 							"0.4.2-SNAPSHOT", "se.sics.kompics.manual.example1.Root",
-							new ArrayList<String>());
+							new ArrayList<String>(),
+							"sics-snapshot",
+							"http://kompics.sics.se/maven/snapshotrepository");
 
 					logger.info("Creating a dummy pom");
 
@@ -117,6 +122,38 @@ public class IndexerTest {
 
 			}
 		};
+
+		public Handler<JobExecResponse> handleJobExecResponse = new Handler<JobExecResponse>() {
+			public void handle(JobExecResponse event) {
+				
+				logger.info("Received job execResponse from job-id: {} , process-id : {}", 
+						event.getJobId(), event.getProcessWrapper());
+
+				ProcessWrapper pw = event.getProcessWrapper();
+				
+				while (pw.started() == false)
+				{
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				
+				try {
+					String read = event.getProcessWrapper().readLineFromOutput();
+					logger.debug("Read from process:" + read);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+//				IndexerTest.semaphore.release(1);
+				
+			}
+		};
+		
 		
 		public Handler<JobAssemblyResponse> handleJobAssemblyResponse = new Handler<JobAssemblyResponse>() {
 			public void handle(JobAssemblyResponse event) {
@@ -128,7 +165,15 @@ public class IndexerTest {
 				
 				SimulationScenario simulationScenario = new SimulationScenario()
 				{
-					
+
+					{
+					StochasticProcess p1 = new StochasticProcess() {
+
+						{
+						}
+					};
+					p1.start();
+					}
 				};
 				Job j = loadedJobs.get(event.getJobId());
 				if (j != null){
@@ -161,7 +206,18 @@ public class IndexerTest {
 				} else {
 					testObj.fail();
 				}
-				IndexerTest.semaphore.release(1);
+				
+				Iterator<Job> iter = listJobsLoaded.iterator();
+				
+				SimulationScenario scenario = new SimulationScenario()
+				{
+					private static final long serialVersionUID = -5355642917108165919L;
+					
+				};
+				
+				trigger(new JobExec(iter.next(),scenario), mavenLauncher.getPositive(Maven.class));
+				
+//				IndexerTest.semaphore.release(1);
 			}
 		};
 

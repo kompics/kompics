@@ -79,8 +79,8 @@
 	<repositories>
 		<repository>
 			<id>sics-snapshot</id>
-			<name>SICS Snapshot Repository</name>
 			<url>http://kompics.sics.se/maven/snapshotrepository</url>
+			<name>SICS Snapshot Repository</name>
 			<releases>
 				<enabled>false</enabled>
 			</releases>
@@ -90,8 +90,8 @@
 		</repository>		
 		<repository>
 			<id>sics-release</id>
-			<name>SICS Release Repository</name>
 			<url>http://kompics.sics.se/maven/repository</url>
+			<name>SICS Release Repository</name>			
 			<releases>
 				<enabled>true</enabled>			
 			</releases>

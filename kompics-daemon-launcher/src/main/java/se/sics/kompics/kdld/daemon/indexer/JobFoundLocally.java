@@ -9,10 +9,16 @@ public class JobFoundLocally extends Job {
 	
 private static final long serialVersionUID = -9018586643681094901L;
 
-	public JobFoundLocally(int id, String repoId, String repoUrl, String repoName, String groupId,
-			String artifactId, String version, String mainClass, List<String> args)
+	public JobFoundLocally(int id, String groupId, String artifactId, String version, 
+			String mainClass, List<String> args,
+			String repoId, String repoUrl)
 			throws DummyPomConstructionException {
-		super(id, repoId, repoUrl, repoName, groupId, artifactId, version, mainClass, args);
+		super(id, groupId, artifactId, version, mainClass, args, repoId, repoUrl);
 	}
 
+	public JobFoundLocally(int id, String groupId, String artifactId, String version, 
+			String mainClass, List<String> args)
+			throws DummyPomConstructionException {
+		this(id, groupId, artifactId, version, mainClass, args, "", "");
+	}
 }

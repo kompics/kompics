@@ -8,6 +8,7 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -35,6 +36,8 @@ public class JobToDummyPom extends Job implements Serializable {
 
 	private static final long serialVersionUID = -6014083364061777714L;
 
+	public final static String MAVEN_XSD_NS = "http://maven.apache.org/POM/4.0.0";
+	
 	protected final String DUMMY_POM = "src/main/resources/se/sics/kompics/kdld/pom.xml";
 
 	protected final String filePath;
@@ -44,10 +47,11 @@ public class JobToDummyPom extends Job implements Serializable {
 
 	protected final Document xmlDoc;
 
-	public JobToDummyPom(int id, String repoId, String repoUrl, String repoName, String groupId,
-			String artifactId, String version, String mainClass, List<String> args)
+	public JobToDummyPom(int id, String groupId, String artifactId, String version, 
+			String mainClass, List<String> args,
+			String repoId, String repoUrl)
 			throws DummyPomConstructionException {
-		super(id,repoId,repoUrl,repoName,groupId,artifactId, version, mainClass,args);
+		super(id, groupId,artifactId, version, mainClass,args, repoId,repoUrl);
 
 
 		String groupPath = PomUtils.groupIdToPath(groupId);
@@ -92,11 +96,16 @@ public class JobToDummyPom extends Job implements Serializable {
 		// printElements("root", root, 6);
 	}
 	
+	public JobToDummyPom(int id, String groupId, String artifactId, String version, 
+			String mainClass, List<String> args)
+			throws DummyPomConstructionException {
+		this(id, groupId, artifactId, version, mainClass, args, "", "");
+	}
+	
 	public JobToDummyPom(Job job)
 			throws DummyPomConstructionException {
-		this(job.getId(), job.getRepoId(), job.getRepoUrl(), job.getRepoName(),
-				job.getGroupId(), job.getArtifactId(), job.getVersion(), job.getMainClass(),
-				job.getArgs());
+		this(job.getId(), job.getGroupId(), job.getArtifactId(), job.getVersion(), job.getMainClass(),
+				job.getArgs(), job.getRepoId(), job.getRepoUrl());
 	}
 	
 	public boolean createDummyPomFile() throws DummyPomConstructionException {
@@ -123,6 +132,8 @@ public class JobToDummyPom extends Job implements Serializable {
 
 			// Write the DOM document to the file
 			Transformer xformer = TransformerFactory.newInstance().newTransformer();
+			xformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			xformer.setOutputProperty(OutputKeys.METHOD, "xml");
 			xformer.transform(source, result);
 		} catch (TransformerConfigurationException e) {
 			e.printStackTrace();
@@ -184,9 +195,19 @@ public class JobToDummyPom extends Job implements Serializable {
 	}
 
 	private void updateRepository() throws DummyPomConstructionException {
-		updateElement("/project/repositories/repository/id", repoId);
-		updateElement("/project/repositories/repository/name", repoName);
-		updateElement("/project/repositories/repository/url", repoUrl);
+		
+		Element id = xmlDoc.createElementNS(MAVEN_XSD_NS, "id");
+//		id.setTextContent(repoId);
+		id.appendChild(xmlDoc.createTextNode(repoId));
+		Element url = xmlDoc.createElementNS(MAVEN_XSD_NS, "url");
+		url.appendChild(xmlDoc.createTextNode(repoUrl));
+		Element repo = xmlDoc.createElementNS(MAVEN_XSD_NS, "repository");
+		repo.appendChild(id);
+		repo.appendChild(url);
+		
+		addElement("/project/repositories", repo);
+
+//		printElements("repositories", xmlDoc.getFirstChild(), 4);
 	}
 
 	private void updateMainClass(String mainClass, List<String> args)
@@ -236,6 +257,21 @@ public class JobToDummyPom extends Job implements Serializable {
 			Node n1 = groupIter.nextNode();
 			Element e1 = (Element) n1;
 			e1.setTextContent(updatedText);
+		} catch (TransformerException e) {
+			e.printStackTrace();
+			throw new DummyPomConstructionException(e.getMessage());
+		}			
+	}
+	
+	private void addElement(String parent, Node child) throws DummyPomConstructionException
+	{
+		try
+		{
+			NodeIterator groupIter = XPathAPI.selectNodeIterator(xmlDoc,
+					parent);
+			Node n1 = groupIter.nextNode();
+			Element e1 = (Element) n1;
+			e1.appendChild(child);
 		} catch (TransformerException e) {
 			e.printStackTrace();
 			throw new DummyPomConstructionException(e.getMessage());

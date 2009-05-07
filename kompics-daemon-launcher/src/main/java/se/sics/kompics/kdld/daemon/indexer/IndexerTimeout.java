@@ -20,6 +20,7 @@
 package se.sics.kompics.kdld.daemon.indexer;
 
 import se.sics.kompics.timer.SchedulePeriodicTimeout;
+import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;
 
 /**
@@ -29,6 +30,10 @@ import se.sics.kompics.timer.Timeout;
 public final class IndexerTimeout extends Timeout {
 
 	protected IndexerTimeout(SchedulePeriodicTimeout request) {
+		super(request);
+	}
+	
+	protected IndexerTimeout(ScheduleTimeout request) {
 		super(request);
 	}
 }

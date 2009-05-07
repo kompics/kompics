@@ -9,20 +9,11 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.maven.embedder.Configuration;
-import org.apache.maven.embedder.ConfigurationValidationResult;
-import org.apache.maven.embedder.DefaultConfiguration;
-import org.apache.maven.embedder.MavenEmbedder;
-import org.apache.maven.embedder.MavenEmbedderException;
-import org.apache.maven.execution.DefaultMavenExecutionRequest;
-import org.apache.maven.execution.MavenExecutionRequest;
-import org.apache.maven.execution.MavenExecutionResult;
-import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +32,6 @@ import se.sics.kompics.kdld.job.JobAssemblyResponse;
 import se.sics.kompics.kdld.job.JobExec;
 import se.sics.kompics.kdld.job.JobExecResponse;
 import se.sics.kompics.kdld.job.JobExited;
-import se.sics.kompics.kdld.job.JobToDummyPom;
-import se.sics.kompics.kdld.util.PomUtils;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.simulator.SimulationScenario;
 
@@ -73,12 +62,14 @@ public class MavenLauncher extends ComponentDefinition {
 
 		private final ProcessBuilder processBuilder;
 		
+		private AtomicBoolean started = new AtomicBoolean(false);
+		
 		private int exitValue=-111;
 
 		public ProcessWrapper(int jobId, ProcessBuilder processBuilder) {
 			this.jobId = jobId;
-			if (process == null) {
-				throw new IllegalArgumentException("Process was null");
+			if (processBuilder == null) {
+				throw new IllegalArgumentException("ProcessBuilder was null");
 			}
 			this.processBuilder = processBuilder;
 		}
@@ -90,7 +81,9 @@ public class MavenLauncher extends ComponentDefinition {
 				writeToInput = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
 				// XXX configure output to write to Socket for log4j at Master
 				readFromOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				
+
+				started.set(true);
+
 				exitValue = process.waitFor();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -104,6 +97,11 @@ public class MavenLauncher extends ComponentDefinition {
 			notifyProcessExiting(jobId, exitValue);
 		}
 
+		public boolean started()
+		{
+			return started.get();
+		}
+		
 		public int getExitValue() {
 			return exitValue;
 		}
@@ -204,8 +202,9 @@ public class MavenLauncher extends ComponentDefinition {
 				status = mvnExecExec(event, event.getScenario());
 			}
 
-			JobExecResponse response = new JobExecResponse(event, id, status);
-			trigger(response, net);
+			ProcessWrapper p = executingProcesses.get(id);
+			JobExecResponse response = new JobExecResponse(event, id, p, status);
+			trigger(response, maven);
 		}
 	};
 
@@ -239,6 +238,17 @@ public class MavenLauncher extends ComponentDefinition {
 			status = JobExecResponse.Status.FAIL;
 			break;
 		}
+		
+		/*
+		try {
+			MavenWrapper mw = new MavenWrapper(job.getPomFile().getAbsolutePath());
+			mw.execute("exec:exec");
+		} catch (MavenExecException e) {
+			status = JobExecResponse.Status.FAIL;
+			e.printStackTrace();
+			logger.error(e.getMessage());
+		}
+		*/
 		return status;
 	}
 
@@ -255,9 +265,10 @@ public class MavenLauncher extends ComponentDefinition {
 		java.util.List<String> command = new ArrayList<String>();
 		command.add("java");
 		command.add("-classpath"); 
-		classPath = classPath  + File.pathSeparatorChar + job.getJarFilename();
+		classPath = classPath  + File.pathSeparatorChar + 
+		job.getDummyJarWithDependenciesName();
 		command.add(classPath);
-		command.add(job.getPomFilename());
+		command.add(job.getMainClass());
 		command.addAll(job.getArgs());
 		command.add("-Dlog4j.properties=log4j.properties");
 		command.add("-DKOMPICS_HOME=" + Daemon.KOMPICS_HOME);
@@ -271,15 +282,27 @@ public class MavenLauncher extends ComponentDefinition {
 		env.put("KOMPICS_HOME", Daemon.KOMPICS_HOME);
 
 		if (scenario != null) {
+			File file=null;
+			ObjectOutputStream oos=null;
 			try {
-				File file = File.createTempFile(SCENARIO_FILENAME, ".bin");
-				ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file));
-				oos.writeObject(this);
+				file = File.createTempFile(SCENARIO_FILENAME, ".bin");
+				oos = new ObjectOutputStream(new FileOutputStream(file));
+				oos.writeObject(scenario);
 				oos.flush();
 				oos.close();
 				env.put(SCENARIO_FILENAME, file.getAbsolutePath());
 			} catch (IOException e) {
 				e.printStackTrace();
+				logger.debug(e.getMessage());
+			}
+			finally {
+				if (oos!= null)
+				{ 
+					try {
+						oos.close();
+					} catch (IOException ignoreException) {
+					}
+				}
 			}
 		}
 		

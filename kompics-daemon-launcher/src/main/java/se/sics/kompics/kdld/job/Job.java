@@ -16,7 +16,6 @@ public abstract class Job extends Request implements Serializable {
 
 	protected final String repoId;
 	protected final String repoUrl;
-	protected final String repoName;
 
 	protected final String groupId;
 	protected final String artifactId;
@@ -26,25 +25,34 @@ public abstract class Job extends Request implements Serializable {
 	protected final List<String> args;
 
 
-	public Job(int id, String repoId, String repoUrl, String repoName, String groupId,
-			String artifactId, String version, String mainClass, List<String> args) {
+	public Job(int id, String groupId, String artifactId, String version, String mainClass, List<String> args,
+			String repoId, String repoUrl) {
 		this.id = id;
-		this.repoId = repoId;
-		this.repoUrl = repoUrl;
-		this.repoName = repoName;
 		this.groupId = groupId;
 		this.artifactId = artifactId;
 		this.version = version;
 		this.mainClass = mainClass;
 		this.args = args;
-
+		this.repoId = repoId;
+		this.repoUrl = repoUrl;
 	}
+	
+	public Job(int id, String groupId, String artifactId, String version, String mainClass, List<String> args) {
+		this.id = id;
+		this.groupId = groupId;
+		this.artifactId = artifactId;
+		this.version = version;
+		this.mainClass = mainClass;
+		this.args = args;
+		this.repoId = "";
+		this.repoUrl = "";
+	}
+	
 	public Job(Job job)
 	{
 		this.id = job.getId();
 		this.repoId = job.getRepoId();
 		this.repoUrl = job.getRepoUrl();
-		this.repoName = job.getRepoName();
 		this.groupId = job.getGroupId();
 		this.artifactId = job.getArtifactId();
 		this.version = job.getVersion();
@@ -76,10 +84,6 @@ public abstract class Job extends Request implements Serializable {
 		return repoUrl;
 	}
 
-	public String getRepoName() {
-		return repoName;
-	}
-
 	public String getMainClass() {
 		return mainClass;
 	}
@@ -105,13 +109,30 @@ public abstract class Job extends Request implements Serializable {
 		artifactId + sepStr + version + sepStr + Daemon.POM_FILENAME;
     	return pomFileName;
 	}
-	
-	public File getJarFile()
+
+	public String getPomDirname()
 	{
-		return new File(getJarFilename());
+		String pomFilename = getPomFilename();
+		int idx = pomFilename.lastIndexOf(Daemon.POM_FILENAME, 0);
+		return pomFilename.substring(0, idx);
+	}
+
+	public String getDummyJarWithDependenciesName()
+	{
+		String sepStr = PomUtils.sepStr();
+		String jarFileName = Daemon.KOMPICS_HOME + sepStr 
+		+ PomUtils.groupIdToPath(groupId) + sepStr +
+		getArtifactId() + sepStr + getVersion() + sepStr 
+		+ "target" + sepStr + "dummy-0.1-jar-with-dependencies.jar";
+		return jarFileName;
 	}
 	
-	public String getJarFilename()
+	public File getJarFromRepoFile()
+	{
+		return new File(getJarFromRepoFilename());
+	}
+	
+	public String getJarFromRepoFilename()
 	{
 		String sepStr = PomUtils.sepStr();
 		String jarFileName = Daemon.MAVEN_REPO_HOME + sepStr 

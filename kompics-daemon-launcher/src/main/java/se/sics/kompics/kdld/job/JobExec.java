@@ -10,17 +10,22 @@ public class JobExec extends Job {
 
 	private final SimulationScenario scenario;
 	
-	public JobExec(int id, String repoId, String repoUrl, String repoName, String groupId,
-			String artifactId, String version, String mainClass, List<String> args,
-			SimulationScenario scenario) {
-		super(id, repoId, repoUrl, repoName, groupId, artifactId, version, mainClass, args);
+	public JobExec(int id, String groupId, String artifactId, String version, String mainClass, 
+			List<String> args, SimulationScenario scenario, 
+			String repoId, String repoUrl) {
+		super(id, groupId, artifactId, version, mainClass, args, repoId, repoUrl);
+		this.scenario = scenario;
+	}
+	
+	public JobExec(int id, String groupId, String artifactId, String version, String mainClass, 
+			List<String> args, SimulationScenario scenario) {
+		super(id, groupId, artifactId, version, mainClass, args);
 		this.scenario = scenario;
 	}
 	
 	public JobExec(Job job, SimulationScenario scenario) {
-		this(job.getId(), job.getRepoId(), job.getRepoUrl(), job.getRepoName(), 
-				job.getGroupId(), job.getArtifactId(), job.getVersion(), job.getMainClass(), 
-				job.getArgs(),scenario);
+		this(job.getId(), job.getGroupId(), job.getArtifactId(), job.getVersion(), 
+				job.getMainClass(),	job.getArgs(),scenario, job.getRepoId(), job.getRepoUrl());
 	}
 
 	public SimulationScenario getScenario() {

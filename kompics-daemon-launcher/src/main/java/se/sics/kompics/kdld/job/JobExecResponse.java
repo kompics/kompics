@@ -3,6 +3,7 @@ package se.sics.kompics.kdld.job;
 import java.io.Serializable;
 
 import se.sics.kompics.Response;
+import se.sics.kompics.kdld.daemon.maven.MavenLauncher.ProcessWrapper;
 
 
 public class JobExecResponse extends Response implements Serializable {
@@ -16,10 +17,13 @@ public class JobExecResponse extends Response implements Serializable {
 	private final Status status;
 
 	private final int jobId;
+	
+	private final ProcessWrapper processWrapper;
 
-	public JobExecResponse(JobExec request, int jobId, Status status) {
+	public JobExecResponse(JobExec request, int jobId, ProcessWrapper process, Status status) {
 		super(request);
 		this.jobId = jobId;
+		this.processWrapper = process;
 		this.status = status;
 	}
 
@@ -31,4 +35,7 @@ public class JobExecResponse extends Response implements Serializable {
 		return status;
 	}
 
+	public ProcessWrapper getProcessWrapper() {
+		return processWrapper;
+	}
 }

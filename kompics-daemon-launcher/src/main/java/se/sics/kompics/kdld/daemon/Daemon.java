@@ -52,7 +52,8 @@ public class Daemon extends ComponentDefinition {
 		if (userHome != null && kHome == null) {
 			System.setProperty("kompics.home", new File(userHome + "/.kompics/").getAbsolutePath());
 		} else if (userHome == null && kHome == null) {
-			throw new IllegalStateException("kompics.home and user.home environment variables not set.");
+			throw new IllegalStateException(
+					"kompics.home and user.home environment variables not set.");
 		}
 		KOMPICS_HOME = System.getProperty("kompics.home");
 
@@ -73,9 +74,8 @@ public class Daemon extends ComponentDefinition {
 
 		String mavenHome = System.getProperty("maven.home");
 		if (mavenHome == null) {
-			System.setProperty("maven.home", new File(userHome + "/.m2/")
-			.getAbsolutePath());
-		} 
+			System.setProperty("maven.home", new File(userHome + "/.m2/").getAbsolutePath());
+		}
 		MAVEN_HOME = System.getProperty("maven.home");
 
 		if (new File(Daemon.MAVEN_HOME).exists() == false) {
@@ -84,12 +84,12 @@ public class Daemon extends ComponentDefinition {
 						+ Daemon.MAVEN_HOME + "\nCheck file permissions for this directory.");
 			}
 		}
-		
+
 		String mavenRepoHome = System.getProperty("maven.repo");
 		if (mavenRepoHome == null) {
 			System.setProperty("maven.repo", new File(MAVEN_HOME + "/repository/")
-			.getAbsolutePath());
-		} 
+					.getAbsolutePath());
+		}
 		MAVEN_REPO_HOME = System.getProperty("maven.repo");
 		if (new File(Daemon.MAVEN_REPO_HOME).exists() == false) {
 			if ((new File(Daemon.MAVEN_REPO_HOME).mkdirs()) == false) {
@@ -115,8 +115,7 @@ public class Daemon extends ComponentDefinition {
 	private Map<Integer, JobExec> executingJobs = new HashMap<Integer, JobExec>();
 	private Map<Integer, JobExec> completedJobs = new HashMap<Integer, JobExec>();
 
-	private Map<Integer, MavenLauncher.ProcessWrapper> executingProcesses = 
-		new ConcurrentHashMap<Integer, MavenLauncher.ProcessWrapper>();
+	private Map<Integer, MavenLauncher.ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, MavenLauncher.ProcessWrapper>();
 
 	private int masterRetryTimeout;
 	private int masterRetryCount;
@@ -193,9 +192,9 @@ public class Daemon extends ComponentDefinition {
 			if (loadingJobs.containsKey(id) == false) {
 				JobAssembly job;
 				try {
-					job = new JobAssembly(event.getJobId(), event.getRepoId(), event.getRepoUrl(),
-							event.getRepoName(), event.getGroupId(), event.getArtifactId(), event
-									.getVersion(), event.getMainClass(), event.getArgs());
+					job = new JobAssembly(event.getJobId(), event.getGroupId(), event
+							.getArtifactId(), event.getVersion(), event.getMainClass(), event
+							.getArgs(), event.getRepoId(), event.getRepoUrl());
 
 					job.createDummyPomFile();
 					status = JobLoadResponse.Status.POM_CREATED;
@@ -225,7 +224,7 @@ public class Daemon extends ComponentDefinition {
 				job = loadingJobs.get(id);
 				if (job == null) {
 					// need to load job first
-					status = JobStartResponse.Status.NOT_LOADED; 
+					status = JobStartResponse.Status.NOT_LOADED;
 				}
 
 			} else {
