@@ -28,13 +28,14 @@ import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
 import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
 import se.sics.kompics.kdld.daemon.maven.Maven;
 import se.sics.kompics.kdld.daemon.maven.MavenLauncher;
-import se.sics.kompics.kdld.daemon.maven.MavenLauncher.ProcessWrapper;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.job.JobAssembly;
 import se.sics.kompics.kdld.job.JobAssemblyResponse;
 import se.sics.kompics.kdld.job.JobExec;
 import se.sics.kompics.kdld.job.JobExecResponse;
+import se.sics.kompics.kdld.job.JobReadFromExecuting;
+import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
 import se.sics.kompics.kdld.job.JobToDummyPom;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.timer.Timer;
@@ -85,6 +86,7 @@ public class IndexerTest {
 			
 			subscribe(handleJobAssemblyResponse, mavenLauncher.getPositive(Maven.class));
 			subscribe(handleJobExecResponse, mavenLauncher.getPositive(Maven.class));
+			subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(Maven.class));
 			
 			subscribe(handleStart, control);
 
@@ -126,31 +128,41 @@ public class IndexerTest {
 		public Handler<JobExecResponse> handleJobExecResponse = new Handler<JobExecResponse>() {
 			public void handle(JobExecResponse event) {
 				
-				logger.info("Received job execResponse from job-id: {} , process-id : {}", 
-						event.getJobId(), event.getProcessWrapper());
+				logger.info("Received job execResponse from job-id: {} ", 
+						event.getJobId());
 
-				ProcessWrapper pw = event.getProcessWrapper();
+//				ProcessWrapper pw = event.getProcessWrapper();
 				
-				while (pw.started() == false)
-				{
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
+//				while (pw.started() == false)
+//				{
+//					try {
+//						Thread.sleep(1000);
+//					} catch (InterruptedException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//				}
 				
-				try {
-					String read = event.getProcessWrapper().readLineFromOutput();
-					logger.debug("Read from process:" + read);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+//				try {
+					trigger(new JobReadFromExecuting(event.getJobId()),
+							mavenLauncher.getNegative(Maven.class));
+//					String read = event.getProcessWrapper().readLineFromOutput();
+//					logger.debug("Read from process:" + read);
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
 				
 //				IndexerTest.semaphore.release(1);
 				
+			}
+		};
+		
+
+		public Handler<JobReadFromExecutingResponse> handleJobReadFromExecutingResponse 
+		= new Handler<JobReadFromExecutingResponse>() {
+			public void handle(JobReadFromExecutingResponse event) {
+				logger.info("Read from job id:" + event.getJobId() + " - " + event.getMsg());
 			}
 		};
 		
@@ -252,7 +264,7 @@ public class IndexerTest {
 
 		TestIndexerComponent.setTestObj(this);
 
-		Kompics.createAndStart(TestIndexerComponent.class, 1);
+		Kompics.createAndStart(TestIndexerComponent.class, 2);
 
 		try {
 			IndexerTest.semaphore.acquire(EVENT_COUNT);

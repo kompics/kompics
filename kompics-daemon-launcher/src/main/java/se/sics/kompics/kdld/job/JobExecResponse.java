@@ -18,12 +18,9 @@ public class JobExecResponse extends Response implements Serializable {
 
 	private final int jobId;
 	
-	private final ProcessWrapper processWrapper;
-
-	public JobExecResponse(JobExec request, int jobId, ProcessWrapper process, Status status) {
+	public JobExecResponse(JobExec request, int jobId, Status status) {
 		super(request);
 		this.jobId = jobId;
-		this.processWrapper = process;
 		this.status = status;
 	}
 
@@ -35,7 +32,4 @@ public class JobExecResponse extends Response implements Serializable {
 		return status;
 	}
 
-	public ProcessWrapper getProcessWrapper() {
-		return processWrapper;
-	}
 }
