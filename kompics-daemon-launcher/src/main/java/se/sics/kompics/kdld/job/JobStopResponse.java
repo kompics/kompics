@@ -1,12 +1,11 @@
 package se.sics.kompics.kdld.job;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.Response;
 
-public class JobExited extends Event {
-
+public class JobStopResponse extends Response {
 
 	public enum Status {
-		EXITED_NORMALLY, EXITED_WITH_ERROR
+		ALREADY_STOPPED, STOPPED, FAILED_TO_STOP
 	};
 
 	private final Status status;
@@ -15,13 +14,13 @@ public class JobExited extends Event {
 
 	private final int jobId;
 
-	public JobExited(int jobId, Status status, String exitMsg) {
-		super();
+	public JobStopResponse(JobStopRequest request, int jobId, JobStopResponse.Status status,
+			String msg) {
+		super(request);
 		this.jobId = jobId;
 		this.status = status;
-		this.msg = exitMsg;
+		this.msg = msg;
 	}
-
 
 	public int getJobId() {
 		return jobId;

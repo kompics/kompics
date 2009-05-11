@@ -372,24 +372,24 @@ public class Daemon extends ComponentDefinition {
 		}
 	}
 
-	public Handler<JobStopRequest> handleJobStopRequest = new Handler<JobStopRequest>() {
-		public void handle(JobStopRequest event) {
+	public Handler<JobStopRemoteRequest> handleJobStopRequest = new Handler<JobStopRemoteRequest>() {
+		public void handle(JobStopRemoteRequest event) {
 
 			int id = event.getJobId();
-			JobStopResponse.Status status;
+			JobStopRemoteResponse.Status status;
 
 			MavenLauncher.ProcessWrapper pw = executingProcesses.get(id);
 			if (pw == null) {
-				status = JobStopResponse.Status.FAILED_TO_STOP;
+				status = JobStopRemoteResponse.Status.FAILED_TO_STOP;
 			} else {
 				if (pw.destroy() == true) {
-					status = JobStopResponse.Status.STOPPED;
+					status = JobStopRemoteResponse.Status.STOPPED;
 				} else {
-					status = JobStopResponse.Status.ALREADY_STOPPED;
+					status = JobStopRemoteResponse.Status.ALREADY_STOPPED;
 				}
 			}
 
-			JobStopResponse response = new JobStopResponse(id, status, self, event.getSource());
+			JobStopRemoteResponse response = new JobStopRemoteResponse(id, status, self, event.getSource());
 			trigger(response, net);
 		}
 	};

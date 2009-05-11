@@ -38,7 +38,6 @@ import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.util.PomUtils;
 import se.sics.kompics.network.Network;
-import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
@@ -57,7 +56,7 @@ public class Indexer extends ComponentDefinition {
 	private static final Logger logger = LoggerFactory.getLogger(Indexer.class);
 
 	private Negative<Index> indexPort = negative(Index.class);
-	private Positive<Network> net = positive(Network.class);
+//	private Positive<Network> net = positive(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
 
 	private long indexingPeriod;

@@ -14,6 +14,7 @@ import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.PlexusContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +88,7 @@ public class MavenWrapper {
         .setGoals( Arrays.asList( new String[]{command} ) );
 	
 		request.setInteractiveMode(false);
-		request.setLoggingLevel(MavenExecutionRequest.LOGGING_LEVEL_WARN);
+		request.setLoggingLevel(MavenExecutionRequest.LOGGING_LEVEL_ERROR);
 		request.setShowErrors(false);        
         request.setPom(pomFile);
 
@@ -98,8 +99,7 @@ public class MavenWrapper {
             try {
 				embedder.stop();
 			} catch (MavenEmbedderException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Problem when trying to stop maven embedder: " + e.getMessage());
 			} 
 	        List exceptions = result.getExceptions();
 	        if (!((exceptions == null) || exceptions.isEmpty())) {
@@ -107,7 +107,7 @@ public class MavenWrapper {
 	            Iterator it = exceptions.iterator();
 	            while (it.hasNext()) {
 	                Exception exception = (Exception) it.next();
-	                exception.printStackTrace(System.err);
+//	                exception.printStackTrace(System.err);
 	            }
 	        }
 			
@@ -121,6 +121,11 @@ public class MavenWrapper {
 	
 	public String getPomFilename() {
 		return pomFilename;
+	}
+	
+	PlexusContainer getPlexusContainer()
+	{
+		return embedder.getPlexusContainer();
 	}
 	
 	private void dumpProject(MavenExecutionResult result)
