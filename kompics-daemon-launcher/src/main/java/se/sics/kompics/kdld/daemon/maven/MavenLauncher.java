@@ -23,7 +23,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.kdld.daemon.Daemon;
-import se.sics.kompics.kdld.daemon.JobStopRemoteResponse;
+import se.sics.kompics.kdld.daemon.JobRemoveResponseMsg;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.job.JobAssembly;
@@ -33,6 +33,8 @@ import se.sics.kompics.kdld.job.JobExecResponse;
 import se.sics.kompics.kdld.job.JobExited;
 import se.sics.kompics.kdld.job.JobReadFromExecuting;
 import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
+import se.sics.kompics.kdld.job.JobRemoveRequest;
+import se.sics.kompics.kdld.job.JobRemoveResponse;
 import se.sics.kompics.kdld.job.JobStopRequest;
 import se.sics.kompics.kdld.job.JobStopResponse;
 import se.sics.kompics.kdld.util.PomUtils;
@@ -49,7 +51,7 @@ public class MavenLauncher extends ComponentDefinition {
 
 	private Negative<Maven> maven = negative(Maven.class);
 
-//	private Map<Integer, Job> assembledJobs = new HashMap<Integer, Job>();
+	// private Map<Integer, Job> assembledJobs = new HashMap<Integer, Job>();
 	private Map<Integer, Job> executingJobs = new HashMap<Integer, Job>();
 
 	private Map<Integer, ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, ProcessWrapper>();
@@ -79,7 +81,7 @@ public class MavenLauncher extends ComponentDefinition {
 
 		public void run() {
 
-			String exitMsg = jobId + ": Process exited successfully"; 
+			String exitMsg = jobId + ": Process exited successfully";
 			try {
 				process = processBuilder.start();
 				writeToInput = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
@@ -95,8 +97,7 @@ public class MavenLauncher extends ComponentDefinition {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 				exitMsg = e.getMessage();
-			}
-			finally {
+			} finally {
 				executingJobs.remove(jobId);
 				executingProcesses.remove(jobId);
 			}
@@ -162,7 +163,6 @@ public class MavenLauncher extends ComponentDefinition {
 			readFromOutput.read(cb);
 			return cb;
 		}
-		
 
 	}
 
@@ -172,24 +172,23 @@ public class MavenLauncher extends ComponentDefinition {
 		subscribe(handleJobExecRequest, maven);
 		subscribe(handleJobStopRequest, maven);
 		subscribe(handleJobReadFromExecuting, maven);
+		subscribe(handleJobRemoveRequest, maven);
 	}
 
-	public Handler<JobReadFromExecuting> handleJobReadFromExecuting = 
-		new Handler<JobReadFromExecuting>() {
+	public Handler<JobReadFromExecuting> handleJobReadFromExecuting = new Handler<JobReadFromExecuting>() {
 		public void handle(JobReadFromExecuting event) {
 
 			int jobId = event.getJobId();
 			ProcessWrapper p = executingProcesses.get(jobId);
-			if (p == null)
-			{
+			if (p == null) {
 				throw new IllegalStateException("Process p not found for jobId: " + jobId);
 			}
-			
+
 			String msg;
-			CharBuffer cb=CharBuffer.allocate(1000);
+			CharBuffer cb = CharBuffer.allocate(1000);
 			try {
 				cb = p.readBufferedOutput(cb);
-//				msg = p.readLineFromOutput();
+				// msg = p.readLineFromOutput();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -198,14 +197,80 @@ public class MavenLauncher extends ComponentDefinition {
 			}
 			cb.rewind();
 			msg = cb.toString();
-			JobReadFromExecutingResponse resp = 
-				new JobReadFromExecutingResponse(event,event.getJobId(), msg);
-			trigger (resp, maven);
+			JobReadFromExecutingResponse resp = new JobReadFromExecutingResponse(event, event
+					.getJobId(), msg);
+			trigger(resp, maven);
+		}
+	};
+
+	public Handler<JobRemoveRequest> handleJobRemoveRequest = new Handler<JobRemoveRequest>() {
+		public void handle(JobRemoveRequest event) {
+			String msg = "Success";
+			JobRemoveResponseMsg.Status status = JobRemoveResponseMsg.Status.SUCCESS;
+			Job job = event.getJob();
+			File pomFile = job.getPomFile();
+
+			try {
+				removeFileRecurse(pomFile.getParentFile(), true);
+			} catch (FileRemovalException e) {
+				msg = e.getMessage();
+				status = JobRemoveResponseMsg.Status.ERROR;
+			}
+			trigger(new JobRemoveResponse(event, status, event.getJob().getId(), msg), maven);
 		}
 	};
 
 	
-	
+	/**
+	 * @param pathToPomDir directory containing pom.xml file.
+	 * @param isInPomDir
+	 * @return true if success, false is only used in recursion not in public API.
+	 * @throws FileRemovalException if the file wasn't successfully deleted.
+	 */
+	private boolean removeFileRecurse(File pathToPomDir, boolean isInPomDir) 
+	throws FileRemovalException	
+	{
+		if (isInPomDir == true) {
+			if (pathToPomDir.exists()) {
+				if (pathToPomDir.isDirectory()) {
+					File[] files = pathToPomDir.listFiles();
+					for (int i = 0; i < files.length; i++) {
+						if (files[i].isDirectory()) {
+							removeFileRecurse(files[i], true);
+						} else {
+							if (files[i].delete() == false)
+							{
+								throw new FileRemovalException("Problem when deleting file: " +
+										files[i].getAbsolutePath());
+							}
+						}
+
+					}
+				}
+			}
+		}
+		File parent = pathToPomDir.getParentFile();
+
+		if (pathToPomDir.delete() == false)
+		{
+			// if I couldn't delete the pom dir, throw exception
+			// don't throw exception if couldn't delete a parent directory, as this is
+			// expected behaviour if the parent directory contains existing files/dirs.
+			if (isInPomDir == true) 
+			{
+				return false;
+			}
+								
+		}
+		
+		// recurse deleting dirs and stop when Daemon.KOMPICS_HOME is reached.
+		if (parent.getAbsolutePath().compareTo(Daemon.KOMPICS_HOME) != 0) {
+			 removeFileRecurse(parent, false);
+		}
+
+		return true;
+	}
+
 	public Handler<JobAssembly> handleJobAssembleRequest = new Handler<JobAssembly>() {
 		public void handle(JobAssembly event) {
 
@@ -213,24 +278,25 @@ public class MavenLauncher extends ComponentDefinition {
 			JobAssemblyResponse.Status status;
 
 			// If msg not a duplicate
-//			if (assembledJobs.containsKey(id) == false && executingJobs.containsKey(id) == false) {
-				try {
-					event.createDummyPomFile();
-					status = JobAssemblyResponse.Status.POM_CREATED;
-					status = mvnAssemblyAssembly(event);
-//					assembledJobs.put(id, event);					
-				} catch (DummyPomConstructionException e) {
-					e.printStackTrace();
-					status = JobAssemblyResponse.Status.FAIL;
-				} catch (MavenExecException e) {
-					e.printStackTrace();
-					logger.error(e.getMessage());
-					status = JobAssemblyResponse.Status.FAIL;
-				}
-				
-//			} else {
-//				status = JobAssemblyResponse.Status.DUPLICATE;
-//			}
+			// if (assembledJobs.containsKey(id) == false &&
+			// executingJobs.containsKey(id) == false) {
+			try {
+				event.createDummyPomFile();
+				status = JobAssemblyResponse.Status.POM_CREATED;
+				status = mvnAssemblyAssembly(event);
+				// assembledJobs.put(id, event);
+			} catch (DummyPomConstructionException e) {
+				e.printStackTrace();
+				status = JobAssemblyResponse.Status.FAIL;
+			} catch (MavenExecException e) {
+				e.printStackTrace();
+				logger.error(e.getMessage());
+				status = JobAssemblyResponse.Status.FAIL;
+			}
+
+			// } else {
+			// status = JobAssemblyResponse.Status.DUPLICATE;
+			// }
 
 			trigger(new JobAssemblyResponse(event, id, status), maven);
 		}
@@ -244,7 +310,7 @@ public class MavenLauncher extends ComponentDefinition {
 			if (event == null) {
 				status = JobExecResponse.Status.FAIL;
 			} else {
-//				status = mvnExecExec(event, event.getScenario());
+				// status = mvnExecExec(event, event.getScenario());
 				forkDummyExec(event, event.getScenario());
 			}
 
@@ -254,8 +320,8 @@ public class MavenLauncher extends ComponentDefinition {
 		}
 	};
 
-	private JobAssemblyResponse.Status mvnAssemblyAssembly(JobAssembly job) throws 
-		MavenExecException {
+	private JobAssemblyResponse.Status mvnAssemblyAssembly(JobAssembly job)
+			throws MavenExecException {
 		JobAssemblyResponse.Status status = JobAssemblyResponse.Status.ASSEMBLED;
 		MavenWrapper mw = new MavenWrapper(job.getPomFile().getAbsolutePath());
 		mw.execute("assembly:assembly");
@@ -279,19 +345,17 @@ public class MavenLauncher extends ComponentDefinition {
 		return status;
 	}
 
-	private void mvnExecExec(JobExec job, SimulationScenario scenario) 
-		throws MavenExecException
-		{
-			MavenWrapper mw = new MavenWrapper(job.getPomFile().getAbsolutePath());
-			executingJobs.put(job.getId(), job);
-			mw.execute("exec:exec");
-			
-//		} catch (MavenExecException e) {
-//			status = JobExecResponse.Status.FAIL;
-//			e.printStackTrace();
-//			logger.error(e.getMessage());
-//		}
-//		return status;
+	private void mvnExecExec(JobExec job, SimulationScenario scenario) throws MavenExecException {
+		MavenWrapper mw = new MavenWrapper(job.getPomFile().getAbsolutePath());
+		executingJobs.put(job.getId(), job);
+		mw.execute("exec:exec");
+
+		// } catch (MavenExecException e) {
+		// status = JobExecResponse.Status.FAIL;
+		// e.printStackTrace();
+		// logger.error(e.getMessage());
+		// }
+		// return status;
 	}
 
 	/**
@@ -350,14 +414,14 @@ public class MavenLauncher extends ComponentDefinition {
 			sb.append(" ");
 		}
 		logger.debug("Executing: " + sb.toString());
-		logger.info("Short version: java -jar " + job.getDummyJarWithDependenciesName() +
-				PomUtils.sepStr() + job.getMainClass());
+		logger.info("Short version: java -jar " + job.getDummyJarWithDependenciesName()
+				+ PomUtils.sepStr() + job.getMainClass());
 
 		ProcessWrapper pw = new ProcessWrapper(job.getId(), processBuilder);
 		executingProcesses.put(job.getId(), pw);
 		executingJobs.put(job.getId(), job);
 		new Thread(pw).start();
-//		assembledJobs.remove(job.getId());
+		// assembledJobs.remove(job.getId());
 		return res;
 	}
 
@@ -380,7 +444,6 @@ public class MavenLauncher extends ComponentDefinition {
 					msg = "Already stopped " + id;
 				}
 			}
-			
 
 			JobStopResponse response = new JobStopResponse(event, id, status, msg);
 			trigger(response, maven);
@@ -389,6 +452,7 @@ public class MavenLauncher extends ComponentDefinition {
 
 	/**
 	 * This method should only be called from WrappedThread instances...
+	 * 
 	 * @param jobId
 	 * @param exitValue
 	 * @param exitMsg

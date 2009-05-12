@@ -20,6 +20,8 @@ import se.sics.kompics.Kompics;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
+import se.sics.kompics.kdld.daemon.JobRemoveRequestMsg;
+import se.sics.kompics.kdld.daemon.JobRemoveResponseMsg;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequest;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedResponse;
 import se.sics.kompics.kdld.daemon.indexer.Index;
@@ -37,6 +39,8 @@ import se.sics.kompics.kdld.job.JobExecResponse;
 import se.sics.kompics.kdld.job.JobExited;
 import se.sics.kompics.kdld.job.JobReadFromExecuting;
 import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
+import se.sics.kompics.kdld.job.JobRemoveRequest;
+import se.sics.kompics.kdld.job.JobRemoveResponse;
 import se.sics.kompics.kdld.job.JobStopRequest;
 import se.sics.kompics.kdld.job.JobStopResponse;
 import se.sics.kompics.kdld.job.JobToDummyPom;
@@ -55,7 +59,7 @@ public class IndexerTest implements Serializable {
 
 	public static Semaphore semaphore = new Semaphore(0);
 
-	public static boolean ASSEMBLY = false;
+	public static boolean ASSEMBLY = true;
 
 	public static final int EVENT_COUNT = 1;
 
@@ -68,7 +72,6 @@ public class IndexerTest implements Serializable {
 
 	}
 
-	
 	
 	public static class JobStopTimeout extends Timeout {
 		private final int jobId;
@@ -110,6 +113,8 @@ public class IndexerTest implements Serializable {
 
 		private static IndexerTest testObj = null;
 
+		private JobToDummyPom dummy;
+		
 		public TestIndexerComponent() {
 
 			if (testObj == null) {
@@ -152,11 +157,14 @@ public class IndexerTest implements Serializable {
 				logger.info("Starting TestIndexer");
 
 				try {
-					JobToDummyPom dummy = new JobToDummyPom(11, "se.sics.kompics",
+
+					dummy = new JobToDummyPom(11, "se.sics.kompics",
 							"kompics-manual", "0.4.2-SNAPSHOT",
 							"se.sics.kompics.manual.example1.Root", new ArrayList<String>(),
 							"sics-snapshot", "http://kompics.sics.se/maven/snapshotrepository");
-
+					
+					dummy.createDummyPomFile();
+					
 					logger.info("Creating a dummy pom");
 
 					// need to call maven assembly:assembly if the jar hasn't
@@ -224,6 +232,8 @@ public class IndexerTest implements Serializable {
 		public Handler<JobExited> handleJobExited = new Handler<JobExited>() {
 			public void handle(JobExited event) {
 				logger.debug("Job exited: " + event.getJobId());
+				
+				trigger(new JobRemoveRequest(dummy), mavenLauncher.getPositive(Maven.class));
 			}
 		};
 
@@ -232,7 +242,7 @@ public class IndexerTest implements Serializable {
 			public void handle(JobStopResponse event) {
 				logger.debug("Job stopped : " + event.getJobId() + " : " + event.getStatus() +
 						" : " + event.getMsg());
-			}
+				}
 		};
 
 		public Handler<JobReadFromExecutingResponse> handleJobReadFromExecutingResponse = new Handler<JobReadFromExecutingResponse>() {
@@ -332,6 +342,18 @@ public class IndexerTest implements Serializable {
 			}
 		};
 
+		private void removeJob(int jobId)
+		{
+				Job job = loadedJobs.get(jobId);
+				trigger(new JobRemoveRequest(job), mavenLauncher.getNegative(Maven.class));
+		}
+
+		public Handler<JobRemoveResponse> handleJobRemoveResponse = new Handler<JobRemoveResponse>() {
+			public void handle(JobRemoveResponse event) {
+				
+				logger.info("Job remove response was:" + event.getMsg() + " - " + event.getStatus());
+			}
+		};
 	}
 
 	@org.junit.Test

@@ -278,10 +278,4 @@ public class JobToDummyPom extends Job implements Serializable {
 		}			
 	}
 
-	public File getPomFile()
-	{
-		String fullName = Daemon.KOMPICS_HOME + sepStr + filePath + sepStr 
-		+ Daemon.POM_FILENAME;
-		return new File(fullName);
-	}
 }

@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +30,8 @@ import se.sics.kompics.kdld.job.JobAssembly;
 import se.sics.kompics.kdld.job.JobAssemblyResponse;
 import se.sics.kompics.kdld.job.JobExec;
 import se.sics.kompics.kdld.job.JobExecResponse;
+import se.sics.kompics.kdld.job.JobRemoveRequest;
+import se.sics.kompics.kdld.job.JobRemoveResponse;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.epfd.diamondp.FailureDetector;
 import se.sics.kompics.timer.ScheduleTimeout;
@@ -138,9 +139,12 @@ public class Daemon extends ComponentDefinition {
 
 		subscribe(handleJobAssemblyResponse, mavenLauncher.getNegative(Maven.class));
 		subscribe(handleJobExecResponse, mavenLauncher.getNegative(Maven.class));
-
+		subscribe(handleJobRemoveResponse, mavenLauncher.getNegative(Maven.class));
+		
+		subscribe(handleJobRemoveRequestMsg, net);
+		
 		subscribe(handleShutdownTimeout, timer);
-
+		
 		subscribe(handleJobFoundLocally, indexer.getPositive(Index.class));
 	}
 
@@ -346,6 +350,33 @@ public class Daemon extends ComponentDefinition {
 		}
 	};
 
+	
+	public Handler<JobRemoveRequestMsg> handleJobRemoveRequestMsg = new Handler<JobRemoveRequestMsg>() {
+		public void handle(JobRemoveRequestMsg event) {
+			
+			Job job = loadedJobs.get(event.getJobId());
+			if (job == null)
+			{
+				trigger (new JobRemoveResponseMsg(event.getJobId(), JobRemoveResponseMsg.Status.NOT_LOADED,
+						self, masterAddress), net);
+			}
+			else
+			{
+				trigger(new JobRemoveRequest(job), mavenLauncher.getNegative(Maven.class));
+			}
+		}
+	};
+	
+	
+	public Handler<JobRemoveResponse> handleJobRemoveResponse = new Handler<JobRemoveResponse>() {
+		public void handle(JobRemoveResponse event) {
+			// Assuming that the reply is sent to the Master here.
+			trigger(new JobRemoveResponseMsg(event.getJobId(), event.getStatus(),
+					event.getMsg(), self, masterAddress), net);
+		}
+	};
+
+	
 	public Handler<TimerDaemonShutdown> handleShutdownTimeout = new Handler<TimerDaemonShutdown>() {
 		public void handle(TimerDaemonShutdown event) {
 			System.exit(0);
