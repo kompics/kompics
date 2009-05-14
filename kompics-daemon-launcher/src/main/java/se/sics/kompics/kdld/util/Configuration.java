@@ -20,6 +20,7 @@ import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
+import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,6 +105,7 @@ public abstract class Configuration {
 	 */
 	protected static Configuration configuration = null;
 	
+	
 	protected CompositeConfiguration config = new CompositeConfiguration();
 
 	
@@ -133,6 +135,10 @@ public abstract class Configuration {
 		config.addConfiguration(new SystemConfiguration());
 		config.addConfiguration(new PropertiesConfiguration("bootstrap.properties"));
 		config.addConfiguration(new PropertiesConfiguration("monitor.properties"));
+
+		// this will watch for changes in the properties files loaded, and update the values on changes
+		// in the files.
+//		config.setReloadingStrategy(new FileChangedReloadingStrategy());
 
 		
 		if (configuration != null)
