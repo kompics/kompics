@@ -16,18 +16,15 @@ public class CyclonConfiguration extends Configuration {
 	private static final Logger logger = LoggerFactory.getLogger(CyclonConfiguration.class);
 	
 	public final static String CYCLON_CONFIG_PROPERTIES_FILE = "config/cyclon.properties";
+	
 	public final static String PROP_CYCLON_MONITOR_ID = "cyclon.monitorid";
+	public final static String PROP_CYCLON_ROUND_TIME = "cyclon.roundtime";
 	
 	protected final static int DEFAULT_ROUND_TIME_MS = 5000; 
-	
 	protected final static int DEFAULT_CYCLON_MONITOR_ID = Integer.MAX_VALUE - 1;
 
 	
-	protected int roundTime;
-	
-	protected int cyclonMonitorId = DEFAULT_CYCLON_MONITOR_ID;
-	
-	protected Address cyclonMonitorServerAddress;
+	protected Address cyclonMonitorServerAddress = null;
 
 	/********************************************************/
 	/********* Helper fields ********************************/
@@ -42,26 +39,13 @@ public class CyclonConfiguration extends Configuration {
 	 * @param args
 	 * @throws IOException
 	 */
-	protected CyclonConfiguration(String[] args) throws IOException, ConfigurationException {
+	public CyclonConfiguration(String[] args) throws IOException, ConfigurationException {
 		super(args);
-		
-		cyclonMonitorServerAddress = new Address(ip, port,
-				cyclonMonitorId);
 
 	}
 
 	@Override
-	public void parseAdditionalOptions(String[] args) throws IOException {
-		
-		try {
-			cyclonConfig = new PropertiesConfiguration(CYCLON_CONFIG_PROPERTIES_FILE);
-			cyclonMonitorId = cyclonConfig .getInt(PROP_CYCLON_MONITOR_ID);
-		}
-		catch (ConfigurationException e)
-		{
-			logger.warn("Configuration file for cyclon not found, using default values: " + CYCLON_CONFIG_PROPERTIES_FILE);
-		}
-
+	protected void parseAdditionalOptions(String[] args) throws IOException {
 		roundTimeOption = new Option("roundtime", true, "Gossiping round time");
 		roundTimeOption.setArgName("milliseconds");
 		options.addOption(roundTimeOption);
@@ -70,33 +54,50 @@ public class CyclonConfiguration extends Configuration {
 		cyclonMonitorIdOption.setArgName("id");
 		options.addOption(cyclonMonitorIdOption);
 
-		cyclonMonitorId = cyclonConfig.getInt(PROP_CYCLON_MONITOR_ID);
-
 	}
 
 	public int getRoundTime() {
-		return roundTime;
+		testInitialized();
+		return configuration.compositeConfig.getInt(PROP_CYCLON_ROUND_TIME, DEFAULT_ROUND_TIME_MS);
 	}
 
 	@Override
-	public void processAdditionalOptions() throws IOException {
+	protected void processAdditionalOptions() throws IOException {
+		
+		try {
+			cyclonConfig = new PropertiesConfiguration(CYCLON_CONFIG_PROPERTIES_FILE);
+			cyclonConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
+			configuration.compositeConfig.addConfiguration(cyclonConfig);
+		}
+		catch (ConfigurationException e)
+		{
+			logger.warn("Configuration file for cyclon not found, using default values: " + CYCLON_CONFIG_PROPERTIES_FILE);
+		}
+
 		if (line.hasOption(roundTimeOption.getOpt()))
 		{
-			roundTime = new Integer(line.getOptionValue(roundTimeOption.getOpt()));
+			int roundTime = new Integer(line.getOptionValue(roundTimeOption.getOpt()));
+			configuration.compositeConfig.setProperty(PROP_CYCLON_ROUND_TIME, roundTime);
 		}
 		if (line.hasOption(cyclonMonitorIdOption.getOpt()))
 		{
-			cyclonMonitorId = new Integer(line.getOptionValue(cyclonMonitorIdOption.getOpt()));
+			int cyclonMonitorId = new Integer(line.getOptionValue(cyclonMonitorIdOption.getOpt()));
+			configuration.compositeConfig.setProperty(PROP_CYCLON_MONITOR_ID, cyclonMonitorId);
 		}
 	}
 
 	@Override
 	protected int getMonitorId() {
-		return cyclonMonitorId;
+		testInitialized();
+		return configuration.compositeConfig.getInt(PROP_CYCLON_MONITOR_ID, DEFAULT_CYCLON_MONITOR_ID);
 	}
 
 	@Override
 	protected Address getMonitorServerAddress() {
+		testInitialized();
+		if (cyclonMonitorServerAddress == null){
+			cyclonMonitorServerAddress = new Address(getIp(), getPort(), getMonitorId());
+		}			
 		return cyclonMonitorServerAddress;
 	}
 }

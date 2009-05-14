@@ -13,6 +13,7 @@
 			below
 		-->
 		<kompics.version>0.4.2-SNAPSHOT</kompics.version>
+		<java.version>1.6</java.version>
 	</properties>
 
 	<dependencies>
@@ -45,7 +46,7 @@
 			<artifactId>lab2</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
- 
+
 		<dependency>
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
@@ -58,6 +59,16 @@
 			<artifactId>commons-cli</artifactId>
 			<version>1.2</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.sun</groupId>
+			<artifactId>tools</artifactId>
+			<version>${java.version}</version>
+			<scope>system</scope>
+			<systemPath>${java.home}/../lib/tools.jar</systemPath>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>
@@ -67,8 +78,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<encoding>UTF-8</encoding>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
 					<debug>true</debug>
 					<optimize>true</optimize>
 					<showDeprecations>true</showDeprecations>

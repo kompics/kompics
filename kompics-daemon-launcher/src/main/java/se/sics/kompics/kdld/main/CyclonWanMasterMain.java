@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.log4j.PropertyConfigurator;
 
 import se.sics.kompics.ChannelFilter;
@@ -19,6 +20,8 @@ import se.sics.kompics.Kompics;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.master.Master;
+import se.sics.kompics.kdld.util.Configuration;
+import se.sics.kompics.kdld.util.CyclonConfiguration;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
@@ -29,7 +32,6 @@ import se.sics.kompics.p2p.epfd.diamondp.FailureDetector;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.p2p.monitor.cyclon.server.CyclonMonitorServer;
 import se.sics.kompics.p2p.monitor.cyclon.server.P2pMonitorServerInit;
-import se.sics.kompics.p2p.overlay.random.cyclon.CyclonConfiguration;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulator;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorInit;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorPort;
@@ -114,10 +116,19 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 
 		Component fd = create(FailureDetector.class);
 		
-		final Configuration config = new Configuration();
-		final BootstrapConfiguration bootConfiguration = config.bootConfiguration;
-		final P2pMonitorConfiguration monitorConfiguration = config.monitorConfiguration;
-		final CyclonConfiguration cyclonConfiguration = config.cyclonConfiguration;
+//		final Configuration config = new Configuration();
+		String[] args = {};
+		CyclonConfiguration cyclonConfiguration = null;
+		try {
+			cyclonConfiguration = (CyclonConfiguration) 
+				Configuration.init(CyclonConfiguration.class, args);
+		} catch (ConfigurationException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		} 
+		final BootstrapConfiguration bootConfiguration = Configuration.getBootConfiguration();
+		final P2pMonitorConfiguration monitorConfiguration = Configuration.getMonitorConfiguration();
 
 		 try {
 				scenario = SimulationScenario.load(System
@@ -127,20 +138,22 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 				System.exit(-1);
 			}
 		
-		System.out.println("For web access please go to " + config.webAddress);
+		System.out.println("For web access please go to " + cyclonConfiguration.getWebAddress());
 		Thread.sleep(2000);
 
 //		trigger(new MasterInit(scenario, new KingLatencyMap()),
 //				master.getControl());
-		trigger(config.jettyWebServerInit, jettyWebServer.getControl());
+		trigger(cyclonConfiguration.getJettyWebServerInit(), jettyWebServer.getControl());
 		trigger(new BootstrapServerInit(bootConfiguration), bootstrapServer
 				.getControl());
 		trigger(new P2pMonitorServerInit(monitorConfiguration), monitorServer
 				.getControl());
-		trigger(
-				new CyclonSimulatorInit(bootConfiguration,
-						monitorConfiguration, cyclonConfiguration,
-						config.peer0Address), cyclonSimulator.getControl());
+		
+		// XXX - change CyclonSimulatorInit to include new defn of CyclonConfiguration 
+//		trigger(
+//				new CyclonSimulatorInit(bootConfiguration,
+//						monitorConfiguration, cyclonConfiguration,
+//						cyclonConfiguration.getPeer0Address()), cyclonSimulator.getControl());
 
 		final class MessageDestinationFilter extends
 				ChannelFilter<Message, Address> {
@@ -166,21 +179,21 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 		// connect
 		connect(bootstrapServer.getNegative(Network.class), master
 				.getPositive(Network.class), new MessageDestinationFilter(
-				config.bootServerAddress));
+						bootConfiguration.getBootstrapServerAddress()));
 		connect(bootstrapServer.getNegative(Timer.class), master
 				.getPositive(Timer.class));
 		connect(bootstrapServer.getPositive(Web.class), jettyWebServer
 				.getNegative(Web.class), new WebRequestDestinationFilter(
-				config.bootId));
+						bootConfiguration.getBootstrapServerAddress().getId()));
 
 		connect(monitorServer.getNegative(Network.class), master
 				.getPositive(Network.class), new MessageDestinationFilter(
-				config.monitorServerAddress));
+				monitorConfiguration.getMonitorServerAddress()));
 		connect(monitorServer.getNegative(Timer.class), master
 				.getPositive(Timer.class));
 		connect(monitorServer.getPositive(Web.class), jettyWebServer
 				.getNegative(Web.class), new WebRequestDestinationFilter(
-				config.monitorId));
+						monitorConfiguration.getMonitorServerAddress().getId()));
 
 		connect(cyclonSimulator.getNegative(Network.class), master
 				.getPositive(Network.class));

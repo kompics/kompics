@@ -1,15 +1,13 @@
 package se.sics.kompics.kdld.util;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -18,8 +16,10 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,41 +28,52 @@ import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.web.jetty.JettyWebServerInit;
 
+/**
+ * This class is not thread-safe for writing, although it is thread-safe for reading.
+ * @author jdowling
+ *
+ */
 public abstract class Configuration {
 	private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
 
 	public final static String BOOTSTRAP_CONFIG_FILE = "config/bootstrap.properties";
-	public final static String MONITOR_CONFIG_FILE = "config/bootstrap.properties";
+	public final static String MONITOR_CONFIG_FILE = "config/monitor.properties";
+	
+	public final static String PROP_IP = "ip";
+	public final static String PROP_PORT = "port";
 	
 	public final static String PROP_BOOTSTRAP_PORT = "bootstrap.server.port";
 	public final static String PROP_BOOTSTRAP_IP = "bootstrap.server.ip";
+	public final static String PROP_BOOTSTRAP_EVICT_AFTER = "bootstrap.evict.after";
 	public final static String PROP_BOOTSTRAP_REFRESH_PERIOD = "client.refresh.period";
 	public final static String PROP_BOOTSTRAP_RETRY_PERIOD = "client.retry.period";
 	public final static String PROP_BOOTSTRAP_RETRY_COUNT = "client.retry.count";
-
+	
+	
 	public final static String PROP_MONITOR_IP = "monitor.server.ip";
 	public final static String PROP_MONITOR_PORT = "monitor.server.port";
 	public final static String PROP_MONITOR_ID = "monitor.server.id";
+	public final static String PROP_MONITOR_EVICT_AFTER = "monitor.evict.after";
 	public final static String PROP_MONITOR_REFRESH_PERIOD = "client.refresh.period";
 	public final static String PROP_MONITOR_RETRY_PERIOD = "client.retry.period";
 	public final static String PROP_MONITOR_RETRY_COUNT = "client.retry.count";
 	
-	public final static String PROP_EVICT_AFTER = "evict.after";
-	
-	public final static String PROP_HOSTS = "hosts";
 	public final static String PROP_NUM_PEERS = "number.peers";
 	public final static String PROP_NUM_WORKERS = "number.workers";
 	
 	/*
 	 * Non-publicly accessible
 	 */
+	protected static final String DEFAULT_IP = "localhost";
+	protected static final int DEFAULT_PORT = 0;
+	
 	protected static final String DEFAULT_BOOTSTRAP_IP = "localhost";
 	protected static final int DEFAULT_BOOTSTRAP_PORT = 20002;
-	protected static final int DEFAULT_BOOT_ID = Integer.MAX_VALUE;
+	protected static final int DEFAULT_BOOTSTRAP_ID = Integer.MAX_VALUE;
 
 	protected static final String DEFAULT_MONITOR_IP = "localhost";
 	protected static final int DEFAULT_MONITOR_PORT = 20001;
-	protected static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE;
+	protected static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
 
 	protected static final int DEFAULT_EVICT_AFTER_SECS = 600;
 	protected static final int DEFAULT_REFRESH_PERIOD = 10;
@@ -83,23 +94,17 @@ public abstract class Configuration {
 	protected static final String DEFAULT_CONTROLLER_IP = "localhost";
 
 	/*
-	 * Publicly accessible
+	 * Cache instances of these variables from Apache Configuration objects.
 	 */
 	protected InetAddress ip = null;
 
-	protected int numPeers = DEFAULT_NUM_PEERS;
-
-	protected int numWorkers = DEFAULT_NUM_WORKERS;
-
-	protected int port = DEFAULT_NET_PORT;
-
 	protected int webPort = DEFAULT_WEB_PORT;
 
-	protected int bootstrapId = DEFAULT_BOOT_ID;
+	protected int bootstrapId = DEFAULT_BOOTSTRAP_ID;
 
-	protected Address peer0Address;
+	protected Address peer0Address = null;
 
-	protected P2pMonitorConfiguration monitorConfiguration;
+	protected P2pMonitorConfiguration monitorConfiguration = null;
 
 	protected int webRequestTimeout = DEFAULT_WEB_REQUEST_TIMEOUT_MS;
 
@@ -109,11 +114,9 @@ public abstract class Configuration {
 
 	protected String homepage;
 
-	protected JettyWebServerInit jettyWebServerInit;
+	protected JettyWebServerInit jettyWebServerInit = null;
 
-	protected BootstrapConfiguration bootConfiguration;
-
-	protected List<Address> hosts;
+	protected BootstrapConfiguration bootConfiguration = null;
 
 	/**
 	 * Singleton instance of configuration
@@ -124,7 +127,7 @@ public abstract class Configuration {
 	protected PropertiesConfiguration bootstrapConfig;
 	protected PropertiesConfiguration monitorConfig;
 	
-//	protected CompositeConfiguration config = new CompositeConfiguration();
+	protected CompositeConfiguration compositeConfig = new CompositeConfiguration();
 
 	/**
 	 * Helper non-public fields
@@ -143,19 +146,20 @@ public abstract class Configuration {
 	 * @return
 	 * @throws IOException
 	 */
-	public Configuration init(Class<? extends Configuration> classname, String[] args)
+	public static synchronized Configuration init(Class<? extends Configuration> classname, String[] args)
 			throws IOException, ConfigurationException {
 
-		if (configuration != null) {
-			return configuration;
-		}
+//		if (configuration != null) {
+//			return configuration;
+//		}
 
 		try {
 			// Create instance of subclass of Configuration and call its
 			// constructor (String[]) using reflection
+			// XXX improve exception processing
 			Constructor<? extends Configuration> constructor = classname
 					.getConstructor(String[].class);
-			configuration = constructor.newInstance((Object[]) args);
+			configuration = constructor.newInstance((Object) args);
 		} catch (SecurityException e) {
 			throw new ConfigurationException(e.getMessage());
 		} catch (NoSuchMethodException e) {
@@ -182,23 +186,11 @@ public abstract class Configuration {
 	 * @throws IOException
 	 */
 	protected Configuration(String[] args) throws IOException {
-		ip = InetAddress.getLocalHost();
-
-		InetAddress bootstrapIP = ip;
-		int bootstrapPort = DEFAULT_BOOTSTRAP_PORT;
-		long bootstrapEvictAfterSeconds = DEFAULT_EVICT_AFTER_SECS;
-		long bootstrapRefreshPeriod = DEFAULT_REFRESH_PERIOD;
-		long bootstrapClientRetryPeriod = DEFAULT_RETRY_PERIOD;
-		int bootstrapClientRetryCount = DEFAULT_RETRY_COUNT;
-
+		
 		try {
 			bootstrapConfig = new PropertiesConfiguration(BOOTSTRAP_CONFIG_FILE);
-			bootstrapIP = InetAddress.getByName(bootstrapConfig.getString(PROP_BOOTSTRAP_IP));
-			bootstrapPort = bootstrapConfig.getInt(PROP_BOOTSTRAP_PORT);
-			bootstrapEvictAfterSeconds = bootstrapConfig.getInt(PROP_EVICT_AFTER);
-			bootstrapRefreshPeriod = bootstrapConfig.getInt(PROP_BOOTSTRAP_REFRESH_PERIOD);
-			bootstrapClientRetryPeriod = bootstrapConfig.getInt(PROP_BOOTSTRAP_RETRY_PERIOD);
-			bootstrapClientRetryCount = bootstrapConfig.getInt(PROP_BOOTSTRAP_RETRY_COUNT);
+			bootstrapConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
+			compositeConfig.addConfiguration(bootstrapConfig);
 		}
 		catch (ConfigurationException e)
 		{
@@ -206,48 +198,10 @@ public abstract class Configuration {
 					+ BOOTSTRAP_CONFIG_FILE);
 		}
 
-		// this will watch for changes in the properties files loaded, and
-		// update the values on changes in the files.
-//		bootstrapConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
-//		monitorConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
-
-//		File bootstrapPropsFile = new File(BOOTSTRAP_CONFIG_FILE);
-//		Properties bootstrapProperties = new Properties();
-//		InputStream bootstrapInputStream = Configuration.class
-//				.getResourceAsStream("bootstrap.properties");
-//		if (bootstrapInputStream != null) {
-//		if (bootstrapPropsFile.exists() == true) {
-//			FileInputStream bootstrapInputStream = new FileInputStream(bootstrapPropsFile);
-//			bootstrapProperties.load(bootstrapInputStream);
-//
-//			bootstrapIP = InetAddress.getByName(bootstrapProperties.getProperty(
-//					"bootstrap.server.ip", DEFAULT_BOOTSTRAP_IP));
-//			bootstrapPort = Integer.parseInt(bootstrapProperties.getProperty(
-//					"bootstrap.server.port", Integer.toString(DEFAULT_BOOTSTRAP_PORT)));
-//			bootstrapEvictAfterSeconds = Long.parseLong(bootstrapProperties.getProperty(
-//					"cache.evict.after", Integer.toString(DEFAULT_EVICT_AFTER_SECS)));
-//			bootstrapRefreshPeriod = 1000 * Long.parseLong(bootstrapProperties.getProperty(
-//					"client.refresh.period", Integer.toString(DEFAULT_REFRESH_PERIOD)));
-//			bootstrapClientRetryPeriod = Long.parseLong(bootstrapProperties.getProperty(
-//					"client.retry.period", Integer.toString(DEFAULT_RETRY_PERIOD)));
-//			bootstrapClientRetryCount = Integer.parseInt(bootstrapProperties.getProperty(
-//					"client.retry.count", Integer.toString(DEFAULT_RETRY_COUNT)));
-//		}
-
-		InetAddress monitorIP = ip;
-		int monitorPort = DEFAULT_MONITOR_PORT;
-		long monitorEvictAfterSeconds = DEFAULT_EVICT_AFTER_SECS;
-		long monitorRefreshPeriod = DEFAULT_REFRESH_PERIOD;
-		int monitorId = DEFAULT_MONITOR_ID;
-
-
 		try {
 			monitorConfig = new PropertiesConfiguration(MONITOR_CONFIG_FILE);
-			monitorIP = InetAddress.getByName(monitorConfig.getString(PROP_MONITOR_IP));
-			monitorPort = monitorConfig.getInt(PROP_MONITOR_PORT);
-			monitorId = monitorConfig.getInt(PROP_MONITOR_ID);
-			monitorEvictAfterSeconds = monitorConfig.getInt(PROP_EVICT_AFTER);
-			monitorRefreshPeriod = monitorConfig.getInt(PROP_BOOTSTRAP_REFRESH_PERIOD);
+			monitorConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
+			compositeConfig.addConfiguration(monitorConfig);
 		}
 		catch (ConfigurationException e)
 		{
@@ -255,34 +209,10 @@ public abstract class Configuration {
 					+ MONITOR_CONFIG_FILE);
 		}
 		
-//		Properties monitorProperties = new Properties();
-////		InputStream monitorInputStream = Configuration.class
-////				.getResourceAsStream("monitor.properties");
-//		if (monitorInputStream != null) {
-//		File monitorPropsFile = new File(MONITOR_CONFIG_FILE);
-//		if (monitorPropsFile.exists() == true) {
-//			FileInputStream monitorInputStream = new FileInputStream(monitorPropsFile);
-//			monitorProperties.load(monitorInputStream);
-//
-//			monitorIP = InetAddress.getByName(monitorProperties.getProperty("monitor.server.ip",
-//					DEFAULT_MONITOR_IP));
-//			monitorPort = Integer.parseInt(monitorProperties.getProperty("monitor.server.port",
-//					Integer.toString(DEFAULT_MONITOR_PORT)));
-//			monitorId = Integer.parseInt(monitorProperties.getProperty("monitor.server.id", Integer
-//					.toString(DEFAULT_MONITOR_ID)));
-//			monitorEvictAfterSeconds = Long.parseLong(monitorProperties.getProperty(
-//					"view.evict.after", Integer.toString(DEFAULT_EVICT_AFTER_SECS)));
-//			monitorRefreshPeriod = 1000 * Long.parseLong(monitorProperties.getProperty(
-//					"client.refresh.period", Integer.toString(DEFAULT_REFRESH_PERIOD)));
-//		}
-
 		// Users can override the default options from the command line
-
-		Option hostsFileOption = new Option("hostsfile", true,
-				"Pathname to file containing a list of comma separated kompics "
-						+ "addresses (format is host:port:id)");
-		hostsFileOption.setArgName("hostsfile");
-		options.addOption(hostsFileOption);
+		Option ipOption = new Option("ip", true, "IP address (or hostname) for Kompics instance to listen on");
+		ipOption.setArgName("ip");
+		options.addOption(ipOption);
 
 		Option portOption = new Option("port", true, "Port for Kompics instance to listen on");
 		portOption.setArgName("port");
@@ -347,77 +277,58 @@ public abstract class Configuration {
 			help("", options);
 		}
 
-		if (line.hasOption(hostsFileOption.getOpt())) {
-			String hostsFilename = new String(line.getOptionValue(hostsFileOption.getOpt()));
-			try {
-				hosts = HostsParser.parseHostsFile(hostsFilename);
-			} catch (HostsParserException e) {
-				e.printStackTrace();
-				throw new IOException(e.getMessage());
-			}
+		if (line.hasOption(ipOption.getOpt())) {
+			String host = new String(line.getOptionValue(ipOption.getOpt()));
+			compositeConfig.setProperty(PROP_IP, host);
 		}
-
 		if (line.hasOption(portOption.getOpt())) {
-			port = new Integer(line.getOptionValue(portOption.getOpt()));
+			int port = new Integer(line.getOptionValue(portOption.getOpt()));
+			compositeConfig.setProperty(PROP_PORT, port);
 		}
 		
 		if (line.hasOption(bootstrapIpOption.getOpt())) {
 			String bootstrapHost = new String(line.getOptionValue(bootstrapIpOption.getOpt()));
-			bootstrapIP = InetAddress.getByName(bootstrapHost);
+			compositeConfig.setProperty(PROP_BOOTSTRAP_IP, bootstrapHost);
 		}
 		if (line.hasOption(bootstrapPortOption.getOpt())) {
-			bootstrapPort = new Integer(line.getOptionValue(bootstrapPortOption.getOpt()));
+			int bootstrapPort = new Integer(line.getOptionValue(bootstrapPortOption.getOpt()));
+			compositeConfig.setProperty(PROP_BOOTSTRAP_PORT, bootstrapPort);
 		}
 		if (line.hasOption(bootstrapRefreshOption.getOpt())) {
-			bootstrapRefreshPeriod = new Long(line.getOptionValue(bootstrapRefreshOption.getOpt()));
+			long bootstrapRefreshPeriod = new Long(line.getOptionValue(bootstrapRefreshOption.getOpt()));
+			compositeConfig.setProperty(PROP_BOOTSTRAP_REFRESH_PERIOD, bootstrapRefreshPeriod);
 		}
 
 		if (line.hasOption(numPeersOption.getOpt())) {
-			numPeers = new Integer(line.getOptionValue(numPeersOption.getOpt()));
+			int numPeers = new Integer(line.getOptionValue(numPeersOption.getOpt()));
+			compositeConfig.setProperty(PROP_NUM_PEERS, numPeers);
 		}
 
 		if (line.hasOption(numWorkersOption.getOpt())) {
-			numWorkers = new Integer(line.getOptionValue(numWorkersOption.getOpt()));
+			int numWorkers = new Integer(line.getOptionValue(numWorkersOption.getOpt()));
+			compositeConfig.setProperty(PROP_NUM_WORKERS, numWorkers );
 		}
 
 		if (line.hasOption(monitorIpOption.getOpt())) {
 			String monitorHost = new String(line.getOptionValue(monitorIpOption.getOpt()));
-			monitorIP = InetAddress.getByName(monitorHost);
+			compositeConfig.setProperty(PROP_MONITOR_IP, monitorHost);
 		}
 
 		if (line.hasOption(monitorPortOption.getOpt())) {
-			monitorPort = new Integer(line.getOptionValue(monitorPortOption.getOpt()));
+			int monitorPort = new Integer(line.getOptionValue(monitorPortOption.getOpt()));
+			compositeConfig.setProperty(PROP_MONITOR_PORT, monitorPort);
 		}
 
 		if (line.hasOption(monitorRefreshOption.getOpt())) {
-			monitorRefreshPeriod = new Long(line.getOptionValue(monitorRefreshOption.getOpt()));
+			long monitorRefreshPeriod = new Long(line.getOptionValue(monitorRefreshOption.getOpt()));
+			compositeConfig.setProperty(PROP_MONITOR_REFRESH_PERIOD, monitorRefreshPeriod);
 		}
-
-		Address monitorAddress = new Address(monitorIP, monitorPort, monitorId);
-
-		monitorConfiguration = new P2pMonitorConfiguration(monitorAddress,
-				monitorEvictAfterSeconds, monitorRefreshPeriod, webPort);
-
-		homepage = "<h2>Welcome to the Kompics Peer-to-Peer Framework!</h2>" + "<a href=\""
-				+ webAddress + bootstrapId + "/" + "\">Bootstrap Server</a><br>" + "<a href=\""
-				+ webAddress + getMonitorId() + "/" + "\">Monitor Server</a><br>";
-		jettyWebServerInit = new JettyWebServerInit(ip, webPort, webRequestTimeout, webThreads,
-				homepage);
-
-		Address bootstrapServer = new Address(bootstrapIP, bootstrapPort, bootstrapId);
-
-		bootConfiguration = new BootstrapConfiguration(bootstrapServer, bootstrapEvictAfterSeconds,
-				bootstrapClientRetryPeriod, bootstrapClientRetryCount, bootstrapRefreshPeriod,
-				webPort);
-
-		webAddress = "http://" + ip.getHostAddress() + ":" + webPort + "/";
-
-		peer0Address = new Address(ip, port, 0);
+		
 	}
 
-	public abstract void parseAdditionalOptions(String[] args) throws IOException;
+	abstract protected void parseAdditionalOptions(String[] args) throws IOException;
 
-	public abstract void processAdditionalOptions() throws IOException;
+	abstract protected void processAdditionalOptions() throws IOException;
 
 	/**
 	 * @param options
@@ -445,44 +356,157 @@ public abstract class Configuration {
 		}
 		logger.info(usage);
 	}
-
-	protected abstract Address getMonitorServerAddress();
-
-	protected abstract int getMonitorId();
-
-	public static List<Address> getHosts() {
-		return configuration.hosts;
+	
+	public static String getHomepage()
+	{
+		testInitialized();
+		configuration.homepage = "<h2>Welcome to the Kompics Peer-to-Peer Framework!</h2>" + "<a href=\""
+		+ getWebAddress() + getBootConfiguration().getBootstrapServerAddress().getId() + 
+		"/" + "\">Bootstrap Server</a><br>" + "<a href=\""
+		+ getWebAddress() + getMonitorConfiguration().getMonitorServerAddress().getId() 
+		+ "/" + "\">Monitor Server</a><br>";
+		return configuration.homepage;
 	}
 
+	/**
+	 * Implemented by monitor program for concrete overlay
+	 * @return id of monitor server for concrete overlay
+	 */
+	protected abstract Address getMonitorServerAddress();
+
+	/**
+	 * Implemented by monitor program for concrete overlay
+	 * @return id of monitor server for concrete overlay
+	 */
+	protected abstract int getMonitorId();
+
 	public static BootstrapConfiguration getBootConfiguration() {
+		testInitialized();
+		if (configuration.bootConfiguration != null)
+		{
+			return configuration.bootConfiguration;
+		}
+		configuration.bootConfiguration = setupBootstrapConfig();
 		return configuration.bootConfiguration;
+	}
+	
+	private static BootstrapConfiguration setupBootstrapConfig()
+	{
+		testInitialized();
+		String bootstrapHost = configuration.compositeConfig.getString(PROP_BOOTSTRAP_IP, DEFAULT_BOOTSTRAP_IP);
+		InetAddress bootstrapIP=null;
+		try {
+			bootstrapIP = InetAddress.getByName(bootstrapHost);
+		} catch (UnknownHostException e) {
+			logger.warn(e.getMessage());
+		}
+		
+		int bootstrapPort = configuration.compositeConfig.getInt(PROP_BOOTSTRAP_PORT, DEFAULT_BOOTSTRAP_PORT);
+		
+		Address bootstrapAddress = new Address(bootstrapIP, bootstrapPort, configuration.bootstrapId);
+		return new BootstrapConfiguration(bootstrapAddress,
+				configuration.compositeConfig.getInt(PROP_BOOTSTRAP_EVICT_AFTER, DEFAULT_EVICT_AFTER_SECS),
+				configuration.compositeConfig.getInt(PROP_BOOTSTRAP_RETRY_PERIOD, DEFAULT_RETRY_PERIOD), 
+				configuration.compositeConfig.getInt(PROP_BOOTSTRAP_RETRY_COUNT, DEFAULT_RETRY_COUNT),
+				configuration.compositeConfig.getInt(PROP_BOOTSTRAP_REFRESH_PERIOD, DEFAULT_REFRESH_PERIOD), 
+				configuration.webPort);
 	}
 
 	public static P2pMonitorConfiguration getMonitorConfiguration() {
+		testInitialized();
+		if (configuration.monitorConfiguration != null)
+		{
+			return configuration.monitorConfiguration;
+		}
+		configuration.monitorConfiguration = setupMonitorConfig();
 		return configuration.monitorConfiguration;
 	}
 
+	private static P2pMonitorConfiguration setupMonitorConfig()
+	{
+		testInitialized();
+		String monitorHost = configuration.compositeConfig.getString(PROP_MONITOR_IP, DEFAULT_MONITOR_IP);
+		InetAddress monitorIP=null;
+		try {
+			monitorIP = InetAddress.getByName(monitorHost);
+		} catch (UnknownHostException e) {
+			logger.warn(e.getMessage());
+		}
+		
+		int monitorPort = configuration.compositeConfig.getInt(PROP_MONITOR_PORT, DEFAULT_MONITOR_PORT);
+		int monitorId = configuration.compositeConfig.getInt(PROP_MONITOR_ID, DEFAULT_MONITOR_ID);
+		
+		Address monitorAddress = new Address(monitorIP, monitorPort, monitorId);
+		return new P2pMonitorConfiguration(monitorAddress,
+				configuration.compositeConfig.getInt(PROP_MONITOR_EVICT_AFTER, DEFAULT_EVICT_AFTER_SECS), 
+				configuration.compositeConfig.getInt(PROP_MONITOR_REFRESH_PERIOD, DEFAULT_REFRESH_PERIOD), 
+				configuration.webPort);
+	}
+	
 	public static int getNumPeers() {
-		return configuration.numPeers;
+		testInitialized();
+		return configuration.compositeConfig.getInt(PROP_NUM_PEERS, DEFAULT_NUM_PEERS);
 	}
 
 	public static InetAddress getIp() {
+		testInitialized();
+		if (configuration.ip == null)
+		{
+			try {
+				configuration.ip = 
+					InetAddress.getByName(configuration.compositeConfig.getString(PROP_IP, DEFAULT_IP));
+			} catch (UnknownHostException e) {
+				logger.warn("Couldn't get IP address for local host: " + 
+						configuration.compositeConfig.getString(PROP_IP, DEFAULT_IP));
+			}
+		}
 		return configuration.ip;
 	}
 	
-	public int getPort() {
-		return port;
+	public static int getPort() {
+		testInitialized();
+		return configuration.compositeConfig.getInt(PROP_PORT, DEFAULT_PORT);
 	}
 
 	public static String getWebAddress() {
+		testInitialized();
+		configuration.webAddress = "http://" + getIp().getHostAddress() 
+		+ ":" + configuration.webPort + "/";
 		return configuration.webAddress;
 	}
 
-	public JettyWebServerInit getJettyWebServerInit() {
+	public static JettyWebServerInit getJettyWebServerInit() {
+		testInitialized();
+		if (configuration.jettyWebServerInit == null)
+		{
+			configuration.jettyWebServerInit = new JettyWebServerInit(getIp(), getWebPort(), 
+					configuration.webRequestTimeout, configuration.webThreads,
+					getHomepage());
+		}
+		
 		return configuration.jettyWebServerInit;
 	}
 	
-	public Address getPeer0Address() {
-		return peer0Address;
+	public static int getWebPort()
+	{
+		testInitialized();
+		return configuration.webPort;
+	}
+	
+	public static Address getPeer0Address() {
+		testInitialized();
+		if (configuration.peer0Address == null)
+		{
+			configuration.peer0Address = new Address(getIp(), getPort(), 0);
+		}
+		return configuration.peer0Address;		
+	}
+	
+	protected static void testInitialized()
+	{
+		if (configuration == null)
+		{
+			throw new IllegalStateException("Configuration not initialized. You must call init method first, before other methods.");
+		}
 	}
 }

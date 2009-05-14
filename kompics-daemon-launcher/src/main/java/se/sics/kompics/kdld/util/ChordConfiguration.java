@@ -1,8 +1,6 @@
 package se.sics.kompics.kdld.util;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
@@ -20,10 +18,10 @@ public class ChordConfiguration extends Configuration {
 	public final static String CHORD_CONFIG_PROPERTIES_FILE = "config/chord.properties";
 	
 	public final static String PROP_CHORD_MONITOR_ID  = "chord.monitorid";
-	public final static String PROP_LIVE_PERIOD  = "chord.live.period";
-	public final static String PROP_SUSPECTED_PERIOD  = "chord.suspected.period";
-	public final static String PROP_MIN_R_TO  = "chord.min.rto";
-	public final static String PROP_TIMEOUT_PERIOD_INC  = "chord.timeout.period.inc";
+	public final static String PROP_CHORD_LIVE_PERIOD  = "chord.live.period";
+	public final static String PROP_CHORD_SUSPECTED_PERIOD  = "chord.suspected.period";
+	public final static String PROP_CHORD_MIN_R_TO  = "chord.min.rto";
+	public final static String PROP_CHORD_TIMEOUT_PERIOD_INC  = "chord.timeout.period.inc";
 	
 	protected final static int DEFAULT_CHORD_MONITOR_ID = Integer.MAX_VALUE - 2;
 	protected final static int DEFAULT_LIVE_PERIOD = 1000;
@@ -31,19 +29,9 @@ public class ChordConfiguration extends Configuration {
 	protected final static int DEFAULT_MIN_R_TO =1000;
 	protected final static int DEFAULT_TIMEOUT_PERIOD_INC = 0;
 	
-	protected int chordMonitorId = DEFAULT_CHORD_MONITOR_ID;
+	protected Address chordMonitorServerAddress = null;
 	
-	protected Address chordMonitorServerAddress;
-	
-	protected int livePeriod = DEFAULT_LIVE_PERIOD;
-	
-	protected int suspectedPeriod = DEFAULT_SUSPECTED_PERIOD;
-	
-	protected int minRTo = DEFAULT_MIN_R_TO;
-	
-	protected int timeoutPeriodIncrement = DEFAULT_TIMEOUT_PERIOD_INC;
-
-	protected FailureDetectorConfiguration fdConfiguration;
+	protected FailureDetectorConfiguration fdConfiguration = null;
 	
 	protected PropertiesConfiguration chordConfig;
 	
@@ -57,31 +45,10 @@ public class ChordConfiguration extends Configuration {
 	
 	public ChordConfiguration(String[] args) throws IOException, ConfigurationException {
 		super(args);
-		
-		chordMonitorServerAddress = new Address(ip, port,
-				chordMonitorId);
-		
-		fdConfiguration = new FailureDetectorConfiguration(
-				livePeriod, suspectedPeriod, minRTo, 
-				timeoutPeriodIncrement);
 	}
 
 	@Override
-	public void parseAdditionalOptions(String[] args) throws IOException {
-		
-		try {
-			chordConfig = new PropertiesConfiguration(CHORD_CONFIG_PROPERTIES_FILE);
-			chordMonitorId = chordConfig.getInt(PROP_CHORD_MONITOR_ID);
-			livePeriod = chordConfig.getInt(PROP_LIVE_PERIOD);
-			suspectedPeriod = chordConfig.getInt(PROP_SUSPECTED_PERIOD);
-			minRTo = chordConfig.getInt(PROP_MIN_R_TO);
-			timeoutPeriodIncrement = chordConfig.getInt(PROP_TIMEOUT_PERIOD_INC);
-		}
-		catch (ConfigurationException e)
-		{
-			logger.warn("Configuration file for chord not found, using default values: " + CHORD_CONFIG_PROPERTIES_FILE);
-		}
-		
+	protected void parseAdditionalOptions(String[] args) throws IOException {
 		chordMonitorIdOption = new Option("monitorid", true, "chord monitor-id");
 		chordMonitorIdOption.setArgName("id");
 		options.addOption(chordMonitorIdOption);
@@ -93,33 +60,84 @@ public class ChordConfiguration extends Configuration {
 		suspectedPeriodOption = new Option("suspectedperiod", true, "failure detector suspected-period");
 		suspectedPeriodOption.setArgName("suspectedperiod");
 		options.addOption(suspectedPeriodOption);
-
 	}
 
 	@Override
 	public void processAdditionalOptions() throws IOException {
+		
+		try {
+			chordConfig = new PropertiesConfiguration(CHORD_CONFIG_PROPERTIES_FILE);
+			chordConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
+			configuration.compositeConfig.addConfiguration(chordConfig);
+		}
+		catch (ConfigurationException e)
+		{
+			logger.warn("Configuration file for chord not found, using default values: " + CHORD_CONFIG_PROPERTIES_FILE);
+		}
+
 		if (line.hasOption(chordMonitorIdOption.getOpt()))
 		{
-			chordMonitorId = new Integer(line.getOptionValue(chordMonitorIdOption.getOpt()));
+			int chordMonitorId = new Integer(line.getOptionValue(chordMonitorIdOption.getOpt()));
+			configuration.compositeConfig.setProperty(PROP_CHORD_MONITOR_ID, chordMonitorId);
 		}
 		if (line.hasOption(livePeriodOption.getOpt()))
 		{
-			livePeriod = new Integer(line.getOptionValue(livePeriodOption.getOpt()));
+			int livePeriod = new Integer(line.getOptionValue(livePeriodOption.getOpt()));
+			configuration.compositeConfig.setProperty(PROP_CHORD_LIVE_PERIOD, livePeriod);
 		}
 		if (line.hasOption(suspectedPeriodOption.getOpt()))
 		{
-			suspectedPeriod = new Integer(line.getOptionValue(suspectedPeriodOption.getOpt()));
+			int suspectedPeriod = new Integer(line.getOptionValue(suspectedPeriodOption.getOpt()));
+			configuration.compositeConfig.setProperty(PROP_CHORD_SUSPECTED_PERIOD, suspectedPeriod);
 		}
 	}
 
 	@Override
 	protected int getMonitorId() {
-		return chordMonitorId;
+		testInitialized();
+		return configuration.compositeConfig.getInt(PROP_CHORD_MONITOR_ID, DEFAULT_CHORD_MONITOR_ID);
 	}
 
 	@Override
 	protected Address getMonitorServerAddress() {
+		testInitialized();
+		if (chordMonitorServerAddress == null)
+		{
+			chordMonitorServerAddress = new Address(Configuration.getIp(), Configuration.getPort(),
+					getMonitorId());
+		}
 		return chordMonitorServerAddress;
+	}
+
+	public static int getLivePeriod() {
+		testInitialized();
+		return configuration.compositeConfig.getInt(PROP_CHORD_LIVE_PERIOD, DEFAULT_LIVE_PERIOD);
+	}
+
+	public int getSuspectedPeriod() {
+		testInitialized();
+		return configuration.compositeConfig.getInt(PROP_CHORD_SUSPECTED_PERIOD, DEFAULT_SUSPECTED_PERIOD);
+	}
+
+	public int getMinRTo() {
+		testInitialized();
+		return configuration.compositeConfig.getInt(PROP_CHORD_MIN_R_TO, DEFAULT_MIN_R_TO);
+	}
+
+	public int getTimeoutPeriodIncrement() {
+		testInitialized();
+		return configuration.compositeConfig.getInt(PROP_CHORD_TIMEOUT_PERIOD_INC, DEFAULT_TIMEOUT_PERIOD_INC);
+	}
+
+	public FailureDetectorConfiguration getFdConfiguration() {
+		testInitialized();
+		if (fdConfiguration == null)
+		{
+			fdConfiguration = new FailureDetectorConfiguration(
+					getLivePeriod(), getSuspectedPeriod(), getMinRTo(), 
+					getTimeoutPeriodIncrement());
+		}
+		return fdConfiguration;
 	}
 
 }

@@ -51,7 +51,6 @@ public class MavenLauncher extends ComponentDefinition {
 
 	private Negative<Maven> maven = negative(Maven.class);
 
-	// private Map<Integer, Job> assembledJobs = new HashMap<Integer, Job>();
 	private Map<Integer, Job> executingJobs = new HashMap<Integer, Job>();
 
 	private Map<Integer, ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, ProcessWrapper>();
