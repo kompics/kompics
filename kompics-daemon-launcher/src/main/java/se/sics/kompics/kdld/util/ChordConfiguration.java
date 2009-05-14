@@ -7,12 +7,24 @@ import java.util.Properties;
 import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.epfd.diamondp.FailureDetectorConfiguration;
 
 public class ChordConfiguration extends Configuration {
-
+	private static final Logger logger = LoggerFactory.getLogger(ChordConfiguration.class);
+	
+	public final static String CHORD_CONFIG_PROPERTIES_FILE = "config/chord.properties";
+	
+	public final static String PROP_CHORD_MONITOR_ID  = "chord.monitorid";
+	public final static String PROP_LIVE_PERIOD  = "chord.live.period";
+	public final static String PROP_SUSPECTED_PERIOD  = "chord.suspected.period";
+	public final static String PROP_MIN_R_TO  = "chord.min.rto";
+	public final static String PROP_TIMEOUT_PERIOD_INC  = "chord.timeout.period.inc";
+	
 	protected final static int DEFAULT_CHORD_MONITOR_ID = Integer.MAX_VALUE - 2;
 	protected final static int DEFAULT_LIVE_PERIOD = 1000;
 	protected final static int DEFAULT_SUSPECTED_PERIOD = 5000;
@@ -33,6 +45,7 @@ public class ChordConfiguration extends Configuration {
 
 	protected FailureDetectorConfiguration fdConfiguration;
 	
+	protected PropertiesConfiguration chordConfig;
 	
 	/********************************************************/
 	/********* Helper fields ********************************/
@@ -44,10 +57,8 @@ public class ChordConfiguration extends Configuration {
 	
 	public ChordConfiguration(String[] args) throws IOException, ConfigurationException {
 		super(args);
-
-		config.addConfiguration(new PropertiesConfiguration("chord.properties"));
 		
-		chordMonitorServerAddress = new Address(ip, networkPort,
+		chordMonitorServerAddress = new Address(ip, port,
 				chordMonitorId);
 		
 		fdConfiguration = new FailureDetectorConfiguration(
@@ -58,23 +69,17 @@ public class ChordConfiguration extends Configuration {
 	@Override
 	public void parseAdditionalOptions(String[] args) throws IOException {
 		
-		Properties chordProperties = new Properties();
-		InputStream chordInputStream = Configuration.class
-				.getResourceAsStream("chord.properties");
-		if (chordInputStream != null) {
-
-			chordProperties.load(chordInputStream);
-
-			chordMonitorId = Integer.parseInt(chordProperties.getProperty("chord.monitorid",
-					Integer.toString(DEFAULT_CHORD_MONITOR_ID)));
-			livePeriod = Integer.parseInt(chordProperties.getProperty("chord.live.period",
-					Integer.toString(DEFAULT_LIVE_PERIOD)));
-			suspectedPeriod = Integer.parseInt(chordProperties.getProperty("chord.suspected.period",
-					Integer.toString(DEFAULT_SUSPECTED_PERIOD)));
-			minRTo = Integer.parseInt(chordProperties.getProperty("chord.min.rto",
-					Integer.toString(DEFAULT_MIN_R_TO)));
-			timeoutPeriodIncrement = Integer.parseInt(chordProperties.getProperty("chord.timeout.period.inc",
-					Integer.toString(DEFAULT_TIMEOUT_PERIOD_INC)));
+		try {
+			chordConfig = new PropertiesConfiguration(CHORD_CONFIG_PROPERTIES_FILE);
+			chordMonitorId = chordConfig.getInt(PROP_CHORD_MONITOR_ID);
+			livePeriod = chordConfig.getInt(PROP_LIVE_PERIOD);
+			suspectedPeriod = chordConfig.getInt(PROP_SUSPECTED_PERIOD);
+			minRTo = chordConfig.getInt(PROP_MIN_R_TO);
+			timeoutPeriodIncrement = chordConfig.getInt(PROP_TIMEOUT_PERIOD_INC);
+		}
+		catch (ConfigurationException e)
+		{
+			logger.warn("Configuration file for chord not found, using default values: " + CHORD_CONFIG_PROPERTIES_FILE);
 		}
 		
 		chordMonitorIdOption = new Option("monitorid", true, "chord monitor-id");
