@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.apache.commons.cli.Option;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.epfd.diamondp.FailureDetectorConfiguration;
@@ -40,9 +42,11 @@ public class ChordConfiguration extends Configuration {
 	protected Option suspectedPeriodOption;
 
 	
-	public ChordConfiguration(String[] args) throws IOException {
+	public ChordConfiguration(String[] args) throws IOException, ConfigurationException {
 		super(args);
 
+		config.addConfiguration(new PropertiesConfiguration("chord.properties"));
+		
 		chordMonitorServerAddress = new Address(ip, networkPort,
 				chordMonitorId);
 		

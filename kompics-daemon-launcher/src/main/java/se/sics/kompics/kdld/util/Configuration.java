@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Constructor;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Properties;
@@ -15,20 +16,24 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.configuration.CompositeConfiguration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.SystemConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-
 import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
-import se.sics.kompics.p2p.epfd.diamondp.FailureDetectorConfiguration;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.web.jetty.JettyWebServerInit;
 
 public abstract class Configuration {
 	private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
 
+	
+	public final static String PROP_BOOTSTRAP_PORT = "bootstrapPort";
+	
 	/*
 	 * Non-publicly accessible
 	 */
@@ -99,6 +104,9 @@ public abstract class Configuration {
 	 */
 	protected static Configuration configuration = null;
 	
+	protected CompositeConfiguration config = new CompositeConfiguration();
+
+	
 	/**
 	 * Helper non-public fields
 	 */
@@ -120,8 +128,13 @@ public abstract class Configuration {
 	 * @throws IOException
 	 */
 	public Configuration init(Class classname, String[] args) // Configuration.ConfigType configType
-		throws IOException
+		throws IOException, ConfigurationException
 	{
+		config.addConfiguration(new SystemConfiguration());
+		config.addConfiguration(new PropertiesConfiguration("bootstrap.properties"));
+		config.addConfiguration(new PropertiesConfiguration("monitor.properties"));
+
+		
 		if (configuration != null)
 		{
 			return configuration;
