@@ -18,6 +18,8 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
 import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.epfd.diamondp.FailureDetectorConfiguration;
@@ -117,21 +119,22 @@ public abstract class Configuration {
 	 * @return
 	 * @throws IOException
 	 */
-	public Configuration init(ConfigType configType, String[] args)
+	public Configuration init(Class classname, String[] args) // Configuration.ConfigType configType
 		throws IOException
 	{
 		if (configuration != null)
 		{
 			return configuration;
 		}
-		if (configType == Configuration.ConfigType.CYCLON)
-		{
-			configuration = new CyclonConfiguration(args);
-		}
-		else if (configType == Configuration.ConfigType.CHORD)
-		{
-			configuration = new CyclonConfiguration(args);
-		}
+//		if (configType == Configuration.ConfigType.CYCLON)
+//		{
+//			configuration = new CyclonConfiguration(args);
+//		}
+//		else if (configType == Configuration.ConfigType.CHORD)
+//		{
+//			configuration = new CyclonConfiguration(args);
+//		}
+		Constructor c = classname.getConstructor(Array<String>);
 		
 		return configuration;
 	}
