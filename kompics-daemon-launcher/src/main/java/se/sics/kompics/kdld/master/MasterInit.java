@@ -21,6 +21,7 @@ package se.sics.kompics.kdld.master;
 
 import se.sics.kompics.Init;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
+import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 
 /**
  * The <code>BootstrapServerInit</code> class.
@@ -29,14 +30,20 @@ import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
  */
 public final class MasterInit extends Init {
 
-	private final BootstrapConfiguration configuration;
+	private final BootstrapConfiguration bootConfig;
+	private final P2pMonitorConfiguration monitorConfig;
 
-	public MasterInit(BootstrapConfiguration configuration) {
+	public MasterInit(BootstrapConfiguration bootconfig, P2pMonitorConfiguration monitorConfig) {
 		super();
-		this.configuration = configuration;
+		this.bootConfig = bootconfig;
+		this.monitorConfig = monitorConfig;
 	}
 
-	public BootstrapConfiguration getConfiguration() {
-		return configuration;
+	public BootstrapConfiguration getBootConfig() {
+		return bootConfig;
+	}
+	
+	public P2pMonitorConfiguration getMonitorConfig() {
+		return monitorConfig;
 	}
 }

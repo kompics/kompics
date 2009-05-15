@@ -21,6 +21,7 @@ import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.network.Network;
+import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.bootstrap.PeerEntry;
 import se.sics.kompics.p2p.bootstrap.server.BootstrapServerInit;
 import se.sics.kompics.p2p.bootstrap.server.CacheAddPeerRequest;
@@ -33,6 +34,7 @@ import se.sics.kompics.p2p.epfd.EventuallyPerfectFailureDetector;
 import se.sics.kompics.p2p.epfd.PeerFailureSuspicion;
 import se.sics.kompics.p2p.epfd.StartProbingPeer;
 import se.sics.kompics.p2p.epfd.SuspicionStatus;
+import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
@@ -75,6 +77,10 @@ public class Master extends ComponentDefinition {
 	private Address self;
 	private String webAddress;
 	private int webPort;
+	
+	private BootstrapConfiguration bootConfig;
+	
+	private P2pMonitorConfiguration monitorConfig;
 
 	public Master() {
 		this.cache = new HashMap<String, HashMap<Address, CacheEntry>>();
@@ -105,12 +111,16 @@ public class Master extends ComponentDefinition {
 		subscribe(handlePrintDaemonsWithLoadedJob, masterCommands);
 	}
 
-	private Handler<BootstrapServerInit> handleInit = new Handler<BootstrapServerInit>() {
-		public void handle(BootstrapServerInit event) {
-			evictAfter = event.getConfiguration().getCacheEvictAfter();
-			self = event.getConfiguration().getBootstrapServerAddress();
+	private Handler<MasterInit> handleInit = new Handler<MasterInit>() {
+		public void handle(MasterInit event) {
+			
+			bootConfig = event.getBootConfig();
+			monitorConfig = event.getMonitorConfig();
+			
+			evictAfter = event.getBootConfig().getCacheEvictAfter();
+			self = event.getBootConfig().getBootstrapServerAddress();
 
-			webPort = event.getConfiguration().getClientWebPort();
+			webPort = event.getBootConfig().getClientWebPort();
 			webAddress = "http://" + self.getIp().getHostAddress() + ":" + webPort + "/"
 					+ self.getId() + "/";
 
