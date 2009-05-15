@@ -121,10 +121,8 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 		CyclonConfiguration cyclonConfiguration = null;
 		try {
 			cyclonConfiguration = (CyclonConfiguration) 
-				Configuration.init(CyclonConfiguration.class, args);
+				Configuration.init(args, CyclonConfiguration.class);
 		} catch (ConfigurationException e1) {
-			e1.printStackTrace();
-		} catch (IOException e1) {
 			e1.printStackTrace();
 		} 
 		final BootstrapConfiguration bootConfiguration = Configuration.getBootConfiguration();

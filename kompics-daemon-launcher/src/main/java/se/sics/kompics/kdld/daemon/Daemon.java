@@ -17,6 +17,7 @@ import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Positive;
+import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.indexer.Index;
 import se.sics.kompics.kdld.daemon.indexer.Indexer;
@@ -32,6 +33,9 @@ import se.sics.kompics.kdld.job.JobExec;
 import se.sics.kompics.kdld.job.JobExecResponse;
 import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
+import se.sics.kompics.kdld.master.ConnectMasterRequest;
+import se.sics.kompics.kdld.master.ConnectMasterResponse;
+import se.sics.kompics.kdld.util.Configuration;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.epfd.diamondp.FailureDetector;
 import se.sics.kompics.timer.ScheduleTimeout;
@@ -131,6 +135,8 @@ public class Daemon extends ComponentDefinition {
 		// XXX connect NET port on mavenLauncher apacheMina component
 
 		subscribe(handleInit, control);
+		subscribe(handleStart, control);
+		
 		subscribe(handleJobLoadRequest, net);
 		subscribe(handleJobStartRequest, net);
 		subscribe(handleShutdown, net);
@@ -148,6 +154,22 @@ public class Daemon extends ComponentDefinition {
 		subscribe(handleJobFoundLocally, indexer.getPositive(Index.class));
 	}
 
+	public Handler<Start> handleStart = new Handler<Start>() {
+		public void handle(Start event) {
+			// XXX start timer to retry connect to Master
+			trigger(new ConnectMasterRequest(self, masterAddress), net);
+		}
+	};
+	
+	
+	public Handler<ConnectMasterResponse> handleConnectMasterResponse = new Handler<ConnectMasterResponse>() {
+		public void handle(ConnectMasterResponse event) {
+			// XXX disable timer
+			
+			// 
+		}
+	};
+	
 	public Handler<DaemonInit> handleInit = new Handler<DaemonInit>() {
 		public void handle(DaemonInit event) {
 			self = new DaemonAddress(event.getId(), event.getSelf());
@@ -403,34 +425,34 @@ public class Daemon extends ComponentDefinition {
 		}
 	}
 
-	public Handler<JobStopRemoteRequest> handleJobStopRequest = new Handler<JobStopRemoteRequest>() {
-		public void handle(JobStopRemoteRequest event) {
+	public Handler<JobStopRequestMsg> handleJobStopRequest = new Handler<JobStopRequestMsg>() {
+		public void handle(JobStopRequestMsg event) {
 
 			int id = event.getJobId();
-			JobStopRemoteResponse.Status status;
+			JobStopResponseMsg.Status status;
 
 			MavenLauncher.ProcessWrapper pw = executingProcesses.get(id);
 			if (pw == null) {
-				status = JobStopRemoteResponse.Status.FAILED_TO_STOP;
+				status = JobStopResponseMsg.Status.FAILED_TO_STOP;
 			} else {
 				if (pw.destroy() == true) {
-					status = JobStopRemoteResponse.Status.STOPPED;
+					status = JobStopResponseMsg.Status.STOPPED;
 				} else {
-					status = JobStopRemoteResponse.Status.ALREADY_STOPPED;
+					status = JobStopResponseMsg.Status.ALREADY_STOPPED;
 				}
 			}
 
-			JobStopRemoteResponse response = new JobStopRemoteResponse(id, status, self, event.getSource());
+			JobStopResponseMsg response = new JobStopResponseMsg(id, status, self, event.getSource());
 			trigger(response, net);
 		}
 	};
 
-	public Handler<ListJobsLoadedRequest> handleListJobsLoadedRequest = new Handler<ListJobsLoadedRequest>() {
-		public void handle(ListJobsLoadedRequest event) {
+	public Handler<ListJobsLoadedRequestMsg> handleListJobsLoadedRequest = new Handler<ListJobsLoadedRequestMsg>() {
+		public void handle(ListJobsLoadedRequestMsg event) {
 
 			Set<Job> listJobsLoaded = new HashSet<Job>(loadedJobs.values());
 
-			trigger(new ListJobsLoadedResponse(listJobsLoaded, self, event.getDestination()), net);
+			trigger(new ListJobsLoadedResponseMsg(listJobsLoaded, self, event.getDestination()), net);
 		}
 	};
 

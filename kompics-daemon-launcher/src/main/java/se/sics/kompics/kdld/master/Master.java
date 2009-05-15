@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,11 +17,11 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
+import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.PeerEntry;
-import se.sics.kompics.p2p.bootstrap.server.BootstrapServer;
 import se.sics.kompics.p2p.bootstrap.server.BootstrapServerInit;
 import se.sics.kompics.p2p.bootstrap.server.CacheAddPeerRequest;
 import se.sics.kompics.p2p.bootstrap.server.CacheEntry;
@@ -47,24 +49,28 @@ import se.sics.kompics.web.WebResponse;
  */
 public class Master extends ComponentDefinition {
 
-	Positive<Network> network = positive(Network.class);
+	private static final Logger logger = LoggerFactory.getLogger(Master.class);	
+	
+	Positive<Network> net = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 	Negative<Web> web = negative(Web.class);
+	
+	Negative<MasterCommands> masterCommands = negative(MasterCommands.class);
+	
 	Positive<EventuallyPerfectFailureDetector> epfd = positive(EventuallyPerfectFailureDetector.class);
 
-	private static final Logger logger = LoggerFactory.getLogger(BootstrapServer.class);
-
 	private final HashMap<String, HashSet<UUID>> outstandingTimeouts;
-	private final HashMap<String, HashMap<Address, CacheEntry>> cache; // overlay == JobId
+	private final HashMap<String, HashMap<Address, CacheEntry>> cache; 
+																		
 	private final HashMap<String, Long> cacheEpoch;
-	
+
 	private HashMap<DaemonAddress, Integer> registeredJobs; // <daemon, jobId>
 
-	// daemonPeers
-	private HashMap<Address, DaemonAddress> daemonPeers = new HashMap<Address,DaemonAddress>(); 
+//	private HashMap<Address, DaemonAddress> daemonPeers = new HashMap<Address, DaemonAddress>();
+	private List<DaemonAddress> daemonPeers = new ArrayList<DaemonAddress>();
 
 	private HashMap<Address, UUID> fdRequests;
-	
+
 	private long evictAfter;
 	private Address self;
 	private String webAddress;
@@ -75,19 +81,28 @@ public class Master extends ComponentDefinition {
 		this.cacheEpoch = new HashMap<String, Long>();
 
 		outstandingTimeouts = new HashMap<String, HashSet<UUID>>();
-		
-		fdRequests = new HashMap<Address,UUID>();
+
+		fdRequests = new HashMap<Address, UUID>();
 
 		subscribe(handleInit, control);
+		subscribe(handleStart, control);
 
 		subscribe(handleWebRequest, web);
-		subscribe(handleCacheResetRequest, network);
-		subscribe(handleCacheAddPeerRequest, network);
-		subscribe(handleCacheGetPeersRequest, network);
-
-		subscribe(handlePeerFailureSuspicion,epfd);
+		subscribe(handleCacheResetRequest, net);
+		subscribe(handleCacheAddPeerRequest, net);
+		subscribe(handleCacheGetPeersRequest, net);
 		
+		subscribe(handleConnectMasterRequest, net);
+		subscribe(handleDisconnectMasterRequest, net);
+		
+
+		subscribe(handlePeerFailureSuspicion, epfd);
+
 		subscribe(handleCacheEvictPeer, timer);
+		
+		subscribe(handlePrintConnectedDameons, masterCommands);
+		subscribe(handlePrintLoadedJobs, masterCommands);
+		subscribe(handlePrintDaemonsWithLoadedJob, masterCommands);
 	}
 
 	private Handler<BootstrapServerInit> handleInit = new Handler<BootstrapServerInit>() {
@@ -104,6 +119,106 @@ public class Master extends ComponentDefinition {
 		}
 	};
 
+	private Handler<Start> handleStart = new Handler<Start>() {
+		public void handle(Start event) {
+
+			UserInput userInput = new UserInput(positive(MasterCommands.class));
+			userInput.start();
+		}
+	};
+
+	class UserInput extends Thread {
+		private final Scanner scanner;
+		private final Positive<MasterCommands> master;
+
+		UserInput(Positive<MasterCommands> master) {
+			scanner = new Scanner(System.in);
+			this.master = master;
+		}
+
+		public void run() {
+			boolean finishedInput = false;
+			while (finishedInput == false) {
+				switch (selectOption()) {
+				case 1:
+					trigger(new PrintConnectedDameons(), master);
+					break;
+				case 2:
+					System.out.println("\tEnter job id: ");
+					int jobId = scanner.nextInt();
+					trigger(new PrintDaemonsWithLoadedJob(jobId), master);
+					break;
+				case 3:
+					System.out.println("\tEnter daemon id: ");
+					int daemonId = scanner.nextInt();
+					trigger(new PrintLoadedJobs(daemonId), master);
+					break;
+				case 99:
+					finishedInput = true;
+					break;
+				default:
+					break;
+				}
+			}
+
+		}
+
+		private int selectOption()
+	    {
+	    	System.out.println("Kompics Master. Enter a number to select an option from below:");
+	    	System.out.println("\t1) list connected daemons.");
+	    	System.out.println("\t2) list all daemons with specified loaded job.");
+	    	System.out.println("\t3) list loaded jobs for a specified daemon.");
+	    	System.out.println();
+	    	System.out.println("\t0) exit program");
+	    	
+	    	return scanner.nextInt();
+	    }
+	};
+
+	
+	private Handler<ConnectMasterRequest> handleConnectMasterRequest = new Handler<ConnectMasterRequest>() {
+		public void handle(ConnectMasterRequest event) {
+
+			DaemonAddress da = new DaemonAddress(event.getDaemonId(), event.getSource());
+			if (daemonPeers.contains(da) == false)
+			{
+				daemonPeers.add(da);
+			}
+			trigger(new ConnectMasterResponse(true, 1000, self, event.getSource()), net);
+		}
+	};
+	
+	private Handler<DisconnectMasterRequest> handleDisconnectMasterRequest = new Handler<DisconnectMasterRequest>() {
+		public void handle(DisconnectMasterRequest event) {
+
+			DaemonAddress da = new DaemonAddress(event.getDaemonId(), event.getSource());
+			daemonPeers.remove(da);
+		}
+	};
+	
+	private Handler<PrintConnectedDameons> handlePrintConnectedDameons = new Handler<PrintConnectedDameons>() {
+		public void handle(PrintConnectedDameons event) {
+		
+			
+		}
+	};
+
+	private Handler<PrintLoadedJobs> handlePrintLoadedJobs = new Handler<PrintLoadedJobs>() {
+		public void handle(PrintLoadedJobs event) {
+		
+			
+		}
+	};
+	
+	private Handler<PrintDaemonsWithLoadedJob> handlePrintDaemonsWithLoadedJob = 
+		new Handler<PrintDaemonsWithLoadedJob>() {
+		public void handle(PrintDaemonsWithLoadedJob event) {
+		
+			
+		}
+	};
+	
 	private Handler<CacheResetRequest> handleCacheResetRequest = new Handler<CacheResetRequest>() {
 		public void handle(CacheResetRequest event) {
 			resetCache(event.getOverlay());
@@ -162,7 +277,7 @@ public class Master extends ComponentDefinition {
 
 			CacheGetPeersResponse response = new CacheGetPeersResponse(peers, event.getRequestId(),
 					self, event.getSource());
-			trigger(response, network);
+			trigger(response, net);
 
 			logger.debug("Responded with {} peers to peer {}", peers.size(), event.getSource());
 		}
@@ -415,19 +530,17 @@ public class Master extends ComponentDefinition {
 		return sb.toString();
 	}
 
-	
 	private Handler<PeerFailureSuspicion> handlePeerFailureSuspicion = new Handler<PeerFailureSuspicion>() {
 		public void handle(PeerFailureSuspicion event) {
 			logger.debug("FAILURE_SUSPICION");
 
 			if (event.getSuspicionStatus().equals(SuspicionStatus.SUSPECTED)) {
 				// peer is suspected
-				DaemonAddress suspectedPeer = daemonPeers.get(event
-						.getPeerAddress());
+//				DaemonAddress suspectedPeer = daemonPeers.get(event.getPeerAddress());
+				DaemonAddress suspectedPeer = (DaemonAddress) event.getOverlayAddress();
 
 				if (suspectedPeer == null
-						|| !fdRequests.containsKey(suspectedPeer
-								.getPeerAddress())) {
+						|| !fdRequests.containsKey(suspectedPeer.getPeerAddress())) {
 					// due to component concurrency it is possible that the FD
 					// component sent us a suspicion event right after we sent
 					// it a stop monitor request
@@ -438,17 +551,15 @@ public class Master extends ComponentDefinition {
 		}
 	};
 
-	
 	private final void registerDaemonForFailureDetection(CacheGetPeersRequest event) {
 
 		Address addr = event.getSource();
-		DaemonAddress peer = daemonPeers.get(addr);
-		
-		StartProbingPeer spp = new StartProbingPeer(addr, peer);
-		daemonPeers.put(addr, peer);
-		fdRequests.put(addr, spp.getRequestId());
-		trigger(spp, epfd);
-	}
+//		DaemonAddress peer = daemonPeers.get(addr);
 
+//		StartProbingPeer spp = new StartProbingPeer(addr, peer);
+//		daemonPeers.put(addr, peer);
+//		fdRequests.put(addr, spp.getRequestId());
+//		trigger(spp, epfd);
+	}
 
 }

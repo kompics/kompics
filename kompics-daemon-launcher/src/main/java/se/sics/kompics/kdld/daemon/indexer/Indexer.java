@@ -32,8 +32,8 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
-import se.sics.kompics.kdld.daemon.ListJobsLoadedRequest;
-import se.sics.kompics.kdld.daemon.ListJobsLoadedResponse;
+import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
+import se.sics.kompics.kdld.daemon.ListJobsLoadedResponseMsg;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.util.PomUtils;
@@ -105,12 +105,12 @@ public class Indexer extends ComponentDefinition {
 		}
 	};
 
-	public Handler<ListJobsLoadedRequest> handleListJobsLoadedRequest = new Handler<ListJobsLoadedRequest>() {
-		public void handle(ListJobsLoadedRequest event) {
+	public Handler<ListJobsLoadedRequestMsg> handleListJobsLoadedRequest = new Handler<ListJobsLoadedRequestMsg>() {
+		public void handle(ListJobsLoadedRequestMsg event) {
 
 			Set<Job> setJobs = new HashSet<Job>(indexedJobs.values());
 			DaemonAddress src = new DaemonAddress(event.getDaemonId(), event.getDestination());
-			trigger(new ListJobsLoadedResponse(setJobs, src, event.getDestination()), indexPort);
+			trigger(new ListJobsLoadedResponseMsg(setJobs, src, event.getDestination()), indexPort);
 		}
 	};
 

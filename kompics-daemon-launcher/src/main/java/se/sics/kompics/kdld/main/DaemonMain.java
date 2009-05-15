@@ -1,5 +1,8 @@
 package se.sics.kompics.kdld.main;
 
+import java.io.IOException;
+
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +15,8 @@ import se.sics.kompics.Kompics;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.daemon.indexer.Indexer;
+import se.sics.kompics.kdld.util.Configuration;
+import se.sics.kompics.kdld.util.DaemonConfiguration;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -43,9 +48,16 @@ public class DaemonMain extends ComponentDefinition {
 	 * @param args
 	 *            the arguments
 	 */
+	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 		
-		Kompics.createAndStart(DaemonMain.class,2);
+		try {
+			Configuration.init(args, DaemonConfiguration.class);
+			Kompics.createAndStart(DaemonMain.class,2);			
+		} catch (ConfigurationException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	/**
@@ -71,6 +83,7 @@ public class DaemonMain extends ComponentDefinition {
 				.getPositive(Network.class));
 		connect(daemon.getNegative(Timer.class), time
 				.getPositive(Timer.class));
+		
 	}
 
 	Handler<Fault> handleFault = new Handler<Fault>() {

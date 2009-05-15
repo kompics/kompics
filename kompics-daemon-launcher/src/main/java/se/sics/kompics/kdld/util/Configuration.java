@@ -7,7 +7,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -146,8 +145,8 @@ public abstract class Configuration {
 	 * @return
 	 * @throws IOException
 	 */
-	public static synchronized Configuration init(Class<? extends Configuration> classname, String[] args)
-			throws IOException, ConfigurationException {
+	public static synchronized Configuration init(String[] args, Class<? extends Configuration> ... classname)
+			throws ConfigurationException {
 
 //		if (configuration != null) {
 //			return configuration;
@@ -157,7 +156,7 @@ public abstract class Configuration {
 			// Create instance of subclass of Configuration and call its
 			// constructor (String[]) using reflection
 			// XXX improve exception processing
-			Constructor<? extends Configuration> constructor = classname
+			Constructor<? extends Configuration> constructor = classname[0]
 					.getConstructor(String[].class);
 			configuration = constructor.newInstance((Object) args);
 		} catch (SecurityException e) {

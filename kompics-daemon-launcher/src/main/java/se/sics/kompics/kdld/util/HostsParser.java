@@ -9,6 +9,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import se.sics.kompics.address.Address;
 
 /**
@@ -17,7 +21,8 @@ import se.sics.kompics.address.Address;
  * @author Jim Dowling 
  */
 public final class HostsParser {
-
+	private static final Logger logger = LoggerFactory.getLogger(HostsParser.class);
+	
 	private final static int DEFAULT_PORT = 22031;
 	private final static int DEFAULT_ID = 1;
 	
@@ -38,26 +43,31 @@ public final class HostsParser {
 				hostPortIdPerLine = in.readLine();
 				if (hostPortIdPerLine != null)
 				{
-					String[] addParts = hostPortIdPerLine.split(":");
-					InetAddress host = InetAddress.getByName(addParts[0]);
-					int port = DEFAULT_PORT;
-					int id =  DEFAULT_ID;
-					if (addParts.length >= 2)
-					{
-						port =  Integer.parseInt(addParts[1]);
+					String[] hosts = hostPortIdPerLine.split(",");
+					for (String h : hosts) {
+						String[] addressParts = h.split(":");
+						InetAddress host = null;
+						try {
+							host = InetAddress.getByName(addressParts[0]);
+						} catch (UnknownHostException e) {
+							logger.warn("Unknown host:" + e.getMessage());
+							continue;
+						}
+						int port = DEFAULT_PORT;
+						int id =  DEFAULT_ID;
+						if (addressParts.length >= 2)
+						{
+							port =  Integer.parseInt(addressParts[1]);
+						}
+						if (addressParts.length == 3)
+						{
+							id =  Integer.parseInt(addressParts[2]);
+						}
+						Address addr = new Address(host, port, id);
+						addrs.add(addr);
 					}
-					if (addParts.length == 3)
-					{
-						id =  Integer.parseInt(addParts[2]);
-					}
-					Address addr = new Address(host, port, id);
-					addrs.add(addr);
-
 				}
-			} catch (UnknownHostException e) {
-				throw new HostsParserException("Unknown host: " + e.getMessage());
-			}
-			catch (NumberFormatException e) {
+			} catch (NumberFormatException e) {
 				throw new HostsParserException("Invalid port or id number: " + e.getMessage());
 			}
 			catch (IOException e) {

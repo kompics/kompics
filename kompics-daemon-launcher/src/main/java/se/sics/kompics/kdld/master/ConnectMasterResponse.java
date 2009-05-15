@@ -1,8 +1,9 @@
-package se.sics.kompics.kdld.daemon;
+package se.sics.kompics.kdld.master;
 
 import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Message;
 
-public final class ConnectControllerResponse extends DaemonResponseMessage {
+public final class ConnectMasterResponse extends Message {
 
 	private static final long serialVersionUID = -1590276498077820239L;
 
@@ -10,7 +11,7 @@ public final class ConnectControllerResponse extends DaemonResponseMessage {
 
 	private final boolean succeeded;
 	
-	public ConnectControllerResponse(boolean succeeded, int timeout, DaemonAddress src, Address dest) {
+	public ConnectMasterResponse(boolean succeeded, int timeout, Address src, Address dest) {
 		super(src, dest);
 		this.succeeded = succeeded;
 		this.timeout = timeout;

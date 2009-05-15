@@ -10,7 +10,7 @@ import se.sics.kompics.address.Address;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class JobStopRemoteRequest extends DaemonRequestMessage {
+public class JobStopRequestMsg extends DaemonRequestMessage {
 
 	private static final long serialVersionUID = 1710717688555956452L;
 
@@ -20,12 +20,12 @@ public class JobStopRemoteRequest extends DaemonRequestMessage {
 	
 	private final int jobId;
 
-	public JobStopRemoteRequest(int jobId, Address src, DaemonAddress dest) {
+	public JobStopRequestMsg(int jobId, Address src, DaemonAddress dest) {
 		super(src,dest);
 		this.jobId = jobId;
 	}
 	
-	public JobStopRemoteRequest(int jobId, String groupId, String artifactId, String version, 
+	public JobStopRequestMsg(int jobId, String groupId, String artifactId, String version, 
 			Address src, DaemonAddress dest) {
 		this(jobId,src,dest);
 		this.groupId = groupId;

@@ -1,6 +1,7 @@
+
 package se.sics.kompics.kdld.main;
 
-import java.io.IOException;
+import java.io.FileNotFoundException;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -11,6 +12,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import se.sics.kompics.kdld.util.ChordConfiguration;
 import se.sics.kompics.kdld.util.Configuration;
 import se.sics.kompics.kdld.util.CyclonConfiguration;
+import se.sics.kompics.kdld.util.DaemonConfiguration;
 import se.sics.kompics.kdld.util.HostsParserException;
 import se.sics.kompics.kdld.util.MasterConfiguration;
 
@@ -41,11 +43,11 @@ public class ConfigTest extends TestCase {
 		String[] args = {""};
 		try {
 			MasterConfiguration mc = 
-				(MasterConfiguration) Configuration.init(MasterConfiguration.class, args);
+				(MasterConfiguration) Configuration.init(args, MasterConfiguration.class);
 			mc.getHosts();
 			
 			ChordConfiguration ch = 
-				(ChordConfiguration) Configuration.init(ChordConfiguration.class, args);
+				(ChordConfiguration) Configuration.init(args, ChordConfiguration.class);
 			ch.getMonitorConfiguration();
 			ch.getSuspectedPeriod();
 			ch.getMinRTo();
@@ -53,22 +55,28 @@ public class ConfigTest extends TestCase {
 			ch.getFdConfiguration();
 			
 			
-			CyclonConfiguration cc = (CyclonConfiguration) Configuration.init(CyclonConfiguration.class, args);
+			CyclonConfiguration cc = (CyclonConfiguration) Configuration.init(args, CyclonConfiguration.class);
 			cc.getHomepage();
 			cc.getIp();
 			cc.getPeer0Address();
 			cc.getPort();
+
+			DaemonConfiguration dc = (DaemonConfiguration) Configuration.init(args, DaemonConfiguration.class);
+			dc.getDaemonRetryPeriod();
+			dc.getDaemonRetryCount();
 			
 			assertTrue(true);
 		} catch (ConfigurationException e) {
 			e.printStackTrace();
 			assertTrue(false);
-		} catch (IOException e) {
-			e.printStackTrace();
-			assertTrue(false);
 		} catch (HostsParserException e) {
 			e.printStackTrace();
 			assertTrue(false);
+		} catch (FileNotFoundException e)
+		{
+			e.printStackTrace();			
+			assertTrue(false);
 		}
+		
 	}
 }

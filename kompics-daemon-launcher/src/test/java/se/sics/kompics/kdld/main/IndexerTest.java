@@ -22,8 +22,8 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.kdld.daemon.JobRemoveRequestMsg;
 import se.sics.kompics.kdld.daemon.JobRemoveResponseMsg;
-import se.sics.kompics.kdld.daemon.ListJobsLoadedRequest;
-import se.sics.kompics.kdld.daemon.ListJobsLoadedResponse;
+import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
+import se.sics.kompics.kdld.daemon.ListJobsLoadedResponseMsg;
 import se.sics.kompics.kdld.daemon.indexer.Index;
 import se.sics.kompics.kdld.daemon.indexer.Indexer;
 import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
@@ -290,8 +290,8 @@ public class IndexerTest implements Serializable {
 			}
 		};
 
-		public Handler<ListJobsLoadedResponse> handleListJobsLoadedResponse = new Handler<ListJobsLoadedResponse>() {
-			public void handle(ListJobsLoadedResponse event) {
+		public Handler<ListJobsLoadedResponseMsg> handleListJobsLoadedResponse = new Handler<ListJobsLoadedResponseMsg>() {
+			public void handle(ListJobsLoadedResponseMsg event) {
 
 				Set<Job> listJobsLoaded = event.getSetJobs();
 
@@ -330,7 +330,7 @@ public class IndexerTest implements Serializable {
 					Address addr;
 					try {
 						addr = new Address(InetAddress.getLocalHost(), 3333, 10);
-						trigger(new ListJobsLoadedRequest(1, addr, new DaemonAddress(1, addr)),
+						trigger(new ListJobsLoadedRequestMsg(1, addr, new DaemonAddress(1, addr)),
 								indexer.getPositive(Index.class));
 					} catch (UnknownHostException e) {
 						// TODO Auto-generated catch block
