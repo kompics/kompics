@@ -45,26 +45,10 @@ public final class HostsParser {
 				{
 					String[] hosts = hostPortIdPerLine.split(",");
 					for (String h : hosts) {
-						String[] addressParts = h.split(":");
-						InetAddress host = null;
-						try {
-							host = InetAddress.getByName(addressParts[0]);
-						} catch (UnknownHostException e) {
-							logger.warn("Unknown host:" + e.getMessage());
-							continue;
+						Address addr = parseHost(h);
+						if (addr != null) {
+							addrs.add(addr);
 						}
-						int port = DEFAULT_PORT;
-						int id =  DEFAULT_ID;
-						if (addressParts.length >= 2)
-						{
-							port =  Integer.parseInt(addressParts[1]);
-						}
-						if (addressParts.length == 3)
-						{
-							id =  Integer.parseInt(addressParts[2]);
-						}
-						Address addr = new Address(host, port, id);
-						addrs.add(addr);
 					}
 				}
 			} catch (NumberFormatException e) {
@@ -82,6 +66,32 @@ public final class HostsParser {
 		}
 		
 		return addrs;
+	}
+	
+	public static Address parseHost(String h)
+	{
+		String[] addressParts = h.split(":");
+		InetAddress host = null;
+		try {
+			host = InetAddress.getByName(addressParts[0]);
+		} catch (UnknownHostException e) {
+			logger.warn("Unknown host:" + e.getMessage());
+			return null;
+		}
+		int port = DEFAULT_PORT;
+		int id =  DEFAULT_ID;
+		if (addressParts.length >= 2)
+		{
+			port =  Integer.parseInt(addressParts[1]);
+		}
+		if (addressParts.length == 3)
+		{
+			id =  Integer.parseInt(addressParts[2]);
+		}
+		Address addr = new Address(host, port, id);
+
+		return addr;
+
 	}
 
 }

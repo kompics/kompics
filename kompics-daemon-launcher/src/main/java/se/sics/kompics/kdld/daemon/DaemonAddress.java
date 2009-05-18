@@ -1,5 +1,8 @@
 package se.sics.kompics.kdld.daemon;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.overlay.OverlayAddress;
 
@@ -17,11 +20,6 @@ public final class DaemonAddress extends OverlayAddress implements
 
 	public final Integer getDaemonId() {
 		return daemonId;
-	}
-
-	@Override
-	public int compareTo(DaemonAddress that) {
-		return daemonId.compareTo(that.daemonId);
 	}
 
 	@Override
@@ -52,6 +50,27 @@ public final class DaemonAddress extends OverlayAddress implements
 		} else if (!daemonId.equals(other.daemonId))
 			return false;
 		return true;
+	}
+	
+	@Override
+	public int compareTo(DaemonAddress that) {
+		if (this.daemonId < that.daemonId)
+			return -1;
+		if (this.daemonId > that.daemonId)
+			return 1;
+		if (this.peerAddress.getPort() < that.peerAddress.getPort())
+			return -1;
+		if (this.peerAddress.getPort() > that.peerAddress.getPort())
+			return 1;
+		if (this.peerAddress.getId() < that.peerAddress.getId())
+			return -1;
+		if (this.peerAddress.getId() > that.peerAddress.getId())
+			return 1;
+		ByteBuffer thisIpBytes = ByteBuffer.wrap(this.peerAddress.getIp().getAddress()).order(
+				ByteOrder.BIG_ENDIAN);
+		ByteBuffer thatIpBytes = ByteBuffer.wrap(that.peerAddress.getIp().getAddress()).order(
+				ByteOrder.BIG_ENDIAN);
+		return thisIpBytes.compareTo(thatIpBytes);
 	}
 
 }

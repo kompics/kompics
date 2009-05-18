@@ -13,7 +13,7 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.master.Master;
 import se.sics.kompics.kdld.master.MasterInit;
 import se.sics.kompics.kdld.util.Configuration;
-import se.sics.kompics.kdld.util.MasterConfiguration;
+import se.sics.kompics.kdld.util.MasterServerConfiguration;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -32,7 +32,7 @@ public class MasterMain extends ComponentDefinition {
 	private static final Logger logger = LoggerFactory
 	.getLogger(MasterMain.class);
 	
-	private static MasterConfiguration config;
+	private static MasterServerConfiguration config;
 
 	/**
 	 * The main method.
@@ -44,7 +44,7 @@ public class MasterMain extends ComponentDefinition {
 	public static void main(String[] args) {
 		
 		try {
-			config = (MasterConfiguration) Configuration.init(args, MasterConfiguration.class);
+			config = (MasterServerConfiguration) Configuration.init(args, MasterServerConfiguration.class);
 			Kompics.createAndStart(MasterMain.class, 2);			
 		} catch (ConfigurationException e) {
 			e.printStackTrace();

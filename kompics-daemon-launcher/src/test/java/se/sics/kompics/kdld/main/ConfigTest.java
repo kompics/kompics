@@ -14,7 +14,7 @@ import se.sics.kompics.kdld.util.Configuration;
 import se.sics.kompics.kdld.util.CyclonConfiguration;
 import se.sics.kompics.kdld.util.DaemonConfiguration;
 import se.sics.kompics.kdld.util.HostsParserException;
-import se.sics.kompics.kdld.util.MasterConfiguration;
+import se.sics.kompics.kdld.util.MasterServerConfiguration;
 
 /**
  * Unit test for simple App.
@@ -42,8 +42,8 @@ public class ConfigTest extends TestCase {
 
 		String[] args = {""};
 		try {
-			MasterConfiguration mc = 
-				(MasterConfiguration) Configuration.init(args, MasterConfiguration.class);
+			MasterServerConfiguration mc = 
+				(MasterServerConfiguration) Configuration.init(args, MasterServerConfiguration.class);
 			mc.getHosts();
 			
 			ChordConfiguration ch = 

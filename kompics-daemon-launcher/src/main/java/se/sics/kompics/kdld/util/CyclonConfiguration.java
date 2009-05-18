@@ -67,7 +67,7 @@ public class CyclonConfiguration extends Configuration {
 		try {
 			cyclonConfig = new PropertiesConfiguration(CYCLON_CONFIG_PROPERTIES_FILE);
 			cyclonConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
-			configuration.compositeConfig.addConfiguration(cyclonConfig);
+			compositeConfig.addConfiguration(cyclonConfig);
 		}
 		catch (ConfigurationException e)
 		{

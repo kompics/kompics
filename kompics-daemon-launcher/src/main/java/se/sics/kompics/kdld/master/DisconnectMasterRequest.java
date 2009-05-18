@@ -1,21 +1,10 @@
 package se.sics.kompics.kdld.master;
 
-import se.sics.kompics.address.Address;
-import se.sics.kompics.kdld.daemon.DaemonAddress;
-import se.sics.kompics.network.Message;
+import se.sics.kompics.Event;
 
-public final class DisconnectMasterRequest extends Message {
+public final class DisconnectMasterRequest extends Event {
 
-	private static final long serialVersionUID = -2063210982343514311L;
-
-	private final int daemonId;
-	
-	public DisconnectMasterRequest(DaemonAddress src, Address dest) {
-		super(src.getPeerAddress(), dest);
-		this.daemonId = src.getDaemonId();
+	public DisconnectMasterRequest() {
 	}
 
-	public int getDaemonId() {
-		return daemonId;
-	}
 }

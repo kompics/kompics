@@ -18,9 +18,9 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.SimulationScenarioLoadException;
 
-public class MasterConfiguration extends Configuration {
+public class MasterServerConfiguration extends Configuration {
 
-	private static final Logger logger = LoggerFactory.getLogger(MasterConfiguration.class);
+	private static final Logger logger = LoggerFactory.getLogger(MasterServerConfiguration.class);
 	
 	public static String PROP_MASTER_CONFIG_PROPS_FILE = "config/master.properties";
 	
@@ -53,7 +53,7 @@ public class MasterConfiguration extends Configuration {
 	 * @param args
 	 * @throws IOException
 	 */
-	public MasterConfiguration(String[] args) throws IOException, ConfigurationException {
+	public MasterServerConfiguration(String[] args) throws IOException, ConfigurationException {
 		super(args);
 
 	}

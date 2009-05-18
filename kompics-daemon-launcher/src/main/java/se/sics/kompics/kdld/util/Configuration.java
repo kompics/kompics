@@ -40,6 +40,7 @@ public abstract class Configuration {
 	
 	public final static String PROP_IP = "ip";
 	public final static String PROP_PORT = "port";
+	public final static String PROP_ID = "id";
 	
 	public final static String PROP_BOOTSTRAP_PORT = "bootstrap.server.port";
 	public final static String PROP_BOOTSTRAP_IP = "bootstrap.server.ip";
@@ -64,7 +65,8 @@ public abstract class Configuration {
 	 * Non-publicly accessible
 	 */
 	protected static final String DEFAULT_IP = "localhost";
-	protected static final int DEFAULT_PORT = 0;
+	protected static final int DEFAULT_PORT = 2323;
+	protected static final int DEFAULT_ID = 0;
 	
 	protected static final String DEFAULT_BOOTSTRAP_IP = "localhost";
 	protected static final int DEFAULT_BOOTSTRAP_PORT = 20002;
@@ -217,7 +219,6 @@ public abstract class Configuration {
 		portOption.setArgName("port");
 		options.addOption(portOption);
 
-		
 		Option bootstrapIpOption = new Option("bIp", true, "Bootstrap server ip address");
 		bootstrapIpOption.setArgName("address");
 		options.addOption(bootstrapIpOption);
@@ -466,6 +467,12 @@ public abstract class Configuration {
 		testInitialized();
 		return configuration.compositeConfig.getInt(PROP_PORT, DEFAULT_PORT);
 	}
+	
+	public static int getId()
+	{
+		testInitialized();
+		return DEFAULT_ID;
+	}
 
 	public static String getWebAddress() {
 		testInitialized();
@@ -496,7 +503,7 @@ public abstract class Configuration {
 		testInitialized();
 		if (configuration.peer0Address == null)
 		{
-			configuration.peer0Address = new Address(getIp(), getPort(), 0);
+			configuration.peer0Address = new Address(getIp(), getPort(), getId());
 		}
 		return configuration.peer0Address;		
 	}

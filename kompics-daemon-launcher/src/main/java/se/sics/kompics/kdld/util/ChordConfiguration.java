@@ -68,7 +68,7 @@ public class ChordConfiguration extends Configuration {
 		try {
 			chordConfig = new PropertiesConfiguration(CHORD_CONFIG_PROPERTIES_FILE);
 			chordConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
-			configuration.compositeConfig.addConfiguration(chordConfig);
+			compositeConfig.addConfiguration(chordConfig);
 		}
 		catch (ConfigurationException e)
 		{

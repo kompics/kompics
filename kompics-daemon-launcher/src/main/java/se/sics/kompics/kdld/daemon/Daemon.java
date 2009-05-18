@@ -35,9 +35,12 @@ import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
 import se.sics.kompics.kdld.master.ConnectMasterRequest;
 import se.sics.kompics.kdld.master.ConnectMasterResponse;
-import se.sics.kompics.kdld.util.Configuration;
+import se.sics.kompics.kdld.master.DisconnectMasterRequest;
+import se.sics.kompics.kdld.master.MasterClient;
+import se.sics.kompics.kdld.master.MasterClientInit;
+import se.sics.kompics.kdld.master.MasterClientP;
+import se.sics.kompics.kdld.master.MasterConfiguration;
 import se.sics.kompics.network.Network;
-import se.sics.kompics.p2p.epfd.diamondp.FailureDetector;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
@@ -108,10 +111,13 @@ public class Daemon extends ComponentDefinition {
 
 	private Positive<Network> net = positive(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
+	
+//	private Negative<MasterClientP> master = negative(MasterClientP.class);
 
 	private Component mavenLauncher;
 	private Component indexer;
-
+	private Component masterClient;
+	
 	private DaemonAddress self;
 	private Address masterAddress;
 
@@ -122,17 +128,14 @@ public class Daemon extends ComponentDefinition {
 
 	private Map<Integer, MavenLauncher.ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, MavenLauncher.ProcessWrapper>();
 
-	private int masterRetryTimeout;
-	private int masterRetryCount;
-
-	private Component fd;
+//	private Component fd;
 
 	public Daemon() {
 
-		fd = create(FailureDetector.class);
+//		fd = create(FailureDetector.class);
 		mavenLauncher = create(MavenLauncher.class);
 		indexer = create(Indexer.class);
-		// XXX connect NET port on mavenLauncher apacheMina component
+		masterClient = create(MasterClient.class); 
 
 		subscribe(handleInit, control);
 		subscribe(handleStart, control);
@@ -143,9 +146,9 @@ public class Daemon extends ComponentDefinition {
 		subscribe(handleJobStopRequest, net);
 		subscribe(handleListJobsLoadedRequest, net);
 
-		subscribe(handleJobAssemblyResponse, mavenLauncher.getNegative(Maven.class));
-		subscribe(handleJobExecResponse, mavenLauncher.getNegative(Maven.class));
-		subscribe(handleJobRemoveResponse, mavenLauncher.getNegative(Maven.class));
+		subscribe(handleJobAssemblyResponse, mavenLauncher.getPositive(Maven.class));
+		subscribe(handleJobExecResponse, mavenLauncher.getPositive(Maven.class));
+		subscribe(handleJobRemoveResponse, mavenLauncher.getPositive(Maven.class));
 		
 		subscribe(handleJobRemoveRequestMsg, net);
 		
@@ -157,28 +160,49 @@ public class Daemon extends ComponentDefinition {
 	public Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
 			// XXX start timer to retry connect to Master
-			trigger(new ConnectMasterRequest(self, masterAddress), net);
+			trigger(new ConnectMasterRequest(), masterClient.getPositive(MasterClientP.class));
 		}
 	};
 	
 	
 	public Handler<ConnectMasterResponse> handleConnectMasterResponse = new Handler<ConnectMasterResponse>() {
 		public void handle(ConnectMasterResponse event) {
-			// XXX disable timer
 			
-			// 
+			if (event.isSucceeded() == true) {
+				logger.info("Successful connection to master from {}", self);
+			}
+			else
+			{
+				logger.warn("Failed connection to master from {}", self);
+			}
 		}
 	};
+
+	public Handler<DisconnectMasterRequest> handleDisconnectMasterRequest = 
+		new Handler<DisconnectMasterRequest>() {
+		public void handle(DisconnectMasterRequest event) {
+			
+			logger.info("Disconnect request sending to master...");
+			
+			trigger(event, masterClient.getPositive(MasterClientP.class));
+		}
+	};
+
 	
 	public Handler<DaemonInit> handleInit = new Handler<DaemonInit>() {
 		public void handle(DaemonInit event) {
 			self = new DaemonAddress(event.getId(), event.getSelf());
 			masterAddress = event.getMasterAddr();
-			masterRetryTimeout = event.getMasterRetryTimeout();
-			masterRetryCount = event.getMasterRetryCount();
-
+			
+			MasterConfiguration mc = new MasterConfiguration(masterAddress, 
+					event.getCacheEvictAfter(), event.getMasterRetryPeriod(),
+					event.getMasterRetryCount(), event.getClientKeepAlivePeriod(),
+					event.getClientWebPort());
+			
 			trigger(new IndexerInit(event.getIndexingPeriod()), indexer.getControl());
 
+			trigger(new MasterClientInit(self, mc), 
+					masterClient.getControl());
 		}
 	};
 
@@ -465,6 +489,8 @@ public class Daemon extends ComponentDefinition {
 			}
 		}
 	};
+
+	
 
 	public Handler<JobMessageRequest> handleJobMessageRequest = new Handler<JobMessageRequest>() {
 		public void handle(JobMessageRequest event) {

@@ -1,9 +1,6 @@
 package se.sics.kompics.kdld.main;
 
-import java.io.IOException;
-
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +11,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.Daemon;
-import se.sics.kompics.kdld.daemon.indexer.Indexer;
+import se.sics.kompics.kdld.daemon.DaemonInit;
 import se.sics.kompics.kdld.util.Configuration;
 import se.sics.kompics.kdld.util.DaemonConfiguration;
 import se.sics.kompics.network.Network;
@@ -31,7 +28,6 @@ public class DaemonMain extends ComponentDefinition {
 	private Component network;
 	private Component daemon;
 
-	private Address self;
 	
 	private static final Logger logger = LoggerFactory
 	.getLogger(DaemonMain.class);
@@ -70,14 +66,21 @@ public class DaemonMain extends ComponentDefinition {
 		subscribe(handleFault, daemon.getControl());
 
 		
-		trigger(new MinaNetworkInit(self), network.getControl());
+		trigger(new MinaNetworkInit(DaemonConfiguration.getPeer0Address()), network.getControl());
 		
 		connect(daemon.getNegative(Network.class), network
 				.getPositive(Network.class));
 		connect(daemon.getNegative(Timer.class), time
 				.getPositive(Timer.class));
 		
-	}
+		DaemonInit dInit = new DaemonInit(DaemonConfiguration.getDaemonId(), 
+				DaemonConfiguration.getPeer0Address(),
+				DaemonConfiguration.getMasterAddress(), 
+				DaemonConfiguration.getDaemonRetryPeriod(),
+				DaemonConfiguration.getDaemonRetryCount(), 
+				DaemonConfiguration.getDaemonIndexingPeriod());
+		trigger(dInit, daemon.getControl());
+		}
 
 	Handler<Fault> handleFault = new Handler<Fault>() {
 		public void handle(Fault fault) {

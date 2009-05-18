@@ -5,9 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -22,18 +20,6 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
-import se.sics.kompics.p2p.bootstrap.PeerEntry;
-import se.sics.kompics.p2p.bootstrap.server.BootstrapServerInit;
-import se.sics.kompics.p2p.bootstrap.server.CacheAddPeerRequest;
-import se.sics.kompics.p2p.bootstrap.server.CacheEntry;
-import se.sics.kompics.p2p.bootstrap.server.CacheEvictPeer;
-import se.sics.kompics.p2p.bootstrap.server.CacheGetPeersRequest;
-import se.sics.kompics.p2p.bootstrap.server.CacheGetPeersResponse;
-import se.sics.kompics.p2p.bootstrap.server.CacheResetRequest;
-import se.sics.kompics.p2p.epfd.EventuallyPerfectFailureDetector;
-import se.sics.kompics.p2p.epfd.PeerFailureSuspicion;
-import se.sics.kompics.p2p.epfd.StartProbingPeer;
-import se.sics.kompics.p2p.epfd.SuspicionStatus;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
@@ -51,61 +37,51 @@ import se.sics.kompics.web.WebResponse;
  */
 public class Master extends ComponentDefinition {
 
-	private static final Logger logger = LoggerFactory.getLogger(Master.class);	
-	
+	private static final Logger logger = LoggerFactory.getLogger(Master.class);
+
 	Positive<Network> net = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 	Negative<Web> web = negative(Web.class);
-	
-	Negative<MasterCommands> masterCommands = negative(MasterCommands.class);
-	
-	Positive<EventuallyPerfectFailureDetector> epfd = positive(EventuallyPerfectFailureDetector.class);
 
-	private final HashMap<String, HashSet<UUID>> outstandingTimeouts;
-	private final HashMap<String, HashMap<Address, CacheEntry>> cache; 
-																		
-	private final HashMap<String, Long> cacheEpoch;
+	Negative<MasterCommands> masterCommands = negative(MasterCommands.class);
+
+	// Positive<EventuallyPerfectFailureDetector> epfd =
+	// positive(EventuallyPerfectFailureDetector.class);
+
+	private final HashSet<UUID> outstandingTimeouts;
+	private final HashMap<DaemonAddress, DaemonEntry> cache;
+
+	private final Long cacheEpoch;
+	// private final HashMap<String, Long> cacheEpoch;
 
 	private HashMap<DaemonAddress, Integer> registeredJobs; // <daemon, jobId>
 
-//	private HashMap<Address, DaemonAddress> daemonPeers = new HashMap<Address, DaemonAddress>();
-	private List<DaemonAddress> daemonPeers = new ArrayList<DaemonAddress>();
-
-	private HashMap<Address, UUID> fdRequests;
+	// private HashMap<Address, UUID> fdRequests;
 
 	private long evictAfter;
 	private Address self;
 	private String webAddress;
 	private int webPort;
-	
+
 	private BootstrapConfiguration bootConfig;
-	
+
 	private P2pMonitorConfiguration monitorConfig;
 
 	public Master() {
-		this.cache = new HashMap<String, HashMap<Address, CacheEntry>>();
-		this.cacheEpoch = new HashMap<String, Long>();
+		this.cache = new HashMap<DaemonAddress, DaemonEntry>();
+		this.cacheEpoch = 1L;
 
-		outstandingTimeouts = new HashMap<String, HashSet<UUID>>();
-
-		fdRequests = new HashMap<Address, UUID>();
+		outstandingTimeouts = new HashSet<UUID>();
 
 		subscribe(handleInit, control);
 		subscribe(handleStart, control);
 
 		subscribe(handleWebRequest, web);
-		subscribe(handleCacheResetRequest, net);
-		subscribe(handleCacheAddPeerRequest, net);
-		subscribe(handleCacheGetPeersRequest, net);
-		
-		subscribe(handleConnectMasterRequest, net);
-		subscribe(handleDisconnectMasterRequest, net);
-		
+		subscribe(handleDisconnectMasterRequestMsg, net);
+		subscribe(handleConnectMasterRequestMsg, net);
 
-		subscribe(handlePeerFailureSuspicion, epfd);
+		subscribe(handleCacheEvictDaemon, timer);
 
-		subscribe(handleCacheEvictPeer, timer);
-		
 		subscribe(handlePrintConnectedDameons, masterCommands);
 		subscribe(handlePrintLoadedJobs, masterCommands);
 		subscribe(handlePrintDaemonsWithLoadedJob, masterCommands);
@@ -113,10 +89,10 @@ public class Master extends ComponentDefinition {
 
 	private Handler<MasterInit> handleInit = new Handler<MasterInit>() {
 		public void handle(MasterInit event) {
-			
+
 			bootConfig = event.getBootConfig();
 			monitorConfig = event.getMonitorConfig();
-			
+
 			evictAfter = event.getBootConfig().getCacheEvictAfter();
 			self = event.getBootConfig().getBootstrapServerAddress();
 
@@ -173,123 +149,69 @@ public class Master extends ComponentDefinition {
 
 		}
 
-		private int selectOption()
-	    {
-	    	System.out.println("Kompics Master. Enter a number to select an option from below:");
-	    	System.out.println("\t1) list connected daemons.");
-	    	System.out.println("\t2) list all daemons with specified loaded job.");
-	    	System.out.println("\t3) list loaded jobs for a specified daemon.");
-	    	System.out.println();
-	    	System.out.println("\t0) exit program");
-	    	
-	    	return scanner.nextInt();
-	    }
-	};
+		private int selectOption() {
+			System.out.println("Kompics Master. Enter a number to select an option from below:");
+			System.out.println("\t1) list connected daemons.");
+			System.out.println("\t2) list all daemons with specified loaded job.");
+			System.out.println("\t3) list loaded jobs for a specified daemon.");
+			System.out.println();
+			System.out.println("\t0) exit program");
 
-	
-	private Handler<ConnectMasterRequest> handleConnectMasterRequest = new Handler<ConnectMasterRequest>() {
-		public void handle(ConnectMasterRequest event) {
-
-			DaemonAddress da = new DaemonAddress(event.getDaemonId(), event.getSource());
-			if (daemonPeers.contains(da) == false)
-			{
-				daemonPeers.add(da);
-			}
-			trigger(new ConnectMasterResponse(true, 1000, self, event.getSource()), net);
+			return scanner.nextInt();
 		}
 	};
-	
-	private Handler<DisconnectMasterRequest> handleDisconnectMasterRequest = new Handler<DisconnectMasterRequest>() {
-		public void handle(DisconnectMasterRequest event) {
 
-			DaemonAddress da = new DaemonAddress(event.getDaemonId(), event.getSource());
-			daemonPeers.remove(da);
-		}
-	};
-	
 	private Handler<PrintConnectedDameons> handlePrintConnectedDameons = new Handler<PrintConnectedDameons>() {
 		public void handle(PrintConnectedDameons event) {
-		
-			
+
 		}
 	};
 
 	private Handler<PrintLoadedJobs> handlePrintLoadedJobs = new Handler<PrintLoadedJobs>() {
 		public void handle(PrintLoadedJobs event) {
-		
-			
+
 		}
 	};
-	
-	private Handler<PrintDaemonsWithLoadedJob> handlePrintDaemonsWithLoadedJob = 
-		new Handler<PrintDaemonsWithLoadedJob>() {
+
+	private Handler<PrintDaemonsWithLoadedJob> handlePrintDaemonsWithLoadedJob = new Handler<PrintDaemonsWithLoadedJob>() {
 		public void handle(PrintDaemonsWithLoadedJob event) {
-		
-			
-		}
-	};
-	
-	private Handler<CacheResetRequest> handleCacheResetRequest = new Handler<CacheResetRequest>() {
-		public void handle(CacheResetRequest event) {
-			resetCache(event.getOverlay());
+
 		}
 	};
 
-	private Handler<CacheAddPeerRequest> handleCacheAddPeerRequest = new Handler<CacheAddPeerRequest>() {
-		public void handle(CacheAddPeerRequest event) {
-			addPeerToCache(event.getPeerAddress(), event.getPeerOverlays());
-			dumpCacheToLog();
+	private Handler<DisconnectMasterRequestMsg> handleDisconnectMasterRequestMsg = new Handler<DisconnectMasterRequestMsg>() {
+		public void handle(DisconnectMasterRequestMsg event) {
+
 		}
 	};
 
-	private Handler<CacheEvictPeer> handleCacheEvictPeer = new Handler<CacheEvictPeer>() {
-		public void handle(CacheEvictPeer event) {
-			// only evict if it was not refreshed in the meantime
-			// which means the timer is not anymore outstanding
-			HashSet<UUID> overlayEvictionTimoutIds = outstandingTimeouts.get(event.getOverlay());
-			if (overlayEvictionTimoutIds != null) {
-				if (overlayEvictionTimoutIds.contains(event.getTimeoutId())) {
-					removePeerFromCache(event.getPeerAddress(), event.getOverlay(), event
-							.getEpoch());
-					outstandingTimeouts.remove(event.getTimeoutId());
-				}
-			}
-			dumpCacheToLog();
-		}
-	};
+	private Handler<ConnectMasterRequestMsg> handleConnectMasterRequestMsg = new Handler<ConnectMasterRequestMsg>() {
+		public void handle(ConnectMasterRequestMsg event) {
 
-	private Handler<CacheGetPeersRequest> handleCacheGetPeersRequest = new Handler<CacheGetPeersRequest>() {
-		public void handle(CacheGetPeersRequest event) {
-			int peersMax = event.getPeersMax();
-			HashSet<PeerEntry> peers = new HashSet<PeerEntry>();
-			long now = System.currentTimeMillis();
-			String overlay = event.getOverlay();
+			DaemonAddress daemonAddress = new DaemonAddress(event.getDaemonId(), event.getSource());
 
-			HashMap<Address, CacheEntry> overlayCache = cache.get(overlay);
+			addDaemonToCache(daemonAddress);
 
-			if (overlayCache != null) {
-				Collection<CacheEntry> entries = overlayCache.values();
-				ArrayList<CacheEntry> sorted = new ArrayList<CacheEntry>(entries);
-
-				// get the most recent up to peersMax entries
-				Collections.sort(sorted);
-				for (CacheEntry cacheEntry : sorted) {
-					PeerEntry peerEntry = new PeerEntry(overlay, cacheEntry.getOverlayAddress(),
-							cacheEntry.getPeerAddress(), now - cacheEntry.getAddedAt(), now
-									- cacheEntry.getRefreshedAt());
-					peers.add(peerEntry);
-					peersMax--;
-
-					if (peersMax == 0)
-						break;
-				}
-			}
-
-			CacheGetPeersResponse response = new CacheGetPeersResponse(peers, event.getRequestId(),
-					self, event.getSource());
+			ConnectMasterResponseMsg response = new ConnectMasterResponseMsg(true, event
+					.getRequestId(), self, event.getSource());
 			trigger(response, net);
 
-			logger.debug("Responded with {} peers to peer {}", peers.size(), event.getSource());
+			logger.debug("Responded with connectMasterResponseMsg from {}", event.getSource());
+
+			dumpCacheToLog();
+		}
+	};
+
+	private Handler<CacheEvictDaemon> handleCacheEvictDaemon = new Handler<CacheEvictDaemon>() {
+		public void handle(CacheEvictDaemon event) {
+			// only evict if it was not refreshed in the meantime
+			// which means the timer is not anymore outstanding
+
+			if (outstandingTimeouts.contains(event.getTimeoutId())) {
+				removePeerFromCache(event.getDaemonAddress(), event.getEpoch());
+				outstandingTimeouts.remove(event.getTimeoutId());
+			}
+			dumpCacheToLog();
 		}
 	};
 
@@ -302,120 +224,74 @@ public class Master extends ComponentDefinition {
 		}
 	};
 
-	private final void resetCache(String overlay) {
-		// cancel all eviction timers for this overlay
-		HashSet<UUID> overlayEvictionTimoutIds = outstandingTimeouts.get(overlay);
-		if (overlayEvictionTimoutIds != null) {
-			for (UUID timoutId : overlayEvictionTimoutIds) {
-				CancelTimeout ct = new CancelTimeout(timoutId);
-				trigger(ct, timer);
-			}
-			overlayEvictionTimoutIds.clear();
-		}
 
-		// reset cache
-		HashMap<Address, CacheEntry> overlayCache = cache.get(overlay);
-		if (overlayCache != null) {
-			overlayCache.clear();
-			Long epoch = cacheEpoch.get(overlay);
-			cacheEpoch.put(overlay, 1 + epoch);
-		} else {
-			cache.put(overlay, new HashMap<Address, CacheEntry>());
-			cacheEpoch.put(overlay, 1L);
-			outstandingTimeouts.put(overlay, new HashSet<UUID>());
-		}
-		logger.debug("Cleared cache for " + overlay);
-		dumpCacheToLog();
-	}
-
-	private final void addPeerToCache(Address address, Set<PeerEntry> overlays) {
+	private final void addDaemonToCache(DaemonAddress address) {
 		if (address != null) {
 			long now = System.currentTimeMillis();
 
-			for (PeerEntry peerEntry : overlays) {
-				String overlay = peerEntry.getOverlay();
+			DaemonEntry entry = cache.get(address);
+			if (entry == null) {
+				// add a new entry
+				entry = new DaemonEntry(address, now, now);
+				cache.put(address, entry);
 
-				HashMap<Address, CacheEntry> overlayCache = cache.get(overlay);
-				if (overlayCache == null) {
-					overlayCache = new HashMap<Address, CacheEntry>();
-					cache.put(overlay, overlayCache);
-					cacheEpoch.put(overlay, 1L);
-					outstandingTimeouts.put(overlay, new HashSet<UUID>());
+				// set a new eviction timeout
+				ScheduleTimeout st = new ScheduleTimeout(evictAfter);
+				st.setTimeoutEvent(new CacheEvictDaemon(st, address, cacheEpoch));
+
+				UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
+				entry.setEvictionTimerId(evictionTimerId);
+				outstandingTimeouts.add(evictionTimerId);
+				trigger(st, timer);
+
+				logger.debug("Added peer {}", address);
+			} else {
+				// update an existing entry
+				entry.setRefreshedAt(now);
+
+				// cancel an old eviction timeout, if it exists
+				UUID oldTimeoutId = entry.getEvictionTimerId();
+				if (oldTimeoutId != null) {
+					trigger(new CancelTimeout(oldTimeoutId), timer);
+					outstandingTimeouts.remove(oldTimeoutId);
 				}
-				CacheEntry entry = overlayCache.get(address);
-				if (entry == null) {
-					// add a new entry
-					entry = new CacheEntry(address, overlay, peerEntry.getOverlayAddress(), now,
-							now);
-					overlayCache.put(address, entry);
+				// set a new eviction timeout
+				ScheduleTimeout st = new ScheduleTimeout(evictAfter);
+				st.setTimeoutEvent(new CacheEvictDaemon(st, address, cacheEpoch));
 
-					// set a new eviction timeout
-					ScheduleTimeout st = new ScheduleTimeout(evictAfter);
-					st.setTimeoutEvent(new CacheEvictPeer(st, address, overlay, cacheEpoch
-							.get(overlay)));
+				UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
+				entry.setEvictionTimerId(evictionTimerId);
+				outstandingTimeouts.add(evictionTimerId);
+				trigger(st, timer);
 
-					UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
-					entry.setEvictionTimerId(evictionTimerId);
-					outstandingTimeouts.get(overlay).add(evictionTimerId);
-					trigger(st, timer);
-
-					logger.debug("Added peer {}", address);
-				} else {
-					// update an existing entry
-					entry.setRefreshedAt(now);
-
-					// cancel an old eviction timeout, if it exists
-					UUID oldTimeoutId = entry.getEvictionTimerId();
-					if (oldTimeoutId != null) {
-						trigger(new CancelTimeout(oldTimeoutId), timer);
-						outstandingTimeouts.get(overlay).remove(oldTimeoutId);
-					}
-					// set a new eviction timeout
-					ScheduleTimeout st = new ScheduleTimeout(evictAfter);
-					st.setTimeoutEvent(new CacheEvictPeer(st, address, overlay, cacheEpoch
-							.get(overlay)));
-
-					UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
-					entry.setEvictionTimerId(evictionTimerId);
-					outstandingTimeouts.get(overlay).add(evictionTimerId);
-					trigger(st, timer);
-
-					logger.debug("Refreshed peer {}", address);
-				}
+				logger.debug("Refreshed peer {}", address);
 			}
 		}
 	}
 
-	private final void removePeerFromCache(Address address, String overlay, long epoch) {
-		long thisEpoch = cacheEpoch.get(overlay);
+	private final void removePeerFromCache(DaemonAddress address, long epoch) {
+		long thisEpoch = cacheEpoch;
 		if (address != null && epoch == thisEpoch) {
-			cache.get(overlay).remove(address);
-
+			cache.remove(address);
 			logger.debug("Removed peer {}", address);
 		}
 	}
 
 	private void dumpCacheToLog() {
-		for (String overlay : cache.keySet()) {
-			dumpCacheToLog(overlay);
-		}
-	}
-
-	private void dumpCacheToLog(String overlay) {
-		logger.info("Overlay {} now contains:", overlay);
-		logger.info("Age=====Freshness==Peer address=========================");
+		logger.info("Registered Daemons are:");
+		logger.info("Age=====Freshness====Daemonaddress=========================");
 		long now = System.currentTimeMillis();
 
-		Collection<CacheEntry> entries = cache.get(overlay).values();
-		ArrayList<CacheEntry> sorted = new ArrayList<CacheEntry>(entries);
+		Collection<DaemonEntry> entries = cache.values();
+		ArrayList<DaemonEntry> sorted = new ArrayList<DaemonEntry>(entries);
 
 		// get all peers in most recently added order
 		Collections.sort(sorted);
-		for (CacheEntry cacheEntry : sorted) {
+		for (DaemonEntry DaemonEntry : sorted) {
 			logger.info("{}\t{}\t  {}", new Object[] {
-					durationToString(now - cacheEntry.getAddedAt()),
-					durationToString(now - cacheEntry.getRefreshedAt()),
-					cacheEntry.getPeerAddress() });
+					durationToString(now - DaemonEntry.getAddedAt()),
+					durationToString(now - DaemonEntry.getRefreshedAt()),
+					DaemonEntry.getDaemonAddress() });
 		}
 
 		logger.info("========================================================");
@@ -433,9 +309,7 @@ public class Master extends ComponentDefinition {
 			sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
 			sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
 			sb.append("Kompics P2P Bootstrap Overlays:</h2><br>");
-			for (String o : cache.keySet()) {
-				sb.append("<a href=\"" + webAddress + o + "\">" + o + "</a>").append("<br>");
-			}
+			sb.append("<a href=\"" + webAddress + "\">daemons</a>").append("<br>");
 			sb.append("</body></html>");
 			return sb.toString();
 		}
@@ -458,29 +332,31 @@ public class Master extends ComponentDefinition {
 		sb.append("<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
 		long now = System.currentTimeMillis();
 
-		Collection<CacheEntry> entries = cache.get(overlay).values();
-		ArrayList<CacheEntry> sorted = new ArrayList<CacheEntry>(entries);
+		Collection<DaemonEntry> entries = cache.values();
+		ArrayList<DaemonEntry> sorted = new ArrayList<DaemonEntry>(entries);
 
 		// get all peers in most recently added order
 		Collections.sort(sorted);
 
 		int count = 1;
 
-		for (CacheEntry cacheEntry : sorted) {
+		for (DaemonEntry DaemonEntry : sorted) {
 			sb.append("<tr>");
 			sb.append("<td><div align=\"center\">").append(count++);
 			sb.append("</div></td>");
 			sb.append("<td><div align=\"right\">");
-			sb.append(durationToString(now - cacheEntry.getAddedAt()));
+			sb.append(durationToString(now - DaemonEntry.getAddedAt()));
 			sb.append("</div></td><td><div align=\"right\">");
-			sb.append(durationToString(now - cacheEntry.getRefreshedAt()));
+			sb.append(durationToString(now - DaemonEntry.getRefreshedAt()));
 			sb.append("</div></td><td><div align=\"center\">");
-			String webAddress = "http://" + cacheEntry.getPeerAddress().getIp().getHostAddress()
-					+ ":" + webPort + "/" + cacheEntry.getPeerAddress().getId() + "/";
+			String webAddress = "http://"
+					+ DaemonEntry.getDaemonAddress().getPeerAddress().getIp().getHostAddress()
+					+ ":" + webPort + "/" + DaemonEntry.getDaemonAddress().getPeerAddress().getId()
+					+ "/";
 			sb.append("<a href=\"").append(webAddress).append("\">");
-			sb.append(cacheEntry.getOverlayAddress().toString()).append("</a>");
+			sb.append(DaemonEntry.toString()).append("</a>");
 			sb.append("</div></td><td><div align=\"left\">");
-			sb.append(cacheEntry.getPeerAddress());
+			sb.append(DaemonEntry.getDaemonAddress());
 			sb.append("</div></td>");
 			sb.append("</tr>");
 		}
@@ -538,38 +414,6 @@ public class Master extends ComponentDefinition {
 		}
 
 		return sb.toString();
-	}
-
-	private Handler<PeerFailureSuspicion> handlePeerFailureSuspicion = new Handler<PeerFailureSuspicion>() {
-		public void handle(PeerFailureSuspicion event) {
-			logger.debug("FAILURE_SUSPICION");
-
-			if (event.getSuspicionStatus().equals(SuspicionStatus.SUSPECTED)) {
-				// peer is suspected
-//				DaemonAddress suspectedPeer = daemonPeers.get(event.getPeerAddress());
-				DaemonAddress suspectedPeer = (DaemonAddress) event.getOverlayAddress();
-
-				if (suspectedPeer == null
-						|| !fdRequests.containsKey(suspectedPeer.getPeerAddress())) {
-					// due to component concurrency it is possible that the FD
-					// component sent us a suspicion event right after we sent
-					// it a stop monitor request
-					return;
-				}
-
-			}
-		}
-	};
-
-	private final void registerDaemonForFailureDetection(CacheGetPeersRequest event) {
-
-		Address addr = event.getSource();
-//		DaemonAddress peer = daemonPeers.get(addr);
-
-//		StartProbingPeer spp = new StartProbingPeer(addr, peer);
-//		daemonPeers.put(addr, peer);
-//		fdRequests.put(addr, spp.getRequestId());
-//		trigger(spp, epfd);
 	}
 
 }
