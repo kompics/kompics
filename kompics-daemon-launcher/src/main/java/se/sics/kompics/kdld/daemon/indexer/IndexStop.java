@@ -1,11 +1,11 @@
 package se.sics.kompics.kdld.daemon.indexer;
 
-import se.sics.kompics.Response;
+import se.sics.kompics.Event;
 
-public class IndexStop extends Response {
+public class IndexStop extends Event {
 
-	public IndexStop(IndexStart request) {
-		super(request);
+	public IndexStop() {
+		super();
 	}
 
 }

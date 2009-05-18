@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
@@ -30,6 +31,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
@@ -37,7 +39,8 @@ import se.sics.kompics.kdld.daemon.ListJobsLoadedResponseMsg;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.util.PomUtils;
-import se.sics.kompics.network.Network;
+import se.sics.kompics.timer.CancelPeriodicTimeout;
+import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
@@ -56,11 +59,9 @@ public class Indexer extends ComponentDefinition {
 	private static final Logger logger = LoggerFactory.getLogger(Indexer.class);
 
 	private Negative<Index> indexPort = negative(Index.class);
-//	private Positive<Network> net = positive(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
 
 	private long indexingPeriod;
-
 	private boolean indexingStopped = false;
 
 	// (pom-filename, job-object) pair
@@ -76,7 +77,7 @@ public class Indexer extends ComponentDefinition {
 
 		subscribe(handleIndexerInit, control);
 		subscribe(handleStart, control);
-
+		subscribe(handleStop, control);
 	}
 
 	public Handler<Start> handleStart = new Handler<Start>() {
@@ -84,6 +85,12 @@ public class Indexer extends ComponentDefinition {
 			logger.info("Starting Indexing...");
 
 			scheduleIndexing();
+		}
+	};
+	
+	public Handler<Stop> handleStop= new Handler<Stop>() {
+		public void handle(Stop event) {
+			stopIndexing();
 		}
 	};
 
@@ -116,10 +123,15 @@ public class Indexer extends ComponentDefinition {
 
 	public Handler<IndexStop> handleIndexStop = new Handler<IndexStop>() {
 		public void handle(IndexStop event) {
-			logger.info("Indexing stopped.");
-			indexingStopped = true;
+			stopIndexing();
 		}
 	};
+	
+	private void stopIndexing()
+	{
+		logger.info("Indexing stopped.");
+		indexingStopped = true;
+	}
 
 	private Handler<IndexerTimeout> handleIndexerTimeout = new Handler<IndexerTimeout>() {
 		public void handle(IndexerTimeout event) {
@@ -129,6 +141,12 @@ public class Indexer extends ComponentDefinition {
 				File kHome = new File(Daemon.KOMPICS_HOME);
 				visitAllDirsAndFiles(kHome, "");
 				scheduleIndexing();
+			}
+			else
+			{
+				UUID timeoutId = event.getTimeoutId();
+				CancelPeriodicTimeout cpt = new CancelPeriodicTimeout(timeoutId);
+				trigger(cpt, timer);				
 			}
 		}
 	};

@@ -5,9 +5,11 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
 import org.slf4j.Logger;
@@ -18,13 +20,13 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
-import se.sics.kompics.kdld.daemon.JobRemoveRequestMsg;
-import se.sics.kompics.kdld.daemon.JobRemoveResponseMsg;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedResponseMsg;
 import se.sics.kompics.kdld.daemon.indexer.Index;
+import se.sics.kompics.kdld.daemon.indexer.IndexStop;
 import se.sics.kompics.kdld.daemon.indexer.Indexer;
 import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
 import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
@@ -59,7 +61,7 @@ public class IndexerTest implements Serializable {
 
 	public static Semaphore semaphore = new Semaphore(0);
 
-	public static boolean ASSEMBLY = true;
+//	public static boolean ASSEMBLY = true;
 
 	public static final int EVENT_COUNT = 1;
 
@@ -115,6 +117,8 @@ public class IndexerTest implements Serializable {
 
 		private JobToDummyPom dummy;
 		
+		private final HashSet<UUID> outstandingTimeouts;
+		
 		public TestIndexerComponent() {
 
 			if (testObj == null) {
@@ -122,6 +126,8 @@ public class IndexerTest implements Serializable {
 						"Test object should be set before calling component");
 			}
 
+			outstandingTimeouts = new HashSet<UUID>();
+			
 			indexer = create(Indexer.class);
 			timer = create(JavaTimer.class);
 			mavenLauncher = create(MavenLauncher.class);
@@ -172,9 +178,7 @@ public class IndexerTest implements Serializable {
 					// timeout for a few seconds, if no response then send maven
 					// assembly:assembly
 
-					if (ASSEMBLY == true) {
-						trigger(new JobAssembly(dummy), mavenLauncher.getPositive(Maven.class));
-					}
+					trigger(new JobAssembly(dummy), mavenLauncher.getPositive(Maven.class));
 
 				} catch (DummyPomConstructionException e1) {
 					// TODO Auto-generated catch block
@@ -189,29 +193,29 @@ public class IndexerTest implements Serializable {
 
 				logger.info("Received job execResponse from job-id: {} ", event.getJobId());
 
-				// ProcessWrapper pw = event.getProcessWrapper();
-
-				// try {
 				
 				ScheduleTimeout st = new ScheduleTimeout(5000);
-				st.setTimeoutEvent(new ExecReadTimeout(event.getJobId(), st));				
+				ExecReadTimeout execReadTimeout = new ExecReadTimeout(event.getJobId(), st);
+				st.setTimeoutEvent(execReadTimeout);	
+				
+				UUID timerId = execReadTimeout.getTimeoutId();
+				outstandingTimeouts.add(timerId);
+				
 				trigger(st, timer.getPositive(Timer.class));
 				
-				// String read = event.getProcessWrapper().readLineFromOutput();
-				// logger.debug("Read from process:" + read);
-				// } catch (IOException e) {
-				// // TODO Auto-generated catch block
-				// e.printStackTrace();
-				// }
-
-				// IndexerTest.semaphore.release(1);
-
 			}
 		};
 
 		public Handler<ExecReadTimeout> handleExecReadTimeout = new Handler<ExecReadTimeout>() {
 			public void handle(ExecReadTimeout event) {
-				logger.debug("Trying to read from job: " + event.getJobId());
+				
+				if (!outstandingTimeouts.contains(event.getTimeoutId())) {
+					return;
+				}
+				outstandingTimeouts.remove(event.getTimeoutId());
+
+				
+				logger.debug("Retrying to read from job: " + event.getJobId());
 				trigger(new JobReadFromExecuting(event.getJobId()), mavenLauncher
 						.getPositive(Maven.class));
 
@@ -224,8 +228,10 @@ public class IndexerTest implements Serializable {
 		
 		public Handler<JobStopTimeout> handleJobStopTimeout = new Handler<JobStopTimeout>() {
 			public void handle(JobStopTimeout event) {
-				logger.debug("Trying to stop a job: " + event.getJobId());
+				logger.warn("Trying to stop a job: " + event.getJobId());
 				trigger(new JobStopRequest(event.getJobId()), mavenLauncher.getPositive(Maven.class));
+				
+				
 			}
 		};
 
@@ -242,6 +248,9 @@ public class IndexerTest implements Serializable {
 			public void handle(JobStopResponse event) {
 				logger.debug("Job stopped : " + event.getJobId() + " : " + event.getStatus() +
 						" : " + event.getMsg());
+				
+				trigger(new IndexStop(), indexer.getPositive(Index.class));
+				trigger(new Stop(), indexer.getControl());
 				}
 		};
 
@@ -352,6 +361,10 @@ public class IndexerTest implements Serializable {
 			public void handle(JobRemoveResponse event) {
 				
 				logger.info("Job remove response was:" + event.getMsg() + " - " + event.getStatus());
+				
+				trigger(new IndexStop(), indexer.getNegative(Index.class));
+				
+				trigger(new Stop(), indexer.getControl());
 			}
 		};
 	}

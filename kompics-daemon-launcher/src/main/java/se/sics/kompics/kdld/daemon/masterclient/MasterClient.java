@@ -1,4 +1,4 @@
-package se.sics.kompics.kdld.master;
+package se.sics.kompics.kdld.daemon.masterclient;
 
 import java.util.HashSet;
 import java.util.UUID;
@@ -12,6 +12,15 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
+import se.sics.kompics.kdld.master.ClientRefreshPeer;
+import se.sics.kompics.kdld.master.ClientRetryRequest;
+import se.sics.kompics.kdld.master.ConnectMasterRequest;
+import se.sics.kompics.kdld.master.ConnectMasterRequestMsg;
+import se.sics.kompics.kdld.master.ConnectMasterResponse;
+import se.sics.kompics.kdld.master.ConnectMasterResponseMsg;
+import se.sics.kompics.kdld.master.DisconnectMasterRequest;
+import se.sics.kompics.kdld.master.DisconnectMasterRequestMsg;
+import se.sics.kompics.kdld.master.KeepAliveDaemonMsg;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.PeerEntry;
 import se.sics.kompics.timer.CancelTimeout;
