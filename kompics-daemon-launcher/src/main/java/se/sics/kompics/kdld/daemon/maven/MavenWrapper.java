@@ -88,8 +88,9 @@ public class MavenWrapper {
         .setGoals( Arrays.asList( new String[]{command} ) );
 	
 		request.setInteractiveMode(false);
-		request.setLoggingLevel(MavenExecutionRequest.LOGGING_LEVEL_ERROR);
-		request.setShowErrors(false);        
+		request.setLoggingLevel(MavenExecutionRequest.LOGGING_LEVEL_FATAL);
+		request.setUsePluginUpdateOverride(true);
+		request.setShowErrors(false);
         request.setPom(pomFile);
 
         MavenExecutionResult result = embedder.execute( request );

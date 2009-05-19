@@ -20,6 +20,7 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.indexer.Index;
+import se.sics.kompics.kdld.daemon.indexer.IndexShutdown;
 import se.sics.kompics.kdld.daemon.indexer.Indexer;
 import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
 import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
@@ -54,6 +55,8 @@ public class Daemon extends ComponentDefinition {
 
 	public static final String SCENARIO_FILENAME = "scenario";
 
+	private static final Logger logger = LoggerFactory.getLogger(Daemon.class);
+
 	static {
 		String kHome = System.getProperty("kompics.home");
 		String userHome = System.getProperty("user.home");
@@ -67,16 +70,8 @@ public class Daemon extends ComponentDefinition {
 
 		if (new File(Daemon.KOMPICS_HOME).exists() == false) {
 			if (new File(Daemon.KOMPICS_HOME).mkdirs() == false) {
-				throw new IllegalStateException("Could not create directory: "
+				logger.warn("Could not create directory: "
 						+ Daemon.KOMPICS_HOME);
-			}
-		}
-
-		if (new File(Daemon.KOMPICS_HOME).exists() == false) {
-
-			if ((new File(Daemon.KOMPICS_HOME).mkdirs()) == false) {
-				throw new IllegalStateException("Couldn't directory for Kompics Home: "
-						+ Daemon.KOMPICS_HOME + "\nCheck file permissions for this directory.");
 			}
 		}
 
@@ -88,7 +83,7 @@ public class Daemon extends ComponentDefinition {
 
 		if (new File(Daemon.MAVEN_HOME).exists() == false) {
 			if ((new File(Daemon.MAVEN_HOME).mkdirs()) == false) {
-				throw new IllegalStateException("Couldn't directory for Maven Home: "
+				logger.warn("Couldn't set directory for Maven Home: "
 						+ Daemon.MAVEN_HOME + "\nCheck file permissions for this directory.");
 			}
 		}
@@ -101,13 +96,11 @@ public class Daemon extends ComponentDefinition {
 		MAVEN_REPO_HOME = System.getProperty("maven.repo");
 		if (new File(Daemon.MAVEN_REPO_HOME).exists() == false) {
 			if ((new File(Daemon.MAVEN_REPO_HOME).mkdirs()) == false) {
-				throw new IllegalStateException("Couldn't directory for Maven Home: "
+				logger.warn("Couldn't directory for Maven Home: "
 						+ Daemon.MAVEN_REPO_HOME + "\nCheck file permissions for this directory.");
 			}
 		}
 	}
-
-	private static final Logger logger = LoggerFactory.getLogger(Daemon.class);
 
 	private Positive<Network> net = positive(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
@@ -153,6 +146,7 @@ public class Daemon extends ComponentDefinition {
 		subscribe(handleJobRemoveRequestMsg, net);
 		
 		subscribe(handleShutdownTimeout, timer);
+		subscribe(handleTimerDaemonShutdown, timer);
 		
 		subscribe(handleJobFoundLocally, indexer.getPositive(Index.class));
 	}
@@ -392,9 +386,22 @@ public class Daemon extends ComponentDefinition {
 			int timeout = event.getTimeout();
 			ScheduleTimeout st = new ScheduleTimeout(timeout);
 			st.setTimeoutEvent(new TimerDaemonShutdown(st));
-			trigger(st, timer);
+			trigger(st, timer);			
 		}
 	};
+
+	public Handler<TimerDaemonShutdown> handleTimerDaemonShutdown = new Handler<TimerDaemonShutdown>() {
+		public void handle(TimerDaemonShutdown event) {
+
+//			trigger(new IndexShutdown(), indexer.getPositive(Index.class));
+			
+			destroy(masterClient);
+			destroy(indexer);
+			destroy(mavenLauncher);
+
+		}
+	};
+	
 
 	
 	public Handler<JobRemoveRequestMsg> handleJobRemoveRequestMsg = new Handler<JobRemoveRequestMsg>() {

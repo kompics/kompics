@@ -2,9 +2,9 @@ package se.sics.kompics.kdld.daemon.indexer;
 
 import se.sics.kompics.Event;
 
-public class IndexStop extends Event {
+public class IndexShutdown extends Event {
 
-	public IndexStop() {
+	public IndexShutdown() {
 		super();
 	}
 

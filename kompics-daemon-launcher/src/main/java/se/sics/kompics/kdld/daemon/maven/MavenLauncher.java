@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -323,7 +324,26 @@ public class MavenLauncher extends ComponentDefinition {
 			throws MavenExecException {
 		JobAssemblyResponse.Status status = JobAssemblyResponse.Status.ASSEMBLED;
 		MavenWrapper mw = new MavenWrapper(job.getPomFile().getAbsolutePath());
+		
+		// XXX redirecting stdin and stderr for this command, due to much
+		// crap being printed. <pluginmanagement> not recongnized in assembly artifact
+		// by maven embedder.
+		PrintStream	origOut	= System.out;
+		PrintStream	origErr	= System.err;
+
+		System.setOut ( new java.io.PrintStream ( new java.io.OutputStream ( ) { 
+			public void write ( int devNull ) { // dump output (like writing to /dev/null)
+				} } ) ) ;
+		System.setErr ( new java.io.PrintStream ( new java.io.OutputStream ( ) { 
+			public void write ( int devNull ) { // dump output (like writing to /dev/null)
+				} } ) ) ;
+		
 		mw.execute("assembly:assembly");
+		
+		System.setOut (origOut) ;
+		System.setErr (origErr) ;
+
+		logger.info("maven assembly:assembly completed...");
 		return status;
 	}
 
@@ -344,18 +364,6 @@ public class MavenLauncher extends ComponentDefinition {
 		return status;
 	}
 
-	private void mvnExecExec(JobExec job, SimulationScenario scenario) throws MavenExecException {
-		MavenWrapper mw = new MavenWrapper(job.getPomFile().getAbsolutePath());
-		executingJobs.put(job.getId(), job);
-		mw.execute("exec:exec");
-
-		// } catch (MavenExecException e) {
-		// status = JobExecResponse.Status.FAIL;
-		// e.printStackTrace();
-		// logger.error(e.getMessage());
-		// }
-		// return status;
-	}
 
 	/**
 	 * @param id

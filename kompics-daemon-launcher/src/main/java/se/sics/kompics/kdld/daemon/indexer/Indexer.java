@@ -69,7 +69,7 @@ public class Indexer extends ComponentDefinition {
 
 	public Indexer() {
 
-		subscribe(handleIndexStop, indexPort);
+		subscribe(handleIndexShutdown, indexPort);
 		subscribe(handleIndexStart, indexPort);
 		subscribe(handleListJobsLoadedRequest, indexPort);
 
@@ -121,8 +121,8 @@ public class Indexer extends ComponentDefinition {
 		}
 	};
 
-	public Handler<IndexStop> handleIndexStop = new Handler<IndexStop>() {
-		public void handle(IndexStop event) {
+	public Handler<IndexShutdown> handleIndexShutdown = new Handler<IndexShutdown>() {
+		public void handle(IndexShutdown event) {
 			stopIndexing();
 		}
 	};

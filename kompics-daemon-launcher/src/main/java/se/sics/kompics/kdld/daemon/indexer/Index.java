@@ -15,7 +15,7 @@ public class Index extends PortType {
 
 	{
 		negative(IndexStart.class);
-		negative(IndexStop.class);
+		negative(IndexShutdown.class);
 		negative(IndexerInit.class);
 		negative(ListJobsLoadedRequestMsg.class);
 

@@ -26,7 +26,7 @@ import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedResponseMsg;
 import se.sics.kompics.kdld.daemon.indexer.Index;
-import se.sics.kompics.kdld.daemon.indexer.IndexStop;
+import se.sics.kompics.kdld.daemon.indexer.IndexShutdown;
 import se.sics.kompics.kdld.daemon.indexer.Indexer;
 import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
 import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
@@ -60,8 +60,6 @@ public class IndexerTest implements Serializable {
 	private static final long serialVersionUID = -8704832589507459009L;
 
 	public static Semaphore semaphore = new Semaphore(0);
-
-//	public static boolean ASSEMBLY = true;
 
 	public static final int EVENT_COUNT = 1;
 
@@ -249,9 +247,11 @@ public class IndexerTest implements Serializable {
 				logger.debug("Job stopped : " + event.getJobId() + " : " + event.getStatus() +
 						" : " + event.getMsg());
 				
-				trigger(new IndexStop(), indexer.getPositive(Index.class));
+				trigger(new IndexShutdown(), indexer.getPositive(Index.class));
 				trigger(new Stop(), indexer.getControl());
-				}
+
+				TestIndexerComponent.testObj.pass();
+			}
 		};
 
 		public Handler<JobReadFromExecutingResponse> handleJobReadFromExecutingResponse = new Handler<JobReadFromExecutingResponse>() {
@@ -267,7 +267,7 @@ public class IndexerTest implements Serializable {
 
 				// if success then remove from loadingJobs, add to loadedJobs
 				if (event.getStatus() != JobAssemblyResponse.Status.ASSEMBLED) {
-					testObj.fail();
+					testObj.fail(true);
 				}
 
 				// SimulationScenario simulationScenario = new
@@ -313,10 +313,8 @@ public class IndexerTest implements Serializable {
 						jobsFound = false;
 					}
 				}
-				if (jobsFound == true) {
-					testObj.pass();
-				} else {
-					testObj.fail();
+				if (jobsFound == false) {
+					testObj.fail(false);
 				}
 
 				Iterator<Job> iter = listJobsLoaded.iterator();
@@ -331,10 +329,10 @@ public class IndexerTest implements Serializable {
 			public void handle(JobFoundLocally event) {
 				int id = event.getId();
 
-				logger.info("Received job found locally.");
+				logger.info("Received job {} found locally.", id);
 				if (loadedJobs.containsKey(id) == false) {
 					loadedJobs.put(id, event);
-					logger.info("Added job to loaded jobs set.");
+					logger.info("Added job {} to loaded jobs set.", id);
 
 					Address addr;
 					try {
@@ -362,7 +360,7 @@ public class IndexerTest implements Serializable {
 				
 				logger.info("Job remove response was:" + event.getMsg() + " - " + event.getStatus());
 				
-				trigger(new IndexStop(), indexer.getNegative(Index.class));
+				trigger(new IndexShutdown(), indexer.getNegative(Index.class));
 				
 				trigger(new Stop(), indexer.getControl());
 			}
@@ -388,9 +386,13 @@ public class IndexerTest implements Serializable {
 
 	public void pass() {
 		org.junit.Assert.assertTrue(true);
+		IndexerTest.semaphore.release();
 	}
 
-	public void fail() {
+	public void fail(boolean release) {
 		org.junit.Assert.assertTrue(false);
+		if (release == true) {
+			IndexerTest.semaphore.release();
+		}
 	}
 }
