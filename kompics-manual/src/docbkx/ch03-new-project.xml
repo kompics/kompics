@@ -44,7 +44,7 @@
 			to execute) are included in the pom.xml file of your generated project.
 		</para>
 		<screen>
-			cd<code><emphasis>myProjDir</emphasis></code>
+			<code>cd <emphasis>myProjDir</emphasis></code>
 			<code>mvn archetype:generate -DarchetypeCatalog=http://korsakov.sics.se/maven</code>
 			...
 			Choose archetype:

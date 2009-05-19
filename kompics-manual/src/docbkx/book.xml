@@ -35,13 +35,11 @@
 			<firstname>Jim</firstname>
 			<surname>Dowling</surname>
 		</editor>
-		<!-- 
-    <pagenums>33 pages (est.)</pagenums>
- -->
+
 		<copyright>
 			<year>2009</year>
-			<holder>Swedish Institute of Computer Science and Kunliga
-				Tekniska Högskola</holder>
+			<holder>Swedish Institute of Computer Science and Royal
+				Institute of Technology</holder>
 		</copyright>
 		<legalnotice>
 			<para>
@@ -58,38 +56,39 @@
 	</bookinfo>
 
 	<title>Document Conventions</title>
-		<para>
-			Typographical Conventions
-			<table id="kompics.typographical-conventions">
-				<title>Typographical Conventions</title>
-				<tgroup cols="2">
-					<thead>
-						<row>
-							<entry>Convention</entry>
-							<entry>Description</entry>
-						</row>
-					</thead>
-					<tbody>
-						<row>
-							<entry>
-								<code>Fixed Width Font</code>
-							</entry>
-							<entry>
-								Fixed width font indicates source-code and literal names of 
-								classes, methods, and variables, such as the
-								<code>java.util.Set</code> class.
-							</entry>
-						</row>
-						<row>
-							<entry>
-								<code>
-									<emphasis>Fixed Width Italics</emphasis>
-								</code>
-							</entry>
-							<entry>
-								Fixed width italic words in source-code and commands
-								indicates you should supply a variable value, such as
-								<code>
+	<para>
+		Typographical Conventions
+		<table id="kompics.typographical-conventions">
+			<title>Typographical Conventions</title>
+			<tgroup cols="2">
+				<thead>
+					<row>
+						<entry>Convention</entry>
+						<entry>Description</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>
+							<code>Fixed Width Font</code>
+						</entry>
+						<entry>
+							Fixed width font indicates source-code and literal names of
+							classes, methods, and variables, such as the
+							<code>java.util.Set</code>
+							class.
+						</entry>
+					</row>
+					<row>
+						<entry>
+							<code>
+								<emphasis>Fixed Width Italics</emphasis>
+							</code>
+						</entry>
+						<entry>
+							Fixed width italic words in source-code and commands
+							indicates you should supply a variable value, such as
+							<code>
 									% cd /home/<emphasis>YourUserName</emphasis>
 								</code>
 							</entry>
