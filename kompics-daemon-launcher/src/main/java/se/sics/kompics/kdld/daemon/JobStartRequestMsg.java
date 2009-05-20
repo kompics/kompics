@@ -8,14 +8,14 @@ import se.sics.kompics.simulator.SimulationScenario;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class JobStartRequest extends DaemonRequestMessage {
+public class JobStartRequestMsg extends DaemonRequestMessage {
 
 	private static final long serialVersionUID = 17131156452L;
 
 	private final SimulationScenario simulationScenario;
 	private final int id;
 	
-	public JobStartRequest(int id, SimulationScenario scenario, Address src, DaemonAddress dest) {
+	public JobStartRequestMsg(int id, SimulationScenario scenario, Address src, DaemonAddress dest) {
 		super(src, dest);
 		this.simulationScenario = scenario;
 		this.id = id;

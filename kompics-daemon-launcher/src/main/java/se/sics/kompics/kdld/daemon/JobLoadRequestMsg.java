@@ -10,17 +10,17 @@ import se.sics.kompics.address.Address;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id: DeployRequest.java
  */
-public class JobLoadRequest extends DaemonRequestMessage {
+public class JobLoadRequestMsg extends DaemonRequestMessage {
 
 	private static final long serialVersionUID = 1710436546452L;
 
-	private final String repoId;
-	private final String repoUrl;
-	private final String repoName;
-	
 	private final String groupId;
 	private final String artifactId;
 	private final String version;
+
+	private final String repoId;
+	private final String repoUrl;
+
 	private final String mainClass;
 	
 	private final List<String> args;
@@ -28,18 +28,17 @@ public class JobLoadRequest extends DaemonRequestMessage {
 	private final int jobId;
 	
 
-	public JobLoadRequest(int jobId, 
-			String repoId, String repoUrl, String repoName,
+	public JobLoadRequestMsg(int jobId, 
 			String groupId, String artifactId, String version,
+			String repoId, String repoUrl, 
 			String mainClass, List<String> args, Address src, DaemonAddress dest) {
 		super(src,dest);
-		this.repoId =  repoId;
-		this.repoUrl = repoUrl;
-		this.repoName = repoName;
 		this.jobId = jobId;
 		this.groupId = groupId;
 		this.artifactId = artifactId;
 		this.version = version;
+		this.repoId =  repoId;
+		this.repoUrl = repoUrl;
 		this.mainClass = mainClass;
 		this.args = args;
 	}
@@ -69,9 +68,6 @@ public class JobLoadRequest extends DaemonRequestMessage {
 	}
 	public String getRepoUrl() {
 		return repoUrl;
-	}
-	public String getRepoName() {
-		return repoName;
 	}
 	public List<String> getArgs() {
 		return args;

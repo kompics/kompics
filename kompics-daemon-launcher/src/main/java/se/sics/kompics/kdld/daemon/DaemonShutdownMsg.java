@@ -9,13 +9,13 @@ import se.sics.kompics.network.Message;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class DaemonShutdown extends Message {
+public class DaemonShutdownMsg extends Message {
 
 	private static final long serialVersionUID = -91334132413638L;
 
 	private final int timeout;
 
-	public DaemonShutdown(int timeout, Address src, Address dest) {
+	public DaemonShutdownMsg(int timeout, Address src, Address dest) {
 		super(src, dest);
 		this.timeout = timeout;
 	}

@@ -225,12 +225,12 @@ public class Daemon extends ComponentDefinition {
 		}
 	};
 
-	public Handler<JobLoadRequest> handleJobLoadRequest = new Handler<JobLoadRequest>() {
-		public void handle(JobLoadRequest event) {
+	public Handler<JobLoadRequestMsg> handleJobLoadRequest = new Handler<JobLoadRequestMsg>() {
+		public void handle(JobLoadRequestMsg event) {
 			logger.info("DeployRequest Event Received");
 
 			int id = event.getJobId();
-			JobLoadResponse.Status status = JobLoadResponse.Status.LOADING;
+			JobLoadResponseMsg.Status status = JobLoadResponseMsg.Status.LOADING;
 
 			// If msg not a duplicate
 			if (loadingJobs.containsKey(id) == false) {
@@ -241,34 +241,34 @@ public class Daemon extends ComponentDefinition {
 							.getArgs(), event.getRepoId(), event.getRepoUrl());
 
 					job.createDummyPomFile();
-					status = JobLoadResponse.Status.POM_CREATED;
+					status = JobLoadResponseMsg.Status.POM_CREATED;
 					loadingJobs.put(id, job);
 					trigger(job, mavenLauncher.getNegative(Maven.class));
 
 				} catch (DummyPomConstructionException e) {
 					e.printStackTrace();
-					status = JobLoadResponse.Status.FAIL;
+					status = JobLoadResponseMsg.Status.FAIL;
 				}
 			} else {
-				status = JobLoadResponse.Status.DUPLICATE;
+				status = JobLoadResponseMsg.Status.DUPLICATE;
 			}
 
-			trigger(new JobLoadResponse(id, status, self, event.getSource()), net);
+			trigger(new JobLoadResponseMsg(id, status, self, event.getSource()), net);
 		}
 	};
 
-	public Handler<JobStartRequest> handleJobStartRequest = new Handler<JobStartRequest>() {
-		public void handle(JobStartRequest event) {
+	public Handler<JobStartRequestMsg> handleJobStartRequest = new Handler<JobStartRequestMsg>() {
+		public void handle(JobStartRequestMsg event) {
 			int id = event.getId();
 			Job job = loadedJobs.get(id);
 
-			JobStartResponse.Status status = JobStartResponse.Status.SUCCESS;
+			JobStartResponseMsg.Status status = JobStartResponseMsg.Status.SUCCESS;
 			if (job == null) {
 				// see if job is loading, if yes, then wait
 				job = loadingJobs.get(id);
 				if (job == null) {
 					// need to load job first
-					status = JobStartResponse.Status.NOT_LOADED;
+					status = JobStartResponseMsg.Status.NOT_LOADED;
 				}
 
 			} else {
@@ -278,7 +278,7 @@ public class Daemon extends ComponentDefinition {
 				executingJobs.put(id, jobExec);
 			}
 
-			JobStartResponse response = new JobStartResponse(id, status, self, event.getSource());
+			JobStartResponseMsg response = new JobStartResponseMsg(id, status, self, event.getSource());
 			trigger(response, net);
 		}
 	};
@@ -380,8 +380,8 @@ public class Daemon extends ComponentDefinition {
 	// return res;
 	// }
 	//	
-	public Handler<DaemonShutdown> handleShutdown = new Handler<DaemonShutdown>() {
-		public void handle(DaemonShutdown event) {
+	public Handler<DaemonShutdownMsg> handleShutdown = new Handler<DaemonShutdownMsg>() {
+		public void handle(DaemonShutdownMsg event) {
 
 			int timeout = event.getTimeout();
 			ScheduleTimeout st = new ScheduleTimeout(timeout);

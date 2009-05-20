@@ -2,12 +2,13 @@ package se.sics.kompics.kdld.daemon;
 
 import se.sics.kompics.address.Address;
 
-public class JobLoadResponse extends DaemonResponseMessage {
+public class JobStartResponseMsg extends DaemonResponseMessage {
 
-	private static final long serialVersionUID = 1212312401206L;
+
+	private static final long serialVersionUID = -8081345362548135164L;
 
 	public enum Status {
-		LOADING, POM_CREATED, ASSEMBLED, FAIL, DUPLICATE
+		SUCCESS, NOT_LOADED, ERROR
 	};
 
 	private final Status status;
@@ -16,13 +17,13 @@ public class JobLoadResponse extends DaemonResponseMessage {
 
 	private final int jobId;
 
-	public JobLoadResponse(int jobId, Status status, DaemonAddress src, Address dest) {
+	public JobStartResponseMsg(int jobId, Status status, DaemonAddress src, Address dest) {
 		super(src, dest);
 		this.jobId = jobId;
 		this.status = status;
 	}
 
-	public JobLoadResponse(int jobId, Status status, String msg, DaemonAddress src, Address dest) {
+	public JobStartResponseMsg(int jobId, Status status, String msg, DaemonAddress src, Address dest) {
 		this(jobId, status, src, dest);
 		this.msg = msg;
 	}
