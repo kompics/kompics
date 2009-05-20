@@ -47,11 +47,11 @@ public class JobToDummyPom extends Job implements Serializable {
 
 	protected final Document xmlDoc;
 
-	public JobToDummyPom(int id, String groupId, String artifactId, String version, 
+	public JobToDummyPom(String groupId, String artifactId, String version, 
 			String mainClass, List<String> args,
 			String repoId, String repoUrl)
 			throws DummyPomConstructionException {
-		super(id, groupId,artifactId, version, mainClass,args, repoId,repoUrl);
+		super(groupId, artifactId, version, mainClass,args, repoId,repoUrl);
 
 
 		String groupPath = PomUtils.groupIdToPath(groupId);
@@ -96,15 +96,15 @@ public class JobToDummyPom extends Job implements Serializable {
 		// printElements("root", root, 6);
 	}
 	
-	public JobToDummyPom(int id, String groupId, String artifactId, String version, 
+	public JobToDummyPom(String groupId, String artifactId, String version, 
 			String mainClass, List<String> args)
 			throws DummyPomConstructionException {
-		this(id, groupId, artifactId, version, mainClass, args, "", "");
+		this(groupId, artifactId, version, mainClass, args, "", "");
 	}
 	
 	public JobToDummyPom(Job job)
 			throws DummyPomConstructionException {
-		this(job.getId(), job.getGroupId(), job.getArtifactId(), job.getVersion(), job.getMainClass(),
+		this(job.getGroupId(), job.getArtifactId(), job.getVersion(), job.getMainClass(),
 				job.getArgs(), job.getRepoId(), job.getRepoUrl());
 	}
 	

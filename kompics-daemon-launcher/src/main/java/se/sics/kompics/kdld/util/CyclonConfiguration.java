@@ -93,7 +93,7 @@ public class CyclonConfiguration extends Configuration {
 	}
 
 	@Override
-	protected Address getMonitorServerAddress() {
+	protected Address getMonitorServerAddress() throws LocalIPAddressNotFound {
 		testInitialized();
 		if (cyclonMonitorServerAddress == null){
 			cyclonMonitorServerAddress = new Address(getIp(), getPort(), getMonitorId());

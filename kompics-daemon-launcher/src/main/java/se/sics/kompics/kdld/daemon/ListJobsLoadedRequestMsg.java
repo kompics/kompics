@@ -10,14 +10,9 @@ import se.sics.kompics.address.Address;
 public class ListJobsLoadedRequestMsg extends DaemonRequestMessage {
 
 	private static final long serialVersionUID = 2266048689015242375L;
-	private final int daemonId;
 	
-	public ListJobsLoadedRequestMsg(int daemonId, Address src, DaemonAddress dest) {
+	public ListJobsLoadedRequestMsg(Address src, DaemonAddress dest) {
 		super(src, dest);
-		this.daemonId = daemonId;
 	}
 	
-	public int getDaemonId() {
-		return daemonId;
-	}
 }

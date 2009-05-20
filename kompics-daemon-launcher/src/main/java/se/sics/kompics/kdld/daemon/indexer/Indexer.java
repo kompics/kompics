@@ -241,7 +241,7 @@ public class Indexer extends ComponentDefinition {
 				&& isValidJar(dummyJarFile)) {
 			List<String> args = new ArrayList<String>();
 			try {
-				job = new JobFoundLocally(Integer.parseInt(jobId), groupId, artifactId, version,
+				job = new JobFoundLocally(groupId, artifactId, version,
 						mainClass, args, repoId, repoUrl);
 			} catch (NumberFormatException e) {
 				throw new PomIndexingException(e.getMessage());

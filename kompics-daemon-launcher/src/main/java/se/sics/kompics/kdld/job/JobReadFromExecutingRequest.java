@@ -2,13 +2,13 @@ package se.sics.kompics.kdld.job;
 
 import se.sics.kompics.Request;
 
-public class JobReadFromExecuting extends Request {
+public class JobReadFromExecutingRequest extends Request {
 
 	private static final long serialVersionUID = 8620116574570790715L;
 
 	private final int jobId;
 	
-	public JobReadFromExecuting(int id) {
+	public JobReadFromExecutingRequest(int id) {
 		super();
 		this.jobId = id;
 	}

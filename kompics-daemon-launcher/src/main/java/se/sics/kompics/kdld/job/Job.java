@@ -25,9 +25,8 @@ public abstract class Job extends Request implements Serializable {
 	protected final List<String> args;
 
 
-	public Job(int id, String groupId, String artifactId, String version, String mainClass, List<String> args,
+	public Job(String groupId, String artifactId, String version, String mainClass, List<String> args,
 			String repoId, String repoUrl) {
-		this.id = id;
 		this.groupId = groupId;
 		this.artifactId = artifactId;
 		this.version = version;
@@ -35,17 +34,11 @@ public abstract class Job extends Request implements Serializable {
 		this.args = args;
 		this.repoId = repoId;
 		this.repoUrl = repoUrl;
+		this.id = PomUtils.getJobId(groupId, artifactId, version);
 	}
 	
-	public Job(int id, String groupId, String artifactId, String version, String mainClass, List<String> args) {
-		this.id = id;
-		this.groupId = groupId;
-		this.artifactId = artifactId;
-		this.version = version;
-		this.mainClass = mainClass;
-		this.args = args;
-		this.repoId = "";
-		this.repoUrl = "";
+	public Job(String groupId, String artifactId, String version, String mainClass, List<String> args) {
+		this(groupId, artifactId, version, mainClass, args, "", "");
 	}
 	
 	public Job(Job job)

@@ -1,8 +1,6 @@
 package se.sics.kompics.kdld.main;
 
 import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,40 +10,42 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import se.sics.kompics.ChannelFilter;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
+import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
-import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.kdld.daemon.DaemonInit;
+import se.sics.kompics.kdld.daemon.JobExitedMsg;
 import se.sics.kompics.kdld.daemon.JobLoadRequestMsg;
+import se.sics.kompics.kdld.daemon.JobLoadResponseMsg;
+import se.sics.kompics.kdld.daemon.JobMessageRequest;
+import se.sics.kompics.kdld.daemon.JobStartRequestMsg;
+import se.sics.kompics.kdld.daemon.JobStartResponseMsg;
+import se.sics.kompics.kdld.daemon.JobStopResponseMsg;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedResponseMsg;
-import se.sics.kompics.kdld.daemon.indexer.Index;
-import se.sics.kompics.kdld.daemon.indexer.IndexShutdown;
-import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
 import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
 import se.sics.kompics.kdld.daemon.maven.Maven;
-import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
-import se.sics.kompics.kdld.job.JobAssemblyResponse;
-import se.sics.kompics.kdld.job.JobExec;
-import se.sics.kompics.kdld.job.JobExecResponse;
-import se.sics.kompics.kdld.job.JobExited;
-import se.sics.kompics.kdld.job.JobReadFromExecuting;
-import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
+import se.sics.kompics.kdld.job.JobLoadResponse;
+import se.sics.kompics.kdld.job.JobReadFromExecutingRequest;
 import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
 import se.sics.kompics.kdld.job.JobStopRequest;
-import se.sics.kompics.kdld.job.JobStopResponse;
+import se.sics.kompics.kdld.util.Configuration;
 import se.sics.kompics.kdld.util.DaemonConfiguration;
+import se.sics.kompics.kdld.util.LocalIPAddressNotFound;
+import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -66,10 +66,6 @@ public class DaemonTest implements Serializable {
 
 	public static final int EVENT_COUNT = 1;
 
-	public static SimulationScenario scenario = new SimulationScenario() {
-		private static final long serialVersionUID = -5355642917108165919L;
-
-	};
 
 	public DaemonTest() {
 
@@ -101,23 +97,38 @@ public class DaemonTest implements Serializable {
 		}
 	}
 
-	public static class TestDaemonComponent extends ComponentDefinition
-			implements Serializable {
+	public static class TestDaemonComponent extends ComponentDefinition implements Serializable {
 
 		private static final long serialVersionUID = -5967918118211382L;
 
-		public Logger logger = LoggerFactory
-				.getLogger(TestDaemonComponent.class);
+		public Logger logger = LoggerFactory.getLogger(TestDaemonComponent.class);
 
-		public Component timer;
+		private Component timer;
 		private Component daemon;
 		private Component network;
 
+		private Positive<Network> net = positive(Network.class);
+		
 		public Map<Integer, Job> loadedJobs = new HashMap<Integer, Job>();
 
 		private static DaemonTest testObj = null;
 
 		private final HashSet<UUID> outstandingTimeouts;
+
+		private Address src = null;
+
+		private DaemonAddress dest = null;
+
+		
+		final class MessageDestinationFilter extends ChannelFilter<Message, Address> {
+			public MessageDestinationFilter(Address address) {
+				super(Message.class, address, true);
+			}
+
+			public Address getValue(Message event) {
+				return event.getDestination();
+			}
+		}
 
 		public TestDaemonComponent() {
 
@@ -132,30 +143,42 @@ public class DaemonTest implements Serializable {
 			daemon = create(Daemon.class);
 			network = create(MinaNetwork.class);
 
-			trigger(new MinaNetworkInit(DaemonConfiguration.getPeer0Address()),
-					network.getControl());
-			connect(daemon.getNegative(Timer.class), timer
-					.getPositive(Timer.class));
-			connect(daemon.getNegative(Network.class), network
-					.getPositive(Network.class));
-			DaemonInit dInit = new DaemonInit(
-					DaemonConfiguration.getDaemonId(), DaemonConfiguration
-							.getPeer0Address(), DaemonConfiguration
-							.getMasterAddress(), DaemonConfiguration
-							.getDaemonRetryPeriod(), DaemonConfiguration
-							.getDaemonRetryCount(), DaemonConfiguration
-							.getDaemonIndexingPeriod());
-			trigger(dInit, daemon.getControl());
+			try {
+				src = new Address(DaemonConfiguration.getIp(), DaemonConfiguration.getPort(),
+						11);
+				dest = new DaemonAddress(DaemonConfiguration.getDaemonId(), DaemonConfiguration
+						.getPeer0Address());
+			} catch (LocalIPAddressNotFound e) {
+				e.printStackTrace();
+				testObj.fail(true);
+			}
 
-			subscribe(handleLoadJobResponse, daemon.getPositive(Maven.class));
-			subscribe(handleJobStartResponse, daemon.getPositive(Maven.class));
-			subscribe(handleJobReadFromExecutingResponse, daemon
-					.getPositive(Maven.class));
+			
+			try {
+				trigger(new MinaNetworkInit(DaemonConfiguration.getPeer0Address()), network
+						.getControl());
+				connect(daemon.getNegative(Timer.class), timer.getPositive(Timer.class));
+				connect(daemon.getNegative(Network.class), network.getPositive(Network.class),
+						new MessageDestinationFilter(dest.getPeerAddress()));
+
+				DaemonInit dInit = new DaemonInit(DaemonConfiguration.getDaemonId(),
+						DaemonConfiguration.getPeer0Address(), DaemonConfiguration
+								.getMasterAddress(), DaemonConfiguration.getDaemonRetryPeriod(),
+						DaemonConfiguration.getDaemonRetryCount(), DaemonConfiguration
+								.getDaemonIndexingPeriod());
+				trigger(dInit, daemon.getControl());
+			} catch (LocalIPAddressNotFound e) {
+				e.printStackTrace();
+				throw new IllegalStateException(e.getMessage());
+			}
+
+			subscribe(handleJobLoadResponseMsg, network.getPositive(Network.class));
+			subscribe(handleJobStartResponseMsg, network.getPositive(Network.class));
+			subscribe(handleJobStopResponse, network.getPositive(Network.class));
+			subscribe(handleJobExited, network.getPositive(Network.class));
 
 			subscribe(handleExecReadTimeout, timer.getPositive(Timer.class));
 			subscribe(handleJobStopTimeout, timer.getPositive(Timer.class));
-			subscribe(handleJobStopResponse, daemon.getPositive(Maven.class));
-			subscribe(handleJobExited, daemon.getPositive(Maven.class));
 
 			subscribe(handleStart, control);
 
@@ -167,34 +190,37 @@ public class DaemonTest implements Serializable {
 
 		public Handler<Start> handleStart = new Handler<Start>() {
 			public void handle(Start event) {
-				logger.info("Starting TestIndexer");
+				logger.info("Preparing JobLoadRequestMsg to be sent to Daemon");
 
-				Address src = null;
-				DaemonAddress dest = null;
-
-				JobLoadRequestMsg msg = new JobLoadRequestMsg(11,
-						"se.sics.kompics", "kompics-manual", "0.4.2-SNAPSHOT",
-						"sics-snapshot",
-						"http://kompics.sics.se/maven/snapshotrepository",
-						"se.sics.kompics.manual.example1.Root",
-						new ArrayList<String>(), src, dest);
+				String groupId = "se.sics.kompics";
+				String artifactId = "kompics-manual";
+				String version = "0.4.2-SNAPSHOT";
+				String repoId = "sics-snapshot";
+				String repoUrl = "http://kompics.sics.se/maven/snapshotrepository";
+				String mainClass = "se.sics.kompics.manual.example1.Root";
+				JobLoadRequestMsg msg = new JobLoadRequestMsg(groupId, artifactId, version, repoId,
+						repoUrl, mainClass, new ArrayList<String>(), src, dest);
 
 				logger.info("JobLoadRequestMsg being sent..");
 
-				trigger(msg, daemon.getPositive(Maven.class));
+				trigger(msg, network.getPositive(Network.class));
 
 			}
 		};
 
-		public Handler<JobExecResponse> handleJobStartResponse = new Handler<JobExecResponse>() {
-			public void handle(JobExecResponse event) {
+		public Handler<JobStartResponseMsg> handleJobStartResponseMsg = new Handler<JobStartResponseMsg>() {
+			public void handle(JobStartResponseMsg event) {
 
-				logger.info("Received job execResponse from job-id: {} ", event
-						.getJobId());
+				logger.info("Received job execResponse from job-id: {} ", event.getJobId());
 
+				// Read from executing job
+				trigger(new JobMessageRequest(event.getJobId(), "Hi there",
+						event.getDestination(), 
+						new DaemonAddress(event.getDaemonId(), event.getSource())
+						), network.getPositive(Network.class));
+				
 				ScheduleTimeout st = new ScheduleTimeout(5000);
-				ExecReadTimeout execReadTimeout = new ExecReadTimeout(event
-						.getJobId(), st);
+				ExecReadTimeout execReadTimeout = new ExecReadTimeout(event.getJobId(), st);
 				st.setTimeoutEvent(execReadTimeout);
 
 				UUID timerId = execReadTimeout.getTimeoutId();
@@ -214,7 +240,7 @@ public class DaemonTest implements Serializable {
 				outstandingTimeouts.remove(event.getTimeoutId());
 
 				logger.debug("Retrying to read from job: " + event.getJobId());
-				trigger(new JobReadFromExecuting(event.getJobId()), daemon
+				trigger(new JobReadFromExecutingRequest(event.getJobId()), daemon
 						.getPositive(Maven.class));
 
 				ScheduleTimeout st = new ScheduleTimeout(2000);
@@ -226,14 +252,13 @@ public class DaemonTest implements Serializable {
 		public Handler<JobStopTimeout> handleJobStopTimeout = new Handler<JobStopTimeout>() {
 			public void handle(JobStopTimeout event) {
 				logger.warn("Trying to stop a job: " + event.getJobId());
-				trigger(new JobStopRequest(event.getJobId()), daemon
-						.getPositive(Maven.class));
+				trigger(new JobStopRequest(event.getJobId()), daemon.getPositive(Maven.class));
 
 			}
 		};
 
-		public Handler<JobExited> handleJobExited = new Handler<JobExited>() {
-			public void handle(JobExited event) {
+		public Handler<JobExitedMsg> handleJobExited = new Handler<JobExitedMsg>() {
+			public void handle(JobExitedMsg event) {
 				logger.debug("Job exited: " + event.getJobId());
 
 				// trigger(new JobRemoveRequest(dummy),
@@ -241,35 +266,33 @@ public class DaemonTest implements Serializable {
 			}
 		};
 
-		public Handler<JobStopResponse> handleJobStopResponse = new Handler<JobStopResponse>() {
-			public void handle(JobStopResponse event) {
-				logger.debug("Job stopped : " + event.getJobId() + " : "
-						+ event.getStatus() + " : " + event.getMsg());
-
-				// trigger(new IndexShutdown(),
-				// indexer.getPositive(Index.class));
-				// trigger(new Stop(), indexer.getControl());
+		public Handler<JobStopResponseMsg> handleJobStopResponse = new Handler<JobStopResponseMsg>() {
+			public void handle(JobStopResponseMsg event) {
+				logger.debug("Job stopped : " + event.getJobId() + " : " + event.getStatus()
+						+ " : " + event.getMsg());
 
 				TestDaemonComponent.testObj.pass();
 			}
 		};
 
-		public Handler<JobReadFromExecutingResponse> handleJobReadFromExecutingResponse = new Handler<JobReadFromExecutingResponse>() {
-			public void handle(JobReadFromExecutingResponse event) {
-				logger.info("Read from job id:" + event.getJobId() + " - "
-						+ event.getMsg());
-			}
-		};
+		public Handler<JobLoadResponseMsg> handleJobLoadResponseMsg = 
+			new Handler<JobLoadResponseMsg>() {
+			public void handle(JobLoadResponseMsg event) {
 
-		public Handler<JobAssemblyResponse> handleLoadJobResponse = new Handler<JobAssemblyResponse>() {
-			public void handle(JobAssemblyResponse event) {
-
-				logger.debug("assembly:assembly response for job: "
-						+ event.getJobId());
-
+				logger.info("Job {} loaded with status {}", event.getJobId(), event.getStatus());
+				
 				// if success then remove from loadingJobs, add to loadedJobs
-				if (event.getStatus() != JobAssemblyResponse.Status.ASSEMBLED) {
+				if (event.getStatus() == JobLoadResponse.Status.FAIL) {
+					logger.info("Job {} not loaded successfully", event.getJobId());
 					testObj.fail(true);
+				}
+				else
+				{
+					DaemonAddress daemonAddr = 
+						new DaemonAddress(event.getDaemonId(), event.getSource());
+					// list loaded jobs
+					trigger(new ListJobsLoadedRequestMsg(event.getDestination(), daemonAddr),
+							network.getPositive(Network.class));
 				}
 
 			}
@@ -280,14 +303,24 @@ public class DaemonTest implements Serializable {
 
 				Set<Job> listJobsLoaded = event.getSetJobs();
 
+				DaemonAddress daemonAddr = new DaemonAddress(event.getDaemonId(), event.getSource());
+				
+				SimulationScenario scenario = new SimulationScenario() {
+					private static final long serialVersionUID = -5355642917108165919L;
+				};
+
 				boolean jobsFound = true;
 				for (Job j : listJobsLoaded) {
 					if (loadedJobs.containsKey(j.getId()) == true) {
 						logger.info("Found already loaded job: " + j.getId());
+						
+						// start a job
+						trigger(new JobStartRequestMsg(j.getId(), scenario, event.getDestination(),
+								daemonAddr),
+								network.getPositive(Network.class));
+
 					} else {
-						logger
-								.info("ERROR: Found job not loaded: "
-										+ j.getId());
+						logger.info("ERROR: Found job not loaded: " + j.getId());
 						jobsFound = false;
 					}
 				}
@@ -296,9 +329,6 @@ public class DaemonTest implements Serializable {
 				}
 
 				Iterator<Job> iter = listJobsLoaded.iterator();
-
-				trigger(new JobExec(iter.next(), scenario), daemon
-						.getPositive(Maven.class));
 
 				// IndexerTest.semaphore.release(1);
 			}
@@ -337,8 +367,9 @@ public class DaemonTest implements Serializable {
 		public Handler<JobRemoveResponse> handleJobRemoveResponse = new Handler<JobRemoveResponse>() {
 			public void handle(JobRemoveResponse event) {
 
-				logger.info("Job remove response was:" + event.getMsg() + " - "
-						+ event.getStatus());
+				logger
+						.info("Job remove response was:" + event.getMsg() + " - "
+								+ event.getStatus());
 
 				// trigger(new IndexShutdown(),
 				// indexer.getNegative(Index.class));
@@ -349,20 +380,26 @@ public class DaemonTest implements Serializable {
 	}
 
 	@org.junit.Test
-	public void testIndexer() {
+	public void testDaemon() {
 
 		TestDaemonComponent.setTestObj(this);
 
-		Kompics.createAndStart(TestDaemonComponent.class, 2);
+		try {
+			Configuration.init(new String[] {}, DaemonConfiguration.class);
+			Kompics.createAndStart(TestDaemonComponent.class, 2);
+		} catch (ConfigurationException e1) {
+			e1.printStackTrace();
+		}
 
 		try {
 			DaemonTest.semaphore.acquire(EVENT_COUNT);
+			System.out.println("Exiting unit test....");
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
 
-		// Kompics.shutdown();
 	}
 
 	public void pass() {

@@ -3,7 +3,7 @@ package se.sics.kompics.kdld.job;
 import se.sics.kompics.Response;
 
 
-public class JobAssemblyResponse extends Response {
+public class JobLoadResponse extends Response {
 
 	private static final long serialVersionUID = 1212312401206L;
 
@@ -15,7 +15,7 @@ public class JobAssemblyResponse extends Response {
 
 	private final int jobId;
 
-	public JobAssemblyResponse(JobAssembly request, int jobId, Status status) {
+	public JobLoadResponse(JobLoadRequest request, int jobId, Status status) {
 		super(request);
 		this.jobId = jobId;
 		this.status = status;

@@ -27,12 +27,12 @@ import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.daemon.JobRemoveResponseMsg;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
-import se.sics.kompics.kdld.job.JobAssembly;
-import se.sics.kompics.kdld.job.JobAssemblyResponse;
-import se.sics.kompics.kdld.job.JobExec;
-import se.sics.kompics.kdld.job.JobExecResponse;
+import se.sics.kompics.kdld.job.JobLoadRequest;
+import se.sics.kompics.kdld.job.JobLoadResponse;
+import se.sics.kompics.kdld.job.JobStartRequest;
+import se.sics.kompics.kdld.job.JobStartResponse;
 import se.sics.kompics.kdld.job.JobExited;
-import se.sics.kompics.kdld.job.JobReadFromExecuting;
+import se.sics.kompics.kdld.job.JobReadFromExecutingRequest;
 import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
 import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
@@ -175,8 +175,8 @@ public class MavenLauncher extends ComponentDefinition {
 		subscribe(handleJobRemoveRequest, maven);
 	}
 
-	public Handler<JobReadFromExecuting> handleJobReadFromExecuting = new Handler<JobReadFromExecuting>() {
-		public void handle(JobReadFromExecuting event) {
+	public Handler<JobReadFromExecutingRequest> handleJobReadFromExecuting = new Handler<JobReadFromExecutingRequest>() {
+		public void handle(JobReadFromExecutingRequest event) {
 
 			int jobId = event.getJobId();
 			ProcessWrapper p = executingProcesses.get(jobId);
@@ -271,58 +271,58 @@ public class MavenLauncher extends ComponentDefinition {
 		return true;
 	}
 
-	public Handler<JobAssembly> handleJobAssembleRequest = new Handler<JobAssembly>() {
-		public void handle(JobAssembly event) {
+	public Handler<JobLoadRequest> handleJobAssembleRequest = new Handler<JobLoadRequest>() {
+		public void handle(JobLoadRequest event) {
 
 			int id = event.getId();
-			JobAssemblyResponse.Status status;
+			JobLoadResponse.Status status;
 
 			// If msg not a duplicate
 			// if (assembledJobs.containsKey(id) == false &&
 			// executingJobs.containsKey(id) == false) {
 			try {
 				event.createDummyPomFile();
-				status = JobAssemblyResponse.Status.POM_CREATED;
+				status = JobLoadResponse.Status.POM_CREATED;
 				status = mvnAssemblyAssembly(event);
 				// assembledJobs.put(id, event);
 			} catch (DummyPomConstructionException e) {
 				e.printStackTrace();
-				status = JobAssemblyResponse.Status.FAIL;
+				status = JobLoadResponse.Status.FAIL;
 			} catch (MavenExecException e) {
 				e.printStackTrace();
 				logger.error(e.getMessage());
-				status = JobAssemblyResponse.Status.FAIL;
+				status = JobLoadResponse.Status.FAIL;
 			}
 
 			// } else {
 			// status = JobAssemblyResponse.Status.DUPLICATE;
 			// }
 
-			trigger(new JobAssemblyResponse(event, id, status), maven);
+			trigger(new JobLoadResponse(event, id, status), maven);
 		}
 	};
 
-	public Handler<JobExec> handleJobExecRequest = new Handler<JobExec>() {
-		public void handle(JobExec event) {
+	public Handler<JobStartRequest> handleJobExecRequest = new Handler<JobStartRequest>() {
+		public void handle(JobStartRequest event) {
 			int id = event.getId();
 
-			JobExecResponse.Status status = JobExecResponse.Status.SUCCESS;
+			JobStartResponse.Status status = JobStartResponse.Status.SUCCESS;
 			if (event == null) {
-				status = JobExecResponse.Status.FAIL;
+				status = JobStartResponse.Status.FAIL;
 			} else {
 				// status = mvnExecExec(event, event.getScenario());
 				forkDummyExec(event, event.getScenario());
 			}
 
 			// ProcessWrapper p = executingProcesses.get(id);
-			JobExecResponse response = new JobExecResponse(event, id, status);
+			JobStartResponse response = new JobStartResponse(event, id, status);
 			trigger(response, maven);
 		}
 	};
 
-	private JobAssemblyResponse.Status mvnAssemblyAssembly(JobAssembly job)
+	private JobLoadResponse.Status mvnAssemblyAssembly(JobLoadRequest job)
 			throws MavenExecException {
-		JobAssemblyResponse.Status status = JobAssemblyResponse.Status.ASSEMBLED;
+		JobLoadResponse.Status status = JobLoadResponse.Status.ASSEMBLED;
 		MavenWrapper mw = new MavenWrapper(job.getPomFile().getAbsolutePath());
 		
 		// XXX redirecting stdin and stderr for this command, due to much
@@ -347,18 +347,18 @@ public class MavenLauncher extends ComponentDefinition {
 		return status;
 	}
 
-	private JobExecResponse.Status forkDummyExec(JobExec job, SimulationScenario scenario) {
-		JobExecResponse.Status status;
+	private JobStartResponse.Status forkDummyExec(JobStartRequest job, SimulationScenario scenario) {
+		JobStartResponse.Status status;
 		int res = forkProcess(job, scenario);
 		switch (res) {
 		case 0:
-			status = JobExecResponse.Status.SUCCESS;
+			status = JobStartResponse.Status.SUCCESS;
 			break;
 		case -1:
-			status = JobExecResponse.Status.FAIL;
+			status = JobStartResponse.Status.FAIL;
 			break;
 		default:
-			status = JobExecResponse.Status.FAIL;
+			status = JobStartResponse.Status.FAIL;
 			break;
 		}
 		return status;

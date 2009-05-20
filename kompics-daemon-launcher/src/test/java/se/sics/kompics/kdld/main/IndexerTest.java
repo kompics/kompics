@@ -34,12 +34,12 @@ import se.sics.kompics.kdld.daemon.maven.Maven;
 import se.sics.kompics.kdld.daemon.maven.MavenLauncher;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
-import se.sics.kompics.kdld.job.JobAssembly;
-import se.sics.kompics.kdld.job.JobAssemblyResponse;
-import se.sics.kompics.kdld.job.JobExec;
-import se.sics.kompics.kdld.job.JobExecResponse;
+import se.sics.kompics.kdld.job.JobLoadRequest;
+import se.sics.kompics.kdld.job.JobLoadResponse;
+import se.sics.kompics.kdld.job.JobStartRequest;
+import se.sics.kompics.kdld.job.JobStartResponse;
 import se.sics.kompics.kdld.job.JobExited;
-import se.sics.kompics.kdld.job.JobReadFromExecuting;
+import se.sics.kompics.kdld.job.JobReadFromExecutingRequest;
 import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
 import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
@@ -162,7 +162,7 @@ public class IndexerTest implements Serializable {
 
 				try {
 
-					dummy = new JobToDummyPom(11, "se.sics.kompics",
+					dummy = new JobToDummyPom("se.sics.kompics",
 							"kompics-manual", "0.4.2-SNAPSHOT",
 							"se.sics.kompics.manual.example1.Root", new ArrayList<String>(),
 							"sics-snapshot", "http://kompics.sics.se/maven/snapshotrepository");
@@ -176,7 +176,7 @@ public class IndexerTest implements Serializable {
 					// timeout for a few seconds, if no response then send maven
 					// assembly:assembly
 
-					trigger(new JobAssembly(dummy), mavenLauncher.getPositive(Maven.class));
+					trigger(new JobLoadRequest(dummy), mavenLauncher.getPositive(Maven.class));
 
 				} catch (DummyPomConstructionException e1) {
 					// TODO Auto-generated catch block
@@ -186,8 +186,8 @@ public class IndexerTest implements Serializable {
 			}
 		};
 
-		public Handler<JobExecResponse> handleJobExecResponse = new Handler<JobExecResponse>() {
-			public void handle(JobExecResponse event) {
+		public Handler<JobStartResponse> handleJobExecResponse = new Handler<JobStartResponse>() {
+			public void handle(JobStartResponse event) {
 
 				logger.info("Received job execResponse from job-id: {} ", event.getJobId());
 
@@ -214,7 +214,7 @@ public class IndexerTest implements Serializable {
 
 				
 				logger.debug("Retrying to read from job: " + event.getJobId());
-				trigger(new JobReadFromExecuting(event.getJobId()), mavenLauncher
+				trigger(new JobReadFromExecutingRequest(event.getJobId()), mavenLauncher
 						.getPositive(Maven.class));
 
 				ScheduleTimeout st = new ScheduleTimeout(2000);
@@ -260,13 +260,13 @@ public class IndexerTest implements Serializable {
 			}
 		};
 
-		public Handler<JobAssemblyResponse> handleJobAssemblyResponse = new Handler<JobAssemblyResponse>() {
-			public void handle(JobAssemblyResponse event) {
+		public Handler<JobLoadResponse> handleJobAssemblyResponse = new Handler<JobLoadResponse>() {
+			public void handle(JobLoadResponse event) {
 
 				logger.debug("assembly:assembly response for job: " + event.getJobId());
 
 				// if success then remove from loadingJobs, add to loadedJobs
-				if (event.getStatus() != JobAssemblyResponse.Status.ASSEMBLED) {
+				if (event.getStatus() != JobLoadResponse.Status.ASSEMBLED) {
 					testObj.fail(true);
 				}
 
@@ -319,7 +319,7 @@ public class IndexerTest implements Serializable {
 
 				Iterator<Job> iter = listJobsLoaded.iterator();
 
-				trigger(new JobExec(iter.next(), scenario), mavenLauncher.getPositive(Maven.class));
+				trigger(new JobStartRequest(iter.next(), scenario), mavenLauncher.getPositive(Maven.class));
 
 				// IndexerTest.semaphore.release(1);
 			}
@@ -337,10 +337,9 @@ public class IndexerTest implements Serializable {
 					Address addr;
 					try {
 						addr = new Address(InetAddress.getLocalHost(), 3333, 10);
-						trigger(new ListJobsLoadedRequestMsg(1, addr, new DaemonAddress(1, addr)),
+						trigger(new ListJobsLoadedRequestMsg(addr, new DaemonAddress(1, addr)),
 								indexer.getPositive(Index.class));
 					} catch (UnknownHostException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 

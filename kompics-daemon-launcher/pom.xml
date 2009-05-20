@@ -13,7 +13,7 @@
 			To change your version of Kompics, edit the kompics.version value
 			below
 		-->
-		<kompics.version>0.4.2-SNAPSHOT</kompics.version>
+		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>
 		<java.version>1.6</java.version>
 	</properties>
 

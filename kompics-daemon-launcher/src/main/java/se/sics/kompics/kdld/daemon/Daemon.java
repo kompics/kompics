@@ -20,7 +20,6 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.indexer.Index;
-import se.sics.kompics.kdld.daemon.indexer.IndexShutdown;
 import se.sics.kompics.kdld.daemon.indexer.Indexer;
 import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
 import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
@@ -31,12 +30,13 @@ import se.sics.kompics.kdld.daemon.maven.Maven;
 import se.sics.kompics.kdld.daemon.maven.MavenLauncher;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
-import se.sics.kompics.kdld.job.JobAssembly;
-import se.sics.kompics.kdld.job.JobAssemblyResponse;
-import se.sics.kompics.kdld.job.JobExec;
-import se.sics.kompics.kdld.job.JobExecResponse;
+import se.sics.kompics.kdld.job.JobExited;
+import se.sics.kompics.kdld.job.JobLoadRequest;
+import se.sics.kompics.kdld.job.JobLoadResponse;
 import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
+import se.sics.kompics.kdld.job.JobStartRequest;
+import se.sics.kompics.kdld.job.JobStartResponse;
 import se.sics.kompics.kdld.master.ConnectMasterRequest;
 import se.sics.kompics.kdld.master.ConnectMasterResponse;
 import se.sics.kompics.kdld.master.DisconnectMasterRequest;
@@ -55,6 +55,8 @@ public class Daemon extends ComponentDefinition {
 
 	public static final String SCENARIO_FILENAME = "scenario";
 
+	public static final String POM_FILENAME = "pom.xml";
+	
 	private static final Logger logger = LoggerFactory.getLogger(Daemon.class);
 
 	static {
@@ -116,8 +118,8 @@ public class Daemon extends ComponentDefinition {
 
 	private Map<Integer, Job> loadingJobs = new HashMap<Integer, Job>();
 	private Map<Integer, Job> loadedJobs = new HashMap<Integer, Job>();
-	private Map<Integer, JobExec> executingJobs = new HashMap<Integer, JobExec>();
-	private Map<Integer, JobExec> completedJobs = new HashMap<Integer, JobExec>();
+	private Map<Integer, JobStartRequest> executingJobs = new HashMap<Integer, JobStartRequest>();
+	private Map<Integer, JobStartRequest> completedJobs = new HashMap<Integer, JobStartRequest>();
 
 	private Map<Integer, MavenLauncher.ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, MavenLauncher.ProcessWrapper>();
 
@@ -139,9 +141,10 @@ public class Daemon extends ComponentDefinition {
 		subscribe(handleJobStopRequest, net);
 		subscribe(handleListJobsLoadedRequest, net);
 
-		subscribe(handleJobAssemblyResponse, mavenLauncher.getPositive(Maven.class));
-		subscribe(handleJobExecResponse, mavenLauncher.getPositive(Maven.class));
+		subscribe(handleJobLoadResponse, mavenLauncher.getPositive(Maven.class));
+		subscribe(handleJobStartResponse, mavenLauncher.getPositive(Maven.class));
 		subscribe(handleJobRemoveResponse, mavenLauncher.getPositive(Maven.class));
+		subscribe(handleJobExited, mavenLauncher.getPositive(Maven.class));
 		
 		subscribe(handleJobRemoveRequestMsg, net);
 		
@@ -200,60 +203,70 @@ public class Daemon extends ComponentDefinition {
 		}
 	};
 
-	public Handler<JobAssemblyResponse> handleJobAssemblyResponse = new Handler<JobAssemblyResponse>() {
-		public void handle(JobAssemblyResponse event) {
+	public Handler<JobLoadResponse> handleJobLoadResponse = new Handler<JobLoadResponse>() {
+		public void handle(JobLoadResponse event) {
+			logger.info("JobLoadResponse {} received from MavenLauchner", event.getJobId());
 
 			// if success then remove from loadingJobs, add to loadedJobs
-			if (event.getStatus() == JobAssemblyResponse.Status.ASSEMBLED) {
+			if (event.getStatus() == JobLoadResponse.Status.ASSEMBLED) {
 				Job job = loadingJobs.get(event.getJobId());
 				loadedJobs.put(event.getJobId(), job);
 			}
 			// remove job from loadingJobs whatever the result.
 			loadingJobs.remove(event.getJobId());
+			
+			trigger(new JobLoadResponseMsg(event, self, masterAddress), net);
 		}
 	};
 
-	public Handler<JobExecResponse> handleJobExecResponse = new Handler<JobExecResponse>() {
-		public void handle(JobExecResponse event) {
-			// if success remove from loadedJobs, add to executingJobs
-			if (event.getStatus() == JobExecResponse.Status.SUCCESS) {
-				JobExec job = executingJobs.get(event.getJobId());
-				completedJobs.put(event.getJobId(), job);
+	public Handler<JobStartResponse> handleJobStartResponse = new Handler<JobStartResponse>() {
+		public void handle(JobStartResponse event) {
+			// if success, add to executingJobs
+			if (event.getStatus() != JobStartResponse.Status.SUCCESS) {
+				executingJobs.remove(event.getJobId());				
 			}
-			// remove job from loadingJobs whatever the result.
-			executingJobs.remove(event.getJobId());
+		
+			trigger(new JobStartResponseMsg(event, self, masterAddress), net);
 		}
 	};
 
 	public Handler<JobLoadRequestMsg> handleJobLoadRequest = new Handler<JobLoadRequestMsg>() {
 		public void handle(JobLoadRequestMsg event) {
-			logger.info("DeployRequest Event Received");
+			logger.info("Job {} Load Request Received for " + event.getGroupId() + "."
+					+ event.getArtifactId() + "-" + event.getVersion(), event.getJobId());
 
 			int id = event.getJobId();
-			JobLoadResponseMsg.Status status = JobLoadResponseMsg.Status.LOADING;
+			JobLoadResponse.Status status;
 
 			// If msg not a duplicate
 			if (loadingJobs.containsKey(id) == false) {
-				JobAssembly job;
-				try {
-					job = new JobAssembly(event.getJobId(), event.getGroupId(), event
-							.getArtifactId(), event.getVersion(), event.getMainClass(), event
-							.getArgs(), event.getRepoId(), event.getRepoUrl());
-
-					job.createDummyPomFile();
-					status = JobLoadResponseMsg.Status.POM_CREATED;
-					loadingJobs.put(id, job);
-					trigger(job, mavenLauncher.getNegative(Maven.class));
-
-				} catch (DummyPomConstructionException e) {
-					e.printStackTrace();
-					status = JobLoadResponseMsg.Status.FAIL;
+				// if job not already loaded
+				if (loadedJobs.containsKey(id) == false)
+				{
+					JobLoadRequest job;
+					try {
+						job = new JobLoadRequest(event.getGroupId(), event
+								.getArtifactId(), event.getVersion(), event.getMainClass(), event
+								.getArgs(), event.getRepoId(), event.getRepoUrl());
+	
+						job.createDummyPomFile();
+						status = JobLoadResponse.Status.POM_CREATED;
+						loadingJobs.put(id, job);
+						trigger(job, mavenLauncher.getPositive(Maven.class));
+	
+					} catch (DummyPomConstructionException e) {
+						// XXX store stack trace and send back in msg
+//						String msg = e.printStackTrace();
+						status = JobLoadResponse.Status.FAIL;
+						trigger(new JobLoadResponseMsg(id, status, self, event.getSource()), net);
+					}
 				}
 			} else {
-				status = JobLoadResponseMsg.Status.DUPLICATE;
+				status = JobLoadResponse.Status.DUPLICATE;
+				trigger(new JobLoadResponseMsg(id, status, self, event.getSource()), net);
 			}
 
-			trigger(new JobLoadResponseMsg(id, status, self, event.getSource()), net);
+			
 		}
 	};
 
@@ -262,124 +275,26 @@ public class Daemon extends ComponentDefinition {
 			int id = event.getId();
 			Job job = loadedJobs.get(id);
 
-			JobStartResponseMsg.Status status = JobStartResponseMsg.Status.SUCCESS;
+			JobStartResponse.Status status = JobStartResponse.Status.SUCCESS;
 			if (job == null) {
 				// see if job is loading, if yes, then wait
 				job = loadingJobs.get(id);
 				if (job == null) {
 					// need to load job first
-					status = JobStartResponseMsg.Status.NOT_LOADED;
+					status = JobStartResponse.Status.NOT_LOADED;
 				}
-
+				JobStartResponseMsg response = new JobStartResponseMsg(id, status, self, event.getSource());
+				trigger(response, net);
 			} else {
-				JobExec jobExec;
-				jobExec = new JobExec(job, event.getSimulationScenario());
-				trigger(jobExec, mavenLauncher.getNegative(Maven.class));
+				JobStartRequest jobExec = new JobStartRequest(job, event.getSimulationScenario());
+				trigger(jobExec, mavenLauncher.getPositive(Maven.class));
 				executingJobs.put(id, jobExec);
 			}
 
-			JobStartResponseMsg response = new JobStartResponseMsg(id, status, self, event.getSource());
-			trigger(response, net);
 		}
 	};
 
-	// private JobLoadResponse.Status mvnAssemblyAssembly(Job job)
-	// {
-	// JobLoadResponse.Status status;
-	// int res = forkProcess(job, null, true);
-	// switch (res)
-	// {
-	// case 0: status = JobLoadResponse.Status.ASSEMBLED; break;
-	// case -1: status = JobLoadResponse.Status.FAIL; break;
-	// default:
-	// status = JobLoadResponse.Status.FAIL; break;
-	// }
-	// return status;
-	// }
-	//
-	// private JobStartResponse.Status mvnExecExec(Job job, SimulationScenario
-	// scenario)
-	// {
-	// JobStartResponse.Status status;
-	// int res = forkProcess(job, scenario, false);
-	// switch (res)
-	// {
-	// case 0: status = JobStartResponse.Status.SUCCESS; break;
-	// case -1: status = JobStartResponse.Status.FAIL; break;
-	// default: status = JobStartResponse.Status.FAIL; break;
-	// }
-	// return status;
-	// }
 
-	/**
-	 * @param id
-	 * @param job
-	 * @param scenario
-	 * @param assembly
-	 * @return 0 on success, -1 on failure.
-	 */
-	// private int forkProcess(Job job, SimulationScenario scenario,
-	// boolean assembly)
-	// {
-	// int res=0;
-	// String[] args = {};
-	//		
-	//	
-	// String classPath = System.getProperty("java.class.path");
-	// java.util.List<String> command = new ArrayList<String>();
-	// command.add("java");
-	// command.add("-classpath");
-	// command.add(classPath); // the Slave jar file should be on this path
-	// command.add("-Dlog4j.properties=log4j.properties");
-	// command.add("-DKOMPICS_HOME="
-	// + KOMPICS_HOME);
-	// command.add(job.getMainClass());
-	// command.add(job.getGroupId());
-	// command.add(job.getArtifactId());
-	// String assembleC;
-	// assembleC = assembly ? "assemble=true" : "assemble=false";
-	// command.add(assembleC);
-	// command.addAll(job.getArgs());
-	//
-	//
-	// ProcessBuilder processBuilder = new ProcessBuilder(command);
-	//		
-	// processBuilder.redirectErrorStream(true);
-	// Map<String,String> env = processBuilder.environment();
-	// env.put("KOMPICS_HOME", KOMPICS_HOME);
-	//		
-	// if (scenario != null)
-	// {
-	// try {
-	// File file = File.createTempFile(SCENARIO_FILENAME, ".bin");
-	// ObjectOutputStream oos = new ObjectOutputStream(
-	// new FileOutputStream(file));
-	// oos.writeObject(scenario);
-	// oos.flush();
-	// oos.close();
-	// env.put(SCENARIO_FILENAME, file.getAbsolutePath());
-	// } catch (IOException e) {
-	// e.printStackTrace();
-	// }
-	// }
-	//		
-	// try {
-	// Process p = processBuilder.start();
-	// ProcessWrapper pw = new ProcessWrapper(job.getId(), p);
-	// executingProcesses.put(job.getId(), pw);
-	// new Thread(pw).start();
-	//			
-	// } catch (IOException e1) {
-	// e1.printStackTrace();
-	// res = -1;
-	// }
-	//		
-	// loadingJobs.remove(job.getId());
-	// executingJobs.put(job.getId(), job);
-	//
-	// return res;
-	// }
-	//	
 	public Handler<DaemonShutdownMsg> handleShutdown = new Handler<DaemonShutdownMsg>() {
 		public void handle(DaemonShutdownMsg event) {
 
@@ -387,6 +302,19 @@ public class Daemon extends ComponentDefinition {
 			ScheduleTimeout st = new ScheduleTimeout(timeout);
 			st.setTimeoutEvent(new TimerDaemonShutdown(st));
 			trigger(st, timer);			
+		}
+	};
+	
+	public Handler<JobExited> handleJobExited = new Handler<JobExited>() {
+		public void handle(JobExited event) {
+
+			logger.info("Job {} has exited with status {}", event.getJobId(), event.getStatus());
+			
+			JobStartRequest job = executingJobs.remove(event.getJobId());
+			completedJobs.put(job.getId(), job);
+			
+			JobExitedMsg e = new JobExitedMsg(event, self, masterAddress);
+			trigger(e, net);			
 		}
 	};
 
@@ -522,76 +450,4 @@ public class Daemon extends ComponentDefinition {
 		}
 	};
 
-	public static final String POM_FILENAME = "pom.xml";
-
-	// private ProcessLauncher createProcess(int id, int idx,
-	// String classPath,
-	// Class<? extends ComponentDefinition> main,
-	// long now, Semaphore semaphore) {
-	// ProcessLauncher processLauncher = new ProcessLauncher(classPath,
-	// main, "-Dlog4j.properties=log4j.properties", id,
-	// idx, this, now, semaphore);
-	// return processLauncher;
-	// }
-
-	/*
-	 * 
-	 * public void jarDownload(String jarFileName, String artifact) { // String
-	 * repo = "http://korsakov.sics.se/maven/snapshotrepository/"; // String
-	 * group = "se/sics/kompics/"; // String artifact = "kompics-manual"; //
-	 * String version = "0.4.0";
-	 * 
-	 * String tmpDirectory = System.getProperty("java.io.tmpdir"); File projDir
-	 * = new File(tmpDirectory, artifact); projDir.mkdir();
-	 * 
-	 * URL jarRemote = null; try { jarRemote = new URL(jarFileName); } catch
-	 * (MalformedURLException e) { e.printStackTrace(); }
-	 * 
-	 * File localJarFile = new File(projDir, artifact + ".jar"); try {
-	 * localJarFile.createNewFile(); copy(jarRemote.openStream(), new
-	 * FileOutputStream(localJarFile)); } catch (IOException e1) {
-	 * e1.printStackTrace(); } }
-	 * 
-	 * 
-	 * 
-	 * private void copy(InputStream in, OutputStream out) throws IOException {
-	 * 
-	 * // Transfer bytes from in to out byte[] buf = new byte[1024]; int len;
-	 * while ((len = in.read(buf)) > 0) { out.write(buf, 0, len); } out.flush();
-	 * in.close(); out.close(); }
-	 * 
-	 * 
-	 * private void BinaryFileDownload() throws Exception { String repo =
-	 * "http://korsakov.sics.se/maven/repository/"; String group =
-	 * "se/sics/kompics/"; String artifact = "kompics-manual"; String version =
-	 * "0.4.0";
-	 * 
-	 * URL u = new URL(repo + group + artifact + "/" + version + "/" + artifact
-	 * + "-" + version + ".jar"); URLConnection uc = u.openConnection(); String
-	 * contentType = uc.getContentType(); int contentLength =
-	 * uc.getContentLength();
-	 * 
-	 * System.out.println("Length: " + contentLength);
-	 * 
-	 * if (contentType.startsWith("text/") || contentLength == -1) { throw new
-	 * IOException("This is not a binary file."); } InputStream raw =
-	 * uc.getInputStream(); InputStream in = new BufferedInputStream(raw);
-	 * byte[] data = new byte[contentLength]; int bytesRead = 0; int offset = 0;
-	 * while (offset < contentLength) { bytesRead = in.read(data, offset,
-	 * data.length - offset); if (bytesRead == -1) break; offset += bytesRead; }
-	 * in.close();
-	 * 
-	 * if (offset != contentLength) { throw new IOException("Only read " +
-	 * offset + " bytes; Expected " + contentLength + " bytes"); }
-	 * 
-	 * String tmpDirectory = System.getProperty("java.io.tmpdir"); File projDir
-	 * = new File(tmpDirectory, artifact); projDir.mkdir();
-	 * 
-	 * String filename = u.getFile().substring( u.getFile().lastIndexOf('/') +
-	 * 1); File outFile = new File(projDir, filename);
-	 * 
-	 * System.out.println("File: " + outFile.getPath()); FileOutputStream out =
-	 * new FileOutputStream(outFile); out.write(data); out.flush(); out.close();
-	 * }
-	 */
 }

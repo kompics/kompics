@@ -14,6 +14,7 @@ import se.sics.kompics.kdld.util.Configuration;
 import se.sics.kompics.kdld.util.CyclonConfiguration;
 import se.sics.kompics.kdld.util.DaemonConfiguration;
 import se.sics.kompics.kdld.util.HostsParserException;
+import se.sics.kompics.kdld.util.LocalIPAddressNotFound;
 import se.sics.kompics.kdld.util.MasterServerConfiguration;
 
 /**
@@ -75,6 +76,10 @@ public class ConfigTest extends TestCase {
 		} catch (FileNotFoundException e)
 		{
 			e.printStackTrace();			
+			assertTrue(false);
+		} catch (LocalIPAddressNotFound e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 			assertTrue(false);
 		}
 		

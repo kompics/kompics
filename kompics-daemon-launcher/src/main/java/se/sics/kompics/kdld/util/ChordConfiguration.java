@@ -99,7 +99,7 @@ public class ChordConfiguration extends Configuration {
 	}
 
 	@Override
-	protected Address getMonitorServerAddress() {
+	protected Address getMonitorServerAddress() throws LocalIPAddressNotFound {
 		testInitialized();
 		if (chordMonitorServerAddress == null)
 		{

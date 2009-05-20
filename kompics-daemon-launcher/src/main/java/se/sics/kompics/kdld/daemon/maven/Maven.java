@@ -1,12 +1,12 @@
 package se.sics.kompics.kdld.daemon.maven;
 
 import se.sics.kompics.PortType;
-import se.sics.kompics.kdld.job.JobAssembly;
-import se.sics.kompics.kdld.job.JobAssemblyResponse;
-import se.sics.kompics.kdld.job.JobExec;
-import se.sics.kompics.kdld.job.JobExecResponse;
+import se.sics.kompics.kdld.job.JobLoadRequest;
+import se.sics.kompics.kdld.job.JobLoadResponse;
+import se.sics.kompics.kdld.job.JobStartRequest;
+import se.sics.kompics.kdld.job.JobStartResponse;
 import se.sics.kompics.kdld.job.JobExited;
-import se.sics.kompics.kdld.job.JobReadFromExecuting;
+import se.sics.kompics.kdld.job.JobReadFromExecutingRequest;
 import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
 import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
@@ -23,15 +23,15 @@ import se.sics.kompics.kdld.job.JobStopResponse;
 public class Maven extends PortType {
 
 	{
-		negative(JobAssembly.class);
-		negative(JobExec.class);
+		negative(JobLoadRequest.class);
+		negative(JobStartRequest.class);
 		negative(JobStopRequest.class);
-		negative(JobReadFromExecuting.class);
+		negative(JobReadFromExecutingRequest.class);
 		negative(JobRemoveRequest.class);
 		
 		positive(JobStopResponse.class);
-		positive(JobAssemblyResponse.class);
-		positive(JobExecResponse.class);
+		positive(JobLoadResponse.class);
+		positive(JobStartResponse.class);
 		positive(JobExited.class);
 		positive(JobReadFromExecutingResponse.class);
 		positive(JobRemoveResponse.class);

@@ -127,7 +127,7 @@ public class MasterServerConfiguration extends Configuration {
 	}
 
 	@Override
-	protected Address getMonitorServerAddress() {
+	protected Address getMonitorServerAddress() throws LocalIPAddressNotFound {
 		testInitialized();
 		if (masterMonitorAddress == null){
 			masterMonitorAddress = new Address(getIp(), getPort(), getMonitorId());

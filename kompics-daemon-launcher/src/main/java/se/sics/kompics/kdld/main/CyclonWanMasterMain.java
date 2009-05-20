@@ -22,6 +22,7 @@ import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.master.Master;
 import se.sics.kompics.kdld.util.Configuration;
 import se.sics.kompics.kdld.util.CyclonConfiguration;
+import se.sics.kompics.kdld.util.LocalIPAddressNotFound;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
@@ -136,16 +137,20 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 				System.exit(-1);
 			}
 		
-		System.out.println("For web access please go to " + cyclonConfiguration.getWebAddress());
-		Thread.sleep(2000);
+		try {
+			System.out.println("For web access please go to " + cyclonConfiguration.getWebAddress());
 
-//		trigger(new MasterInit(scenario, new KingLatencyMap()),
-//				master.getControl());
-		trigger(cyclonConfiguration.getJettyWebServerInit(), jettyWebServer.getControl());
-		trigger(new BootstrapServerInit(bootConfiguration), bootstrapServer
-				.getControl());
-		trigger(new P2pMonitorServerInit(monitorConfiguration), monitorServer
-				.getControl());
+	//		trigger(new MasterInit(scenario, new KingLatencyMap()),
+	//				master.getControl());
+			trigger(cyclonConfiguration.getJettyWebServerInit(), jettyWebServer.getControl());
+			trigger(new BootstrapServerInit(bootConfiguration), bootstrapServer
+					.getControl());
+			trigger(new P2pMonitorServerInit(monitorConfiguration), monitorServer
+					.getControl());
+		} catch (LocalIPAddressNotFound e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		// XXX - change CyclonSimulatorInit to include new defn of CyclonConfiguration 
 //		trigger(

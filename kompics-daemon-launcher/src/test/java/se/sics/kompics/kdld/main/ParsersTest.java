@@ -51,7 +51,7 @@ public class ParsersTest extends TestCase {
 		try {
 			List<String> args = new ArrayList<String>();
 			args.add("jim");
-			JobToDummyPom dp = new JobToDummyPom(1, groupId, artifactId, version, mainClass, args,
+			JobToDummyPom dp = new JobToDummyPom(groupId, artifactId, version, mainClass, args,
 					repoId, repoUrl);
 			dp.createDummyPomFile();
 			

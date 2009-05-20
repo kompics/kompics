@@ -14,6 +14,7 @@ import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.daemon.DaemonInit;
 import se.sics.kompics.kdld.util.Configuration;
 import se.sics.kompics.kdld.util.DaemonConfiguration;
+import se.sics.kompics.kdld.util.LocalIPAddressNotFound;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -66,20 +67,27 @@ public class DaemonMain extends ComponentDefinition {
 		subscribe(handleFault, daemon.getControl());
 
 		
-		trigger(new MinaNetworkInit(DaemonConfiguration.getPeer0Address()), network.getControl());
+		try {
+			trigger(new MinaNetworkInit(DaemonConfiguration.getPeer0Address()), network.getControl());
 		
-		connect(daemon.getNegative(Network.class), network
-				.getPositive(Network.class));
-		connect(daemon.getNegative(Timer.class), time
-				.getPositive(Timer.class));
-		
-		DaemonInit dInit = new DaemonInit(DaemonConfiguration.getDaemonId(), 
-				DaemonConfiguration.getPeer0Address(),
-				DaemonConfiguration.getMasterAddress(), 
-				DaemonConfiguration.getDaemonRetryPeriod(),
-				DaemonConfiguration.getDaemonRetryCount(), 
-				DaemonConfiguration.getDaemonIndexingPeriod());
-		trigger(dInit, daemon.getControl());
+			connect(daemon.getNegative(Network.class), network
+					.getPositive(Network.class));
+			connect(daemon.getNegative(Timer.class), time
+					.getPositive(Timer.class));
+			
+			DaemonInit dInit = new DaemonInit(DaemonConfiguration.getDaemonId(), 
+					DaemonConfiguration.getPeer0Address(),
+					DaemonConfiguration.getMasterAddress(), 
+					DaemonConfiguration.getDaemonRetryPeriod(),
+					DaemonConfiguration.getDaemonRetryCount(), 
+					DaemonConfiguration.getDaemonIndexingPeriod());
+			trigger(dInit, daemon.getControl());
+
+		} catch (LocalIPAddressNotFound e) {
+			e.printStackTrace();
+			throw new IllegalStateException(e.getMessage());
+		}
+			
 		}
 
 	Handler<Fault> handleFault = new Handler<Fault>() {

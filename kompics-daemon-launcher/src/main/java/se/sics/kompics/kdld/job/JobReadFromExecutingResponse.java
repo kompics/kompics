@@ -9,7 +9,7 @@ public class JobReadFromExecutingResponse extends Response {
 	private final int jobId;
 	private final String msg;
 	
-	public JobReadFromExecutingResponse(JobReadFromExecuting request, int id, String msg) {
+	public JobReadFromExecutingResponse(JobReadFromExecutingRequest request, int id, String msg) {
 		super(request);
 		this.jobId = id;
 		this.msg = msg;

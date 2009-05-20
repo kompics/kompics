@@ -3,6 +3,7 @@ package se.sics.kompics.kdld.daemon;
 import java.util.List;
 
 import se.sics.kompics.address.Address;
+import se.sics.kompics.kdld.util.PomUtils;
 
 /**
  * 
@@ -28,12 +29,10 @@ public class JobLoadRequestMsg extends DaemonRequestMessage {
 	private final int jobId;
 	
 
-	public JobLoadRequestMsg(int jobId, 
-			String groupId, String artifactId, String version,
+	public JobLoadRequestMsg(String groupId, String artifactId, String version,
 			String repoId, String repoUrl, 
 			String mainClass, List<String> args, Address src, DaemonAddress dest) {
 		super(src,dest);
-		this.jobId = jobId;
 		this.groupId = groupId;
 		this.artifactId = artifactId;
 		this.version = version;
@@ -41,6 +40,7 @@ public class JobLoadRequestMsg extends DaemonRequestMessage {
 		this.repoUrl = repoUrl;
 		this.mainClass = mainClass;
 		this.args = args;
+		this.jobId = hashCode();
 	}
 
 	public int getJobId() {
@@ -71,5 +71,10 @@ public class JobLoadRequestMsg extends DaemonRequestMessage {
 	}
 	public List<String> getArgs() {
 		return args;
+	}
+	
+	@Override
+	public int hashCode() {
+		return PomUtils.getJobId(groupId, artifactId, version);
 	}
 }
