@@ -1,15 +1,15 @@
 package se.sics.kompics.kdld.daemon.maven;
 
 import se.sics.kompics.PortType;
+import se.sics.kompics.kdld.job.JobExited;
 import se.sics.kompics.kdld.job.JobLoadRequest;
 import se.sics.kompics.kdld.job.JobLoadResponse;
-import se.sics.kompics.kdld.job.JobStartRequest;
-import se.sics.kompics.kdld.job.JobStartResponse;
-import se.sics.kompics.kdld.job.JobExited;
 import se.sics.kompics.kdld.job.JobReadFromExecutingRequest;
 import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
 import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
+import se.sics.kompics.kdld.job.JobStartRequest;
+import se.sics.kompics.kdld.job.JobStartResponse;
 import se.sics.kompics.kdld.job.JobStopRequest;
 import se.sics.kompics.kdld.job.JobStopResponse;
 

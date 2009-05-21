@@ -3,7 +3,6 @@ package se.sics.kompics.kdld.job;
 import java.io.Serializable;
 
 import se.sics.kompics.Response;
-import se.sics.kompics.kdld.daemon.maven.MavenLauncher.ProcessWrapper;
 
 
 public class JobStartResponse extends Response implements Serializable {

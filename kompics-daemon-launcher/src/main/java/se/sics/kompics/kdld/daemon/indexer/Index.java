@@ -2,7 +2,6 @@ package se.sics.kompics.kdld.daemon.indexer;
 
 import se.sics.kompics.PortType;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
-import se.sics.kompics.kdld.daemon.ListJobsLoadedResponseMsg;
 
 
 /**
@@ -17,9 +16,9 @@ public class Index extends PortType {
 		negative(IndexStart.class);
 		negative(IndexShutdown.class);
 		negative(IndexerInit.class);
-		negative(ListJobsLoadedRequestMsg.class);
+		negative(ListJobsLoadedRequest.class);
 
-		positive(JobFoundLocally.class);
-		positive(ListJobsLoadedResponseMsg.class);
+		positive(JobsFound.class);
+		positive(ListJobsLoadedResponse.class);
 	}
 }

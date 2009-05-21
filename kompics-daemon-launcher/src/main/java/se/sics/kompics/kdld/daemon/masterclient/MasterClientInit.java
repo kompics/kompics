@@ -3,7 +3,6 @@ package se.sics.kompics.kdld.daemon.masterclient;
 import se.sics.kompics.Init;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.kdld.master.MasterConfiguration;
-import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 
 /**
  * The <code>MasterClientInit</code> class.

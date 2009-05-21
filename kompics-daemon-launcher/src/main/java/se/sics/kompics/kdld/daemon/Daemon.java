@@ -22,7 +22,8 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.indexer.Index;
 import se.sics.kompics.kdld.daemon.indexer.Indexer;
 import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
-import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
+import se.sics.kompics.kdld.daemon.indexer.JobsFound;
+import se.sics.kompics.kdld.daemon.indexer.ListJobsLoadedResponse;
 import se.sics.kompics.kdld.daemon.masterclient.MasterClient;
 import se.sics.kompics.kdld.daemon.masterclient.MasterClientInit;
 import se.sics.kompics.kdld.daemon.masterclient.MasterClientP;
@@ -33,6 +34,7 @@ import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.job.JobExited;
 import se.sics.kompics.kdld.job.JobLoadRequest;
 import se.sics.kompics.kdld.job.JobLoadResponse;
+import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
 import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
 import se.sics.kompics.kdld.job.JobStartRequest;
@@ -145,13 +147,14 @@ public class Daemon extends ComponentDefinition {
 		subscribe(handleJobStartResponse, mavenLauncher.getPositive(Maven.class));
 		subscribe(handleJobRemoveResponse, mavenLauncher.getPositive(Maven.class));
 		subscribe(handleJobExited, mavenLauncher.getPositive(Maven.class));
+		subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(Maven.class));
 		
 		subscribe(handleJobRemoveRequestMsg, net);
 		
 		subscribe(handleShutdownTimeout, timer);
 		subscribe(handleTimerDaemonShutdown, timer);
 		
-		subscribe(handleJobFoundLocally, indexer.getPositive(Index.class));
+		subscribe(handleJobsFound, indexer.getPositive(Index.class));
 	}
 
 	public Handler<Start> handleStart = new Handler<Start>() {
@@ -161,6 +164,14 @@ public class Daemon extends ComponentDefinition {
 		}
 	};
 	
+	public Handler<JobReadFromExecutingResponse> handleJobReadFromExecutingResponse = 
+		new Handler<JobReadFromExecutingResponse>() {
+		public void handle(JobReadFromExecutingResponse event) {
+			
+			logger.info("Read from job {} :", event.getJobId());
+			trigger(new JobReadFromExecutingResponseMsg(event, self, masterAddress), net);
+		}
+	};
 	
 	public Handler<ConnectMasterResponse> handleConnectMasterResponse = new Handler<ConnectMasterResponse>() {
 		public void handle(ConnectMasterResponse event) {
@@ -409,19 +420,44 @@ public class Daemon extends ComponentDefinition {
 	public Handler<ListJobsLoadedRequestMsg> handleListJobsLoadedRequest = new Handler<ListJobsLoadedRequestMsg>() {
 		public void handle(ListJobsLoadedRequestMsg event) {
 
-			Set<Job> listJobsLoaded = new HashSet<Job>(loadedJobs.values());
-
-			trigger(new ListJobsLoadedResponseMsg(listJobsLoaded, self, event.getDestination()), net);
+			Set<Job> jobsLoaded = new HashSet<Job>(loadedJobs.values());
+			storeJobs(jobsLoaded);
+			
+			trigger(new JobsFoundMsg(jobsLoaded, self, event.getSource()), net);
 		}
 	};
+	
+	private void storeJobs(Set<Job> jobsLoaded)
+	{
+		for (Job job : jobsLoaded)
+		{
+			loadedJobs.put(job.getId(), job);
+		}
+	}
 
-	public Handler<JobFoundLocally> handleJobFoundLocally = new Handler<JobFoundLocally>() {
-		public void handle(JobFoundLocally event) {
-			int id = event.getId();
-
-			if (loadedJobs.containsKey(id) == false) {
-				loadedJobs.put(id, event);
+	public Handler<ListJobsLoadedResponse> handleListJobsLoadedResponse = new Handler<ListJobsLoadedResponse>() {
+		public void handle(ListJobsLoadedResponse event) {
+			logger.debug("ListJobsLoadedResponse received");
+			
+			Set<Job> jobsLoaded = new HashSet<Job>(loadedJobs.values());
+			storeJobs(jobsLoaded);
+			
+			trigger(new JobsFoundMsg(jobsLoaded, self, masterAddress), net);
+		}
+	};
+	
+	public Handler<JobsFound> handleJobsFound = new Handler<JobsFound>() {
+		public void handle(JobsFound event) {
+			logger.debug("{} JobsFound and adding them to Daemon cache.", event.getSetJobs().size());
+			
+			for (Job job : event.getSetJobs())
+			{
+				loadedJobs.put(job.getId(), job);
 			}
+			
+			// Could send event to Master indicating job found here
+			// Fire-and-forget, as master can query list of jobs
+			trigger(new JobsFoundMsg(event.getSetJobs(), self, masterAddress), net);
 		}
 	};
 

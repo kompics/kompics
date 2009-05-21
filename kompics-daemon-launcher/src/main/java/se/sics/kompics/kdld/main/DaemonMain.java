@@ -9,7 +9,6 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Fault;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
-import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.daemon.DaemonInit;
 import se.sics.kompics.kdld.util.Configuration;

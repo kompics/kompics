@@ -1,22 +1,8 @@
 package se.sics.kompics.kdld.main;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
-import org.apache.maven.embedder.Configuration;
-import org.apache.maven.embedder.ConfigurationValidationResult;
-import org.apache.maven.embedder.DefaultConfiguration;
-import org.apache.maven.embedder.MavenEmbedder;
-import org.apache.maven.embedder.MavenEmbedderException;
-import org.apache.maven.execution.DefaultMavenExecutionRequest;
-import org.apache.maven.execution.MavenExecutionRequest;
-import org.apache.maven.execution.MavenExecutionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.kompics.kdld.daemon.Daemon;
 import se.sics.kompics.kdld.daemon.maven.MavenExecException;
 import se.sics.kompics.kdld.daemon.maven.MavenWrapper;
 

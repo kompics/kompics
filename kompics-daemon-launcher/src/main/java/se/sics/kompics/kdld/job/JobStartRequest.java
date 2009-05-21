@@ -2,7 +2,6 @@ package se.sics.kompics.kdld.job;
 
 import java.util.List;
 
-import se.sics.kompics.kdld.daemon.JobStartRequestMsg;
 import se.sics.kompics.simulator.SimulationScenario;
 
 public class JobStartRequest extends Job {

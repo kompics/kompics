@@ -34,7 +34,6 @@ import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.p2p.monitor.cyclon.server.CyclonMonitorServer;
 import se.sics.kompics.p2p.monitor.cyclon.server.P2pMonitorServerInit;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulator;
-import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorInit;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorPort;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.SimulationScenarioLoadException;

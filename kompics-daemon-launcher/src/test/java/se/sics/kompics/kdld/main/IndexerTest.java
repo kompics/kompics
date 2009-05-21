@@ -24,25 +24,24 @@ import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.kdld.daemon.DaemonAddress;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
-import se.sics.kompics.kdld.daemon.ListJobsLoadedResponseMsg;
 import se.sics.kompics.kdld.daemon.indexer.Index;
 import se.sics.kompics.kdld.daemon.indexer.IndexShutdown;
 import se.sics.kompics.kdld.daemon.indexer.Indexer;
 import se.sics.kompics.kdld.daemon.indexer.IndexerInit;
-import se.sics.kompics.kdld.daemon.indexer.JobFoundLocally;
+import se.sics.kompics.kdld.daemon.indexer.JobsFound;
 import se.sics.kompics.kdld.daemon.maven.Maven;
 import se.sics.kompics.kdld.daemon.maven.MavenLauncher;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
+import se.sics.kompics.kdld.job.JobExited;
 import se.sics.kompics.kdld.job.JobLoadRequest;
 import se.sics.kompics.kdld.job.JobLoadResponse;
-import se.sics.kompics.kdld.job.JobStartRequest;
-import se.sics.kompics.kdld.job.JobStartResponse;
-import se.sics.kompics.kdld.job.JobExited;
 import se.sics.kompics.kdld.job.JobReadFromExecutingRequest;
 import se.sics.kompics.kdld.job.JobReadFromExecutingResponse;
 import se.sics.kompics.kdld.job.JobRemoveRequest;
 import se.sics.kompics.kdld.job.JobRemoveResponse;
+import se.sics.kompics.kdld.job.JobStartRequest;
+import se.sics.kompics.kdld.job.JobStartResponse;
 import se.sics.kompics.kdld.job.JobStopRequest;
 import se.sics.kompics.kdld.job.JobStopResponse;
 import se.sics.kompics.kdld.job.JobToDummyPom;
@@ -270,37 +269,11 @@ public class IndexerTest implements Serializable {
 					testObj.fail(true);
 				}
 
-				// SimulationScenario simulationScenario = new
-				// SimulationScenario()
-				// {
-				//
-				// private static final long serialVersionUID =
-				// -5355642917108165919L;
-				//
-				// {
-				// StochasticProcess p1 = new StochasticProcess() {
-				//
-				// {
-				// }
-				// };
-				// p1.start();
-				// }
-				// };
-				// Job j = loadedJobs.get(event.getJobId());
-				// if (j != null){
-				// trigger(new JobExec(j,simulationScenario),
-				// mavenLauncher.getPositive(Maven.class));
-				// }
-				// else
-				// {
-				// logger.debug("job returned by assemblyResponse was null");
-				// }
-
 			}
 		};
 
-		public Handler<ListJobsLoadedResponseMsg> handleListJobsLoadedResponse = new Handler<ListJobsLoadedResponseMsg>() {
-			public void handle(ListJobsLoadedResponseMsg event) {
+		public Handler<JobsFound> handleListJobsLoadedResponse = new Handler<JobsFound>() {
+			public void handle(JobsFound event) {
 
 				Set<Job> listJobsLoaded = event.getSetJobs();
 
@@ -325,24 +298,28 @@ public class IndexerTest implements Serializable {
 			}
 		};
 
-		public Handler<JobFoundLocally> handleJobFoundLocally = new Handler<JobFoundLocally>() {
-			public void handle(JobFoundLocally event) {
-				int id = event.getId();
-
-				logger.info("Received job {} found locally.", id);
-				if (loadedJobs.containsKey(id) == false) {
-					loadedJobs.put(id, event);
-					logger.info("Added job {} to loaded jobs set.", id);
-
-					Address addr;
-					try {
-						addr = new Address(InetAddress.getLocalHost(), 3333, 10);
-						trigger(new ListJobsLoadedRequestMsg(addr, new DaemonAddress(1, addr)),
-								indexer.getPositive(Index.class));
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
+		public Handler<JobsFound> handleJobFoundLocally = new Handler<JobsFound>() {
+			public void handle(JobsFound event) {
+				
+				for (Job job : event.getSetJobs())
+				{
+					int id = job.getId();
+	
+					logger.info("Received job {} found locally.", id);
+					if (loadedJobs.containsKey(id) == false) {
+						loadedJobs.put(id, job);
+						logger.info("Added job {} to loaded jobs set.", id);
+	
+						Address addr;
+						try {
+							addr = new Address(InetAddress.getLocalHost(), 3333, 10);
+							trigger(new ListJobsLoadedRequestMsg(addr, new DaemonAddress(1, addr)),
+									indexer.getPositive(Index.class));
+						} catch (UnknownHostException e) {
+							e.printStackTrace();
+						}
+	
 					}
-
 				}
 
 			}

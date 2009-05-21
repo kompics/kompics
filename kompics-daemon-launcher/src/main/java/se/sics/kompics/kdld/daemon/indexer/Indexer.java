@@ -33,14 +33,10 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 import se.sics.kompics.kdld.daemon.Daemon;
-import se.sics.kompics.kdld.daemon.DaemonAddress;
-import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
-import se.sics.kompics.kdld.daemon.ListJobsLoadedResponseMsg;
 import se.sics.kompics.kdld.job.DummyPomConstructionException;
 import se.sics.kompics.kdld.job.Job;
 import se.sics.kompics.kdld.util.PomUtils;
 import se.sics.kompics.timer.CancelPeriodicTimeout;
-import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
@@ -112,12 +108,10 @@ public class Indexer extends ComponentDefinition {
 		}
 	};
 
-	public Handler<ListJobsLoadedRequestMsg> handleListJobsLoadedRequest = new Handler<ListJobsLoadedRequestMsg>() {
-		public void handle(ListJobsLoadedRequestMsg event) {
-
+	public Handler<ListJobsLoadedRequest> handleListJobsLoadedRequest = new Handler<ListJobsLoadedRequest>() {
+		public void handle(ListJobsLoadedRequest event) {
 			Set<Job> setJobs = new HashSet<Job>(indexedJobs.values());
-			DaemonAddress src = new DaemonAddress(event.getDaemonId(), event.getDestination());
-			trigger(new ListJobsLoadedResponseMsg(setJobs, src, event.getDestination()), indexPort);
+			trigger(new ListJobsLoadedResponse(event, setJobs), indexPort);
 		}
 	};
 
@@ -235,13 +229,13 @@ public class Indexer extends ComponentDefinition {
 		+ sepStr + version + sepStr + "target" + sepStr + "dummy-0.1-jar-with-dependencies.jar";
 		File dummyJarFile = new File(dummyJarFileName);
 		
-		JobFoundLocally job;
+		JobFound job;
 		if ((indexedJobs.containsKey(jarFileName) == false) 
 				&& isValidJar(jarFile)
 				&& isValidJar(dummyJarFile)) {
 			List<String> args = new ArrayList<String>();
 			try {
-				job = new JobFoundLocally(groupId, artifactId, version,
+				job = new JobFound(groupId, artifactId, version,
 						mainClass, args, repoId, repoUrl);
 			} catch (NumberFormatException e) {
 				throw new PomIndexingException(e.getMessage());

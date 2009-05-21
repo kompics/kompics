@@ -1,7 +1,6 @@
 package se.sics.kompics.kdld.job;
 
 import se.sics.kompics.Request;
-import se.sics.kompics.address.Address;
 
 /**
  * 

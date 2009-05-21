@@ -7,7 +7,6 @@ import java.net.UnknownHostException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +25,7 @@ public class DaemonConfiguration extends Configuration {
 
 	protected static int DEFAULT_DAEMON_ID;
 	protected static final long DEFAULT_DAEMON_INDEXING_PERIOD = 10 * 1000;
-	protected static final String DEFAULT_DAEMON_MASTER_ADDRESS = "lucan.sics.se:2323:1";
+	protected static final String DEFAULT_DAEMON_MASTER_ADDRESS = "localhost:2323:1";
 
 	/********************************************************/
 	/********* Helper fields ********************************/

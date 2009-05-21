@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.kdld.daemon.Daemon;
-import se.sics.kompics.kdld.main.MavenExecMain;
 
 public class MavenWrapper {
 
