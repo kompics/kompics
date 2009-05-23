@@ -31,6 +31,7 @@ import se.sics.kompics.kdld.daemon.JobReadFromExecutingRequestMsg;
 import se.sics.kompics.kdld.daemon.JobReadFromExecutingResponseMsg;
 import se.sics.kompics.kdld.daemon.JobStartRequestMsg;
 import se.sics.kompics.kdld.daemon.JobStartResponseMsg;
+import se.sics.kompics.kdld.daemon.JobStopRequestMsg;
 import se.sics.kompics.kdld.daemon.JobStopResponseMsg;
 import se.sics.kompics.kdld.daemon.JobsFoundMsg;
 import se.sics.kompics.kdld.daemon.ListJobsLoadedRequestMsg;
@@ -105,8 +106,6 @@ public class DaemonTest implements Serializable {
 		private Component daemon;
 		private Component network;
 
-		private Positive<Network> net = positive(Network.class);
-		
 		public Map<Integer, Job> loadedJobs = new HashMap<Integer, Job>();
 
 		private static DaemonTest testObj = null;
@@ -252,7 +251,8 @@ public class DaemonTest implements Serializable {
 		public Handler<JobStopTimeout> handleJobStopTimeout = new Handler<JobStopTimeout>() {
 			public void handle(JobStopTimeout event) {
 				logger.warn("Trying to stop a job: " + event.getJobId());
-				trigger(new JobStopRequest(event.getJobId()), daemon.getPositive(Maven.class));
+				trigger(new JobStopRequestMsg(event.getJobId(), src, dest), 
+						network.getPositive(Network.class));
 
 			}
 		};
@@ -337,8 +337,9 @@ public class DaemonTest implements Serializable {
 		public Handler<JobsFoundMsg> handleJobsFound = new Handler<JobsFoundMsg>() {
 			public void handle(JobsFoundMsg event) {
 				
-				SimulationScenario scenario = new SimulationScenario() {
-					private static final long serialVersionUID = -5355642917108165919L;
+				SimulationScenario scenario = 
+					new SimulationScenario() {
+//					private static final long serialVersionUID = -5355642917108165919L;
 				};
 				DaemonAddress daemonAddr = new DaemonAddress(event.getDaemonId(), event.getSource());
 				for (Job job : event.getSetJobs())

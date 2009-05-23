@@ -12,40 +12,18 @@ import se.sics.kompics.address.Address;
  */
 public class JobStopRequestMsg extends DaemonRequestMessage {
 
-	private static final long serialVersionUID = 1710717688555956452L;
+	private static final long serialVersionUID = 17107145855956452L;
 
-	private String groupId="";
-	private String artifactId="";
-	private String version="";
-	
 	private final int jobId;
 
 	public JobStopRequestMsg(int jobId, Address src, DaemonAddress dest) {
 		super(src,dest);
 		this.jobId = jobId;
 	}
-	
-	public JobStopRequestMsg(int jobId, String groupId, String artifactId, String version, 
-			Address src, DaemonAddress dest) {
-		this(jobId,src,dest);
-		this.groupId = groupId;
-		this.artifactId = artifactId;
-		this.version = version;
-	}
+
 
 	public int getJobId() {
 		return jobId;
 	}
 	
-	public String getGroupId() {
-		return groupId;
-	}
-	
-	public String getArtifactId() {
-		return artifactId;
-	}
-	
-	public String getVersion() {
-		return version;
-	}
 }

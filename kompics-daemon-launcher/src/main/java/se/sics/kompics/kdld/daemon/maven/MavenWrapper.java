@@ -48,7 +48,7 @@ public class MavenWrapper {
 
         if ( validationResult.isValid() == false)
         {
-        	logger.warn("Invalid maven settings.xml configuration");
+        	logger.warn("Problem with maven {} configuration file: cannot find it or invalid", user.getAbsolutePath());
         }
 		try {
 			embedder = new MavenEmbedder( configuration );
