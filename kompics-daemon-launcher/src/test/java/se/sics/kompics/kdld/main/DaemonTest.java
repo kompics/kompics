@@ -65,6 +65,12 @@ public class DaemonTest implements Serializable {
 
 	public static final int EVENT_COUNT = 1;
 
+	static SimulationScenario scenario = 
+		new SimulationScenario() {
+
+			private static final long serialVersionUID = -111714340642367999L;
+	};
+
 
 	public DaemonTest() {
 
@@ -337,10 +343,6 @@ public class DaemonTest implements Serializable {
 		public Handler<JobsFoundMsg> handleJobsFound = new Handler<JobsFoundMsg>() {
 			public void handle(JobsFoundMsg event) {
 				
-				SimulationScenario scenario = 
-					new SimulationScenario() {
-//					private static final long serialVersionUID = -5355642917108165919L;
-				};
 				DaemonAddress daemonAddr = new DaemonAddress(event.getDaemonId(), event.getSource());
 				for (Job job : event.getSetJobs())
 				{
