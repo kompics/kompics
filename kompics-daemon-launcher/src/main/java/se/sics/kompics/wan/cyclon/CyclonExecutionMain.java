@@ -17,17 +17,13 @@ import se.sics.kompics.p2p.bootstrap.server.BootstrapServerInit;
 import se.sics.kompics.p2p.monitor.cyclon.server.CyclonMonitorServer;
 import se.sics.kompics.p2p.monitor.cyclon.server.P2pMonitorServerInit;
 import se.sics.kompics.p2p.orchestrator.P2pOrchestrator;
+import se.sics.kompics.p2p.orchestrator.P2pOrchestratorInit;
 import se.sics.kompics.p2p.simulator.KingLatencyMap;
-import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulator;
-import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorInit;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorPort;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.CyclonConfiguration;
-import se.sics.kompics.wan.config.DaemonConfiguration;
-import se.sics.kompics.wan.slave.Slave;
-import se.sics.kompics.wan.slave.SlaveInit;
 import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
@@ -45,9 +41,11 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 	private static SimulationScenario scenario;
 
 	private static boolean isSlave = false;
+	
+	private static int slaveId, numSlaves;
 
 	private static void usage() {
-		System.out.println("Usage: <prog> slave|master");
+		System.out.println("Usage: <prog> slave|master slaveId numSlaves");
 		System.exit(-1);
 	}
 
@@ -56,7 +54,7 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 		long heapSize = Runtime.getRuntime().totalMemory();
 		System.out.println("Heap Size= " + heapSize);
 
-		if (args.length < 1) {
+		if (args.length < 3) {
 			usage();
 		}
 		if (args[0].compareTo("slave") == 0) {
@@ -66,6 +64,9 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 		} else {
 			usage();
 		}
+		slaveId = Integer.parseInt(args[1]);
+		numSlaves = Integer.parseInt(args[2]);
+		
 		Kompics.createAndStart(CyclonExecutionMain.class, 2);
 	}
 
@@ -73,8 +74,8 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 	public CyclonExecutionMain() throws UnknownHostException, InterruptedException {
 		P2pOrchestrator.setSimulationPortType(CyclonSimulatorPort.class);
 		// create
-		Component slave = create(Slave.class);
-		Component cyclonSimulator = create(CyclonSimulator.class);
+		Component slave = create(P2pOrchestrator.class);
+		Component cyclonSimulator = create(CyclonSimulatorWan.class);
 		Component jettyWebServer = create(JettyWebServer.class);
 
 		try {
@@ -84,7 +85,7 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 					.println("For web access please go to " + CyclonConfiguration.getWebAddress());
 			Thread.sleep(2000);
 
-			trigger(new SlaveInit(DaemonConfiguration.getId() , scenario, new KingLatencyMap()), slave.getControl());
+			trigger(new P2pOrchestratorInit(scenario, new KingLatencyMap()), slave.getControl());
 
 			se.sics.kompics.p2p.overlay.random.cyclon.CyclonConfiguration cyclonConfiguration = new se.sics.kompics.p2p.overlay.random.cyclon.CyclonConfiguration(
 					CyclonConfiguration.getShuffleLength(), CyclonConfiguration.getCacheSize(),
@@ -92,7 +93,8 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 					CyclonConfiguration.getShuffleTimeout(), CyclonConfiguration.getIdSpaceSize(),
 					CyclonConfiguration.getBootstrapRequestPeerCount());
 
-			trigger(new CyclonSimulatorInit(CyclonConfiguration.getBootConfiguration(),
+			trigger(new CyclonSimulatorWanInit(slaveId, numSlaves,
+					CyclonConfiguration.getBootConfiguration(),
 					CyclonConfiguration.getMonitorConfiguration(), cyclonConfiguration,
 					CyclonConfiguration.getPeer0Address()), cyclonSimulator.getControl());
 			

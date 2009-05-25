@@ -169,7 +169,7 @@ public class MavenLauncher extends ComponentDefinition {
 	public MavenLauncher() {
 
 		subscribe(handleJobAssembleRequest, maven);
-		subscribe(handleJobExecRequest, maven);
+		subscribe(handleJobStartRequest, maven);
 		subscribe(handleJobStopRequest, maven);
 		subscribe(handleJobReadFromExecuting, maven);
 		subscribe(handleJobRemoveRequest, maven);
@@ -220,16 +220,17 @@ public class MavenLauncher extends ComponentDefinition {
 		}
 	};
 
-	
 	/**
-	 * @param pathToPomDir directory containing pom.xml file.
+	 * @param pathToPomDir
+	 *            directory containing pom.xml file.
 	 * @param isInPomDir
-	 * @return true if success, false is only used in recursion not in public API.
-	 * @throws FileRemovalException if the file wasn't successfully deleted.
+	 * @return true if success, false is only used in recursion not in public
+	 *         API.
+	 * @throws FileRemovalException
+	 *             if the file wasn't successfully deleted.
 	 */
-	private boolean removeFileRecurse(File pathToPomDir, boolean isInPomDir) 
-	throws FileRemovalException	
-	{
+	private boolean removeFileRecurse(File pathToPomDir, boolean isInPomDir)
+			throws FileRemovalException {
 		if (isInPomDir == true) {
 			if (pathToPomDir.exists()) {
 				if (pathToPomDir.isDirectory()) {
@@ -238,10 +239,9 @@ public class MavenLauncher extends ComponentDefinition {
 						if (files[i].isDirectory()) {
 							removeFileRecurse(files[i], true);
 						} else {
-							if (files[i].delete() == false)
-							{
-								throw new FileRemovalException("Problem when deleting file: " +
-										files[i].getAbsolutePath());
+							if (files[i].delete() == false) {
+								throw new FileRemovalException("Problem when deleting file: "
+										+ files[i].getAbsolutePath());
 							}
 						}
 
@@ -251,21 +251,21 @@ public class MavenLauncher extends ComponentDefinition {
 		}
 		File parent = pathToPomDir.getParentFile();
 
-		if (pathToPomDir.delete() == false)
-		{
+		if (pathToPomDir.delete() == false) {
 			// if I couldn't delete the pom dir, throw exception
-			// don't throw exception if couldn't delete a parent directory, as this is
-			// expected behaviour if the parent directory contains existing files/dirs.
-			if (isInPomDir == true) 
-			{
+			// don't throw exception if couldn't delete a parent directory, as
+			// this is
+			// expected behaviour if the parent directory contains existing
+			// files/dirs.
+			if (isInPomDir == true) {
 				return false;
 			}
-								
+
 		}
-		
+
 		// recurse deleting dirs and stop when Daemon.KOMPICS_HOME is reached.
 		if (parent.getAbsolutePath().compareTo(Daemon.KOMPICS_HOME) != 0) {
-			 removeFileRecurse(parent, false);
+			removeFileRecurse(parent, false);
 		}
 
 		return true;
@@ -302,20 +302,21 @@ public class MavenLauncher extends ComponentDefinition {
 		}
 	};
 
-	public Handler<JobStartRequest> handleJobExecRequest = new Handler<JobStartRequest>() {
+	public Handler<JobStartRequest> handleJobStartRequest = new Handler<JobStartRequest>() {
 		public void handle(JobStartRequest event) {
-			int id = event.getId();
+			int jobId = event.getId();
 
 			JobStartResponse.Status status = JobStartResponse.Status.SUCCESS;
 			if (event == null) {
 				status = JobStartResponse.Status.FAIL;
 			} else {
 				// status = mvnExecExec(event, event.getScenario());
-				forkDummyExec(event, event.getScenario());
+				forkDummyExec(event.getSlaveId(), event.getNumSlaves(), event, event.getScenario());
 			}
 
 			// ProcessWrapper p = executingProcesses.get(id);
-			JobStartResponse response = new JobStartResponse(event, id, status);
+			JobStartResponse response = new JobStartResponse(event, jobId, event.getSlaveId(),
+					status);
 			trigger(response, maven);
 		}
 	};
@@ -324,32 +325,38 @@ public class MavenLauncher extends ComponentDefinition {
 			throws MavenExecException {
 		JobLoadResponse.Status status = JobLoadResponse.Status.ASSEMBLED;
 		MavenWrapper mw = new MavenWrapper(job.getPomFile().getAbsolutePath());
-		
-		// XXX redirecting stdin and stderr for this command, due to much
-		// crap being printed. <pluginmanagement> not recongnized in assembly artifact
-		// by maven embedder.
-		PrintStream	origOut	= System.out;
-		PrintStream	origErr	= System.err;
 
-		System.setOut ( new java.io.PrintStream ( new java.io.OutputStream ( ) { 
-			public void write ( int devNull ) { // dump output (like writing to /dev/null)
-				} } ) ) ;
-		System.setErr ( new java.io.PrintStream ( new java.io.OutputStream ( ) { 
-			public void write ( int devNull ) { // dump output (like writing to /dev/null)
-				} } ) ) ;
-		
+		// XXX redirecting stdin and stderr for this command, due to much
+		// crap being printed. <pluginmanagement> not recongnized in assembly
+		// artifact
+		// by maven embedder.
+		PrintStream origOut = System.out;
+		PrintStream origErr = System.err;
+
+		System.setOut(new java.io.PrintStream(new java.io.OutputStream() {
+			public void write(int devNull) { // dump output (like writing to
+												// /dev/null)
+			}
+		}));
+		System.setErr(new java.io.PrintStream(new java.io.OutputStream() {
+			public void write(int devNull) { // dump output (like writing to
+												// /dev/null)
+			}
+		}));
+
 		mw.execute("assembly:assembly");
-		
-		System.setOut (origOut) ;
-		System.setErr (origErr) ;
+
+		System.setOut(origOut);
+		System.setErr(origErr);
 
 		logger.info("maven assembly:assembly completed...");
 		return status;
 	}
 
-	private JobStartResponse.Status forkDummyExec(JobStartRequest job, SimulationScenario scenario) {
+	private JobStartResponse.Status forkDummyExec(int slaveId, int numSlaves, JobStartRequest job,
+			SimulationScenario scenario) {
 		JobStartResponse.Status status;
-		int res = forkProcess(job, scenario);
+		int res = forkProcess(slaveId, numSlaves, job, scenario);
 		switch (res) {
 		case 0:
 			status = JobStartResponse.Status.SUCCESS;
@@ -364,7 +371,6 @@ public class MavenLauncher extends ComponentDefinition {
 		return status;
 	}
 
-
 	/**
 	 * @param id
 	 * @param job
@@ -372,7 +378,7 @@ public class MavenLauncher extends ComponentDefinition {
 	 * @param assembly
 	 * @return 0 on success, -1 on failure.
 	 */
-	private int forkProcess(Job job, SimulationScenario scenario) {
+	private int forkProcess(int slaveId, int numSlaves, Job job, SimulationScenario scenario) {
 		int res = 0;
 		String classPath = System.getProperty("java.class.path");
 		java.util.List<String> command = new ArrayList<String>();
@@ -381,6 +387,9 @@ public class MavenLauncher extends ComponentDefinition {
 		classPath = classPath + File.pathSeparatorChar + job.getDummyJarWithDependenciesName();
 		command.add(classPath);
 		command.add(job.getMainClass());
+		command.add("slave");
+		command.add(Integer.toString(slaveId));
+		command.add(Integer.toString(numSlaves));
 		command.addAll(job.getArgs());
 		command.add("-Dlog4j.properties=log4j.properties");
 		command.add("-DKOMPICS_HOME=" + Daemon.KOMPICS_HOME);

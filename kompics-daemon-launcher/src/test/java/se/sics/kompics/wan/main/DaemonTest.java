@@ -354,7 +354,7 @@ public class DaemonTest implements Serializable {
 						loadedJobs.put(id, job);
 						logger.info("Added job {} to loaded jobs set.", id);	
 	
-						trigger(new JobStartRequestMsg(job.getId(), scenario, event.getDestination(),
+						trigger(new JobStartRequestMsg(job.getId(), 1, 1, scenario, event.getDestination(),
 						daemonAddr), network.getPositive(Network.class));
 	
 					}

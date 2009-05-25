@@ -3,7 +3,7 @@
   <ReviewIssue id="FV5BY4NB">
     <ReviewIssueMeta>
       <CreationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:25:12:839 CEST</CreationDate>
-      <LastModificationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:25:38:163 CEST</LastModificationDate>
+      <LastModificationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:35:31:489 CEST</LastModificationDate>
     </ReviewIssueMeta>
     <ReviewerId>Jim</ReviewerId>
     <AssignedTo>Jim</AssignedTo>
@@ -14,13 +14,13 @@
     <Description>here</Description>
     <Annotation></Annotation>
     <Revision></Revision>
-    <Resolution>item.label.unset</Resolution>
-    <Status>item.status.label.open</Status>
+    <Resolution>item.resolution.label.validFixlater</Resolution>
+    <Status>item.status.label.closed</Status>
   </ReviewIssue>
   <ReviewIssue id="FV5C310B">
     <ReviewIssueMeta>
       <CreationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:29:01:403 CEST</CreationDate>
-      <LastModificationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:29:06:736 CEST</LastModificationDate>
+      <LastModificationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:35:26:817 CEST</LastModificationDate>
     </ReviewIssueMeta>
     <ReviewerId>Jim</ReviewerId>
     <AssignedTo>Jim</AssignedTo>
@@ -31,13 +31,13 @@
     <Description></Description>
     <Annotation></Annotation>
     <Revision></Revision>
-    <Resolution>item.label.unset</Resolution>
-    <Status>item.status.label.open</Status>
+    <Resolution>item.resolution.label.validNeedsfixing</Resolution>
+    <Status>item.status.label.closed</Status>
   </ReviewIssue>
   <ReviewIssue id="FV5C3A50">
     <ReviewIssueMeta>
       <CreationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:29:13:236 CEST</CreationDate>
-      <LastModificationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:29:26:813 CEST</LastModificationDate>
+      <LastModificationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:35:21:010 CEST</LastModificationDate>
     </ReviewIssueMeta>
     <ReviewerId>Jim</ReviewerId>
     <AssignedTo>Jim</AssignedTo>
@@ -48,7 +48,7 @@
     <Description>wrong</Description>
     <Annotation></Annotation>
     <Revision></Revision>
-    <Resolution>item.label.unset</Resolution>
-    <Status>item.status.label.open</Status>
+    <Resolution>item.resolution.label.validNeedsfixing</Resolution>
+    <Status>item.status.label.closed</Status>
   </ReviewIssue>
 </Review>

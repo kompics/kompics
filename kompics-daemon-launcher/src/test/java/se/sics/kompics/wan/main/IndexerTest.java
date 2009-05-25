@@ -292,7 +292,7 @@ public class IndexerTest implements Serializable {
 
 				Iterator<Job> iter = listJobsLoaded.iterator();
 
-				trigger(new JobStartRequest(iter.next(), scenario), mavenLauncher.getPositive(Maven.class));
+				trigger(new JobStartRequest(1, 1, iter.next(), scenario), mavenLauncher.getPositive(Maven.class));
 
 				// IndexerTest.semaphore.release(1);
 			}
