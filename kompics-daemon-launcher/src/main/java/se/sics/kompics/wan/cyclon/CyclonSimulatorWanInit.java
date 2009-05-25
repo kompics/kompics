@@ -33,24 +33,24 @@ import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorInit;
  */
 public final class CyclonSimulatorWanInit extends CyclonSimulatorInit {
 
-	private final int daemonId;
-	private final int numDaemons;
+	private final int slaveId;
+	private final int numSlaves;
 	
-	public CyclonSimulatorWanInit(int daemonId, int numDaemons, 
+	public CyclonSimulatorWanInit(int slaveId, int numSlaves, 
 			BootstrapConfiguration bootstrapConfiguration,
 			P2pMonitorConfiguration monitorConfiguration,
 			CyclonConfiguration cyclonConfiguration, Address peer0Address) {
 		super(bootstrapConfiguration, monitorConfiguration, cyclonConfiguration, peer0Address);
-		this.daemonId = daemonId;
-		this.numDaemons = numDaemons;
+		this.slaveId = slaveId;
+		this.numSlaves = numSlaves;
 	}
 	
-	public int getDaemonId() {
-		return daemonId;
+	public int getSlaveId() {
+		return slaveId;
 	}
 	
-	public int getNumDaemons() {
-		return numDaemons;
+	public int getNumSlaves() {
+		return numSlaves;
 	}
 
 }

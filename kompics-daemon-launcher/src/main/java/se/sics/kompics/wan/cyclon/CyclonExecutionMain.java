@@ -74,7 +74,7 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 	public CyclonExecutionMain() throws UnknownHostException, InterruptedException {
 		P2pOrchestrator.setSimulationPortType(CyclonSimulatorPort.class);
 		// create
-		Component slave = create(P2pOrchestrator.class);
+		Component p2pOrchestrator = create(P2pOrchestrator.class);
 		Component cyclonSimulator = create(CyclonSimulatorWan.class);
 		Component jettyWebServer = create(JettyWebServer.class);
 
@@ -85,7 +85,7 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 					.println("For web access please go to " + CyclonConfiguration.getWebAddress());
 			Thread.sleep(2000);
 
-			trigger(new P2pOrchestratorInit(scenario, new KingLatencyMap()), slave.getControl());
+			trigger(new P2pOrchestratorInit(scenario, new KingLatencyMap()), p2pOrchestrator.getControl());
 
 			se.sics.kompics.p2p.overlay.random.cyclon.CyclonConfiguration cyclonConfiguration = new se.sics.kompics.p2p.overlay.random.cyclon.CyclonConfiguration(
 					CyclonConfiguration.getShuffleLength(), CyclonConfiguration.getCacheSize(),
@@ -143,18 +143,18 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 			trigger(new P2pMonitorServerInit(CyclonConfiguration.getMonitorConfiguration()),
 					cyclonMonitorServer.getControl());
 
-			connect(bootstrapServer.getNegative(Network.class), slave.getPositive(Network.class),
+			connect(bootstrapServer.getNegative(Network.class), p2pOrchestrator.getPositive(Network.class),
 					new MessageDestinationFilter(CyclonConfiguration.getBootConfiguration()
 							.getBootstrapServerAddress()));
-			connect(bootstrapServer.getNegative(Timer.class), slave.getPositive(Timer.class));
+			connect(bootstrapServer.getNegative(Timer.class), p2pOrchestrator.getPositive(Timer.class));
 			connect(bootstrapServer.getPositive(Web.class), jettyWebServer.getNegative(Web.class),
 					new WebRequestDestinationFilter(CyclonConfiguration.getBootConfiguration()
 							.getBootstrapServerAddress().getId()));
 
-			connect(cyclonMonitorServer.getNegative(Network.class), slave
+			connect(cyclonMonitorServer.getNegative(Network.class), p2pOrchestrator
 					.getPositive(Network.class), new MessageDestinationFilter(CyclonConfiguration
 					.getMonitorConfiguration().getMonitorServerAddress()));
-			connect(cyclonMonitorServer.getNegative(Timer.class), slave.getPositive(Timer.class));
+			connect(cyclonMonitorServer.getNegative(Timer.class), p2pOrchestrator.getPositive(Timer.class));
 			connect(cyclonMonitorServer.getPositive(Web.class), jettyWebServer
 					.getNegative(Web.class), new WebRequestDestinationFilter(CyclonConfiguration
 					.getMonitorConfiguration().getMonitorServerAddress().getId()));
@@ -163,9 +163,9 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 		
 		
 		connect(cyclonSimulator.getPositive(Web.class), jettyWebServer.getNegative(Web.class));
-		connect(cyclonSimulator.getNegative(Network.class), slave.getPositive(Network.class));
-		connect(cyclonSimulator.getNegative(Timer.class), slave.getPositive(Timer.class));
-		connect(cyclonSimulator.getNegative(CyclonSimulatorPort.class), slave
+		connect(cyclonSimulator.getNegative(Network.class), p2pOrchestrator.getPositive(Network.class));
+		connect(cyclonSimulator.getNegative(Timer.class), p2pOrchestrator.getPositive(Timer.class));
+		connect(cyclonSimulator.getNegative(CyclonSimulatorPort.class), p2pOrchestrator
 				.getPositive(CyclonSimulatorPort.class));
 	}
 }

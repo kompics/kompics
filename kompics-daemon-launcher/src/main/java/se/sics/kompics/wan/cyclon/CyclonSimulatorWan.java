@@ -50,9 +50,9 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 	
 	private static SimulationScenario scenario;
 	
-	private int numDaemons;
-	private int daemonId;
-	private BigInteger cyclonLocalIdentifierSpace;
+	private int numSlaves;
+	private int slaveId;
+	private BigInteger localIdSpaceStart, localIdSpaceEnd;
 	
 	Positive<CyclonSimulatorPort> simulator = positive(CyclonSimulatorPort.class);
 	Positive<Network> network = positive(Network.class);
@@ -107,12 +107,12 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 			peerIdSequence = 0;
 			dataSet = null;
 		
-			daemonId = init.getDaemonId();
-			if (daemonId < 1 )
+			slaveId = init.getSlaveId();
+			if (slaveId < 0 )
 			{
-				throw new IllegalStateException("DaemonId must be > 0 ");
+				throw new IllegalStateException("SlaveId must be >= 0 ");
 			}
-			numDaemons = init.getNumDaemons();
+			numSlaves = init.getNumSlaves();
 
 			peer0Address = init.getPeer0Address();
 			bootstrapConfiguration = init.getBootstrapConfiguration();
@@ -122,17 +122,36 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 			cyclonIdentifierSpaceSize = cyclonConfiguration
 					.getIdentifierSpaceSize();
 			
-			BigInteger localId = new BigInteger(Integer.toString(daemonId));
-			BigInteger numPartitions = new BigInteger(Integer.toString(numDaemons));
-			cyclonLocalIdentifierSpace = 
-				cyclonIdentifierSpaceSize.divide(numPartitions).multiply(localId);
+			BigInteger localId = new BigInteger(Integer.toString(slaveId));
+			BigInteger numPartitions = new BigInteger(Integer.toString(numSlaves));
+			BigInteger partitionSize = cyclonIdentifierSpaceSize.divide(numPartitions);
+			localIdSpaceStart =  partitionSize.multiply(localId);
+			localIdSpaceEnd = localIdSpaceStart.add(partitionSize).subtract(BigInteger.ONE); 
+
 		}
 	};
 
+	final private boolean between(BigInteger val)
+	{
+		if (val.compareTo(localIdSpaceStart) >= 0 && val.compareTo(localIdSpaceEnd) <= 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
 	Handler<CyclonPeerJoin> handleJoin = new Handler<CyclonPeerJoin>() {
 		public void handle(CyclonPeerJoin event) {
 			BigInteger id = event.getCyclonId();
 
+			if (between(id) == false)
+			{
+				return;
+			}
+			
 			// join with the next id if this id is taken
 			BigInteger successor = cyclonView.getNode(id);
 			while (successor != null && successor.equals(id)) {
@@ -177,6 +196,12 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 		public void handle(CyclonPeerGetPeer event) {
 			BigInteger id = cyclonView.getNode(event.getCyclonId());
 
+			if (between(id) == false)
+			{
+				return;
+			}
+
+			
 			logger.debug("{} GET_PEER@{}", ++lcnt, id);
 
 			CyclonGetPeersRequest getPeerRequest = new CyclonGetPeersRequest(6);
