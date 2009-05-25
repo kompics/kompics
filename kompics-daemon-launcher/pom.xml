@@ -96,7 +96,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>se.sics.kompics.kdld.main.Application</mainClass>
+							<mainClass>se.sics.kompics.wan.main.Application</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
