@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Review id="Kompics-Daemon">
+  <ReviewIssue id="FV5BY4NB">
+    <ReviewIssueMeta>
+      <CreationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:25:12:839 CEST</CreationDate>
+      <LastModificationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:25:38:163 CEST</LastModificationDate>
+    </ReviewIssueMeta>
+    <ReviewerId>Jim</ReviewerId>
+    <AssignedTo>Jim</AssignedTo>
+    <File line="352">src/main/java/se/sics/kompics/wan/slave/Slave.java</File>
+    <Type>item.type.label.programLogic</Type>
+    <Severity>item.label.unset</Severity>
+    <Summary>Doesn't look good</Summary>
+    <Description>here</Description>
+    <Annotation></Annotation>
+    <Revision></Revision>
+    <Resolution>item.label.unset</Resolution>
+    <Status>item.status.label.open</Status>
+  </ReviewIssue>
+  <ReviewIssue id="FV5C310B">
+    <ReviewIssueMeta>
+      <CreationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:29:01:403 CEST</CreationDate>
+      <LastModificationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:29:06:736 CEST</LastModificationDate>
+    </ReviewIssueMeta>
+    <ReviewerId>Jim</ReviewerId>
+    <AssignedTo>Jim</AssignedTo>
+    <File line="352">src/main/java/se/sics/kompics/wan/slave/Slave.java</File>
+    <Type>item.label.unset</Type>
+    <Severity>item.label.unset</Severity>
+    <Summary></Summary>
+    <Description></Description>
+    <Annotation></Annotation>
+    <Revision></Revision>
+    <Resolution>item.label.unset</Resolution>
+    <Status>item.status.label.open</Status>
+  </ReviewIssue>
+  <ReviewIssue id="FV5C3A50">
+    <ReviewIssueMeta>
+      <CreationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:29:13:236 CEST</CreationDate>
+      <LastModificationDate format="yyyy-MM-dd :: HH:mm:ss:SSS z">2009-05-25 :: 17:29:26:813 CEST</LastModificationDate>
+    </ReviewIssueMeta>
+    <ReviewerId>Jim</ReviewerId>
+    <AssignedTo>Jim</AssignedTo>
+    <File line="352">src/main/java/se/sics/kompics/wan/slave/Slave.java</File>
+    <Type>item.type.label.usability</Type>
+    <Severity>item.severity.label.major</Severity>
+    <Summary>something</Summary>
+    <Description>wrong</Description>
+    <Annotation></Annotation>
+    <Revision></Revision>
+    <Resolution>item.label.unset</Resolution>
+    <Status>item.status.label.open</Status>
+  </ReviewIssue>
+</Review>
