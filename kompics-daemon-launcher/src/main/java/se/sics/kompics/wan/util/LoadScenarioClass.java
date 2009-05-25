@@ -29,8 +29,9 @@ public class LoadScenarioClass {
 		
 		// XXX detect source code change since last compilation
 		
-		return com.sun.tools.javac.Main.compile(new String[] { "-classpath", classPath, "-d",
-				CLASSES_DIR, classFilename }, out); // "dynacode/sample/PostmanImpl.java"
+//		return com.sun.tools.javac.Main.compile(new String[] { "-classpath", classPath, "-d",
+//				CLASSES_DIR, classFilename }, out); // "dynacode/sample/PostmanImpl.java"
+		return 0;
 	}
 
 	// The basic idea is to load the dynamic class using our own URLClassLoader.

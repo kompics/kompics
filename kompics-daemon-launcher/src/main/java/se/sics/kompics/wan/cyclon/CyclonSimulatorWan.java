@@ -45,6 +45,15 @@ import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 
+/**
+ * 
+ * All the slaves must be seeded with the same random number -
+ * otherwise join events will be missed by slaves!
+ * 
+ * 
+ * @author Jim Dowling
+ *
+ */
 public final class CyclonSimulatorWan extends ComponentDefinition {
 
 	
