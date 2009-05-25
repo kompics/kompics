@@ -35,7 +35,6 @@ import se.sics.kompics.p2p.simulator.cyclon.CyclonDataPoint;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonPeerFail;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonPeerGetPeer;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonPeerJoin;
-import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorInit;
 import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorPort;
 import se.sics.kompics.p2p.simulator.cyclon.ReceivedMessage;
 import se.sics.kompics.simulator.SimulationScenario;
@@ -209,11 +208,16 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 			{
 				return;
 			}
+			if (peers.get(id) == null)
+			{
+				return;
+			}
 
 			
 			logger.debug("{} GET_PEER@{}", ++lcnt, id);
 
-			CyclonGetPeersRequest getPeerRequest = new CyclonGetPeersRequest(6);
+			CyclonGetPeersRequest getPeerRequest = 
+				new CyclonGetPeersRequest(se.sics.kompics.wan.config.CyclonConfiguration.getCacheSize());
 			trigger(getPeerRequest, peers.get(id).getPositive(
 					CyclonPeerPort.class));
 		}
