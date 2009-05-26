@@ -56,8 +56,7 @@ public class MavenWrapper {
 			e1.printStackTrace();
 			throw new MavenExecException(e1.getMessage());
 		}
-		
-      
+		      
 	}
 	
 	public MavenExecutionResult execute(String command)

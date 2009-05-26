@@ -79,6 +79,7 @@ public class Master extends ComponentDefinition {
 		subscribe(handleWebRequest, web);
 		subscribe(handleDisconnectMasterRequestMsg, net);
 		subscribe(handleConnectMasterRequestMsg, net);
+		subscribe(handleKeepAliveDaemonMsg, net);
 
 		subscribe(handleCacheEvictDaemon, timer);
 
@@ -182,6 +183,13 @@ public class Master extends ComponentDefinition {
 	private Handler<DisconnectMasterRequestMsg> handleDisconnectMasterRequestMsg = new Handler<DisconnectMasterRequestMsg>() {
 		public void handle(DisconnectMasterRequestMsg event) {
 
+		}
+	};
+	
+	private Handler<KeepAliveDaemonMsg> handleKeepAliveDaemonMsg = new Handler<KeepAliveDaemonMsg>() {
+		public void handle(KeepAliveDaemonMsg event) {
+			addDaemonToCache(event.getPeerAddress());
+			dumpCacheToLog();
 		}
 	};
 

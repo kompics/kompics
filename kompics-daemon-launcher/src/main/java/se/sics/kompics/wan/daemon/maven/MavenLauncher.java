@@ -25,6 +25,7 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.simulator.SimulationScenario;
+import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.daemon.JobRemoveResponseMsg;
 import se.sics.kompics.wan.job.DummyPomConstructionException;
@@ -378,7 +379,7 @@ public class MavenLauncher extends ComponentDefinition {
 	 * @param assembly
 	 * @return 0 on success, -1 on failure.
 	 */
-	private int forkProcess(int slaveId, int numSlaves, Job job, SimulationScenario scenario) {
+	private int forkProcess(int slaveId, int numPeers, Job job, SimulationScenario scenario) {
 		int res = 0;
 		String classPath = System.getProperty("java.class.path");
 		java.util.List<String> command = new ArrayList<String>();
@@ -388,8 +389,9 @@ public class MavenLauncher extends ComponentDefinition {
 		command.add(classPath);
 		command.add(job.getMainClass());
 		command.add("slave");
-		command.add(Integer.toString(slaveId));
-		command.add(Integer.toString(numSlaves));
+		command.add("-" + Configuration.OPT_PEERS + " " + Integer.toString(slaveId)); 
+		command.add("-" + Configuration.OPT_IDSPACE + " " + Integer.toString(numPeers));				
+
 		command.addAll(job.getArgs());
 		command.add("-Dlog4j.properties=log4j.properties");
 		command.add("-DKOMPICS_HOME=" + Daemon.KOMPICS_HOME);

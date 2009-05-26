@@ -40,35 +40,34 @@ import se.sics.kompics.p2p.simulator.cyclon.ReceivedMessage;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.timer.Timer;
+import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 
 /**
  * 
- * All the slaves must be seeded with the same random number -
- * otherwise join events will be missed by slaves!
+ * All the slaves must be seeded with the same random number - otherwise join
+ * events will be missed by slaves!
  * 
  * 
  * @author Jim Dowling
- *
+ * 
  */
 public final class CyclonSimulatorWan extends ComponentDefinition {
 
-	
 	private static SimulationScenario scenario;
-	
-	private int numSlaves;
+
+	private BigInteger numSlaves;
 	private int slaveId;
-	private BigInteger localIdSpaceStart, localIdSpaceEnd;
-	
+	// private BigInteger localIdSpaceStart, localIdSpaceEnd;
+
 	Positive<CyclonSimulatorPort> simulator = positive(CyclonSimulatorPort.class);
 	Positive<Network> network = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 	Negative<Web> web = negative(Web.class);
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(CyclonSimulatorWan.class);
+	private static final Logger logger = LoggerFactory.getLogger(CyclonSimulatorWan.class);
 	private final HashMap<BigInteger, Component> peers;
 
 	// peer initialization state
@@ -80,6 +79,7 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 	private int peerIdSequence;
 
 	private BigInteger cyclonIdentifierSpaceSize;
+
 	private ConsistentHashtable<BigInteger> cyclonView;
 
 	// statistics
@@ -92,14 +92,13 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 		peers = new HashMap<BigInteger, Component>();
 		cyclonView = new ConsistentHashtable<BigInteger>();
 
-		 try {
-			scenario = SimulationScenario.load(System
-						.getProperty(Daemon.SCENARIO_FILENAME));
+		try {
+			scenario = SimulationScenario.load(System.getProperty(Daemon.SCENARIO_FILENAME));
 		} catch (SimulationScenarioLoadException e) {
 			e.printStackTrace();
 			System.exit(-1);
 		}
-		
+
 		subscribe(handleInit, control);
 
 		subscribe(handleJoin, simulator);
@@ -114,52 +113,40 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 			peers.clear();
 			peerIdSequence = 0;
 			dataSet = null;
-		
+
 			slaveId = init.getSlaveId();
-			if (slaveId < 0 )
-			{
+			if (slaveId < 0) {
 				throw new IllegalStateException("SlaveId must be >= 0 ");
 			}
-			numSlaves = init.getNumSlaves();
+			int n = init.getNumSlaves();
+			numSlaves = new BigInteger(Integer.toString(n));
 
 			peer0Address = init.getPeer0Address();
 			bootstrapConfiguration = init.getBootstrapConfiguration();
 			monitorConfiguration = init.getMonitorConfiguration();
 			cyclonConfiguration = init.getCyclonConfiguration();
 
-			cyclonIdentifierSpaceSize = cyclonConfiguration
-					.getIdentifierSpaceSize();
-			
-			BigInteger localId = new BigInteger(Integer.toString(slaveId));
-			BigInteger numPartitions = new BigInteger(Integer.toString(numSlaves));
-			BigInteger partitionSize = cyclonIdentifierSpaceSize.divide(numPartitions);
-			localIdSpaceStart =  partitionSize.multiply(localId);
-			localIdSpaceEnd = localIdSpaceStart.add(partitionSize).subtract(BigInteger.ONE); 
+			cyclonIdentifierSpaceSize = cyclonConfiguration.getIdentifierSpaceSize();
 
 		}
 	};
 
-	final private boolean between(BigInteger val)
-	{
-		if (val.compareTo(localIdSpaceStart) >= 0 && val.compareTo(localIdSpaceEnd) <= 0)
-		{
+	final private boolean isEventForThisPeer(BigInteger val) {
+		if (val.mod(numSlaves).equals(BigInteger.ZERO)) {
 			return true;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}
-	
+
 	Handler<CyclonPeerJoin> handleJoin = new Handler<CyclonPeerJoin>() {
 		public void handle(CyclonPeerJoin event) {
 			BigInteger id = event.getCyclonId();
 
-			if (between(id) == false)
-			{
+			if (isEventForThisPeer(id) == false) {
 				return;
 			}
-			
+
 			// join with the next id if this id is taken
 			BigInteger successor = cyclonView.getNode(id);
 			while (successor != null && successor.equals(id)) {
@@ -173,8 +160,7 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 
 			cyclonView.addNode(id);
 
-			trigger(new JoinCyclon(id), newPeer
-					.getPositive(CyclonPeerPort.class));
+			trigger(new JoinCyclon(id), newPeer.getPositive(CyclonPeerPort.class));
 
 			addedPeer();
 		}
@@ -204,22 +190,18 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 		public void handle(CyclonPeerGetPeer event) {
 			BigInteger id = cyclonView.getNode(event.getCyclonId());
 
-			if (between(id) == false)
-			{
+			if (isEventForThisPeer(id) == false) {
 				return;
 			}
-			if (peers.get(id) == null)
-			{
+			if (peers.get(id) == null) {
 				return;
 			}
 
-			
 			logger.debug("{} GET_PEER@{}", ++lcnt, id);
 
-			CyclonGetPeersRequest getPeerRequest = 
-				new CyclonGetPeersRequest(se.sics.kompics.wan.config.CyclonConfiguration.getCacheSize());
-			trigger(getPeerRequest, peers.get(id).getPositive(
-					CyclonPeerPort.class));
+			CyclonGetPeersRequest getPeerRequest = new CyclonGetPeersRequest(
+					se.sics.kompics.wan.config.CyclonConfiguration.getCacheSize());
+			trigger(getPeerRequest, peers.get(id).getPositive(CyclonPeerPort.class));
 		}
 	};
 
@@ -269,14 +251,14 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 			}
 			rm.incrementCount();
 
-//			if (dataSet != null) {
-//				rm = dataSet.messageHistogram.get(event.getClass());
-//				if (rm == null) {
-//					rm = new ReceivedMessage(event.getClass(), 0);
-//					dataSet.messageHistogram.put(event.getClass(), rm);
-//				}
-//				rm.incrementCount();
-//			}
+			// if (dataSet != null) {
+			// rm = dataSet.messageHistogram.get(event.getClass());
+			// if (rm == null) {
+			// rm = new ReceivedMessage(event.getClass(), 0);
+			// dataSet.messageHistogram.put(event.getClass(), rm);
+			// }
+			// rm.incrementCount();
+			// }
 
 			// lookup load
 			// if (event instanceof FindSuccessorRequest) {
@@ -306,19 +288,19 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 
 	Handler<CollectCyclonData> handleCollectData = new Handler<CollectCyclonData>() {
 		public void handle(CollectCyclonData event) {
-//			if (dataSet == null) {
-//				dataSet = new CyclonDataSet();
-//				dataSet.beganAt = System.currentTimeMillis();
-//				logger.info("Started data collection...");
-//			} else {
-//				dataSet.endedAt = System.currentTimeMillis();
-//				logger.info("Stopped data collection...");
+			// if (dataSet == null) {
+			// dataSet = new CyclonDataSet();
+			// dataSet.beganAt = System.currentTimeMillis();
+			// logger.info("Started data collection...");
+			// } else {
+			// dataSet.endedAt = System.currentTimeMillis();
+			// logger.info("Stopped data collection...");
 
-//				updatedPeerCount(0);
-//				CyclonDataPoint dataPoint = new CyclonDataPoint(
-//						currentPeriodPeerCount, dataSet);
-//				logger.info("DataPoint: \n{}", dataPoint);
-//			}
+			// updatedPeerCount(0);
+			// CyclonDataPoint dataPoint = new CyclonDataPoint(
+			// currentPeriodPeerCount, dataSet);
+			// logger.info("DataPoint: \n{}", dataPoint);
+			// }
 
 			// updatedPeerCount(0);
 
@@ -391,19 +373,16 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 			throw new RuntimeException("Total peer lifetime overflow");
 
 		if (increment == 0) {
-			logger.info("Total peer lifetime: {} Current peer count: {}",
-					P2pSimulator.durationToString(totalPeerLifetime),
-					currentPeriodPeerCount);
+			logger.info("Total peer lifetime: {} Current peer count: {}", P2pSimulator
+					.durationToString(totalPeerLifetime), currentPeriodPeerCount);
 		} else {
-			logger.debug("Period: {} Total lifetime: {} Current count: {}",
-					new Object[] { P2pSimulator.durationToString(period),
-							P2pSimulator.durationToString(totalPeerLifetime),
-							currentPeriodPeerCount });
+			logger.debug("Period: {} Total lifetime: {} Current count: {}", new Object[] {
+					P2pSimulator.durationToString(period),
+					P2pSimulator.durationToString(totalPeerLifetime), currentPeriodPeerCount });
 		}
 	}
 
-	private final static class MessageDestinationFilter extends
-			ChannelFilter<Message, Address> {
+	private final static class MessageDestinationFilter extends ChannelFilter<Message, Address> {
 		public MessageDestinationFilter(Address address) {
 			super(Message.class, address, true);
 		}
@@ -427,20 +406,17 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 	private final Component createAndStartNewPeer(BigInteger id) {
 		Component peer = create(CyclonPeer.class);
 		int peerId = ++peerIdSequence;
-		Address peerAddress = new Address(peer0Address.getIp(), peer0Address
-				.getPort(), peerId);
+		Address peerAddress = new Address(peer0Address.getIp(), peer0Address.getPort(), peerId);
 
-		connect(network, peer.getNegative(Network.class),
-				new MessageDestinationFilter(peerAddress));
+		connect(network, peer.getNegative(Network.class), new MessageDestinationFilter(peerAddress));
 		connect(timer, peer.getNegative(Timer.class));
-		connect(web, peer.getPositive(Web.class),
-				new WebRequestDestinationFilter(peerId));
+		connect(web, peer.getPositive(Web.class), new WebRequestDestinationFilter(peerId));
 
 		subscribe(handleGetPeerResponse, peer.getPositive(CyclonPeerPort.class));
 		subscribe(handleNeighbors, peer.getPositive(CyclonPeerPort.class));
 
-		trigger(new CyclonPeerInit(peerAddress, bootstrapConfiguration,
-				monitorConfiguration, cyclonConfiguration), peer.getControl());
+		trigger(new CyclonPeerInit(peerAddress, bootstrapConfiguration, monitorConfiguration,
+				cyclonConfiguration), peer.getControl());
 
 		trigger(new Start(), peer.getControl());
 		peers.put(id, peer);
@@ -453,8 +429,7 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 
 		trigger(new Stop(), peer.getControl());
 
-		unsubscribe(handleGetPeerResponse, peer
-				.getPositive(CyclonPeerPort.class));
+		unsubscribe(handleGetPeerResponse, peer.getPositive(CyclonPeerPort.class));
 		unsubscribe(handleNeighbors, peer.getPositive(CyclonPeerPort.class));
 
 		disconnect(network, peer.getNegative(Network.class));

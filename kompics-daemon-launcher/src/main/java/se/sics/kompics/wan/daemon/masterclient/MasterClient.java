@@ -177,10 +177,8 @@ public class MasterClient extends ComponentDefinition {
 	private Handler<DisconnectMasterRequest> handleDisconnectMasterRequest = 
 			new Handler<DisconnectMasterRequest>() {
 		public void handle(DisconnectMasterRequest event) {
-
 			DisconnectMasterRequestMsg request = new DisconnectMasterRequestMsg(self,
 					masterAddress);
-
 			trigger(request, network);
 			logger.debug("Sending DisconnectMasterRequestMsg to " + masterAddress);
 		}

@@ -68,19 +68,19 @@ public class DaemonConfiguration extends Configuration {
 	@Override
 	protected void parseAdditionalOptions(String[] args) throws IOException {
 		daemonMasterOption = new Option("masteraddr", true, "Address of Master Server");
-		daemonMasterOption.setArgName("masteraddr");
+		daemonMasterOption.setArgName(VAL_ADDRESS);
 		options.addOption(daemonMasterOption);
 
 		daemonIdOption = new Option("id", true, "Daemon id");
-		daemonIdOption.setArgName("id");
+		daemonIdOption.setArgName(VAL_NUMBER);
 		options.addOption(daemonIdOption);
 
 		daemonRetryPeriodOption = new Option("drp", true, "Daemon retry period");
-		daemonRetryPeriodOption.setArgName("drp");
+		daemonRetryPeriodOption.setArgName(VAL_PERIOD_SECS);
 		options.addOption(daemonRetryPeriodOption);
 
 		daemonRetryCountOption = new Option("drc", true, "Daemon retry count");
-		daemonRetryCountOption.setArgName("drc");
+		daemonRetryCountOption.setArgName(VAL_NUMBER);
 		options.addOption(daemonRetryCountOption);
 
 	}

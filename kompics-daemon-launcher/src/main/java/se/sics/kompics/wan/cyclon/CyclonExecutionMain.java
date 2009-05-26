@@ -1,5 +1,6 @@
 package se.sics.kompics.wan.cyclon;
 
+import java.math.BigInteger;
 import java.net.UnknownHostException;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -23,6 +24,7 @@ import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorPort;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.timer.Timer;
+import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.CyclonConfiguration;
 import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 import se.sics.kompics.web.Web;
@@ -64,10 +66,18 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 		} else {
 			usage();
 		}
-		slaveId = Integer.parseInt(args[1]);
-		numSlaves = Integer.parseInt(args[2]);
+//		slaveId = Integer.parseInt(args[1]);
+//		numSlaves = Integer.parseInt(args[2]);
 		
-		Kompics.createAndStart(CyclonExecutionMain.class, 2);
+		
+		try {
+			CyclonConfiguration.init(new String[] {}, CyclonConfiguration.class);
+			Kompics.createAndStart(CyclonExecutionMain.class, 2);
+		} catch (ConfigurationException e) {
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+			System.exit(-1);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -79,7 +89,6 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 		Component jettyWebServer = create(JettyWebServer.class);
 
 		try {
-			CyclonConfiguration.init(new String[] {}, CyclonConfiguration.class);
 			scenario = SimulationScenario.load(System.getProperty("scenario"));
 			System.out
 					.println("For web access please go to " + CyclonConfiguration.getWebAddress());
@@ -103,10 +112,6 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 
 		} catch (SimulationScenarioLoadException e) {
 			e.printStackTrace();
-			System.exit(-1);
-		} catch (ConfigurationException e) {
-			e.printStackTrace();
-			System.out.println(e.getMessage());
 			System.exit(-1);
 		} catch (LocalIPAddressNotFound e) {
 			e.printStackTrace();

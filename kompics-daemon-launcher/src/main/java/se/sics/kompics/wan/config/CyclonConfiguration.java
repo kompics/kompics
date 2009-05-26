@@ -1,7 +1,6 @@
 package se.sics.kompics.wan.config;
 
 import java.io.IOException;
-import java.math.BigInteger;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
@@ -24,7 +23,6 @@ public class CyclonConfiguration extends Configuration {
 	public final static String PROP_CYCLON_SHUFFLE_LENGTH = "cyclon.shuffle.length";
 	public final static String PROP_CYCLON_SHUFFLE_TIMEOUT = "cyclon.shuffle.timeout";
 	public final static String PROP_CYCLON_CACHE_SIZE = "cyclon.cache.size";
-	public final static String PROP_CYCLON_ID_SPACE_SIZE = "cyclon.idspace.size";
 	public final static String PROP_CYCLON_BOOTSTRAP_NUM_PEERS = "cyclon.bootstrap.numpeers";
 	
 	protected final static int DEFAULT_CYCLON_MONITOR_ID = Integer.MAX_VALUE - 1;
@@ -32,7 +30,6 @@ public class CyclonConfiguration extends Configuration {
 	protected final static int DEFAULT_CYCLON_SHUFFLE_LENGTH = 5;
 	protected final static int DEFAULT_CYCLON_SHUFFLE_TIMEOUT = 5000;
 	protected final static int DEFAULT_CYCLON_CACHE_SIZE = 10;
-	protected final static String DEFAULT_CYCLON_IDSPACE_SIZE = "10000";
 	protected final static int DEFAULT_CYCLON_BOOTSTRAP_NUM_PEERS = 5;
 	
 	protected Address cyclonMonitorServerAddress = null;
@@ -46,7 +43,6 @@ public class CyclonConfiguration extends Configuration {
 	protected Option shufflePeriodOption;
 	protected Option shuffleTimeoutOption;
 	protected Option cacheSizeOption;
-	protected Option idSpaceSizeOption;
 	protected Option bootstrapRequestPeerCountOption;
 
 	protected PropertiesConfiguration cyclonConfig;
@@ -67,31 +63,27 @@ public class CyclonConfiguration extends Configuration {
 	protected void parseAdditionalOptions(String[] args) throws IOException {
 		
 		cyclonMonitorIdOption = new Option("monitorid", true, "Cyclon monitor-id");
-		cyclonMonitorIdOption.setArgName("id");
+		cyclonMonitorIdOption.setArgName(VAL_NUMBER);
 		options.addOption(cyclonMonitorIdOption);
 		
 		shuffleLengthOption = new Option("shufflelength", true, "the number of descriptors exchanged during a shuffle");
-		shuffleLengthOption.setArgName("shufflelength");
+		shuffleLengthOption.setArgName(VAL_NUMBER);
 		options.addOption(shuffleLengthOption);
 
 		shufflePeriodOption = new Option("shuffleperiod", true, "Gossiping round time: the number of milliseconds between two consecutive shuffles initiated by a peer");
-		shufflePeriodOption.setArgName("shuffleperiod");
+		shufflePeriodOption.setArgName(VAL_PERIOD_MILLISECS);
 		options.addOption(shufflePeriodOption);
 
 		shuffleTimeoutOption = new Option("shuffletimeout", true, "num. of milliseconds after which a node that does not respond to a shuffle request is considered dead");
-		shuffleTimeoutOption.setArgName("shuffletimeout");
+		shuffleTimeoutOption.setArgName(VAL_PERIOD_MILLISECS);
 		options.addOption(shuffleTimeoutOption);
 
-		cacheSizeOption = new Option("cachesize", true, "the size of the cache of each Cyclon node");
-		cacheSizeOption.setArgName("cachesize");
+		cacheSizeOption = new Option("cachesize", true, "the number of neighbour entries in the cache of each Cyclon node");
+		cacheSizeOption.setArgName(VAL_NUMBER);
 		options.addOption(cacheSizeOption);
 		
-		idSpaceSizeOption = new Option("idspace", true, "the size of the identifier space");
-		idSpaceSizeOption.setArgName("idspace");
-		options.addOption(idSpaceSizeOption);
-		
 		bootstrapRequestPeerCountOption = new Option("bootpeers", true, "the number of peers to request from Bootstrap server");
-		bootstrapRequestPeerCountOption.setArgName("bootpeers");
+		bootstrapRequestPeerCountOption.setArgName(VAL_NUMBER);
 		options.addOption(bootstrapRequestPeerCountOption);
 
 	}
@@ -134,11 +126,7 @@ public class CyclonConfiguration extends Configuration {
 			int cs = new Integer(line.getOptionValue(cacheSizeOption.getOpt()));
 			configuration.compositeConfig.setProperty(PROP_CYCLON_CACHE_SIZE, cs);
 		}
-		if (line.hasOption(idSpaceSizeOption.getOpt()))
-		{
-			int idss = new Integer(line.getOptionValue(idSpaceSizeOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CYCLON_ID_SPACE_SIZE, idss);
-		}
+
 		if (line.hasOption(bootstrapRequestPeerCountOption.getOpt()))
 		{
 			int bp = new Integer(line.getOptionValue(bootstrapRequestPeerCountOption.getOpt()));
@@ -185,14 +173,6 @@ public class CyclonConfiguration extends Configuration {
 		return configuration.compositeConfig.getInt(PROP_CYCLON_CACHE_SIZE, 
 				DEFAULT_CYCLON_CACHE_SIZE);
 	}	
-	
-	static public BigInteger getIdSpaceSize() {
-		cyclonInitialized();
-		String idSpaceSize = configuration.compositeConfig.getString(PROP_CYCLON_ID_SPACE_SIZE, 
-				DEFAULT_CYCLON_IDSPACE_SIZE);
-		return new BigInteger(idSpaceSize);
-	}	
-	
 	
 	static public int getBootstrapRequestPeerCount() {
 		cyclonInitialized();

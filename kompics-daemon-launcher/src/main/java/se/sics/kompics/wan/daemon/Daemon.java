@@ -109,8 +109,6 @@ public class Daemon extends ComponentDefinition {
 	private Positive<Network> net = positive(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
 	
-//	private Negative<MasterClientP> master = negative(MasterClientP.class);
-
 	private Component mavenLauncher;
 	private Component indexer;
 	private Component masterClient;
@@ -125,11 +123,10 @@ public class Daemon extends ComponentDefinition {
 
 	private Map<Integer, MavenLauncher.ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, MavenLauncher.ProcessWrapper>();
 
-//	private Component fd;
+	private boolean connectedToMaster = false;
 
 	public Daemon() {
 
-//		fd = create(FailureDetector.class);
 		mavenLauncher = create(MavenLauncher.class);
 		indexer = create(Indexer.class);
 		masterClient = create(MasterClient.class); 
@@ -178,6 +175,7 @@ public class Daemon extends ComponentDefinition {
 			
 			if (event.isSucceeded() == true) {
 				logger.info("Successful connection to master from {}", self);
+				connectedToMaster = true;
 			}
 			else
 			{
@@ -336,8 +334,6 @@ public class Daemon extends ComponentDefinition {
 	public Handler<TimerDaemonShutdown> handleTimerDaemonShutdown = new Handler<TimerDaemonShutdown>() {
 		public void handle(TimerDaemonShutdown event) {
 
-//			trigger(new IndexShutdown(), indexer.getPositive(Index.class));
-			
 			destroy(masterClient);
 			destroy(indexer);
 			destroy(mavenLauncher);

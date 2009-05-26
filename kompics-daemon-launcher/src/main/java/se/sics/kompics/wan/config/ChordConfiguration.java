@@ -53,15 +53,15 @@ public class ChordConfiguration extends Configuration {
 	@Override
 	protected void parseAdditionalOptions(String[] args) throws IOException {
 		chordMonitorIdOption = new Option("monitorid", true, "chord monitor-id");
-		chordMonitorIdOption.setArgName("id");
+		chordMonitorIdOption.setArgName(VAL_NUMBER);
 		options.addOption(chordMonitorIdOption);
 		
 		livePeriodOption = new Option("liveperiod", true, "failure detector live-period");
-		livePeriodOption.setArgName("liveperiod");
+		livePeriodOption.setArgName(VAL_PERIOD_MILLISECS);
 		options.addOption(livePeriodOption);
 		
 		suspectedPeriodOption = new Option("suspectedperiod", true, "failure detector suspected-period");
-		suspectedPeriodOption.setArgName("suspectedperiod");
+		suspectedPeriodOption.setArgName(VAL_PERIOD_MILLISECS);
 		options.addOption(suspectedPeriodOption);
 	}
 

@@ -67,23 +67,23 @@ public class MasterServerConfiguration extends Configuration {
 	protected void parseAdditionalOptions(String[] args) throws IOException {
 		
 		masterMonitorIdOption = new Option("monitorid", true, "Cyclon monitor-id");
-		masterMonitorIdOption.setArgName("id");
+		masterMonitorIdOption.setArgName(VAL_NUMBER);
 		options.addOption(masterMonitorIdOption);
 		
 		
-		masterConfigFileOption = new Option("masterprops", true, "Master properties file.");
-		masterConfigFileOption.setArgName("masterprops");
+		masterConfigFileOption = new Option("masterprops", true, "Full pathname for the master properties file 'master.properties'.");
+		masterConfigFileOption.setArgName("filename");
 		options.addOption(masterConfigFileOption);
 		
 		
 		scenarioClassfileOption = new Option("scenarioclassfile", true, "File containing SimulationScenario class (experiment to be executed).");
-		scenarioClassfileOption.setArgName("scenarioclassfile");
+		scenarioClassfileOption.setArgName("filename");
 		options.addOption(scenarioClassfileOption);
 		
 		hostsFileOption = new Option("hostsfile", true,
 				"Pathname to file containing a list of comma separated kompics "
 						+ "addresses (format is host:port:id)");
-		hostsFileOption.setArgName("hostsfile");
+		hostsFileOption.setArgName("filename");
 		options.addOption(hostsFileOption);
 	}
 

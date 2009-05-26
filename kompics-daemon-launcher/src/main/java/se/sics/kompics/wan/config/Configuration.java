@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -60,9 +61,12 @@ public abstract class Configuration {
 	public final static String PROP_MONITOR_RETRY_PERIOD = "client.retry.period";
 	public final static String PROP_MONITOR_RETRY_COUNT = "client.retry.count";
 
-	public final static String PROP_NUM_PEERS = "number.peers";
 	public final static String PROP_NUM_WORKERS = "number.workers";
 
+	public final static String PROP_PEER_IDSPACE_SIZE = "peer.idspace.size";
+//	public final static String PROP_PEER_IDSPACE_START = "peer.idspace.start";
+//	public final static String PROP_PEER_IDSPACE_END = "peer.idspace.end";
+	public final static String PROP_PEER_NUM_PEERS = "number.peers";	
 	/*
 	 * Non-publicly accessible
 	 */
@@ -84,8 +88,6 @@ public abstract class Configuration {
 	protected static final int DEFAULT_RETRY_COUNT = 3;
 
 	protected static final int DEFAULT_NUM_WORKERS = 1;
-	protected static final int DEFAULT_NUM_PEERS = 1;
-
 	protected static final int DEFAULT_NET_PORT = 20000;
 
 	protected static final int DEFAULT_WEB_PORT = 8080;
@@ -96,6 +98,18 @@ public abstract class Configuration {
 	protected static final int DEFAULT_CONTROLLER_REQUEST_TIMEOUT_MS = 10000;
 	protected static final String DEFAULT_CONTROLLER_IP = "localhost";
 
+	protected final static String DEFAULT_PEER_IDSPACE_SIZE = "10000";
+
+	protected static final int DEFAULT_PEER_NUM_PEERS = 1;
+	
+	public final static String OPT_PEERS = "peers";
+	public final static String OPT_IDSPACE = "idspace";
+	
+	protected final static String VAL_ADDRESS = "address";
+	protected final static String VAL_NUMBER = "number";
+	protected final static String VAL_PERIOD_SECS = "seconds";
+	protected final static String VAL_PERIOD_MILLISECS = "milliseconds";
+	
 	/*
 	 * Cache instances of these variables from Apache Configuration objects.
 	 */
@@ -137,6 +151,7 @@ public abstract class Configuration {
 	protected Options options = new Options();
 
 	protected CommandLine line;
+
 	
 	/**
 	 * If configuration object already created, it returns the existing
@@ -210,23 +225,23 @@ public abstract class Configuration {
 		// Users can override the default options from the command line
 		Option ipOption = new Option("ip", true,
 				"IP address (or hostname) for Kompics instance to listen on");
-		ipOption.setArgName("ip");
+		ipOption.setArgName("address");
 		options.addOption(ipOption);
 
 		Option portOption = new Option("port", true, "Port for Kompics instance to listen on");
-		portOption.setArgName("port");
+		portOption.setArgName(VAL_NUMBER);
 		options.addOption(portOption);
 
 		Option bootstrapIpOption = new Option("bIp", true, "Bootstrap server ip address");
-		bootstrapIpOption.setArgName("address");
+		bootstrapIpOption.setArgName(VAL_ADDRESS);
 		options.addOption(bootstrapIpOption);
 
 		Option bootstrapPortOption = new Option("bPort", true, "Bootstrap server bootstrapPort");
-		bootstrapPortOption.setArgName("number");
+		bootstrapPortOption.setArgName(VAL_NUMBER);
 		options.addOption(bootstrapPortOption);
 
 		Option numWorkersOption = new Option("workers", true, "Number of Workers to create");
-		numWorkersOption.setArgName("number");
+		numWorkersOption.setArgName(VAL_NUMBER);
 		options.addOption(numWorkersOption);
 
 		Option monitorIpOption = new Option("mIp", true, "Peer Monitor server ip address");
@@ -234,30 +249,34 @@ public abstract class Configuration {
 		options.addOption(monitorIpOption);
 
 		Option monitorPortOption = new Option("mPort", true, "Peer Monitor port");
-		monitorPortOption.setArgName("number");
+		monitorPortOption.setArgName(VAL_ADDRESS);
 		options.addOption(monitorPortOption);
 
 		Option monitorIdOption = new Option("mId", true, "Peer Monitor id");
-		monitorIdOption.setArgName("id");
+		monitorIdOption.setArgName(VAL_NUMBER);
 		options.addOption(monitorIdOption);
 
 		Option help = new Option("help", false, "Help message printed");
 		options.addOption(help);
 
-		Option numPeersOption = new Option("peers", true, "Number of peers to simulate.");
-		numPeersOption.setArgName("number");
+		Option numPeersOption = new Option(OPT_PEERS, true, "Number of peers to simulate.");
+		numPeersOption.setArgName(VAL_NUMBER);
 		options.addOption(numPeersOption);
 
 		Option monitorRefreshOption = new Option("mRefreshPeriod", true,
 				"Client Monitor refresh Period");
-		monitorRefreshOption.setArgName("seconds");
+		monitorRefreshOption.setArgName(VAL_PERIOD_SECS);
 		options.addOption(monitorRefreshOption);
 
 		Option bootstrapRefreshOption = new Option("bRefreshPeriod", true,
 				"Bootstrap refresh Period");
-		bootstrapRefreshOption.setArgName("seconds");
+		bootstrapRefreshOption.setArgName(VAL_PERIOD_SECS);
 		options.addOption(bootstrapRefreshOption);
-
+		
+		Option idSpaceSizeOption = new Option(OPT_IDSPACE, true, "the size of the identifier space");
+		idSpaceSizeOption.setArgName(VAL_NUMBER);
+		options.addOption(idSpaceSizeOption);
+		
 		// implemented by subclass
 		parseAdditionalOptions(args);
 
@@ -300,7 +319,7 @@ public abstract class Configuration {
 
 		if (line.hasOption(numPeersOption.getOpt())) {
 			int numPeers = new Integer(line.getOptionValue(numPeersOption.getOpt()));
-			compositeConfig.setProperty(PROP_NUM_PEERS, numPeers);
+			compositeConfig.setProperty(PROP_PEER_NUM_PEERS, numPeers);
 		}
 
 		if (line.hasOption(numWorkersOption.getOpt())) {
@@ -323,6 +342,12 @@ public abstract class Configuration {
 			compositeConfig.setProperty(PROP_MONITOR_REFRESH_PERIOD, monitorRefreshPeriod);
 		}
 
+		if (line.hasOption(idSpaceSizeOption.getOpt()))
+		{
+			int idss = new Integer(line.getOptionValue(idSpaceSizeOption.getOpt()));
+			compositeConfig.setProperty(Configuration.PROP_PEER_IDSPACE_SIZE, idss);
+		}
+		
 	}
 
 	abstract protected void parseAdditionalOptions(String[] args) throws IOException;
@@ -445,11 +470,6 @@ public abstract class Configuration {
 				.getInt(PROP_MONITOR_REFRESH_PERIOD, DEFAULT_REFRESH_PERIOD), configuration.webPort);
 	}
 
-	public static int getNumPeers() {
-		baseInitialized();
-		return configuration.compositeConfig.getInt(PROP_NUM_PEERS, DEFAULT_NUM_PEERS);
-	}
-
 	public static InetAddress getIp() throws LocalIPAddressNotFound {
 		baseInitialized();
 		if (configuration.ip == null) {
@@ -504,6 +524,18 @@ public abstract class Configuration {
 		return configuration.peer0Address;
 	}
 
+	public static BigInteger getIdSpaceSize() {
+		baseInitialized();
+		String idSpaceSize = configuration.compositeConfig.getString(Configuration.PROP_PEER_IDSPACE_SIZE, 
+				Configuration.DEFAULT_PEER_IDSPACE_SIZE);
+		return new BigInteger(idSpaceSize);
+	}
+
+	public static int getNumPeers() {
+		baseInitialized();
+		return configuration.compositeConfig.getInt(PROP_PEER_NUM_PEERS, DEFAULT_PEER_NUM_PEERS);
+	}
+	
 	protected static void baseInitialized() {
 		if (configuration == null) {
 			throw new IllegalStateException(
