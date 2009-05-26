@@ -143,6 +143,8 @@ public final class CyclonSimulatorWan extends ComponentDefinition {
 		public void handle(CyclonPeerJoin event) {
 			BigInteger id = event.getCyclonId();
 
+			String host = event.getHost();
+			
 			if (isEventForThisPeer(id) == false) {
 				return;
 			}
