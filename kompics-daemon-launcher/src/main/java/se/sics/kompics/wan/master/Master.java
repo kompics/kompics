@@ -1,6 +1,5 @@
 package se.sics.kompics.wan.master;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,6 +15,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
@@ -34,7 +34,6 @@ import se.sics.kompics.wan.daemon.JobLoadRequestMsg;
 import se.sics.kompics.wan.daemon.JobLoadResponseMsg;
 import se.sics.kompics.wan.daemon.JobsFoundMsg;
 import se.sics.kompics.wan.job.Job;
-import se.sics.kompics.wan.util.HostsParserException;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.WebResponse;
@@ -53,8 +52,8 @@ public class Master extends ComponentDefinition {
 	Positive<Network> net = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 	Negative<Web> web = negative(Web.class);
-
-	Negative<MasterCommands> masterCommands = negative(MasterCommands.class);
+	
+	private Component userInput;
 
 	private HashSet<UUID> outstandingTimeouts;
 		
@@ -91,7 +90,8 @@ public class Master extends ComponentDefinition {
 		this.loadedJobs = new HashMap<Integer, TreeSet<Integer>>();
 		this.jobs = new HashMap<Integer,Job>();
 		this.cacheEpoch = 1L;
-
+		this.userInput = create(UserInput.class);
+		
 		outstandingTimeouts = new HashSet<UUID>();
 
 		subscribe(handleInit, control);
@@ -106,10 +106,10 @@ public class Master extends ComponentDefinition {
 
 		subscribe(handleCacheEvictDaemon, timer);
 
-		subscribe(handlePrintConnectedDameons, masterCommands);
-		subscribe(handlePrintLoadedJobs, masterCommands);
-		subscribe(handlePrintDaemonsWithLoadedJob, masterCommands);
-		subscribe(handleInstallJobOnHosts, masterCommands);
+		subscribe(handlePrintConnectedDameons, userInput.getPositive(MasterCommands.class));
+		subscribe(handlePrintLoadedJobs, userInput.getPositive(MasterCommands.class));
+		subscribe(handlePrintDaemonsWithLoadedJob, userInput.getPositive(MasterCommands.class));
+		subscribe(handleInstallJobOnHosts, userInput.getPositive(MasterCommands.class));
 	}
 
 	private Handler<MasterInit> handleInit = new Handler<MasterInit>() {
@@ -132,96 +132,10 @@ public class Master extends ComponentDefinition {
 
 	private Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
-
-			UserInput userInput = new UserInput(positive(MasterCommands.class));
-			userInput.start();
+			trigger(new Start(), userInput.getControl());
 		}
 	};
 
-	class UserInput extends Thread {
-		private final Scanner scanner;
-		private final Positive<MasterCommands> master;
-
-		UserInput(Positive<MasterCommands> master) {
-			scanner = new Scanner(System.in);
-			this.master = master;
-		}
-
-		public void run() {
-			boolean finishedInput = false;
-			while (finishedInput == false) {
-				
-				TreeSet<Address> hosts = MasterConfiguration.getHosts();
-				switch (selectOption()) {
-				case 1:
-					trigger(new PrintConnectedDameons(), master);
-					break;
-				case 2:
-					System.out.print("\tEnter job id: ");
-					int jobId = scanner.nextInt();
-					trigger(new PrintDaemonsWithLoadedJob(jobId), master);
-					break;
-				case 3:
-					System.out.print("\tEnter daemon id: ");
-					int daemonId = scanner.nextInt();
-					trigger(new PrintLoadedJobs(daemonId), master);
-					break;
-				case 5: // XXX 
-					hosts = getHosts();
-					// deliberate skip of 'break' here.
-				case 4:
-					System.out.print("\tEnter groupId: ");
-					String groupId = scanner.next();
-					System.out.print("\tEnter artifactId: ");
-					String artifactId = scanner.next();
-					System.out.print("\tEnter version: ");
-					String version = scanner.next();
-					System.out.print("\tEnter mainClass: ");
-					String mainClass = scanner.next();
-//					System.out.print("\tEnter any optional args (return for none): ");
-//					String allArgs = scanner.next();
-//					String[] args = allArgs.split(" ");
-					String[] args = {};
-					trigger(new InstallJobOnHosts(groupId, artifactId, version, mainClass,
-									Arrays.asList(args), hosts), master);
-					break;
-				case 0:
-					finishedInput = true;
-					System.out.println("\tGoodbye.");
-					System.out.println("\tExiting.....");
-					System.out.println();
-					System.exit(0);
-					break;
-				default:
-					System.out.println("\tInvalid choice.");
-					break;
-				}
-			}
-		}
-		
-		private TreeSet<Address> getHosts()
-		{
-			int first, last;
-			System.out.println("Enter the start of the range of hosts to use:");
-			first = scanner.nextInt();
-			System.out.println("Enter the end of the range of hosts to use:");
-			last = scanner.nextInt();
-			return MasterConfiguration.getHosts(first, last);
-		}
-
-		private int selectOption() {
-			System.out.println();
-			System.out.println("Enter a number to select an option from below:");
-			System.out.println("\t1) list connected daemons.");
-			System.out.println("\t2) list all daemons with specified loaded job.");
-			System.out.println("\t3) list loaded jobs for a specified daemon.");
-			System.out.println("\t4) load a job to all hosts.");
-			System.out.println("\t5) load a job to selected hosts.");
-			System.out.println("\t0) exit program");
-			System.out.print("Enter your choice: ");
-			return scanner.nextInt();
-		}
-	};
 
 	private Handler<PrintConnectedDameons> handlePrintConnectedDameons = new Handler<PrintConnectedDameons>() {
 		public void handle(PrintConnectedDameons event) {

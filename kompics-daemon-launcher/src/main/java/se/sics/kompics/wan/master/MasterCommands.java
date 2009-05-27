@@ -12,9 +12,9 @@ import se.sics.kompics.PortType;
 public class MasterCommands extends PortType {
 
 	{
-		negative(PrintConnectedDameons.class);
-		negative(PrintDaemonsWithLoadedJob.class);
-		negative(PrintLoadedJobs.class);
-		negative(InstallJobOnHosts.class);
+		positive(PrintConnectedDameons.class);
+		positive(PrintDaemonsWithLoadedJob.class);
+		positive(PrintLoadedJobs.class);
+		positive(InstallJobOnHosts.class);
 	}
 }
