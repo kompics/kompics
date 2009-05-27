@@ -16,9 +16,10 @@ import se.sics.kompics.network.mina.MinaNetworkInit;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.wan.config.Configuration;
-import se.sics.kompics.wan.config.MasterServerConfiguration;
+import se.sics.kompics.wan.config.MasterConfiguration;
 import se.sics.kompics.wan.master.Master;
 import se.sics.kompics.wan.master.MasterInit;
+import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 
 
 public class MasterMain extends ComponentDefinition {
@@ -27,13 +28,9 @@ public class MasterMain extends ComponentDefinition {
 	private Component network;
 	private Component master;
 
-	private Address self;
-	
 	private static final Logger logger = LoggerFactory
 	.getLogger(MasterMain.class);
 	
-	private static MasterServerConfiguration config;
-
 	/**
 	 * The main method.
 	 * 
@@ -44,10 +41,12 @@ public class MasterMain extends ComponentDefinition {
 	public static void main(String[] args) {
 		
 		try {
-			config = (MasterServerConfiguration) Configuration.init(args, MasterServerConfiguration.class);
+			Configuration.init(args, MasterConfiguration.class);
 			Kompics.createAndStart(MasterMain.class, 2);			
 		} catch (ConfigurationException e) {
 			e.printStackTrace();
+			logger.error(e.getMessage());
+			System.exit(-1);
 		}
 		
 	}
@@ -68,10 +67,11 @@ public class MasterMain extends ComponentDefinition {
 		subscribe(handleFault, master.getControl());
 
 		MasterInit init = new 
-			MasterInit(config.getBootConfiguration(), config.getMonitorConfiguration());
+			MasterInit(MasterConfiguration.getBootConfiguration(), 
+					MasterConfiguration.getMonitorConfiguration());
 		
 		trigger(init, master.getControl());
-		trigger(new MinaNetworkInit(self), network.getControl());
+		trigger(new MinaNetworkInit(Configuration.getPeer0Address()), network.getControl());
 		
 		connect(master.getNegative(Network.class), network
 				.getPositive(Network.class));

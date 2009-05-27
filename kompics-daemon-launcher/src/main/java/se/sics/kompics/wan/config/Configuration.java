@@ -39,34 +39,34 @@ import se.sics.kompics.web.jetty.JettyWebServerInit;
 public abstract class Configuration {
 	private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
 
-	public final static String BOOTSTRAP_CONFIG_FILE = "config/bootstrap.properties";
-	public final static String MONITOR_CONFIG_FILE = "config/monitor.properties";
+	public static final String BOOTSTRAP_CONFIG_FILE = "config/bootstrap.properties";
+	public static final String MONITOR_CONFIG_FILE = "config/monitor.properties";
+	public static final String EXPERIMENT_CONFIG_FILE = "config/experiment.properties";
 
-	public final static String PROP_IP = "ip";
-	public final static String PROP_PORT = "port";
-	public final static String PROP_ID = "id";
+	public static final String PROP_IP = "ip";
+	public static final String PROP_PORT = "port";
+	public static final String PROP_ID = "id";
 
-	public final static String PROP_BOOTSTRAP_PORT = "bootstrap.server.port";
-	public final static String PROP_BOOTSTRAP_IP = "bootstrap.server.ip";
-	public final static String PROP_BOOTSTRAP_EVICT_AFTER = "bootstrap.evict.after";
-	public final static String PROP_BOOTSTRAP_REFRESH_PERIOD = "client.refresh.period";
-	public final static String PROP_BOOTSTRAP_RETRY_PERIOD = "client.retry.period";
-	public final static String PROP_BOOTSTRAP_RETRY_COUNT = "client.retry.count";
+	public static final String PROP_BOOTSTRAP_PORT = "bootstrap.server.port";
+	public static final String PROP_BOOTSTRAP_IP = "bootstrap.server.ip";
+	public static final String PROP_BOOTSTRAP_EVICT_AFTER = "bootstrap.evict.after";
+	public static final String PROP_BOOTSTRAP_REFRESH_PERIOD = "client.refresh.period";
+	public static final String PROP_BOOTSTRAP_RETRY_PERIOD = "client.retry.period";
+	public static final String PROP_BOOTSTRAP_RETRY_COUNT = "client.retry.count";
 
-	public final static String PROP_MONITOR_IP = "monitor.server.ip";
-	public final static String PROP_MONITOR_PORT = "monitor.server.port";
-	public final static String PROP_MONITOR_ID = "monitor.server.id";
-	public final static String PROP_MONITOR_EVICT_AFTER = "monitor.evict.after";
-	public final static String PROP_MONITOR_REFRESH_PERIOD = "client.refresh.period";
-	public final static String PROP_MONITOR_RETRY_PERIOD = "client.retry.period";
-	public final static String PROP_MONITOR_RETRY_COUNT = "client.retry.count";
+	public static final String PROP_MONITOR_IP = "monitor.server.ip";
+	public static final String PROP_MONITOR_PORT = "monitor.server.port";
+	public static final String PROP_MONITOR_ID = "monitor.server.id";
+	public static final String PROP_MONITOR_EVICT_AFTER = "monitor.evict.after";
+	public static final String PROP_MONITOR_REFRESH_PERIOD = "client.refresh.period";
+	public static final String PROP_MONITOR_RETRY_PERIOD = "client.retry.period";
+	public static final String PROP_MONITOR_RETRY_COUNT = "client.retry.count";
 
-	public final static String PROP_NUM_WORKERS = "number.workers";
-
-	public final static String PROP_PEER_IDSPACE_SIZE = "peer.idspace.size";
-//	public final static String PROP_PEER_IDSPACE_START = "peer.idspace.start";
-//	public final static String PROP_PEER_IDSPACE_END = "peer.idspace.end";
-	public final static String PROP_PEER_NUM_PEERS = "number.peers";	
+	public static final String PROP_EXPERIMENT_IDSPACE_SIZE = "idspace.size";
+	public static final String PROP_EXPERIMENT_NUM_PEERS = "peers.number";
+	public static final String PROP_EXPERIMENT_REPO_ID = "repo.id";
+	public static final String PROP_EXPERIMENT_REPO_URL = "repo.url";
+	public static final String PROP_EXPERIMENT_NUM_WORKERS = "number.workers";	
 	/*
 	 * Non-publicly accessible
 	 */
@@ -87,7 +87,6 @@ public abstract class Configuration {
 	protected static final int DEFAULT_RETRY_PERIOD = 500;
 	protected static final int DEFAULT_RETRY_COUNT = 3;
 
-	protected static final int DEFAULT_NUM_WORKERS = 1;
 	protected static final int DEFAULT_NET_PORT = 20000;
 
 	protected static final int DEFAULT_WEB_PORT = 8080;
@@ -98,21 +97,22 @@ public abstract class Configuration {
 	protected static final int DEFAULT_CONTROLLER_REQUEST_TIMEOUT_MS = 10000;
 	protected static final String DEFAULT_CONTROLLER_IP = "localhost";
 
-	protected final static String DEFAULT_PEER_IDSPACE_SIZE = "10000";
+	protected static final String DEFAULT_EXPERIMENT_IDSPACE_SIZE = "10000";
+	protected static final int DEFAULT_EXPERIMENT_NUM_PEERS = 1;
+	protected static final String DEFAULT_EXPERIMENT_REPO_ID = "";
+	protected static final String DEFAULT_EXPERIMENT_REPO_URL = "";
+	protected static final int DEFAULT_EXPERIMENT_NUM_WORKERS = 1;
+	
+	public static final String OPT_PEERS = "peers";
+	public static final String OPT_IDSPACE = "idspace";
+	
+	protected static final String VAL_ADDRESS = "address";
+	protected static final String VAL_NUMBER = "number";
+	protected static final String VAL_PERIOD_SECS = "seconds";
+	protected static final String VAL_PERIOD_MILLISECS = "milliseconds";
+	
 
-	protected static final int DEFAULT_PEER_NUM_PEERS = 1;
 	
-	public final static String OPT_PEERS = "peers";
-	public final static String OPT_IDSPACE = "idspace";
-	
-	protected final static String VAL_ADDRESS = "address";
-	protected final static String VAL_NUMBER = "number";
-	protected final static String VAL_PERIOD_SECS = "seconds";
-	protected final static String VAL_PERIOD_MILLISECS = "milliseconds";
-	
-	/*
-	 * Cache instances of these variables from Apache Configuration objects.
-	 */
 	protected InetAddress ip = null;
 
 	protected int webPort = DEFAULT_WEB_PORT;
@@ -142,6 +142,7 @@ public abstract class Configuration {
 
 	protected PropertiesConfiguration bootstrapConfig;
 	protected PropertiesConfiguration monitorConfig;
+	protected PropertiesConfiguration experimentConfig;
 
 	protected CompositeConfiguration compositeConfig = new CompositeConfiguration();
 
@@ -163,7 +164,7 @@ public abstract class Configuration {
 	 * @return
 	 * @throws IOException
 	 */
-	public final static synchronized Configuration init(String[] args,
+	public static final synchronized Configuration init(String[] args,
 			Class<? extends Configuration>... classname) throws ConfigurationException {
 
 		// if (configuration != null) {
@@ -221,6 +222,15 @@ public abstract class Configuration {
 			logger.warn("Monitor configuration file not found, using default values: "
 					+ MONITOR_CONFIG_FILE);
 		}
+		
+		try {
+			experimentConfig = new PropertiesConfiguration(EXPERIMENT_CONFIG_FILE);
+			experimentConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
+			compositeConfig.addConfiguration(experimentConfig);
+		} catch (ConfigurationException e) {
+			logger.warn("Experiment configuration file not found, using default values: "
+					+ EXPERIMENT_CONFIG_FILE);
+		}
 
 		// Users can override the default options from the command line
 		Option ipOption = new Option("ip", true,
@@ -276,6 +286,15 @@ public abstract class Configuration {
 		Option idSpaceSizeOption = new Option(OPT_IDSPACE, true, "the size of the identifier space");
 		idSpaceSizeOption.setArgName(VAL_NUMBER);
 		options.addOption(idSpaceSizeOption);
+
+		Option repoIdOption = new Option("repoId", true, "the maven repository id (default: sics-snapshot)");
+		repoIdOption.setArgName("id");
+		options.addOption(repoIdOption);
+		
+		Option repoUrlOption = new Option("repoUrl", true, "the maven repository url (default: http://kompics.sics.se/maven/snapshotrepository)");
+		repoUrlOption.setArgName("url");
+		options.addOption(repoUrlOption);
+
 		
 		// implemented by subclass
 		parseAdditionalOptions(args);
@@ -319,12 +338,12 @@ public abstract class Configuration {
 
 		if (line.hasOption(numPeersOption.getOpt())) {
 			int numPeers = new Integer(line.getOptionValue(numPeersOption.getOpt()));
-			compositeConfig.setProperty(PROP_PEER_NUM_PEERS, numPeers);
+			compositeConfig.setProperty(PROP_EXPERIMENT_NUM_PEERS, numPeers);
 		}
 
 		if (line.hasOption(numWorkersOption.getOpt())) {
 			int numWorkers = new Integer(line.getOptionValue(numWorkersOption.getOpt()));
-			compositeConfig.setProperty(PROP_NUM_WORKERS, numWorkers);
+			compositeConfig.setProperty(PROP_EXPERIMENT_NUM_WORKERS, numWorkers);
 		}
 
 		if (line.hasOption(monitorIpOption.getOpt())) {
@@ -345,9 +364,41 @@ public abstract class Configuration {
 		if (line.hasOption(idSpaceSizeOption.getOpt()))
 		{
 			int idss = new Integer(line.getOptionValue(idSpaceSizeOption.getOpt()));
-			compositeConfig.setProperty(Configuration.PROP_PEER_IDSPACE_SIZE, idss);
+			compositeConfig.setProperty(Configuration.PROP_EXPERIMENT_IDSPACE_SIZE, idss);
+		}
+
+		if (line.hasOption(repoIdOption.getOpt()))
+		{
+			String repoId = new String(line.getOptionValue(repoIdOption.getOpt()));
+			compositeConfig.setProperty(PROP_EXPERIMENT_REPO_ID, repoId);
 		}
 		
+		if (line.hasOption(repoUrlOption.getOpt()))
+		{
+			String repoUrl = new String(line.getOptionValue(repoUrlOption.getOpt()));
+			compositeConfig.setProperty(PROP_EXPERIMENT_REPO_URL, repoUrl);
+		}
+		
+
+		ip = InetAddress.getByName(compositeConfig.getString(
+						PROP_IP, DEFAULT_IP));
+
+		webAddress = "http://" + compositeConfig.getString(
+				PROP_IP, DEFAULT_IP) + ":"
+		+ webPort + "/";
+
+		bootConfiguration = setupBootstrapConfig();
+
+		monitorConfiguration = setupMonitorConfig();
+		
+		homepage = "<h2>Welcome to the Kompics Peer-to-Peer Framework!</h2>"
+			+ "<a href=\"" + webAddress
+			+ bootConfiguration.getBootstrapServerAddress().getId() + "/"
+			+ "\">Bootstrap Server</a><br>" + "<a href=\"" + webAddress
+			+ monitorConfiguration.getMonitorServerAddress().getId() + "/"
+			+ "\">Monitor Server</a><br>";
+
+
 	}
 
 	abstract protected void parseAdditionalOptions(String[] args) throws IOException;
@@ -368,6 +419,7 @@ public abstract class Configuration {
 		formatter.printHelp(writer, HelpFormatter.DEFAULT_WIDTH, applicationName, "", options,
 				HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, "");
 
+		// XXX add the default values for parameters
 		writer.close();
 
 		displayHelper(message, stringWriter.getBuffer().toString());
@@ -381,14 +433,8 @@ public abstract class Configuration {
 		logger.info(usage);
 	}
 
-	public static String getHomepage() throws LocalIPAddressNotFound {
+	public static String getHomepage() {
 		baseInitialized();
-		configuration.homepage = "<h2>Welcome to the Kompics Peer-to-Peer Framework!</h2>"
-				+ "<a href=\"" + getWebAddress()
-				+ getBootConfiguration().getBootstrapServerAddress().getId() + "/"
-				+ "\">Bootstrap Server</a><br>" + "<a href=\"" + getWebAddress()
-				+ getMonitorConfiguration().getMonitorServerAddress().getId() + "/"
-				+ "\">Monitor Server</a><br>";
 		return configuration.homepage;
 	}
 
@@ -397,7 +443,7 @@ public abstract class Configuration {
 	 * 
 	 * @return id of monitor server for concrete overlay
 	 */
-	protected abstract Address getMonitorServerAddress() throws LocalIPAddressNotFound;
+	protected abstract Address getMonitorServerAddress();
 
 	/**
 	 * Implemented by monitor program for concrete overlay
@@ -408,79 +454,50 @@ public abstract class Configuration {
 
 	public static BootstrapConfiguration getBootConfiguration() {
 		baseInitialized();
-		if (configuration.bootConfiguration != null) {
-			return configuration.bootConfiguration;
-		}
-		configuration.bootConfiguration = setupBootstrapConfig();
 		return configuration.bootConfiguration;
 	}
 
-	private static BootstrapConfiguration setupBootstrapConfig() {
-		baseInitialized();
-		String bootstrapHost = configuration.compositeConfig.getString(PROP_BOOTSTRAP_IP,
+	private BootstrapConfiguration setupBootstrapConfig() throws UnknownHostException {
+		String bootstrapHost = compositeConfig.getString(PROP_BOOTSTRAP_IP,
 				DEFAULT_BOOTSTRAP_IP);
-		InetAddress bootstrapIP = null;
-		try {
-			bootstrapIP = InetAddress.getByName(bootstrapHost);
-		} catch (UnknownHostException e) {
-			logger.warn(e.getMessage());
-		}
+		InetAddress bootstrapIP = InetAddress.getByName(bootstrapHost);
 
-		int bootstrapPort = configuration.compositeConfig.getInt(PROP_BOOTSTRAP_PORT,
+		int bootstrapPort = compositeConfig.getInt(PROP_BOOTSTRAP_PORT,
 				DEFAULT_BOOTSTRAP_PORT);
 
 		Address bootstrapAddress = new Address(bootstrapIP, bootstrapPort,
-				configuration.bootstrapId);
-		return new BootstrapConfiguration(bootstrapAddress, configuration.compositeConfig.getInt(
+				bootstrapId);
+		return new BootstrapConfiguration(bootstrapAddress, compositeConfig.getInt(
 				PROP_BOOTSTRAP_EVICT_AFTER, DEFAULT_EVICT_AFTER_SECS),
-				configuration.compositeConfig.getInt(PROP_BOOTSTRAP_RETRY_PERIOD,
-						DEFAULT_RETRY_PERIOD), configuration.compositeConfig.getInt(
+				compositeConfig.getInt(PROP_BOOTSTRAP_RETRY_PERIOD,
+						DEFAULT_RETRY_PERIOD), compositeConfig.getInt(
 						PROP_BOOTSTRAP_RETRY_COUNT, DEFAULT_RETRY_COUNT),
-				configuration.compositeConfig.getInt(PROP_BOOTSTRAP_REFRESH_PERIOD,
-						DEFAULT_REFRESH_PERIOD), configuration.webPort);
+				compositeConfig.getInt(PROP_BOOTSTRAP_REFRESH_PERIOD,
+						DEFAULT_REFRESH_PERIOD), webPort);
 	}
 
 	public static P2pMonitorConfiguration getMonitorConfiguration() {
 		baseInitialized();
-		if (configuration.monitorConfiguration != null) {
-			return configuration.monitorConfiguration;
-		}
-		configuration.monitorConfiguration = setupMonitorConfig();
 		return configuration.monitorConfiguration;
 	}
 
-	private static P2pMonitorConfiguration setupMonitorConfig() {
-		baseInitialized();
-		String monitorHost = configuration.compositeConfig.getString(PROP_MONITOR_IP,
+	private P2pMonitorConfiguration setupMonitorConfig() throws UnknownHostException {
+		String monitorHost = compositeConfig.getString(PROP_MONITOR_IP,
 				DEFAULT_MONITOR_IP);
-		InetAddress monitorIP = null;
-		try {
-			monitorIP = InetAddress.getByName(monitorHost);
-		} catch (UnknownHostException e) {
-			logger.warn(e.getMessage());
-		}
-
-		int monitorPort = configuration.compositeConfig.getInt(PROP_MONITOR_PORT,
+		InetAddress monitorIP = InetAddress.getByName(monitorHost);
+		
+		int monitorPort = compositeConfig.getInt(PROP_MONITOR_PORT,
 				DEFAULT_MONITOR_PORT);
-		int monitorId = configuration.compositeConfig.getInt(PROP_MONITOR_ID, DEFAULT_MONITOR_ID);
+		int monitorId = compositeConfig.getInt(PROP_MONITOR_ID, DEFAULT_MONITOR_ID);
 
 		Address monitorAddress = new Address(monitorIP, monitorPort, monitorId);
-		return new P2pMonitorConfiguration(monitorAddress, configuration.compositeConfig.getInt(
-				PROP_MONITOR_EVICT_AFTER, DEFAULT_EVICT_AFTER_SECS), configuration.compositeConfig
-				.getInt(PROP_MONITOR_REFRESH_PERIOD, DEFAULT_REFRESH_PERIOD), configuration.webPort);
+		return new P2pMonitorConfiguration(monitorAddress, compositeConfig.getInt(
+				PROP_MONITOR_EVICT_AFTER, DEFAULT_EVICT_AFTER_SECS), compositeConfig
+				.getInt(PROP_MONITOR_REFRESH_PERIOD, DEFAULT_REFRESH_PERIOD), webPort);
 	}
 
-	public static InetAddress getIp() throws LocalIPAddressNotFound {
+	public static InetAddress getIp() {
 		baseInitialized();
-		if (configuration.ip == null) {
-			try {
-				configuration.ip = InetAddress.getByName(configuration.compositeConfig.getString(
-						PROP_IP, DEFAULT_IP));
-			} catch (UnknownHostException e) {
-				throw new LocalIPAddressNotFound("Couldn't get IP address for local host: "
-						+ configuration.compositeConfig.getString(PROP_IP, DEFAULT_IP));
-			}
-		}
 		return configuration.ip;
 	}
 
@@ -496,8 +513,6 @@ public abstract class Configuration {
 
 	public static String getWebAddress() throws LocalIPAddressNotFound {
 		baseInitialized();
-		configuration.webAddress = "http://" + getIp().getHostAddress() + ":"
-				+ configuration.webPort + "/";
 		return configuration.webAddress;
 	}
 
@@ -516,7 +531,7 @@ public abstract class Configuration {
 		return configuration.webPort;
 	}
 
-	public static Address getPeer0Address() throws LocalIPAddressNotFound {
+	public static Address getPeer0Address() {
 		baseInitialized();
 		if (configuration.peer0Address == null) {
 			configuration.peer0Address = new Address(getIp(), getPort(), getId());
@@ -526,14 +541,26 @@ public abstract class Configuration {
 
 	public static BigInteger getIdSpaceSize() {
 		baseInitialized();
-		String idSpaceSize = configuration.compositeConfig.getString(Configuration.PROP_PEER_IDSPACE_SIZE, 
-				Configuration.DEFAULT_PEER_IDSPACE_SIZE);
+		String idSpaceSize = configuration.compositeConfig.getString(Configuration.PROP_EXPERIMENT_IDSPACE_SIZE, 
+				Configuration.DEFAULT_EXPERIMENT_IDSPACE_SIZE);
 		return new BigInteger(idSpaceSize);
 	}
 
 	public static int getNumPeers() {
 		baseInitialized();
-		return configuration.compositeConfig.getInt(PROP_PEER_NUM_PEERS, DEFAULT_PEER_NUM_PEERS);
+		return configuration.compositeConfig.getInt(PROP_EXPERIMENT_NUM_PEERS, DEFAULT_EXPERIMENT_NUM_PEERS);
+	}
+	
+	public static String getDefaultRepoId() {
+		baseInitialized();
+		return configuration.compositeConfig.getString(PROP_EXPERIMENT_REPO_ID, 
+				DEFAULT_EXPERIMENT_REPO_ID);
+	}
+	
+	public static String getDefaultRepoUrl() {
+		baseInitialized();
+		return configuration.compositeConfig.getString(PROP_EXPERIMENT_REPO_URL, 
+				DEFAULT_EXPERIMENT_REPO_URL);
 	}
 	
 	protected static void baseInitialized() {

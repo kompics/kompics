@@ -2,7 +2,7 @@ package se.sics.kompics.wan.daemon.masterclient;
 
 import se.sics.kompics.Init;
 import se.sics.kompics.wan.daemon.DaemonAddress;
-import se.sics.kompics.wan.master.MasterConfiguration;
+import se.sics.kompics.wan.master.MasterClientConfig;
 
 /**
  * The <code>MasterClientInit</code> class.
@@ -14,10 +14,10 @@ import se.sics.kompics.wan.master.MasterConfiguration;
 
 		private final DaemonAddress self;
 
-		private final MasterConfiguration masterConfiguration;
+		private final MasterClientConfig masterConfiguration;
 
 		public MasterClientInit(DaemonAddress self,
-				MasterConfiguration masterConfiguration) {
+				MasterClientConfig masterConfiguration) {
 			super();
 			this.self = self;
 			this.masterConfiguration = masterConfiguration;
@@ -27,7 +27,7 @@ import se.sics.kompics.wan.master.MasterConfiguration;
 			return self;
 		}
 
-		public MasterConfiguration getMasterConfiguration() {
+		public MasterClientConfig getMasterConfiguration() {
 			return masterConfiguration;
 		}
 	}

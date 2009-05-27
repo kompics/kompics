@@ -1,6 +1,8 @@
 package se.sics.kompics.wan.util;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PomUtils {
 
@@ -17,7 +19,7 @@ public class PomUtils {
 		return new String(separator);
 	}
 	
-	public static int getJobId(String groupId, String artifactId, String version)
+	public static int generateJobId(String groupId, String artifactId, String version)
 	{
 		int id;
 		if ((groupId.hashCode() + artifactId.hashCode() + version.hashCode()) < Integer.MAX_VALUE)
@@ -28,7 +30,9 @@ public class PomUtils {
 		{
 			id = (groupId.hashCode() + artifactId.hashCode() + version.hashCode()) % Integer.MAX_VALUE;
 		}
+		
 		return id;
 	}
+	
 	
 }

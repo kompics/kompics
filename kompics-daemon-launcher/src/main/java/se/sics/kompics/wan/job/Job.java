@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import se.sics.kompics.Request;
+import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.util.PomUtils;
 
@@ -34,23 +35,25 @@ public abstract class Job extends Request implements Serializable {
 		this.args = args;
 		this.repoId = repoId;
 		this.repoUrl = repoUrl;
-		this.id = PomUtils.getJobId(groupId, artifactId, version);
+		this.id = PomUtils.generateJobId(groupId, artifactId, version);
 	}
 	
 	public Job(String groupId, String artifactId, String version, String mainClass, List<String> args) {
-		this(groupId, artifactId, version, mainClass, args, "", "");
+		this(groupId, artifactId, version, mainClass, args, 
+				Configuration.getDefaultRepoId(), 
+				Configuration.getDefaultRepoUrl());
 	}
 	
 	public Job(Job job)
 	{
 		this.id = job.getId();
-		this.repoId = job.getRepoId();
-		this.repoUrl = job.getRepoUrl();
 		this.groupId = job.getGroupId();
 		this.artifactId = job.getArtifactId();
 		this.version = job.getVersion();
 		this.mainClass = job.getMainClass();
 		this.args = job.getArgs();
+		this.repoId = job.getRepoId();
+		this.repoUrl = job.getRepoUrl();
 	}
 
 	public int getId() {

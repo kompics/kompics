@@ -65,12 +65,10 @@ public class DaemonTest implements Serializable {
 
 	public static final int EVENT_COUNT = 1;
 
-	static SimulationScenario scenario = 
-		new SimulationScenario() {
+	static SimulationScenario scenario = new SimulationScenario() {
 
-			private static final long serialVersionUID = -111714340642367999L;
+		private static final long serialVersionUID = -111714340642367999L;
 	};
-
 
 	public DaemonTest() {
 
@@ -122,7 +120,6 @@ public class DaemonTest implements Serializable {
 
 		private DaemonAddress dest = null;
 
-		
 		final class MessageDestinationFilter extends ChannelFilter<Message, Address> {
 			public MessageDestinationFilter(Address address) {
 				super(Message.class, address, true);
@@ -146,34 +143,21 @@ public class DaemonTest implements Serializable {
 			daemon = create(Daemon.class);
 			network = create(MinaNetwork.class);
 
-			try {
-				src = new Address(DaemonConfiguration.getIp(), DaemonConfiguration.getPort(),
-						11);
-				dest = new DaemonAddress(DaemonConfiguration.getDaemonId(), DaemonConfiguration
-						.getPeer0Address());
-			} catch (LocalIPAddressNotFound e) {
-				e.printStackTrace();
-				testObj.fail(true);
-			}
+			src = new Address(DaemonConfiguration.getIp(), DaemonConfiguration.getPort(), 11);
+			dest = new DaemonAddress(DaemonConfiguration.getDaemonId(), DaemonConfiguration
+					.getPeer0Address());
 
-			
-			try {
-				trigger(new MinaNetworkInit(DaemonConfiguration.getPeer0Address()), network
-						.getControl());
-				connect(daemon.getNegative(Timer.class), timer.getPositive(Timer.class));
-				connect(daemon.getNegative(Network.class), network.getPositive(Network.class),
-						new MessageDestinationFilter(dest.getPeerAddress()));
+			trigger(new MinaNetworkInit(DaemonConfiguration.getPeer0Address()), network
+					.getControl());
+			connect(daemon.getNegative(Timer.class), timer.getPositive(Timer.class));
+			connect(daemon.getNegative(Network.class), network.getPositive(Network.class),
+					new MessageDestinationFilter(dest.getPeerAddress()));
 
-				DaemonInit dInit = new DaemonInit(DaemonConfiguration.getDaemonId(),
-						DaemonConfiguration.getPeer0Address(), DaemonConfiguration
-								.getMasterAddress(), DaemonConfiguration.getDaemonRetryPeriod(),
-						DaemonConfiguration.getDaemonRetryCount(), DaemonConfiguration
-								.getDaemonIndexingPeriod());
-				trigger(dInit, daemon.getControl());
-			} catch (LocalIPAddressNotFound e) {
-				e.printStackTrace();
-				throw new IllegalStateException(e.getMessage());
-			}
+			DaemonInit dInit = new DaemonInit(DaemonConfiguration.getDaemonId(),
+					DaemonConfiguration.getPeer0Address(), DaemonConfiguration.getMasterAddress(),
+					DaemonConfiguration.getDaemonRetryPeriod(), DaemonConfiguration
+							.getDaemonRetryCount(), DaemonConfiguration.getDaemonIndexingPeriod());
+			trigger(dInit, daemon.getControl());
 
 			subscribe(handleJobLoadResponseMsg, network.getPositive(Network.class));
 			subscribe(handleJobStartResponseMsg, network.getPositive(Network.class));
@@ -219,11 +203,10 @@ public class DaemonTest implements Serializable {
 				logger.info("Received job execResponse from job-id: {} ", event.getJobId());
 
 				// Read from executing job
-				trigger(new JobMessageRequest(event.getJobId(), "Hi there",
-						event.getDestination(), 
-						new DaemonAddress(event.getDaemonId(), event.getSource())
-						), network.getPositive(Network.class));
-				
+				trigger(new JobMessageRequest(event.getJobId(), "Hi there", event.getDestination(),
+						new DaemonAddress(event.getDaemonId(), event.getSource())), network
+						.getPositive(Network.class));
+
 				ScheduleTimeout st = new ScheduleTimeout(5000);
 				ExecReadTimeout execReadTimeout = new ExecReadTimeout(event.getJobId(), st);
 				st.setTimeoutEvent(execReadTimeout);
@@ -245,8 +228,8 @@ public class DaemonTest implements Serializable {
 				outstandingTimeouts.remove(event.getTimeoutId());
 
 				logger.debug("Retrying to read from job: " + event.getJobId());
-				trigger(new JobReadFromExecutingRequestMsg(event.getJobId(), src, dest), 
-						network.getPositive(Network.class));
+				trigger(new JobReadFromExecutingRequestMsg(event.getJobId(), src, dest), network
+						.getPositive(Network.class));
 
 				ScheduleTimeout st = new ScheduleTimeout(2000);
 				st.setTimeoutEvent(new JobStopTimeout(event.getJobId(), st));
@@ -257,8 +240,8 @@ public class DaemonTest implements Serializable {
 		public Handler<JobStopTimeout> handleJobStopTimeout = new Handler<JobStopTimeout>() {
 			public void handle(JobStopTimeout event) {
 				logger.warn("Trying to stop a job: " + event.getJobId());
-				trigger(new JobStopRequestMsg(event.getJobId(), src, dest), 
-						network.getPositive(Network.class));
+				trigger(new JobStopRequestMsg(event.getJobId(), src, dest), network
+						.getPositive(Network.class));
 
 			}
 		};
@@ -281,21 +264,20 @@ public class DaemonTest implements Serializable {
 			}
 		};
 
-		public Handler<JobLoadResponseMsg> handleJobLoadResponseMsg = 
-			new Handler<JobLoadResponseMsg>() {
+		public Handler<JobLoadResponseMsg> handleJobLoadResponseMsg = new Handler<JobLoadResponseMsg>() {
 			public void handle(JobLoadResponseMsg event) {
 
 				logger.info("Job {} loaded with status {}", event.getJobId(), event.getStatus());
-				
+
 				// if success then remove from loadingJobs, add to loadedJobs
-				if (event.getStatus() == JobLoadResponse.Status.FAIL || event.getStatus() == JobLoadResponse.Status.DUPLICATE) {
-					logger.warn("JobLoadRequest for {} not success. Status: {}", event.getJobId(), event.getStatus());
+				if (event.getStatus() == JobLoadResponse.Status.FAIL
+						|| event.getStatus() == JobLoadResponse.Status.DUPLICATE) {
+					logger.warn("JobLoadRequest for {} not success. Status: {}", event.getJobId(),
+							event.getStatus());
 					testObj.fail(true);
-				}
-				else
-				{
-					DaemonAddress daemonAddr = 
-						new DaemonAddress(event.getDaemonId(), event.getSource());
+				} else {
+					DaemonAddress daemonAddr = new DaemonAddress(event.getDaemonId(), event
+							.getSource());
 					// list loaded jobs
 					trigger(new ListJobsLoadedRequestMsg(event.getDestination(), daemonAddr),
 							network.getPositive(Network.class));
@@ -304,59 +286,62 @@ public class DaemonTest implements Serializable {
 			}
 		};
 
-		
-//		public Handler<ListJobsLoadedResponseMsg> handleListJobsLoadedResponse = new Handler<ListJobsLoadedResponseMsg>() {
-//			public void handle(ListJobsLoadedResponseMsg event) {
-//
-//				logger.info("ListJobsLoadedResponse returned {} jobs", event.getSetJobs().size());
-//				Set<Job> listJobsLoaded = event.getSetJobs();
-//
-//				DaemonAddress daemonAddr = new DaemonAddress(event.getDaemonId(), event.getSource());
-//				
-//				SimulationScenario scenario = new SimulationScenario() {
-//					private static final long serialVersionUID = -5355642917108165919L;
-//				};
-//
-//				boolean jobsFound = true;
-//				for (Job j : listJobsLoaded) {
-//					if (loadedJobs.containsKey(j.getId()) == true) {
-//						logger.info("JobStartRequestMsg sent for job: " + j.getId());						
-//						// start a job
-//						trigger(new JobStartRequestMsg(j.getId(), scenario, event.getDestination(),
-//								daemonAddr), network.getPositive(Network.class));
-//
-//					} else {
-//						logger.info("ERROR: Found job not loaded: " + j.getId());
-//						jobsFound = false;
-//					}
-//				}
-//				if (jobsFound == false) {
-//					testObj.fail(false);
-//				}
-//
-//				Iterator<Job> iter = listJobsLoaded.iterator();
-//
-//				// IndexerTest.semaphore.release(1);
-//			}
-//		};
+		// public Handler<ListJobsLoadedResponseMsg>
+		// handleListJobsLoadedResponse = new
+		// Handler<ListJobsLoadedResponseMsg>() {
+		// public void handle(ListJobsLoadedResponseMsg event) {
+		//
+		// logger.info("ListJobsLoadedResponse returned {} jobs",
+		// event.getSetJobs().size());
+		// Set<Job> listJobsLoaded = event.getSetJobs();
+		//
+		// DaemonAddress daemonAddr = new DaemonAddress(event.getDaemonId(),
+		// event.getSource());
+		//				
+		// SimulationScenario scenario = new SimulationScenario() {
+		// private static final long serialVersionUID = -5355642917108165919L;
+		// };
+		//
+		// boolean jobsFound = true;
+		// for (Job j : listJobsLoaded) {
+		// if (loadedJobs.containsKey(j.getId()) == true) {
+		// logger.info("JobStartRequestMsg sent for job: " + j.getId());
+		// // start a job
+		// trigger(new JobStartRequestMsg(j.getId(), scenario,
+		// event.getDestination(),
+		// daemonAddr), network.getPositive(Network.class));
+		//
+		// } else {
+		// logger.info("ERROR: Found job not loaded: " + j.getId());
+		// jobsFound = false;
+		// }
+		// }
+		// if (jobsFound == false) {
+		// testObj.fail(false);
+		// }
+		//
+		// Iterator<Job> iter = listJobsLoaded.iterator();
+		//
+		// // IndexerTest.semaphore.release(1);
+		// }
+		// };
 
 		public Handler<JobsFoundMsg> handleJobsFound = new Handler<JobsFoundMsg>() {
 			public void handle(JobsFoundMsg event) {
-				
+
 				DaemonAddress daemonAddr = new DaemonAddress(event.getDaemonId(), event.getSource());
-				for (Job job : event.getSetJobs())
-				{
-				
+				for (Job job : event.getSetJobs()) {
+
 					int id = job.getId();
-	
+
 					logger.info("Received job {} found.", id);
 					if (loadedJobs.containsKey(id) == false) {
 						loadedJobs.put(id, job);
-						logger.info("Added job {} to loaded jobs set.", id);	
-	
-						trigger(new JobStartRequestMsg(job.getId(), 1, 1, scenario, event.getDestination(),
-						daemonAddr), network.getPositive(Network.class));
-	
+						logger.info("Added job {} to loaded jobs set.", id);
+
+						trigger(new JobStartRequestMsg(job.getId(), 1, 1, scenario, event
+								.getDestination(), daemonAddr), network.getPositive(Network.class));
+
 					}
 				}
 
@@ -368,15 +353,14 @@ public class DaemonTest implements Serializable {
 			trigger(new JobRemoveRequest(job), daemon.getNegative(Maven.class));
 		}
 
-		public Handler<JobReadFromExecutingResponseMsg> handleJobReadFromExecutingResponseMsg = 
-			new Handler<JobReadFromExecutingResponseMsg>() {
+		public Handler<JobReadFromExecutingResponseMsg> handleJobReadFromExecutingResponseMsg = new Handler<JobReadFromExecutingResponseMsg>() {
 			public void handle(JobReadFromExecutingResponseMsg event) {
-				
+
 				logger.info("Read from job {} :", event.getJobId());
 				logger.info(event.getMsg());
 			}
 		};
-		
+
 		public Handler<JobRemoveResponse> handleJobRemoveResponse = new Handler<JobRemoveResponse>() {
 			public void handle(JobRemoveResponse event) {
 

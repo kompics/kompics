@@ -45,7 +45,7 @@ import se.sics.kompics.wan.job.JobStartResponse;
 import se.sics.kompics.wan.master.ConnectMasterRequest;
 import se.sics.kompics.wan.master.ConnectMasterResponse;
 import se.sics.kompics.wan.master.DisconnectMasterRequest;
-import se.sics.kompics.wan.master.MasterConfiguration;
+import se.sics.kompics.wan.master.MasterClientConfig;
 
 public class Daemon extends ComponentDefinition {
 
@@ -100,7 +100,7 @@ public class Daemon extends ComponentDefinition {
 		MAVEN_REPO_HOME = System.getProperty("maven.repo");
 		if (new File(Daemon.MAVEN_REPO_HOME).exists() == false) {
 			if ((new File(Daemon.MAVEN_REPO_HOME).mkdirs()) == false) {
-				logger.warn("Couldn't directory for Maven Home: "
+				logger.warn("Couldn't create directory for Maven Home: "
 						+ Daemon.MAVEN_REPO_HOME + "\nCheck file permissions for this directory.");
 			}
 		}
@@ -200,7 +200,7 @@ public class Daemon extends ComponentDefinition {
 			self = new DaemonAddress(event.getId(), event.getSelf());
 			masterAddress = event.getMasterAddr();
 			
-			MasterConfiguration mc = new MasterConfiguration(masterAddress, 
+			MasterClientConfig mc = new MasterClientConfig(masterAddress, 
 					event.getCacheEvictAfter(), event.getMasterRetryPeriod(),
 					event.getMasterRetryCount(), event.getClientKeepAlivePeriod(),
 					event.getClientWebPort());

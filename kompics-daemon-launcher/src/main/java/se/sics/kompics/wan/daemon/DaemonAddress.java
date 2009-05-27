@@ -24,7 +24,7 @@ public final class DaemonAddress extends OverlayAddress implements
 
 	@Override
 	public String toString() {
-		return daemonId.toString();
+		return daemonId + ":(" + peerAddress.toString() + ")";
 	}
 
 	@Override
@@ -72,5 +72,5 @@ public final class DaemonAddress extends OverlayAddress implements
 				ByteOrder.BIG_ENDIAN);
 		return thisIpBytes.compareTo(thatIpBytes);
 	}
-
+	
 }

@@ -3,6 +3,7 @@ package se.sics.kompics.wan.daemon;
 import java.util.List;
 
 import se.sics.kompics.address.Address;
+import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.wan.util.PomUtils;
 
 /**
@@ -43,6 +44,18 @@ public class JobLoadRequestMsg extends DaemonRequestMessage {
 		this.jobId = hashCode();
 	}
 
+	public JobLoadRequestMsg(Job job, Address src, DaemonAddress dest) {
+		super(src,dest);
+		this.groupId = job.getGroupId();
+		this.artifactId = job.getArtifactId();
+		this.version = job.getVersion();
+		this.repoId =  job.getRepoId();
+		this.repoUrl = job.getRepoUrl();
+		this.mainClass = job.getMainClass();
+		this.args = job.getArgs();
+		this.jobId = hashCode();
+	}
+	
 	public int getJobId() {
 		return jobId;
 	}
@@ -75,6 +88,6 @@ public class JobLoadRequestMsg extends DaemonRequestMessage {
 	
 	@Override
 	public int hashCode() {
-		return PomUtils.getJobId(groupId, artifactId, version);
+		return PomUtils.generateJobId(groupId, artifactId, version);
 	}
 }

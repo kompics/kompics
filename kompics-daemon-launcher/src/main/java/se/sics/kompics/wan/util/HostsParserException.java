@@ -1,6 +1,8 @@
 package se.sics.kompics.wan.util;
 
-public class HostsParserException extends Exception {
+import java.io.IOException;
+
+public class HostsParserException extends IOException {
 
 	private static final long serialVersionUID = 5919535454651047347L;
 

@@ -13,7 +13,7 @@ import se.sics.kompics.wan.config.ChordConfiguration;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.CyclonConfiguration;
 import se.sics.kompics.wan.config.DaemonConfiguration;
-import se.sics.kompics.wan.config.MasterServerConfiguration;
+import se.sics.kompics.wan.config.MasterConfiguration;
 import se.sics.kompics.wan.util.HostsParserException;
 import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 
@@ -43,8 +43,8 @@ public class ConfigTest extends TestCase {
 
 		String[] args = {""};
 		try {
-			MasterServerConfiguration mc = 
-				(MasterServerConfiguration) Configuration.init(args, MasterServerConfiguration.class);
+			MasterConfiguration mc = 
+				(MasterConfiguration) Configuration.init(args, MasterConfiguration.class);
 			mc.getHosts();
 			
 			ChordConfiguration ch = 
@@ -70,18 +70,6 @@ public class ConfigTest extends TestCase {
 		} catch (ConfigurationException e) {
 			e.printStackTrace();
 			assertTrue(false);
-		} catch (HostsParserException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		} catch (FileNotFoundException e)
-		{
-			e.printStackTrace();			
-			assertTrue(false);
-		} catch (LocalIPAddressNotFound e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			assertTrue(false);
-		}
-		
+		} 
 	}
 }

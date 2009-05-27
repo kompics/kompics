@@ -5,7 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.List;
+import java.util.Iterator;
+import java.util.TreeSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
@@ -21,35 +22,29 @@ import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
 import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 
-public class MasterServerConfiguration extends Configuration {
+public class MasterConfiguration extends Configuration {
 
-	private static final Logger logger = LoggerFactory.getLogger(MasterServerConfiguration.class);
+	private static final Logger logger = LoggerFactory.getLogger(MasterConfiguration.class);
 	
-	public static String PROP_MASTER_CONFIG_PROPS_FILE = "config/master.properties";
+	public static final String PROP_MASTER_SCENARIO_CLASSFILE = "master.scenario.classfile";
+	public static final String PROP_MASTER_HOSTS_FILENAME = "master.hosts.filename";
 	
-	public final static String PROP_MASTER_SCENARIO_CLASSFILE = "master.scenario.classfile";
-	public final static String PROP_MASTER_HOSTS_FILENAME = "master.hosts.filename";
-	
-	protected final static int DEFAULT_MASTER_MONITOR_ID = Integer.MAX_VALUE - 1;
-	protected final static String DEFAULT_MASTER_HOSTSFILE = "config/hosts.csv";
+	protected static final int DEFAULT_MASTER_MONITOR_ID = Integer.MAX_VALUE - 1;
+	protected static final String DEFAULT_MASTER_HOSTSFILE = "config/hosts.csv";
 
+	/**
+	 * Ordered set (no duplicates)
+	 */
+	protected static TreeSet<Address> hosts=null;
 	
-	protected Address masterMonitorAddress = null;
-
-	protected static List<Address> hosts;
-	
+	protected Address masterMonitorAddress=null;
 	/********************************************************/
 	/********* Helper fields ********************************/
 	/********************************************************/
-	protected Option masterMonitorIdOption;
-	
-	protected Option masterConfigFileOption;
 	
 	protected Option scenarioClassfileOption;
 
 	protected Option hostsFileOption;
-	
-	protected PropertiesConfiguration masterConfig;
 	
 	protected static boolean masterServerInitialized = false;
 	
@@ -57,25 +52,20 @@ public class MasterServerConfiguration extends Configuration {
 	 * 
 	 * @param args
 	 * @throws IOException
+	 * @throws HostsParserException 
 	 */
-	public MasterServerConfiguration(String[] args) throws IOException, ConfigurationException {
+	public MasterConfiguration(String[] args) throws ConfigurationException, HostsParserException, IOException {
 		super(args);
+		
+		String fName= compositeConfig.getString(PROP_MASTER_HOSTS_FILENAME, DEFAULT_MASTER_HOSTSFILE);
+		hosts = HostsParser.parseHostsFile(fName);
+
 		masterServerInitialized = true;
 	}
 
 	@Override
 	protected void parseAdditionalOptions(String[] args) throws IOException {
-		
-		masterMonitorIdOption = new Option("monitorid", true, "Cyclon monitor-id");
-		masterMonitorIdOption.setArgName(VAL_NUMBER);
-		options.addOption(masterMonitorIdOption);
-		
-		
-		masterConfigFileOption = new Option("masterprops", true, "Full pathname for the master properties file 'master.properties'.");
-		masterConfigFileOption.setArgName("filename");
-		options.addOption(masterConfigFileOption);
-		
-		
+				
 		scenarioClassfileOption = new Option("scenarioclassfile", true, "File containing SimulationScenario class (experiment to be executed).");
 		scenarioClassfileOption.setArgName("filename");
 		options.addOption(scenarioClassfileOption);
@@ -89,29 +79,6 @@ public class MasterServerConfiguration extends Configuration {
 
 	@Override
 	protected void processAdditionalOptions() throws IOException {
-
-		if (line.hasOption(masterConfigFileOption.getOpt()))
-		{
-			PROP_MASTER_CONFIG_PROPS_FILE =
-				new String(line.getOptionValue(masterConfigFileOption.getOpt()));
-		}
-
-		try {
-			masterConfig = new PropertiesConfiguration(PROP_MASTER_CONFIG_PROPS_FILE);
-			masterConfig.setReloadingStrategy(new FileChangedReloadingStrategy());
-			configuration.compositeConfig.addConfiguration(masterConfig);
-		}
-		catch (ConfigurationException e)
-		{
-			logger.warn("Configuration file for cyclon not found, using default values: " + PROP_MASTER_CONFIG_PROPS_FILE);
-		}
-
-		
-		if (line.hasOption(masterMonitorIdOption.getOpt()))
-		{
-			int cyclonMonitorId = new Integer(line.getOptionValue(masterMonitorIdOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_MONITOR_ID, cyclonMonitorId);
-		}
 		
 		if (line.hasOption(scenarioClassfileOption.getOpt()))
 		{
@@ -132,7 +99,7 @@ public class MasterServerConfiguration extends Configuration {
 	}
 
 	@Override
-	protected Address getMonitorServerAddress() throws LocalIPAddressNotFound {
+	protected Address getMonitorServerAddress() {
 		masterServerInitialized();
 		if (masterMonitorAddress == null){
 			masterMonitorAddress = new Address(getIp(), getPort(), getMonitorId());
@@ -140,12 +107,40 @@ public class MasterServerConfiguration extends Configuration {
 		return masterMonitorAddress;
 	}
 	
-	public static List<Address> getHosts() throws HostsParserException, FileNotFoundException{
+	public static TreeSet<Address> getHosts() {
 		masterServerInitialized();
-		String fName= configuration.compositeConfig.getString(
-				PROP_MASTER_HOSTS_FILENAME, DEFAULT_MASTER_HOSTSFILE);
-		hosts = HostsParser.parseHostsFile(fName);
 		return hosts;
+	}
+
+	public static int getNumberHosts() {
+		masterServerInitialized();
+		return getHosts().size();
+	}
+	
+	/**
+	 * Gets the hosts from first to last (inclusive) from the hosts.csv file.
+	 * @param first offset in list of hosts
+	 * @param last offset in list of hosts
+	 * @return
+	 * @throws HostsParserException
+	 * @throws FileNotFoundException
+	 */
+	public static TreeSet<Address> getHosts(int first, int last){
+		masterServerInitialized();
+		TreeSet<Address> h = getHosts();
+		TreeSet<Address> subsetHosts = new TreeSet<Address>();
+		Iterator<Address> iter = h.iterator();
+		int count = 0;
+		while (iter.hasNext() && (count <= last))
+		{
+			Address a = iter.next();
+			if (count >= first)
+			{
+				subsetHosts.add(a);
+			}
+			count++;			
+		}		
+		return subsetHosts;
 	}
 	
 	public static SimulationScenario getSimulationScenarioClass() throws SimulationScenarioLoadException

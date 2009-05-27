@@ -7,8 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +25,9 @@ public final class HostsParser {
 	private final static int DEFAULT_PORT = 22031;
 	private final static int DEFAULT_ID = 1;
 	
-	public static List<Address> parseHostsFile(String fileName) throws FileNotFoundException, HostsParserException
+	public static TreeSet<Address> parseHostsFile(String fileName) throws FileNotFoundException, HostsParserException
 	{
-		List<Address> addrs = new ArrayList<Address>();
+		TreeSet<Address> addrs = new TreeSet<Address>();
 		FileInputStream hostFile = new FileInputStream(fileName);
 		
 		BufferedReader in = new BufferedReader(

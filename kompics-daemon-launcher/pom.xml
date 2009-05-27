@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">	
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
 	<version>0.0.1-SNAPSHOT</version>
@@ -62,15 +62,12 @@
 			<version>1.2</version>
 		</dependency>
 
-<!-- 
-		<dependency>
-			<groupId>com.sun</groupId>
-			<artifactId>tools</artifactId>
-			<version>${java.version}</version>
+		<!--
+			<dependency> <groupId>com.sun</groupId>
+			<artifactId>tools</artifactId> <version>${java.version}</version>
 			<scope>system</scope>
-			<systemPath>${java.home}/../lib/tools.jar</systemPath>
-		</dependency>
- -->
+			<systemPath>${java.home}/../lib/tools.jar</systemPath> </dependency>
+		-->
 
 	</dependencies>
 
@@ -97,9 +94,18 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>se.sics.kompics.wan.main.Application</mainClass>
+							<mainClass>se.sics.kompics.wan.main.DaemonMain</mainClass>
 						</manifest>
 					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+				<!-- 
+					<mainClass>se.sics.kompics.wan.main.MasterMain</mainClass>
+				 -->
 				</configuration>
 			</plugin>
 		</plugins>
@@ -132,11 +138,11 @@
 
 	<reporting>
 		<plugins>
-				<plugin>
-					<inherited>true</inherited>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>cobertura-maven-plugin</artifactId>
-				</plugin>
+			<plugin>
+				<inherited>true</inherited>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+			</plugin>
 		</plugins>
 	</reporting>
 

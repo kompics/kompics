@@ -2,7 +2,7 @@ package se.sics.kompics.wan.master;
 
 import se.sics.kompics.address.Address;
 
-public final class MasterConfiguration {
+public final class MasterClientConfig {
 
 	private final Address masterAddress;
 	
@@ -16,7 +16,7 @@ public final class MasterConfiguration {
 	
 	private final int clientWebPort;
 
-	public MasterConfiguration(Address masterAddress,
+	public MasterClientConfig(Address masterAddress,
 			long cacheEvictAfter, long clientRetryPeriod, int clientRetryCount,
 			long clientKeepAlivePeriod, int clientWebPort) {
 		this.masterAddress = masterAddress;

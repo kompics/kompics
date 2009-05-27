@@ -38,7 +38,7 @@ public class JobToDummyPom extends Job implements Serializable {
 
 	public final static String MAVEN_XSD_NS = "http://maven.apache.org/POM/4.0.0";
 	
-	protected final String DUMMY_POM = "src/main/resources/se/sics/kompics/kdld/pom.xml";
+	protected final String DUMMY_POM = "src/main/resources/se/sics/kompics/wan/pom.xml";
 
 	protected final String filePath;
 	protected final String sepStr;

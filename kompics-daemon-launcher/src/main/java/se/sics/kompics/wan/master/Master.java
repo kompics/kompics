@@ -1,11 +1,16 @@
 package se.sics.kompics.wan.master;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -23,7 +28,13 @@ import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
+import se.sics.kompics.wan.config.MasterConfiguration;
 import se.sics.kompics.wan.daemon.DaemonAddress;
+import se.sics.kompics.wan.daemon.JobLoadRequestMsg;
+import se.sics.kompics.wan.daemon.JobLoadResponseMsg;
+import se.sics.kompics.wan.daemon.JobsFoundMsg;
+import se.sics.kompics.wan.job.Job;
+import se.sics.kompics.wan.util.HostsParserException;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.WebResponse;
@@ -45,30 +56,40 @@ public class Master extends ComponentDefinition {
 
 	Negative<MasterCommands> masterCommands = negative(MasterCommands.class);
 
-	// Positive<EventuallyPerfectFailureDetector> epfd =
-	// positive(EventuallyPerfectFailureDetector.class);
+	private HashSet<UUID> outstandingTimeouts;
+		
+	/**
+	 * (DaemonAddress, Cache-entry-for-daemon)
+	 */
+	private HashMap<DaemonAddress, DaemonEntry> registeredDaemons;
 
-	private final HashSet<UUID> outstandingTimeouts;
-	private final HashMap<DaemonAddress, DaemonEntry> cache;
+	/**
+	 * Updated when the cache is reset.
+	 */
+	private Long cacheEpoch;
 
-	private final Long cacheEpoch;
-	// private final HashMap<String, Long> cacheEpoch;
-
-	private HashMap<DaemonAddress, Integer> registeredJobs; // <daemon, jobId>
-
-	// private HashMap<Address, UUID> fdRequests;
-
+	/**
+	 * (daemonId, <jobIds>)
+	 */
+	private HashMap<Integer, TreeSet<Integer>> loadedJobs; 
+	
+	/**
+	 * (jobId, Job)
+	 */
+	private HashMap<Integer, Job> jobs;
+	
 	private long evictAfter;
 	private Address self;
 	private String webAddress;
 	private int webPort;
 
 	private BootstrapConfiguration bootConfig;
-
 	private P2pMonitorConfiguration monitorConfig;
 
 	public Master() {
-		this.cache = new HashMap<DaemonAddress, DaemonEntry>();
+		this.registeredDaemons = new HashMap<DaemonAddress, DaemonEntry>();
+		this.loadedJobs = new HashMap<Integer, TreeSet<Integer>>();
+		this.jobs = new HashMap<Integer,Job>();
 		this.cacheEpoch = 1L;
 
 		outstandingTimeouts = new HashSet<UUID>();
@@ -80,12 +101,15 @@ public class Master extends ComponentDefinition {
 		subscribe(handleDisconnectMasterRequestMsg, net);
 		subscribe(handleConnectMasterRequestMsg, net);
 		subscribe(handleKeepAliveDaemonMsg, net);
+		subscribe(handleJobLoadResponseMsg, net);
+		subscribe(handleJobsFoundMsg, net);
 
 		subscribe(handleCacheEvictDaemon, timer);
 
 		subscribe(handlePrintConnectedDameons, masterCommands);
 		subscribe(handlePrintLoadedJobs, masterCommands);
 		subscribe(handlePrintDaemonsWithLoadedJob, masterCommands);
+		subscribe(handleInstallJobOnHosts, masterCommands);
 	}
 
 	private Handler<MasterInit> handleInit = new Handler<MasterInit>() {
@@ -126,38 +150,75 @@ public class Master extends ComponentDefinition {
 		public void run() {
 			boolean finishedInput = false;
 			while (finishedInput == false) {
+				
+				TreeSet<Address> hosts = MasterConfiguration.getHosts();
 				switch (selectOption()) {
 				case 1:
 					trigger(new PrintConnectedDameons(), master);
 					break;
 				case 2:
-					System.out.println("\tEnter job id: ");
+					System.out.print("\tEnter job id: ");
 					int jobId = scanner.nextInt();
 					trigger(new PrintDaemonsWithLoadedJob(jobId), master);
 					break;
 				case 3:
-					System.out.println("\tEnter daemon id: ");
+					System.out.print("\tEnter daemon id: ");
 					int daemonId = scanner.nextInt();
 					trigger(new PrintLoadedJobs(daemonId), master);
 					break;
-				case 99:
+				case 5: // XXX 
+					hosts = getHosts();
+					// deliberate skip of 'break' here.
+				case 4:
+					System.out.print("\tEnter groupId: ");
+					String groupId = scanner.next();
+					System.out.print("\tEnter artifactId: ");
+					String artifactId = scanner.next();
+					System.out.print("\tEnter version: ");
+					String version = scanner.next();
+					System.out.print("\tEnter mainClass: ");
+					String mainClass = scanner.next();
+//					System.out.print("\tEnter any optional args (return for none): ");
+//					String allArgs = scanner.next();
+//					String[] args = allArgs.split(" ");
+					String[] args = {};
+					trigger(new InstallJobOnHosts(groupId, artifactId, version, mainClass,
+									Arrays.asList(args), hosts), master);
+					break;
+				case 0:
 					finishedInput = true;
+					System.out.println("\tGoodbye.");
+					System.out.println("\tExiting.....");
+					System.out.println();
+					System.exit(0);
 					break;
 				default:
+					System.out.println("\tInvalid choice.");
 					break;
 				}
 			}
-
+		}
+		
+		private TreeSet<Address> getHosts()
+		{
+			int first, last;
+			System.out.println("Enter the start of the range of hosts to use:");
+			first = scanner.nextInt();
+			System.out.println("Enter the end of the range of hosts to use:");
+			last = scanner.nextInt();
+			return MasterConfiguration.getHosts(first, last);
 		}
 
 		private int selectOption() {
-			System.out.println("Kompics Master. Enter a number to select an option from below:");
+			System.out.println();
+			System.out.println("Enter a number to select an option from below:");
 			System.out.println("\t1) list connected daemons.");
 			System.out.println("\t2) list all daemons with specified loaded job.");
 			System.out.println("\t3) list loaded jobs for a specified daemon.");
-			System.out.println();
+			System.out.println("\t4) load a job to all hosts.");
+			System.out.println("\t5) load a job to selected hosts.");
 			System.out.println("\t0) exit program");
-
+			System.out.print("Enter your choice: ");
 			return scanner.nextInt();
 		}
 	};
@@ -165,24 +226,143 @@ public class Master extends ComponentDefinition {
 	private Handler<PrintConnectedDameons> handlePrintConnectedDameons = new Handler<PrintConnectedDameons>() {
 		public void handle(PrintConnectedDameons event) {
 
+			if (registeredDaemons.size() == 0)
+			{
+				logger.info("No daemons registered.");
+			}
+			else
+			{
+				logger.info("======== Start registered daemons ========");
+				for (DaemonAddress dAddr : registeredDaemons.keySet())
+				{
+					logger.info(dAddr.toString());
+				}
+				logger.info("======== End registered daemons ========");
+			}
 		}
 	};
 
 	private Handler<PrintLoadedJobs> handlePrintLoadedJobs = new Handler<PrintLoadedJobs>() {
 		public void handle(PrintLoadedJobs event) {
 
+			if (loadedJobs.size() == 0)
+			{
+				logger.info("No loaded jobs.");
+			}
+			else
+			{
+				logger.info("======== Start loaded jobs ========");
+				TreeSet<Integer> jobIds = loadedJobs.get(event.getDaemonId());
+				for (Integer i : jobIds)
+				{
+					logger.info("Job " + i.toString());
+				}
+				logger.info("======== End loaded jobs ========");
+			}
 		}
 	};
 
 	private Handler<PrintDaemonsWithLoadedJob> handlePrintDaemonsWithLoadedJob = new Handler<PrintDaemonsWithLoadedJob>() {
 		public void handle(PrintDaemonsWithLoadedJob event) {
+			int jobId = event.getJobId();
+			List<DaemonAddress> daemonsFound = new ArrayList<DaemonAddress>();
+			for (DaemonAddress d: registeredDaemons.keySet())
+			{
+				TreeSet<Integer> loadedJobsAtD = loadedJobs.get(d.getDaemonId());
+				if (loadedJobsAtD.contains(jobId))
+				{
+					daemonsFound.add(d);
+				}
+			}
+			if (daemonsFound.size() == 0)
+			{
+				logger.info("No daemons found that have loaded job " + jobId);
+			}
+			else {
 
+				logger.info("======== {} daemons Found with loaded job {} ========", daemonsFound.size(), jobId);
+
+				for (DaemonAddress d : daemonsFound)
+				{
+					logger.info(d.toString());
+				}
+				logger.info("======== End daemons Found with loaded job {} ========", jobId);
+			}
 		}
 	};
 
+	
+	private Handler<InstallJobOnHosts> handleInstallJobOnHosts = new Handler<InstallJobOnHosts>() {
+		public void handle(InstallJobOnHosts event) {
+			if (event.getHosts().size() == 0)
+			{
+				logger.warn("No hosts selected to install job on!");
+				return;
+			}
+			
+			jobs.put(event.getId(), event);
+			
+			for (DaemonAddress dest : registeredDaemons.keySet())
+			{
+				JobLoadRequestMsg job = new JobLoadRequestMsg(event, self, dest);
+				trigger(job, net);
+			}
+		}
+	};
+	
+	private Handler<JobsFoundMsg> handleJobsFoundMsg = new Handler<JobsFoundMsg>() {
+		public void handle(JobsFoundMsg event) {
+			logger.info("{} jobs found on daemon {}", event.getSetJobs().size(), event.getDaemonId());
+			Set<Job> jobSet = event.getSetJobs();
+			DaemonAddress src = new DaemonAddress(event.getDaemonId(), event.getSource());
+			addJobs(src, jobSet);
+		}
+	};
+
+	private void addJobs(DaemonAddress addr, Set<Job> jobSet)
+	{
+		for (Job job : jobSet)
+		{
+			addJob(addr, job);
+		}
+	}
+
+	private TreeSet<Integer> getJobsForDaemon(DaemonAddress addr)
+	{
+		TreeSet<Integer> jobIds = loadedJobs.get(addr);
+		if (jobIds == null)
+		{
+			jobIds = new TreeSet<Integer>();
+		}
+		return jobIds;
+	}
+	
+	private void addJob(DaemonAddress addr, Job job)
+	{
+		jobs.put(job.getId(), job);
+		TreeSet<Integer> jobIds = getJobsForDaemon(addr);
+		jobIds.add(job.getId());
+		loadedJobs.put(addr.getDaemonId(), jobIds);
+	}
+	
+	private Handler<JobLoadResponseMsg> handleJobLoadResponseMsg = new Handler<JobLoadResponseMsg>() {
+		public void handle(JobLoadResponseMsg event) {
+
+			Address src = event.getSource();
+			int srcId = event.getDaemonId();
+			DaemonAddress dAddr = new DaemonAddress(srcId, src);
+			TreeSet<Integer> jobsAtDaemon = loadedJobs.get(dAddr.getDaemonId());
+			jobsAtDaemon.add(event.getJobId());
+		}
+	};
+	
+	
+	
+	
 	private Handler<DisconnectMasterRequestMsg> handleDisconnectMasterRequestMsg = new Handler<DisconnectMasterRequestMsg>() {
 		public void handle(DisconnectMasterRequestMsg event) {
 
+			removePeerFromCache(event.getDaemon(), cacheEpoch);
 		}
 	};
 	
@@ -193,6 +373,13 @@ public class Master extends ComponentDefinition {
 		}
 	};
 
+	/**
+	 * Daemons send ConnectMasterRequestMsg events to the Master. They retry if they
+	 * don't receive a responseMsg before a timeout expires. Retry is safe, as it 
+	 * just updates the daemon's timestamp in the cache.
+	 * After registration, the daemon sends KeepAliveDaemonMsg events that don't
+	 * require a response msg. 
+	 */
 	private Handler<ConnectMasterRequestMsg> handleConnectMasterRequestMsg = new Handler<ConnectMasterRequestMsg>() {
 		public void handle(ConnectMasterRequestMsg event) {
 
@@ -237,11 +424,11 @@ public class Master extends ComponentDefinition {
 		if (address != null) {
 			long now = System.currentTimeMillis();
 
-			DaemonEntry entry = cache.get(address);
+			DaemonEntry entry = registeredDaemons.get(address);
 			if (entry == null) {
 				// add a new entry
 				entry = new DaemonEntry(address, now, now);
-				cache.put(address, entry);
+				registeredDaemons.put(address, entry);
 
 				// set a new eviction timeout
 				ScheduleTimeout st = new ScheduleTimeout(evictAfter);
@@ -252,7 +439,7 @@ public class Master extends ComponentDefinition {
 				outstandingTimeouts.add(evictionTimerId);
 				trigger(st, timer);
 
-				logger.debug("Added peer {}", address);
+				logger.debug("Updated cache with peer {}", address);
 			} else {
 				// update an existing entry
 				entry.setRefreshedAt(now);
@@ -280,17 +467,21 @@ public class Master extends ComponentDefinition {
 	private final void removePeerFromCache(DaemonAddress address, long epoch) {
 		long thisEpoch = cacheEpoch;
 		if (address != null && epoch == thisEpoch) {
-			cache.remove(address);
+			registeredDaemons.remove(address);
 			logger.debug("Removed peer {}", address);
 		}
 	}
 
 	private void dumpCacheToLog() {
+		if (registeredDaemons.size() == 0)
+		{
+			return;
+		}
 		logger.info("Registered Daemons are:");
 		logger.info("Age=====Freshness====Daemonaddress=========================");
 		long now = System.currentTimeMillis();
 
-		Collection<DaemonEntry> entries = cache.values();
+		Collection<DaemonEntry> entries = registeredDaemons.values();
 		ArrayList<DaemonEntry> sorted = new ArrayList<DaemonEntry>(entries);
 
 		// get all peers in most recently added order
@@ -306,7 +497,7 @@ public class Master extends ComponentDefinition {
 	}
 
 	private String dumpCacheToHtml(String overlay) {
-		if (!cache.containsKey(overlay)) {
+		if (!registeredDaemons.containsKey(overlay)) {
 			StringBuilder sb = new StringBuilder("<!DOCTYPE html PUBLIC \"-//W3C");
 			sb.append("//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR");
 			sb.append("/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http:");
@@ -340,7 +531,7 @@ public class Master extends ComponentDefinition {
 		sb.append("<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
 		long now = System.currentTimeMillis();
 
-		Collection<DaemonEntry> entries = cache.values();
+		Collection<DaemonEntry> entries = registeredDaemons.values();
 		ArrayList<DaemonEntry> sorted = new ArrayList<DaemonEntry>(entries);
 
 		// get all peers in most recently added order
@@ -373,6 +564,30 @@ public class Master extends ComponentDefinition {
 		return sb.toString();
 	}
 
+	private final void resetCache() {
+		// cancel all eviction timers for this overlay
+		HashSet<UUID> overlayEvictionTimoutIds = outstandingTimeouts;
+		if (overlayEvictionTimoutIds != null) {
+			for (UUID timoutId : overlayEvictionTimoutIds) {
+				CancelTimeout ct = new CancelTimeout(timoutId);
+				trigger(ct, timer);
+			}
+			overlayEvictionTimoutIds.clear();
+		}
+
+		// reset cache
+		if (registeredDaemons != null) {
+			registeredDaemons.clear();
+			cacheEpoch += 1L;
+		} else {
+			registeredDaemons = new HashMap<DaemonAddress, DaemonEntry>();
+			cacheEpoch = 1L;
+			outstandingTimeouts= new HashSet<UUID>();
+		}
+		logger.debug("Cleared daemon cache.");
+		dumpCacheToLog();
+	}
+	
 	private String durationToString(long duration) {
 		StringBuilder sb = new StringBuilder();
 

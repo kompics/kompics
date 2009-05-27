@@ -124,7 +124,7 @@ public class DaemonConfiguration extends Configuration {
 	}
 
 	@Override
-	protected Address getMonitorServerAddress() throws LocalIPAddressNotFound {
+	protected Address getMonitorServerAddress() {
 		daemonInitialized();
 		return new Address(getIp(), getPort(), getMonitorId());
 	}

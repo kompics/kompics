@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -82,7 +83,7 @@ public class ParsersTest extends TestCase {
 			bw.flush();
 			bw.close();
 
-			List<Address> addrs = HostsParser.parseHostsFile(filename);
+			TreeSet<Address> addrs = HostsParser.parseHostsFile(filename);
 
 			int i = 0;
 
@@ -100,15 +101,16 @@ public class ParsersTest extends TestCase {
 				}
 			}
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			assertEquals(true, false);
 		} catch (HostsParserException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			assertEquals(true, false);
 		}
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			assertEquals(true, false);
+		} 
 
 	}
 	
