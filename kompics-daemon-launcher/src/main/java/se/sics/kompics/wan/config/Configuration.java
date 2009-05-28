@@ -82,7 +82,7 @@ public abstract class Configuration {
 	protected static final int DEFAULT_MONITOR_PORT = 20001;
 	protected static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
 
-	protected static final int DEFAULT_EVICT_AFTER_SECS = 600;
+	protected static final int DEFAULT_EVICT_AFTER = 300*1000;
 	protected static final int DEFAULT_REFRESH_PERIOD = 30*1000;
 	protected static final int DEFAULT_RETRY_PERIOD = 30*1000;
 	protected static final int DEFAULT_RETRY_COUNT = 3;
@@ -466,7 +466,7 @@ public abstract class Configuration {
 		Address bootstrapAddress = new Address(bootstrapIP, bootstrapPort,
 				bootstrapId);
 		return new BootstrapConfiguration(bootstrapAddress, compositeConfig.getInt(
-				PROP_BOOTSTRAP_EVICT_AFTER, DEFAULT_EVICT_AFTER_SECS),
+				PROP_BOOTSTRAP_EVICT_AFTER, DEFAULT_EVICT_AFTER),
 				compositeConfig.getInt(PROP_BOOTSTRAP_RETRY_PERIOD,
 						DEFAULT_RETRY_PERIOD), compositeConfig.getInt(
 						PROP_BOOTSTRAP_RETRY_COUNT, DEFAULT_RETRY_COUNT),
@@ -490,7 +490,7 @@ public abstract class Configuration {
 
 		Address monitorAddress = new Address(monitorIP, monitorPort, monitorId);
 		return new P2pMonitorConfiguration(monitorAddress, compositeConfig.getInt(
-				PROP_MONITOR_EVICT_AFTER, DEFAULT_EVICT_AFTER_SECS), compositeConfig
+				PROP_MONITOR_EVICT_AFTER, DEFAULT_EVICT_AFTER), compositeConfig
 				.getInt(PROP_MONITOR_REFRESH_PERIOD, DEFAULT_REFRESH_PERIOD), webPort);
 	}
 

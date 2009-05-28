@@ -197,11 +197,11 @@ public class Master extends ComponentDefinition {
 	
 	private Handler<InstallJobOnHosts> handleInstallJobOnHosts = new Handler<InstallJobOnHosts>() {
 		public void handle(InstallJobOnHosts event) {
-			if (event.getHosts().size() == 0)
-			{
-				logger.warn("No hosts selected to install job on!");
-				return;
-			}
+//			if (event.getHosts().size() == 0)
+//			{
+//				logger.warn("No hosts selected to install job on!");
+//				return;
+//			}
 			
 			jobs.put(event.getId(), event);
 			
@@ -259,6 +259,10 @@ public class Master extends ComponentDefinition {
 			int srcId = event.getDaemonId();
 			DaemonAddress dAddr = new DaemonAddress(srcId, src);
 			TreeSet<Integer> jobsAtDaemon = loadedJobs.get(dAddr.getDaemonId());
+			if (jobsAtDaemon == null)
+			{
+				jobsAtDaemon = new TreeSet<Integer>();
+			}
 			jobsAtDaemon.add(event.getJobId());
 		}
 	};
@@ -376,7 +380,7 @@ public class Master extends ComponentDefinition {
 		long thisEpoch = cacheEpoch;
 		if (address != null && epoch == thisEpoch) {
 			registeredDaemons.remove(address);
-			logger.debug("Removed peer {}", address);
+			logger.info("Removed peer {}", address);
 		}
 	}
 
