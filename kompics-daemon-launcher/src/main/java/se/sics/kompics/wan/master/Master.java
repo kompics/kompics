@@ -110,6 +110,8 @@ public class Master extends ComponentDefinition {
 		subscribe(handlePrintLoadedJobs, userInput.getPositive(MasterCommands.class));
 		subscribe(handlePrintDaemonsWithLoadedJob, userInput.getPositive(MasterCommands.class));
 		subscribe(handleInstallJobOnHosts, userInput.getPositive(MasterCommands.class));
+		
+		connect(timer, userInput.getNegative(Timer.class));
 	}
 
 	private Handler<MasterInit> handleInit = new Handler<MasterInit>() {
@@ -161,7 +163,7 @@ public class Master extends ComponentDefinition {
 
 			if (loadedJobs.size() == 0)
 			{
-				logger.info("No loaded jobs.");
+				logger.info("No loaded jobs for daemon {}", event.getDaemonId());
 			}
 			else
 			{
