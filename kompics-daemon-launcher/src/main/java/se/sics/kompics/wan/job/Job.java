@@ -131,7 +131,7 @@ public abstract class Job extends Request implements Serializable {
 	public String getJarFromRepoFilename()
 	{
 		String sepStr = PomUtils.sepStr();
-		String jarFileName = Daemon.MAVEN_REPO_HOME + sepStr 
+		String jarFileName = Daemon.MAVEN_REPO_LOCAL + sepStr 
 		+ PomUtils.groupIdToPath(groupId) + sepStr +
 		getArtifactId() + sepStr + getVersion() + sepStr 
 		+ getArtifactId() + "-" + getVersion() + ".jar";

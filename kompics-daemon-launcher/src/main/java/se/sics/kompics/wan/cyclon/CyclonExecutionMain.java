@@ -113,9 +113,6 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 		} catch (SimulationScenarioLoadException e) {
 			e.printStackTrace();
 			System.exit(-1);
-		} catch (LocalIPAddressNotFound e) {
-			e.printStackTrace();
-			System.exit(-1);
 		}
 
 		final class MessageDestinationFilter extends ChannelFilter<Message, Address> {

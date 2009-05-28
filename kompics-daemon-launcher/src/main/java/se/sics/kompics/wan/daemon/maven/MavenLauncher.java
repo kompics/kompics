@@ -395,13 +395,13 @@ public class MavenLauncher extends ComponentDefinition {
 		command.addAll(job.getArgs());
 		command.add("-Dlog4j.properties=log4j.properties");
 		command.add("-DKOMPICS_HOME=" + Daemon.KOMPICS_HOME);
-		command.add("-DMAVEN_HOME=" + Daemon.MAVEN_HOME);
-		command.add("-DMAVEN_REPO_HOME=" + Daemon.MAVEN_REPO_HOME);
+		command.add("-DMAVEN_REPO_LOCAL=" + Daemon.MAVEN_REPO_LOCAL);
 
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
 		processBuilder.redirectErrorStream(true);
 		Map<String, String> env = processBuilder.environment();
 		env.put("KOMPICS_HOME", Daemon.KOMPICS_HOME);
+		env.put("MAVEN_REPO_LOCAL", Daemon.MAVEN_REPO_LOCAL);
 
 		if (scenario != null) {
 			File file = null;

@@ -51,9 +51,7 @@ public class Daemon extends ComponentDefinition {
 
 	public static final String KOMPICS_HOME;
 
-	public static final String MAVEN_REPO_HOME;
-
-	public static final String MAVEN_HOME;
+	public static final String MAVEN_REPO_LOCAL;
 
 	public static final String SCENARIO_FILENAME = "scenario";
 
@@ -79,31 +77,19 @@ public class Daemon extends ComponentDefinition {
 			}
 		}
 
-		String mavenHome = System.getProperty("maven.home");
+		String mavenHome = System.getProperty("maven.repo.local");
 		if (mavenHome == null) {
-			System.setProperty("maven.home", new File(userHome + "/.m2/").getAbsolutePath());
+			System.setProperty("maven.repo.local", new File(userHome + "/.m2/repository").getAbsolutePath());
 		}
-		MAVEN_HOME = System.getProperty("maven.home");
+		MAVEN_REPO_LOCAL = System.getProperty("maven.repo.local");
 
-		if (new File(Daemon.MAVEN_HOME).exists() == false) {
-			if ((new File(Daemon.MAVEN_HOME).mkdirs()) == false) {
-				logger.warn("Couldn't set directory for Maven Home: "
-						+ Daemon.MAVEN_HOME + "\nCheck file permissions for this directory.");
+		if (new File(Daemon.MAVEN_REPO_LOCAL).exists() == false) {
+			if ((new File(Daemon.MAVEN_REPO_LOCAL).mkdirs()) == false) {
+				logger.warn("Couldn't set directory for Maven Local Repository: "
+						+ Daemon.MAVEN_REPO_LOCAL + "\nCheck file permissions for this directory.");
 			}
 		}
 
-		String mavenRepoHome = System.getProperty("maven.repo");
-		if (mavenRepoHome == null) {
-			System.setProperty("maven.repo", new File(MAVEN_HOME + "/repository/")
-					.getAbsolutePath());
-		}
-		MAVEN_REPO_HOME = System.getProperty("maven.repo");
-		if (new File(Daemon.MAVEN_REPO_HOME).exists() == false) {
-			if ((new File(Daemon.MAVEN_REPO_HOME).mkdirs()) == false) {
-				logger.warn("Couldn't create directory for Maven Home: "
-						+ Daemon.MAVEN_REPO_HOME + "\nCheck file permissions for this directory.");
-			}
-		}
 	}
 
 	private Positive<Network> net = positive(Network.class);
@@ -156,7 +142,6 @@ public class Daemon extends ComponentDefinition {
 
 	public Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
-			// XXX start timer to retry connect to Master
 			trigger(new ConnectMasterRequest(), masterClient.getPositive(MasterClientP.class));
 		}
 	};
@@ -200,15 +185,20 @@ public class Daemon extends ComponentDefinition {
 			self = new DaemonAddress(event.getId(), event.getSelf());
 			masterAddress = event.getMasterAddr();
 			
-			MasterClientConfig mc = new MasterClientConfig(masterAddress, 
-					event.getCacheEvictAfter(), event.getMasterRetryPeriod(),
-					event.getMasterRetryCount(), event.getClientKeepAlivePeriod(),
-					event.getClientWebPort());
+			MasterClientConfig mc = new MasterClientConfig(
+					masterAddress, 
+					event.getMasterRetryPeriod(),
+					event.getMasterRetryCount(), 
+					event.getClientKeepAlivePeriod()
+					);
 			
 			trigger(new IndexerInit(event.getIndexingPeriod()), indexer.getControl());
 
 			trigger(new MasterClientInit(self, mc), 
 					masterClient.getControl());
+			
+			connect(timer, masterClient.getNegative(Timer.class));
+			connect(net, masterClient.getNegative(Network.class));
 		}
 	};
 

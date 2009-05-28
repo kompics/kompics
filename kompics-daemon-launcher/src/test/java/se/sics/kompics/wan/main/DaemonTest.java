@@ -31,6 +31,7 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.DaemonConfiguration;
+import se.sics.kompics.wan.config.MasterAddressConfiguration;
 import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.daemon.DaemonAddress;
 import se.sics.kompics.wan.daemon.DaemonInit;
@@ -154,9 +155,12 @@ public class DaemonTest implements Serializable {
 					new MessageDestinationFilter(dest.getPeerAddress()));
 
 			DaemonInit dInit = new DaemonInit(DaemonConfiguration.getDaemonId(),
-					DaemonConfiguration.getPeer0Address(), DaemonConfiguration.getMasterAddress(),
-					DaemonConfiguration.getDaemonRetryPeriod(), DaemonConfiguration
-							.getDaemonRetryCount(), DaemonConfiguration.getDaemonIndexingPeriod());
+					DaemonConfiguration.getPeer0Address(), 
+					MasterAddressConfiguration.getMasterAddress(),
+					DaemonConfiguration.getDaemonRetryPeriod(), 
+					DaemonConfiguration.getDaemonRetryCount(), 
+					DaemonConfiguration.getDaemonIndexingPeriod(),
+					DaemonConfiguration.getDaemonRetryPeriod());
 			trigger(dInit, daemon.getControl());
 
 			subscribe(handleJobLoadResponseMsg, network.getPositive(Network.class));

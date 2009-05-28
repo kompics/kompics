@@ -221,7 +221,7 @@ public class Indexer extends ComponentDefinition {
 
 		String groupPath = PomUtils.groupIdToPath(groupId);
 		String sepStr = PomUtils.sepStr();
-		String jarFileName = Daemon.MAVEN_REPO_HOME + sepStr + groupPath + sepStr + artifactId
+		String jarFileName = Daemon.MAVEN_REPO_LOCAL + sepStr + groupPath + sepStr + artifactId
 				+ sepStr + version + sepStr + artifactId + "-" + version + ".jar";
 		File jarFile = new File(jarFileName);
 

@@ -6,33 +6,23 @@ public final class MasterClientConfig {
 
 	private final Address masterAddress;
 	
-	private final long cacheEvictAfter;
-	
 	private final long clientRetryPeriod;
 
 	private final int clientRetryCount;
 
 	private final long clientKeepAlivePeriod;
 	
-	private final int clientWebPort;
-
 	public MasterClientConfig(Address masterAddress,
-			long cacheEvictAfter, long clientRetryPeriod, int clientRetryCount,
-			long clientKeepAlivePeriod, int clientWebPort) {
+			long clientRetryPeriod, int clientRetryCount,
+			long clientKeepAlivePeriod) {
 		this.masterAddress = masterAddress;
-		this.cacheEvictAfter = cacheEvictAfter;
 		this.clientRetryPeriod = clientRetryPeriod;
 		this.clientRetryCount = clientRetryCount;
 		this.clientKeepAlivePeriod = clientKeepAlivePeriod;
-		this.clientWebPort = clientWebPort;
 	}
 
 	public Address getMasterAddress() {
 		return masterAddress;
-	}
-
-	public long getCacheEvictAfter() {
-		return cacheEvictAfter;
 	}
 
 	public long getClientRetryPeriod() {
@@ -47,7 +37,4 @@ public final class MasterClientConfig {
 		return clientKeepAlivePeriod;
 	}
 
-	public int getClientWebPort() {
-		return clientWebPort;
-	}
 }

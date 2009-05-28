@@ -20,6 +20,7 @@
 package se.sics.kompics.wan.master;
 
 import se.sics.kompics.Init;
+import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 
@@ -32,13 +33,19 @@ public final class MasterInit extends Init {
 
 	private final BootstrapConfiguration bootConfig;
 	private final P2pMonitorConfiguration monitorConfig;
+	private final Address master;
 
-	public MasterInit(BootstrapConfiguration bootconfig, P2pMonitorConfiguration monitorConfig) {
+	public MasterInit(Address master, BootstrapConfiguration bootconfig, P2pMonitorConfiguration monitorConfig) {
 		super();
+		this.master = master;
 		this.bootConfig = bootconfig;
 		this.monitorConfig = monitorConfig;
 	}
 
+	public Address getMaster() {
+		return master;
+	}
+	
 	public BootstrapConfiguration getBootConfig() {
 		return bootConfig;
 	}

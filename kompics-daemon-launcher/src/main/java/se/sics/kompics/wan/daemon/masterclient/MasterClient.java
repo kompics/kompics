@@ -12,7 +12,6 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
-import se.sics.kompics.p2p.bootstrap.PeerEntry;
 import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
@@ -35,12 +34,10 @@ public class MasterClient extends ComponentDefinition {
 	Positive<Network> network = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 
-	private Logger logger;
+	private final Logger logger = LoggerFactory.getLogger(MasterClient.class);
 
 	private final HashSet<UUID> outstandingTimeouts;
 	private ConnectMasterRequest activeConnectMasterRequest;
-
-	private HashSet<PeerEntry> overlays;
 
 	private Address masterAddress;
 	private DaemonAddress self;
@@ -51,10 +48,7 @@ public class MasterClient extends ComponentDefinition {
 
 	public MasterClient() {
 		outstandingTimeouts = new HashSet<UUID>();
-		overlays = new HashSet<PeerEntry>();
-
 		subscribe(handleInit, control);
-
 
 		subscribe(handleConnectMasterRequest, masterPort);
 		subscribe(handleConnectMasterResponse, network);
@@ -72,13 +66,14 @@ public class MasterClient extends ComponentDefinition {
 			self = init.getSelf();
 			clientKeepAlivePeriod = init.getMasterConfiguration().getClientKeepAlivePeriod();
 
-			logger = LoggerFactory.getLogger(MasterClient.class.getName() + "@"
-					+ self.getDaemonId());
 		}
 	};		
 
 	private Handler<ConnectMasterRequest> handleConnectMasterRequest = new Handler<ConnectMasterRequest>() {
 		public void handle(ConnectMasterRequest event) {
+			
+			logger.info("Daemon's MC sending connect request to Master at {}", masterAddress);
+			
 			// set an alarm to retry the request if no response
 			ScheduleTimeout st = new ScheduleTimeout(retryPeriod);
 			ClientRetryRequest retryRequest = new ClientRetryRequest(st, retriesCount, event);
@@ -88,13 +83,13 @@ public class MasterClient extends ComponentDefinition {
 					masterAddress);
 
 			outstandingTimeouts.add(timerId);
+			logger.info("Timer-id: {}", timerId);
 
+			
 			activeConnectMasterRequest = event;
 
 			trigger(request, network);
 			trigger(st, timer);
-
-			logger.debug("Sending GetPeersRequest to " + masterAddress);
 		}
 	};
 
@@ -105,6 +100,10 @@ public class MasterClient extends ComponentDefinition {
 			}
 			outstandingTimeouts.remove(event.getTimeoutId());
 
+			logger.info("Retrying ConnectMasterRequestMsg to Master: {} . NoRetries left={}", 
+					masterAddress.toString(),
+					event.getRetriesLeft());
+			
 			if (event.getRetriesLeft() > 0) {
 				// set an alarm to retry the request if no response
 				ScheduleTimeout st = new ScheduleTimeout(retryPeriod);
@@ -121,8 +120,6 @@ public class MasterClient extends ComponentDefinition {
 
 				trigger(request, network);
 				trigger(st, timer);
-
-				logger.debug("Sending GetPeersRequest to  " + masterAddress);
 			} else {
 				ConnectMasterResponse response = new ConnectMasterResponse(
 						activeConnectMasterRequest, false);
@@ -133,6 +130,7 @@ public class MasterClient extends ComponentDefinition {
 
 	private Handler<ConnectMasterResponseMsg> handleConnectMasterResponse = new Handler<ConnectMasterResponseMsg>() {
 		public void handle(ConnectMasterResponseMsg event) {
+			logger.info("Received ConnectMasterResponseMsg {} from {}", event.getRequestId(), event.getSource());
 			if (outstandingTimeouts.contains(event.getRequestId())) {
 				CancelTimeout ct = new CancelTimeout(event.getRequestId());
 				trigger(ct, timer);
@@ -144,11 +142,9 @@ public class MasterClient extends ComponentDefinition {
 				return;
 			}
 
-			// TODO request map for MULTIPLE overlays
 			ConnectMasterResponse response = new ConnectMasterResponse(activeConnectMasterRequest,
 					true);
 
-			logger.debug("Received ConectMasterResponse");
 			trigger(response, masterPort);
 			
 			keepAlive();
@@ -171,6 +167,7 @@ public class MasterClient extends ComponentDefinition {
 		public void handle(ClientRefreshPeer event) {
 			KeepAliveDaemonMsg request = new KeepAliveDaemonMsg(self, masterAddress);
 			trigger(request, network);
+			logger.debug("Refreshing Master connection at: {}", self.getDaemonId());
 		}
 	};
 

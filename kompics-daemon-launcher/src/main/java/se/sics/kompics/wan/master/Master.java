@@ -1,13 +1,11 @@
 package se.sics.kompics.wan.master;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -28,7 +26,6 @@ import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
-import se.sics.kompics.wan.config.MasterConfiguration;
 import se.sics.kompics.wan.daemon.DaemonAddress;
 import se.sics.kompics.wan.daemon.JobLoadRequestMsg;
 import se.sics.kompics.wan.daemon.JobLoadResponseMsg;
@@ -47,8 +44,8 @@ import se.sics.kompics.web.WebResponse;
  */
 public class Master extends ComponentDefinition {
 
-	private static final Logger logger = LoggerFactory.getLogger(Master.class);
-
+	private final Logger logger = LoggerFactory.getLogger(Master.class);
+	
 	Positive<Network> net = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 	Negative<Web> web = negative(Web.class);
@@ -117,11 +114,12 @@ public class Master extends ComponentDefinition {
 	private Handler<MasterInit> handleInit = new Handler<MasterInit>() {
 		public void handle(MasterInit event) {
 
+			self = event.getMaster();
+			
 			bootConfig = event.getBootConfig();
 			monitorConfig = event.getMonitorConfig();
 
 			evictAfter = event.getBootConfig().getCacheEvictAfter();
-			self = event.getBootConfig().getBootstrapServerAddress();
 
 			webPort = event.getBootConfig().getClientWebPort();
 			webAddress = "http://" + self.getIp().getHostAddress() + ":" + webPort + "/"
@@ -134,7 +132,6 @@ public class Master extends ComponentDefinition {
 
 	private Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
-			trigger(new Start(), userInput.getControl());
 		}
 	};
 
@@ -142,19 +139,7 @@ public class Master extends ComponentDefinition {
 	private Handler<PrintConnectedDameons> handlePrintConnectedDameons = new Handler<PrintConnectedDameons>() {
 		public void handle(PrintConnectedDameons event) {
 
-			if (registeredDaemons.size() == 0)
-			{
-				logger.info("No daemons registered.");
-			}
-			else
-			{
-				logger.info("======== Start registered daemons ========");
-				for (DaemonAddress dAddr : registeredDaemons.keySet())
-				{
-					logger.info(dAddr.toString());
-				}
-				logger.info("======== End registered daemons ========");
-			}
+				dumpCacheToLog();
 		}
 	};
 
@@ -185,9 +170,11 @@ public class Master extends ComponentDefinition {
 			for (DaemonAddress d: registeredDaemons.keySet())
 			{
 				TreeSet<Integer> loadedJobsAtD = loadedJobs.get(d.getDaemonId());
-				if (loadedJobsAtD.contains(jobId))
-				{
-					daemonsFound.add(d);
+				if (loadedJobsAtD != null) {
+					if (loadedJobsAtD.contains(jobId))
+					{
+						daemonsFound.add(d);
+					}
 				}
 			}
 			if (daemonsFound.size() == 0)
@@ -222,6 +209,7 @@ public class Master extends ComponentDefinition {
 			{
 				JobLoadRequestMsg job = new JobLoadRequestMsg(event, self, dest);
 				trigger(job, net);
+				logger.info("Installing job {} on {}", job.getArtifactId(), dest);
 			}
 		}
 	};
@@ -264,6 +252,9 @@ public class Master extends ComponentDefinition {
 	private Handler<JobLoadResponseMsg> handleJobLoadResponseMsg = new Handler<JobLoadResponseMsg>() {
 		public void handle(JobLoadResponseMsg event) {
 
+			logger.info("JobLoadResponse received for {} was {}", 
+					event.getJobId(), event.getStatus());
+			
 			Address src = event.getSource();
 			int srcId = event.getDaemonId();
 			DaemonAddress dAddr = new DaemonAddress(srcId, src);
@@ -277,7 +268,7 @@ public class Master extends ComponentDefinition {
 	
 	private Handler<DisconnectMasterRequestMsg> handleDisconnectMasterRequestMsg = new Handler<DisconnectMasterRequestMsg>() {
 		public void handle(DisconnectMasterRequestMsg event) {
-
+			logger.info("Daemon disconnecting: {}", event.getDaemon());
 			removePeerFromCache(event.getDaemon(), cacheEpoch);
 		}
 	};
@@ -285,7 +276,7 @@ public class Master extends ComponentDefinition {
 	private Handler<KeepAliveDaemonMsg> handleKeepAliveDaemonMsg = new Handler<KeepAliveDaemonMsg>() {
 		public void handle(KeepAliveDaemonMsg event) {
 			addDaemonToCache(event.getPeerAddress());
-			dumpCacheToLog();
+			logger.info("Refreshed connection to daemon {}", event.getPeerAddress().getDaemonId());
 		}
 	};
 
@@ -306,7 +297,8 @@ public class Master extends ComponentDefinition {
 			ConnectMasterResponseMsg response = new ConnectMasterResponseMsg(true, event
 					.getRequestId(), self, event.getSource());
 			trigger(response, net);
-
+			logger.info("Request-id: {}", event.getRequestId());
+			
 			logger.debug("Responded with connectMasterResponseMsg from {}", event.getSource());
 
 			dumpCacheToLog();
@@ -393,8 +385,7 @@ public class Master extends ComponentDefinition {
 		{
 			return;
 		}
-		logger.info("Registered Daemons are:");
-		logger.info("Age=====Freshness====Daemonaddress=========================");
+		logger.info("Age=====Freshness====Daemonaddress====ID===");
 		long now = System.currentTimeMillis();
 
 		Collection<DaemonEntry> entries = registeredDaemons.values();
@@ -402,14 +393,15 @@ public class Master extends ComponentDefinition {
 
 		// get all peers in most recently added order
 		Collections.sort(sorted);
-		for (DaemonEntry DaemonEntry : sorted) {
-			logger.info("{}\t{}\t  {}", new Object[] {
-					durationToString(now - DaemonEntry.getAddedAt()),
-					durationToString(now - DaemonEntry.getRefreshedAt()),
-					DaemonEntry.getDaemonAddress() });
+		for (DaemonEntry daemonEntry : sorted) {
+			logger.info("{}\t{}\t  {} : {}", new Object[] {
+					durationToString(now - daemonEntry.getAddedAt()),
+					durationToString(now - daemonEntry.getRefreshedAt()),
+					daemonEntry.getDaemonAddress(), 
+					daemonEntry.getDaemonAddress().getDaemonId() });
 		}
 
-		logger.info("========================================================");
+		logger.info("=========================================");
 	}
 
 	private String dumpCacheToHtml(String overlay) {

@@ -44,53 +44,49 @@ import se.sics.kompics.web.jetty.JettyWebServer;
 
 public final class CyclonWanMasterMain extends ComponentDefinition {
 
-	private static String HOSTS_FILE= "hosts.csv";
-	private static List<String> listHosts = new ArrayList<String>();  
+	private static String HOSTS_FILE = "hosts.csv";
+	private static List<String> listHosts = new ArrayList<String>();
 
 	static {
 		PropertyConfigurator.configureAndWatch("log4j.properties");
 	}
-	
+
 	private void host(String ip) {
 		listHosts.add(ip);
 	}
-	
+
 	{
 		host("evgsics1.sics.se");
 		host("evgsics2.sics.se");
 		host("evgsics3.sics.se");
 		host("evgsics4.sics.se");
 	}
-	
-	
+
 	private static SimulationScenario scenario;
 
-	private static void readHostsFile() throws FileNotFoundException, IOException 
-	{
-		File file = new File(HOSTS_FILE);	 
-		BufferedReader bufRdr  = new BufferedReader(new FileReader(file));
+	private static void readHostsFile() throws FileNotFoundException, IOException {
+		File file = new File(HOSTS_FILE);
+		BufferedReader bufRdr = new BufferedReader(new FileReader(file));
 		String line = null;
 		int row = 0;
 		int col = 0;
-		 
-		//read each line of text file
-		while((line = bufRdr.readLine()) != null)
-		{
-			StringTokenizer st = new StringTokenizer(line,",");
-			while (st.hasMoreTokens())
-			{
-				//get next token and store it in the array
+
+		// read each line of text file
+		while ((line = bufRdr.readLine()) != null) {
+			StringTokenizer st = new StringTokenizer(line, ",");
+			while (st.hasMoreTokens()) {
+				// get next token and store it in the array
 				listHosts.add(st.nextToken());
 				col++;
 			}
 			row++;
-		}		 
-		//close the file
-		bufRdr.close(); 
+		}
+		// close the file
+		bufRdr.close();
 	}
-	
+
 	public static void main(String[] args) {
-		
+
 		try {
 			readHostsFile();
 			Kompics.createAndStart(CyclonWanMasterMain.class, 1);
@@ -101,12 +97,11 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 			System.err.println("Problem when reading hosts file:" + HOSTS_FILE);
 			e.printStackTrace();
 		}
-		
+
 	}
 
-	public CyclonWanMasterMain() throws UnknownHostException,
-			InterruptedException {
-//		Master.setSimulationPortType(CyclonSimulatorPort.class);
+	public CyclonWanMasterMain() throws UnknownHostException, InterruptedException {
+		// Master.setSimulationPortType(CyclonSimulatorPort.class);
 		// create
 		Component master = create(Master.class);
 		Component jettyWebServer = create(JettyWebServer.class);
@@ -115,50 +110,44 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 		Component cyclonSimulator = create(CyclonSimulator.class);
 
 		Component fd = create(FailureDetector.class);
-		
-//		final Configuration config = new Configuration();
+
+		// final Configuration config = new Configuration();
 		String[] args = {};
 		CyclonConfiguration cyclonConfiguration = null;
 		try {
-			cyclonConfiguration = (CyclonConfiguration) 
-				Configuration.init(args, CyclonConfiguration.class);
+			cyclonConfiguration = (CyclonConfiguration) Configuration.init(args,
+					CyclonConfiguration.class);
 		} catch (ConfigurationException e1) {
 			e1.printStackTrace();
-		} 
-		final BootstrapConfiguration bootConfiguration = Configuration.getBootConfiguration();
-		final P2pMonitorConfiguration monitorConfiguration = Configuration.getMonitorConfiguration();
-
-		 try {
-				scenario = SimulationScenario.load(System
-							.getProperty(Daemon.SCENARIO_FILENAME));
-			} catch (SimulationScenarioLoadException e) {
-				e.printStackTrace();
-				System.exit(-1);
-			}
-		
-		try {
-			System.out.println("For web access please go to " + cyclonConfiguration.getWebAddress());
-
-	//		trigger(new MasterInit(scenario, new KingLatencyMap()),
-	//				master.getControl());
-			trigger(cyclonConfiguration.getJettyWebServerInit(), jettyWebServer.getControl());
-			trigger(new BootstrapServerInit(bootConfiguration), bootstrapServer
-					.getControl());
-			trigger(new P2pMonitorServerInit(monitorConfiguration), monitorServer
-					.getControl());
-		} catch (LocalIPAddressNotFound e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
-		// XXX - change CyclonSimulatorInit to include new defn of CyclonConfiguration 
-//		trigger(
-//				new CyclonSimulatorInit(bootConfiguration,
-//						monitorConfiguration, cyclonConfiguration,
-//						cyclonConfiguration.getPeer0Address()), cyclonSimulator.getControl());
+		final BootstrapConfiguration bootConfiguration = Configuration.getBootConfiguration();
+		final P2pMonitorConfiguration monitorConfiguration = Configuration
+				.getMonitorConfiguration();
 
-		final class MessageDestinationFilter extends
-				ChannelFilter<Message, Address> {
+		try {
+			scenario = SimulationScenario.load(System.getProperty(Daemon.SCENARIO_FILENAME));
+		} catch (SimulationScenarioLoadException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+
+		System.out.println("For web access please go to " + cyclonConfiguration.getWebAddress());
+
+		// trigger(new MasterInit(scenario, new KingLatencyMap()),
+		// master.getControl());
+		trigger(cyclonConfiguration.getJettyWebServerInit(), jettyWebServer.getControl());
+		trigger(new BootstrapServerInit(bootConfiguration), bootstrapServer.getControl());
+		trigger(new P2pMonitorServerInit(monitorConfiguration), monitorServer.getControl());
+
+		// XXX - change CyclonSimulatorInit to include new defn of
+		// CyclonConfiguration
+		// trigger(
+		// new CyclonSimulatorInit(bootConfiguration,
+		// monitorConfiguration, cyclonConfiguration,
+		// cyclonConfiguration.getPeer0Address()),
+		// cyclonSimulator.getControl());
+
+		final class MessageDestinationFilter extends ChannelFilter<Message, Address> {
 			public MessageDestinationFilter(Address address) {
 				super(Message.class, address, true);
 			}
@@ -167,8 +156,7 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 				return event.getDestination();
 			}
 		}
-		final class WebRequestDestinationFilter extends
-				ChannelFilter<WebRequest, Integer> {
+		final class WebRequestDestinationFilter extends ChannelFilter<WebRequest, Integer> {
 			public WebRequestDestinationFilter(Integer destination) {
 				super(WebRequest.class, destination, false);
 			}
@@ -179,36 +167,28 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 		}
 
 		// connect
-		connect(bootstrapServer.getNegative(Network.class), master
-				.getPositive(Network.class), new MessageDestinationFilter(
-						bootConfiguration.getBootstrapServerAddress()));
-		connect(bootstrapServer.getNegative(Timer.class), master
-				.getPositive(Timer.class));
-		connect(bootstrapServer.getPositive(Web.class), jettyWebServer
-				.getNegative(Web.class), new WebRequestDestinationFilter(
-						bootConfiguration.getBootstrapServerAddress().getId()));
+		connect(bootstrapServer.getNegative(Network.class), master.getPositive(Network.class),
+				new MessageDestinationFilter(bootConfiguration.getBootstrapServerAddress()));
+		connect(bootstrapServer.getNegative(Timer.class), master.getPositive(Timer.class));
+		connect(bootstrapServer.getPositive(Web.class), jettyWebServer.getNegative(Web.class),
+				new WebRequestDestinationFilter(bootConfiguration.getBootstrapServerAddress()
+						.getId()));
 
-		connect(monitorServer.getNegative(Network.class), master
-				.getPositive(Network.class), new MessageDestinationFilter(
-				monitorConfiguration.getMonitorServerAddress()));
-		connect(monitorServer.getNegative(Timer.class), master
-				.getPositive(Timer.class));
-		connect(monitorServer.getPositive(Web.class), jettyWebServer
-				.getNegative(Web.class), new WebRequestDestinationFilter(
-						monitorConfiguration.getMonitorServerAddress().getId()));
+		connect(monitorServer.getNegative(Network.class), master.getPositive(Network.class),
+				new MessageDestinationFilter(monitorConfiguration.getMonitorServerAddress()));
+		connect(monitorServer.getNegative(Timer.class), master.getPositive(Timer.class));
+		connect(monitorServer.getPositive(Web.class), jettyWebServer.getNegative(Web.class),
+				new WebRequestDestinationFilter(monitorConfiguration.getMonitorServerAddress()
+						.getId()));
 
-		connect(cyclonSimulator.getNegative(Network.class), master
-				.getPositive(Network.class));
-		connect(cyclonSimulator.getNegative(Timer.class), master
-				.getPositive(Timer.class));
-		connect(cyclonSimulator.getPositive(Web.class), jettyWebServer
-				.getNegative(Web.class));
-		connect(cyclonSimulator.getNegative(CyclonSimulatorPort.class),
-				master.getPositive(CyclonSimulatorPort.class));
-		
+		connect(cyclonSimulator.getNegative(Network.class), master.getPositive(Network.class));
+		connect(cyclonSimulator.getNegative(Timer.class), master.getPositive(Timer.class));
+		connect(cyclonSimulator.getPositive(Web.class), jettyWebServer.getNegative(Web.class));
+		connect(cyclonSimulator.getNegative(CyclonSimulatorPort.class), master
+				.getPositive(CyclonSimulatorPort.class));
+
 		connect(master.getNegative(EventuallyPerfectFailureDetector.class), fd
 				.getPositive(EventuallyPerfectFailureDetector.class));
 	}
-	
 
 }

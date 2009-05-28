@@ -82,9 +82,12 @@ public class UserInput extends ComponentDefinition {
 			System.exit(0);
 			break;
 		default:
-			System.out.println("\tInvalid choice.");
+			System.out.println();
+			System.out.println("Invalid choice.");
+			System.out.println();
 			break;
 		}
+		System.out.println();
 
 		ScheduleTimeout st = new ScheduleTimeout(100);
 		UserInputTimeout uit = new UserInputTimeout(st);

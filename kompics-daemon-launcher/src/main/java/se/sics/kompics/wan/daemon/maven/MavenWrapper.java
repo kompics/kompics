@@ -37,7 +37,7 @@ public class MavenWrapper {
 		}
 		this.pomFilename = pomFilename;
 		
-		File user = new File( Daemon.MAVEN_HOME, "settings.xml" );
+		File user = new File( Daemon.MAVEN_REPO_LOCAL, "../settings.xml" );
 				
         Configuration configuration = new DefaultConfiguration()
         .setUserSettingsFile( user )

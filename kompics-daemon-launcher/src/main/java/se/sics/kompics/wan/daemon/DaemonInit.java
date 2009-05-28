@@ -17,12 +17,8 @@ public final class DaemonInit extends Init {
 	
 	private final long indexingPeriod;
 	
-	private final long cacheEvictAfter;
-
 	private final long clientKeepAlivePeriod;
 	
-	private final int clientWebPort;
-
 	
 	/**
 	 * 
@@ -35,7 +31,7 @@ public final class DaemonInit extends Init {
 	 * @param indexingPeriod
 	 */
 	public DaemonInit(int id, Address self, Address masterAddr, long masterRetryPeriod,
-			int masterRetryCount, long indexingPeriod) {
+			int masterRetryCount, long indexingPeriod, long clientKeepAlivePeriod) {
 		super();
 		this.id = id;
 		this.self = self;
@@ -48,9 +44,7 @@ public final class DaemonInit extends Init {
 		this.masterRetryCount = masterRetryCount;
 		this.indexingPeriod = indexingPeriod;
 		
-		this.cacheEvictAfter = -1;
-		this.clientKeepAlivePeriod = -1;
-		this.clientWebPort = -1;
+		this.clientKeepAlivePeriod = clientKeepAlivePeriod;
 	}
 	
 	/**
@@ -66,8 +60,7 @@ public final class DaemonInit extends Init {
 	 * @param clientWebPort
 	 */
 	public DaemonInit(int id, Address self, Address masterAddr, int masterRetryPeriod,
-			int masterRetryCount, long indexingPeriod, long cacheEvictAfter, 
-			long clientKeepAlivePeriod, int clientWebPort) {
+			int masterRetryCount, long indexingPeriod, long clientKeepAlivePeriod) {
 		super();
 		this.id = id;
 		this.self = self;
@@ -80,9 +73,7 @@ public final class DaemonInit extends Init {
 		this.masterRetryCount = masterRetryCount;
 		this.indexingPeriod = indexingPeriod;
 		
-		this.cacheEvictAfter = cacheEvictAfter;
 		this.clientKeepAlivePeriod = clientKeepAlivePeriod;
-		this.clientWebPort = clientWebPort;
 	}
 
 	public int getId() {
@@ -109,15 +100,10 @@ public final class DaemonInit extends Init {
 		return indexingPeriod;
 	}
 	
-	public long getCacheEvictAfter() {
-		return cacheEvictAfter;
-	}
-	
+
 	public long getClientKeepAlivePeriod() {
 		return clientKeepAlivePeriod;
 	}
 	
-	public int getClientWebPort() {
-		return clientWebPort;
-	}
+
 }

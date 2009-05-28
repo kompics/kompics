@@ -71,8 +71,8 @@ public abstract class Configuration {
 	 * Non-publicly accessible
 	 */
 	protected static final String DEFAULT_IP = "localhost";
-	protected static final int DEFAULT_PORT = 2323;
-	protected static final int DEFAULT_ID = 0;
+	public static final int DEFAULT_PORT = 2323;
+	public static final int DEFAULT_ID = 0;
 
 	protected static final String DEFAULT_BOOTSTRAP_IP = "localhost";
 	protected static final int DEFAULT_BOOTSTRAP_PORT = 20002;
@@ -83,19 +83,17 @@ public abstract class Configuration {
 	protected static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
 
 	protected static final int DEFAULT_EVICT_AFTER_SECS = 600;
-	protected static final int DEFAULT_REFRESH_PERIOD = 10;
-	protected static final int DEFAULT_RETRY_PERIOD = 500;
+	protected static final int DEFAULT_REFRESH_PERIOD = 30*1000;
+	protected static final int DEFAULT_RETRY_PERIOD = 30*1000;
 	protected static final int DEFAULT_RETRY_COUNT = 3;
 
-	protected static final int DEFAULT_NET_PORT = 20000;
-
 	protected static final int DEFAULT_WEB_PORT = 8080;
-	protected static final int DEFAULT_WEB_REQUEST_TIMEOUT_MS = 10000;
+	protected static final int DEFAULT_WEB_REQUEST_TIMEOUT_MS = 30*1000;
 	protected static final int DEFAULT_WEB_THREADS = 2;
 
-	protected static final int DEFAULT_CONTROLLER_PORT = 9090;
-	protected static final int DEFAULT_CONTROLLER_REQUEST_TIMEOUT_MS = 10000;
-	protected static final String DEFAULT_CONTROLLER_IP = "localhost";
+//	protected static final int DEFAULT_CONTROLLER_PORT = 9090;
+//	protected static final int DEFAULT_CONTROLLER_REQUEST_TIMEOUT_MS = 10000;
+//	protected static final String DEFAULT_CONTROLLER_IP = "localhost";
 
 	protected static final String DEFAULT_EXPERIMENT_IDSPACE_SIZE = "10000";
 	protected static final int DEFAULT_EXPERIMENT_NUM_PEERS = 1;
@@ -411,7 +409,7 @@ public abstract class Configuration {
 	protected void help(String message, Options options) {
 		HelpFormatter formatter = new HelpFormatter();
 
-		String applicationName = System.getProperty("app.name", "bootstrap-server");
+		String applicationName = System.getProperty("app.name", "kompics");
 
 		StringWriter stringWriter = new StringWriter();
 		PrintWriter writer = new PrintWriter(stringWriter);
@@ -511,12 +509,12 @@ public abstract class Configuration {
 		return DEFAULT_ID;
 	}
 
-	public static String getWebAddress() throws LocalIPAddressNotFound {
+	public static String getWebAddress() {
 		baseInitialized();
 		return configuration.webAddress;
 	}
 
-	public static JettyWebServerInit getJettyWebServerInit() throws LocalIPAddressNotFound {
+	public static JettyWebServerInit getJettyWebServerInit() {
 		baseInitialized();
 		if (configuration.jettyWebServerInit == null) {
 			configuration.jettyWebServerInit = new JettyWebServerInit(getIp(), getWebPort(),
@@ -570,4 +568,22 @@ public abstract class Configuration {
 		}
 	}
 	
+	public static void printConfigurationValues()
+	{
+		logger.info("============= Start Configuration Values =============================");
+		logger.info("Local Address (Peer0Address):\t {}",getPeer0Address());
+		logger.info("Web Address:\t\t\t\t{}:{}", getWebAddress(), getWebPort());
+		logger.info("Number of Peers:\t\t{}", getNumPeers());
+		logger.info("Repo id:\t\t{}", getDefaultRepoId());
+		logger.info("Repo url:\t\t{}", getDefaultRepoUrl());
+		logger.info("Bootstrap Server:\t\t{}", getBootConfiguration().getBootstrapServerAddress());
+		logger.info("Monitor Server:\t\t{}", getMonitorConfiguration().getMonitorServerAddress());
+		logger.info("Web Server:\t\t\t{}", getJettyWebServerInit().getHomePage());
+		logger.info("");
+		logger.info("");
+		logger.info("");
+		logger.info("");
+		logger.info("");
+		logger.info("============= End Configuration Values =============================");
+	}
 }

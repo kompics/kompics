@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.address.Address;
+import se.sics.kompics.wan.config.Configuration;
 
 /**
  * The <code>HostsParser</code> class.
@@ -22,9 +23,14 @@ import se.sics.kompics.address.Address;
 public final class HostsParser {
 	private static final Logger logger = LoggerFactory.getLogger(HostsParser.class);
 	
-	private final static int DEFAULT_PORT = 22031;
-	private final static int DEFAULT_ID = 1;
 	
+	/**
+	 * If a hostname from the list is not resolved, a warning is printed (no exception is thrown).
+	 * @param fileName
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws HostsParserException
+	 */
 	public static TreeSet<Address> parseHostsFile(String fileName) throws FileNotFoundException, HostsParserException
 	{
 		TreeSet<Address> addrs = new TreeSet<Address>();
@@ -44,9 +50,15 @@ public final class HostsParser {
 				{
 					String[] hosts = hostPortIdPerLine.split(",");
 					for (String h : hosts) {
-						Address addr = parseHost(h);
-						if (addr != null) {
-							addrs.add(addr);
+						try {
+							Address addr = parseHost(h);
+							if (addr != null) {
+								addrs.add(addr);
+							}
+						}
+						catch (UnknownHostException e)
+						{
+							logger.warn("Unknown host:" + e.getMessage());
 						}
 					}
 				}
@@ -67,18 +79,13 @@ public final class HostsParser {
 		return addrs;
 	}
 	
-	public static Address parseHost(String h)
+	public static Address parseHost(String h) throws UnknownHostException
 	{
 		String[] addressParts = h.split(":");
 		InetAddress host = null;
-		try {
-			host = InetAddress.getByName(addressParts[0]);
-		} catch (UnknownHostException e) {
-			logger.warn("Unknown host:" + e.getMessage());
-			return null;
-		}
-		int port = DEFAULT_PORT;
-		int id =  DEFAULT_ID;
+		host = InetAddress.getByName(addressParts[0]);
+		int port = Configuration.DEFAULT_PORT;
+		int id =  Configuration.DEFAULT_ID;
 		if (addressParts.length >= 2)
 		{
 			port =  Integer.parseInt(addressParts[1]);

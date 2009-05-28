@@ -10,8 +10,6 @@ import java.util.TreeSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +18,8 @@ import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
-import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 
-public class MasterConfiguration extends Configuration {
+public class MasterConfiguration extends MasterAddressConfiguration {
 
 	private static final Logger logger = LoggerFactory.getLogger(MasterConfiguration.class);
 	
