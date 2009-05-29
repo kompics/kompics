@@ -197,6 +197,8 @@ public class Daemon extends ComponentDefinition {
 			trigger(new MasterClientInit(self, mc), 
 					masterClient.getControl());
 			
+			connect(timer, indexer.getNegative(Timer.class));
+			
 			connect(timer, masterClient.getNegative(Timer.class));
 			connect(net, masterClient.getNegative(Network.class));
 		}

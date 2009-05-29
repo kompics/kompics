@@ -33,7 +33,7 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 import se.sics.kompics.timer.CancelPeriodicTimeout;
-import se.sics.kompics.timer.ScheduleTimeout;
+import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.job.DummyPomConstructionException;
@@ -59,7 +59,8 @@ public class Indexer extends ComponentDefinition {
 
 	private long indexingPeriod;
 	private boolean indexingStopped = false;
-
+	private UUID indexingTimoutId;
+	
 	// (pom-filename, job-object) pair
 	private Map<String, Job> indexedJobs = new HashMap<String, Job>();
 
@@ -124,6 +125,8 @@ public class Indexer extends ComponentDefinition {
 	private void stopIndexing()
 	{
 		logger.info("Indexing stopped.");
+		CancelPeriodicTimeout cpt = new CancelPeriodicTimeout(indexingTimoutId);
+		trigger(cpt, timer);
 		indexingStopped = true;
 	}
 
@@ -134,21 +137,14 @@ public class Indexer extends ComponentDefinition {
 			if (indexingStopped == false) {
 				File kHome = new File(Daemon.KOMPICS_HOME);
 				visitAllDirsAndFiles(kHome, "");
-				scheduleIndexing();
-			}
-			else
-			{
-				UUID timeoutId = event.getTimeoutId();
-				CancelPeriodicTimeout cpt = new CancelPeriodicTimeout(timeoutId);
-				trigger(cpt, timer);				
 			}
 		}
 	};
 
 	private void scheduleIndexing() {
-//		SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(indexingPeriod, indexingPeriod);
-		ScheduleTimeout spt = new ScheduleTimeout(indexingPeriod);
+		SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(0, indexingPeriod);
 		spt.setTimeoutEvent(new IndexerTimeout(spt));
+		indexingTimoutId = spt.getTimeoutEvent().getTimeoutId();
 		trigger(spt, timer);
 	}
 
@@ -242,9 +238,13 @@ public class Indexer extends ComponentDefinition {
 			} catch (DummyPomConstructionException e) {
 				throw new PomIndexingException(e.getMessage());
 			}
-
+			Set<Job> setJobs = new HashSet<Job>();
+			setJobs.add(job);
+			JobsFound jobs = new JobsFound(setJobs);
+			
 			indexedJobs.put(groupArtifactVersion, job);
-			trigger(job, indexPort);
+			trigger(jobs, indexPort);
+			logger.debug("Indexer found job: {}", groupArtifactVersion);
 		}
 	}
 
