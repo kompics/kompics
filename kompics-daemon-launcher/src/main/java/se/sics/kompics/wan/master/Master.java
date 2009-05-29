@@ -6,7 +6,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
@@ -23,12 +25,14 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
+import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.daemon.DaemonAddress;
 import se.sics.kompics.wan.daemon.JobLoadRequestMsg;
 import se.sics.kompics.wan.daemon.JobLoadResponseMsg;
+import se.sics.kompics.wan.daemon.JobStartRequestMsg;
 import se.sics.kompics.wan.daemon.JobsFoundMsg;
 import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.web.Web;
@@ -50,6 +54,12 @@ public class Master extends ComponentDefinition {
 	Positive<Timer> timer = positive(Timer.class);
 	Negative<Web> web = negative(Web.class);
 	
+	static SimulationScenario scenario = new SimulationScenario() {
+
+		private static final long serialVersionUID = -1117143406424329L;
+	};
+
+	
 	private Component userInput;
 
 	private HashSet<UUID> outstandingTimeouts;
@@ -57,7 +67,7 @@ public class Master extends ComponentDefinition {
 	/**
 	 * (DaemonAddress, Cache-entry-for-daemon)
 	 */
-	private HashMap<DaemonAddress, DaemonEntry> registeredDaemons;
+	private List<DaemonEntry> registeredDaemons;
 
 	/**
 	 * Updated when the cache is reset.
@@ -67,7 +77,7 @@ public class Master extends ComponentDefinition {
 	/**
 	 * (daemonId, <jobIds>)
 	 */
-	private HashMap<Integer, TreeSet<Integer>> loadedJobs; 
+	private HashMap<String, TreeSet<Integer>> loadedJobs; 
 	
 	/**
 	 * (jobId, Job)
@@ -83,8 +93,8 @@ public class Master extends ComponentDefinition {
 	private P2pMonitorConfiguration monitorConfig;
 
 	public Master() {
-		this.registeredDaemons = new HashMap<DaemonAddress, DaemonEntry>();
-		this.loadedJobs = new HashMap<Integer, TreeSet<Integer>>();
+		this.registeredDaemons = new ArrayList<DaemonEntry>();
+		this.loadedJobs = new HashMap<String, TreeSet<Integer>>();
 		this.jobs = new HashMap<Integer,Job>();
 		this.cacheEpoch = 1L;
 		this.userInput = create(UserInput.class);
@@ -107,6 +117,7 @@ public class Master extends ComponentDefinition {
 		subscribe(handlePrintLoadedJobs, userInput.getPositive(MasterCommands.class));
 		subscribe(handlePrintDaemonsWithLoadedJob, userInput.getPositive(MasterCommands.class));
 		subscribe(handleInstallJobOnHosts, userInput.getPositive(MasterCommands.class));
+		subscribe(handleStartJobOnHosts, userInput.getPositive(MasterCommands.class));
 		
 		connect(timer, userInput.getNegative(Timer.class));
 	}
@@ -138,7 +149,6 @@ public class Master extends ComponentDefinition {
 
 	private Handler<PrintConnectedDameons> handlePrintConnectedDameons = new Handler<PrintConnectedDameons>() {
 		public void handle(PrintConnectedDameons event) {
-
 				dumpCacheToLog();
 		}
 	};
@@ -148,12 +158,12 @@ public class Master extends ComponentDefinition {
 
 			if (loadedJobs.size() == 0)
 			{
-				logger.info("No loaded jobs for daemon {}", event.getDaemonId());
+				logger.info("No loaded jobs for daemon {}", event.getHost());
 			}
 			else
 			{
 				logger.info("======== Start loaded jobs ========");
-				TreeSet<Integer> jobIds = loadedJobs.get(event.getDaemonId());
+				TreeSet<Integer> jobIds = loadedJobs.get(event.getHost());
 				for (Integer i : jobIds)
 				{
 					logger.info("Job " + i.toString());
@@ -163,20 +173,29 @@ public class Master extends ComponentDefinition {
 		}
 	};
 
+	
+	private List<DaemonAddress> getDaemonsWithLoadedJob(int jobId)
+	{
+		List<DaemonAddress> daemonsFound = new ArrayList<DaemonAddress>();
+		for (DaemonEntry d: registeredDaemons)
+		{
+			TreeSet<Integer> loadedJobsAtD = loadedJobs.get(d.getHostname());
+			if (loadedJobsAtD != null) {
+				if (loadedJobsAtD.contains(jobId))
+				{
+					daemonsFound.add(d.getDaemonAddress());
+				}
+			}
+		}
+		return daemonsFound;
+	}
+	
 	private Handler<PrintDaemonsWithLoadedJob> handlePrintDaemonsWithLoadedJob = new Handler<PrintDaemonsWithLoadedJob>() {
 		public void handle(PrintDaemonsWithLoadedJob event) {
 			int jobId = event.getJobId();
-			List<DaemonAddress> daemonsFound = new ArrayList<DaemonAddress>();
-			for (DaemonAddress d: registeredDaemons.keySet())
-			{
-				TreeSet<Integer> loadedJobsAtD = loadedJobs.get(d.getDaemonId());
-				if (loadedJobsAtD != null) {
-					if (loadedJobsAtD.contains(jobId))
-					{
-						daemonsFound.add(d);
-					}
-				}
-			}
+			
+			List<DaemonAddress> daemonsFound = getDaemonsWithLoadedJob(jobId);
+
 			if (daemonsFound.size() == 0)
 			{
 				logger.info("No daemons found that have loaded job " + jobId);
@@ -194,6 +213,20 @@ public class Master extends ComponentDefinition {
 		}
 	};
 
+	private Handler<StartJobOnHosts> handleStartJobOnHosts = new Handler<StartJobOnHosts>() {
+		public void handle(StartJobOnHosts event) {
+			int jobId = event.getJobId();
+			List<DaemonAddress> daemonsFound = getDaemonsWithLoadedJob(jobId);
+			
+			logger.info("Starting job. Num daemons found {} ", daemonsFound.size());
+			for (DaemonAddress dest : daemonsFound)
+			{
+				logger.info("Starting job {} at {}", jobId, dest);
+				trigger(new JobStartRequestMsg(jobId, event.getNumPeersPerHost(), 
+						scenario, self, dest), net);
+			}
+		}
+	};
 	
 	private Handler<InstallJobOnHosts> handleInstallJobOnHosts = new Handler<InstallJobOnHosts>() {
 		public void handle(InstallJobOnHosts event) {
@@ -205,9 +238,9 @@ public class Master extends ComponentDefinition {
 			
 			jobs.put(event.getId(), event);
 			
-			for (DaemonAddress dest : registeredDaemons.keySet())
+			for (DaemonEntry dest : registeredDaemons)
 			{
-				JobLoadRequestMsg job = new JobLoadRequestMsg(event, self, dest);
+				JobLoadRequestMsg job = new JobLoadRequestMsg(event, self, dest.getDaemonAddress());
 				trigger(job, net);
 				logger.info("Installing job {} on {}", job.getArtifactId(), dest);
 			}
@@ -246,7 +279,7 @@ public class Master extends ComponentDefinition {
 		jobs.put(job.getId(), job);
 		TreeSet<Integer> jobIds = getJobsForDaemon(addr);
 		jobIds.add(job.getId());
-		loadedJobs.put(addr.getDaemonId(), jobIds);
+		loadedJobs.put(addr.getPeerAddress().getIp().getCanonicalHostName(), jobIds);
 	}
 	
 	private Handler<JobLoadResponseMsg> handleJobLoadResponseMsg = new Handler<JobLoadResponseMsg>() {
@@ -255,15 +288,14 @@ public class Master extends ComponentDefinition {
 			logger.info("JobLoadResponse received for {} was {}", 
 					event.getJobId(), event.getStatus());
 			
-			Address src = event.getSource();
-			int srcId = event.getDaemonId();
-			DaemonAddress dAddr = new DaemonAddress(srcId, src);
-			TreeSet<Integer> jobsAtDaemon = loadedJobs.get(dAddr.getDaemonId());
+			String hostname = event.getSource().getIp().getCanonicalHostName(); 
+			TreeSet<Integer> jobsAtDaemon = loadedJobs.get(hostname);
 			if (jobsAtDaemon == null)
 			{
 				jobsAtDaemon = new TreeSet<Integer>();
 			}
 			jobsAtDaemon.add(event.getJobId());
+			loadedJobs.put(hostname, jobsAtDaemon);
 		}
 	};
 	
@@ -280,7 +312,7 @@ public class Master extends ComponentDefinition {
 	private Handler<KeepAliveDaemonMsg> handleKeepAliveDaemonMsg = new Handler<KeepAliveDaemonMsg>() {
 		public void handle(KeepAliveDaemonMsg event) {
 			addDaemonToCache(event.getPeerAddress());
-			logger.info("Refreshed connection to daemon {}", event.getPeerAddress().getDaemonId());
+			logger.debug("Refreshed connection to daemon {}", event.getPeerAddress().getDaemonId());
 		}
 	};
 
@@ -326,21 +358,34 @@ public class Master extends ComponentDefinition {
 		public void handle(WebRequest event) {
 			logger.debug("Handling WebRequest");
 
-			WebResponse response = new WebResponse(dumpCacheToHtml(event.getTarget()), event, 1, 1);
+			WebResponse response = new WebResponse(dumpCacheToHtml(), event, 1, 1);
 			trigger(response, web);
 		}
 	};
 
 
+	private DaemonEntry findDaemonEntry(DaemonAddress address)
+	{
+		for (DaemonEntry de : registeredDaemons)
+		{
+			if (de.getDaemonAddress().compareTo(address) == 0)
+			{
+				return de;
+			}
+		}
+		return null;
+	}
+	
 	private final void addDaemonToCache(DaemonAddress address) {
 		if (address != null) {
 			long now = System.currentTimeMillis();
 
-			DaemonEntry entry = registeredDaemons.get(address);
+			DaemonEntry entry = findDaemonEntry(address);
 			if (entry == null) {
 				// add a new entry
+				// XXX look-up groupId for this host in table, and add to constructor
 				entry = new DaemonEntry(address, now, now);
-				registeredDaemons.put(address, entry);
+				registeredDaemons.add(entry);
 
 				// set a new eviction timeout
 				ScheduleTimeout st = new ScheduleTimeout(evictAfter);
@@ -392,38 +437,19 @@ public class Master extends ComponentDefinition {
 		logger.info("Age=====Freshness====Daemonaddress====ID===");
 		long now = System.currentTimeMillis();
 
-		Collection<DaemonEntry> entries = registeredDaemons.values();
-		ArrayList<DaemonEntry> sorted = new ArrayList<DaemonEntry>(entries);
-
-		// get all peers in most recently added order
-		Collections.sort(sorted);
-		for (DaemonEntry daemonEntry : sorted) {
-			logger.info("{}\t{}\t  {} : {}", new Object[] {
+		Collections.sort(registeredDaemons, new DaemonAgeComparator());
+		for (DaemonEntry daemonEntry : registeredDaemons) {
+			logger.info("{}\t{}\t  {} : id={}", new Object[] {
 					durationToString(now - daemonEntry.getAddedAt()),
 					durationToString(now - daemonEntry.getRefreshedAt()),
-					daemonEntry.getDaemonAddress(), 
+					daemonEntry.getHostname(), 
 					daemonEntry.getDaemonAddress().getDaemonId() });
 		}
 
 		logger.info("=========================================");
 	}
 
-	private String dumpCacheToHtml(String overlay) {
-		if (!registeredDaemons.containsKey(overlay)) {
-			StringBuilder sb = new StringBuilder("<!DOCTYPE html PUBLIC \"-//W3C");
-			sb.append("//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR");
-			sb.append("/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http:");
-			sb.append("//www.w3.org/1999/xhtml\"><head><meta http-equiv=\"Conten");
-			sb.append("t-Type\" content=\"text/html; charset=utf-8\" />");
-			sb.append("<title>Kompics P2P Bootstrap Server</title>");
-			sb.append("<style type=\"text/css\"><!--.style2 {font-family: ");
-			sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
-			sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
-			sb.append("Kompics P2P Bootstrap Overlays:</h2><br>");
-			sb.append("<a href=\"" + webAddress + "\">daemons</a>").append("<br>");
-			sb.append("</body></html>");
-			return sb.toString();
-		}
+	private String dumpCacheToHtml() {
 
 		StringBuilder sb = new StringBuilder("<!DOCTYPE html PUBLIC \"-//W3C");
 		sb.append("//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR");
@@ -434,24 +460,19 @@ public class Master extends ComponentDefinition {
 		sb.append("<style type=\"text/css\"><!--.style2 {font-family: ");
 		sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
 		sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
-		sb.append("Kompics P2P Bootstrap Cache for " + overlay + "</h2>");
+		sb.append("Kompics P2P Bootstrap Cache </h2>");
 		sb.append("<table width=\"600\" border=\"0\" align=\"center\"><tr>");
 		sb.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
 		sb.append("<th class=\"style2\" width=\"80\" scope=\"col\">Age</th>");
 		sb.append("<th class=\"style2\" width=\"120\" scope=\"col\">Freshness</th>");
-		sb.append("<th class=\"style2\" width=\"300\" scope=\"col\">" + overlay + " id</th>");
 		sb.append("<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
 		long now = System.currentTimeMillis();
 
-		Collection<DaemonEntry> entries = registeredDaemons.values();
-		ArrayList<DaemonEntry> sorted = new ArrayList<DaemonEntry>(entries);
-
-		// get all peers in most recently added order
-		Collections.sort(sorted);
+		Collections.sort(registeredDaemons, new DaemonAgeComparator());
 
 		int count = 1;
 
-		for (DaemonEntry DaemonEntry : sorted) {
+		for (DaemonEntry DaemonEntry : registeredDaemons) {
 			sb.append("<tr>");
 			sb.append("<td><div align=\"center\">").append(count++);
 			sb.append("</div></td>");
@@ -492,7 +513,7 @@ public class Master extends ComponentDefinition {
 			registeredDaemons.clear();
 			cacheEpoch += 1L;
 		} else {
-			registeredDaemons = new HashMap<DaemonAddress, DaemonEntry>();
+			registeredDaemons = new ArrayList<DaemonEntry>();
 			cacheEpoch = 1L;
 			outstandingTimeouts= new HashSet<UUID>();
 		}

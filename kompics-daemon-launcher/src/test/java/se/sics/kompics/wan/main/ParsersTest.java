@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -74,10 +75,12 @@ public class ParsersTest extends TestCase {
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
 					new FileOutputStream(f)));
 
+			Arrays.sort(hosts);
 			for (String host : hosts) {
 				bw.write(host);
 				bw.newLine();
 			}
+			
 			String filename = f.getPath();
 
 			bw.flush();

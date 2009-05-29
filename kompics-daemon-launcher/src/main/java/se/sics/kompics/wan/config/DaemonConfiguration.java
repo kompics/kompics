@@ -63,9 +63,10 @@ public class DaemonConfiguration extends MasterAddressConfiguration {
 
 	@Override
 	protected void parseAdditionalOptions(String[] args) throws IOException {
-		daemonMasterOption = new Option("masteraddr", true, "Address of Master Server");
-		daemonMasterOption.setArgName(VAL_ADDRESS);
-		options.addOption(daemonMasterOption);
+		super.parseAdditionalOptions(args);
+//		daemonMasterOption = new Option("masteraddr", true, "Address of Master Server");
+//		daemonMasterOption.setArgName(VAL_ADDRESS);
+//		options.addOption(daemonMasterOption);
 
 		daemonIdOption = new Option("id", true, "Daemon id");
 		daemonIdOption.setArgName(VAL_NUMBER);
@@ -83,7 +84,7 @@ public class DaemonConfiguration extends MasterAddressConfiguration {
 
 	@Override
 	protected void processAdditionalOptions() throws IOException {
-
+		super.processAdditionalOptions();
 		try {
 			daemonConfig = new PropertiesConfiguration(PROP_DAEMON_CONFIG_PROPS_FILE);
 			compositeConfig.addConfiguration(daemonConfig);
@@ -92,21 +93,21 @@ public class DaemonConfiguration extends MasterAddressConfiguration {
 					+ PROP_DAEMON_CONFIG_PROPS_FILE);
 		}
 
-		if (line.hasOption(daemonMasterOption.getOpt())) {
-			String masterAddr = new String(line.getOptionValue(daemonMasterOption.getOpt()));
-			configuration.compositeConfig.setProperty(MasterAddressConfiguration.PROP_MASTER_ADDR, masterAddr);
-		}
+//		if (line.hasOption(daemonMasterOption.getOpt())) {
+//			String masterAddr = new String(line.getOptionValue(daemonMasterOption.getOpt()));
+//			compositeConfig.setProperty(MasterAddressConfiguration.PROP_MASTER_ADDR, masterAddr);
+//		}
 		if (line.hasOption(daemonIdOption.getOpt())) {
 			int daemonId = new Integer(line.getOptionValue(daemonIdOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_DAEMON_ID, daemonId);
+			compositeConfig.setProperty(PROP_DAEMON_ID, daemonId);
 		}
 		if (line.hasOption(daemonRetryPeriodOption.getOpt())) {
 			int retryPeriod = new Integer(line.getOptionValue(daemonRetryPeriodOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_DAEMON_RETRY_PERIOD, retryPeriod);
+			compositeConfig.setProperty(PROP_DAEMON_RETRY_PERIOD, retryPeriod);
 		}
 		if (line.hasOption(daemonRetryCountOption.getOpt())) {
 			int retryCount = new Integer(line.getOptionValue(daemonRetryCountOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_DAEMON_RETRY_COUNT, retryCount);
+			compositeConfig.setProperty(PROP_DAEMON_RETRY_COUNT, retryCount);
 		}
 
 	}

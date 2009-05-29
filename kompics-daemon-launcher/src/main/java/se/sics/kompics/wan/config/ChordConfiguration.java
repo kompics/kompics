@@ -81,17 +81,17 @@ public class ChordConfiguration extends Configuration {
 		if (line.hasOption(chordMonitorIdOption.getOpt()))
 		{
 			int chordMonitorId = new Integer(line.getOptionValue(chordMonitorIdOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CHORD_MONITOR_ID, chordMonitorId);
+			compositeConfig.setProperty(PROP_CHORD_MONITOR_ID, chordMonitorId);
 		}
 		if (line.hasOption(livePeriodOption.getOpt()))
 		{
 			int livePeriod = new Integer(line.getOptionValue(livePeriodOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CHORD_LIVE_PERIOD, livePeriod);
+			compositeConfig.setProperty(PROP_CHORD_LIVE_PERIOD, livePeriod);
 		}
 		if (line.hasOption(suspectedPeriodOption.getOpt()))
 		{
 			int suspectedPeriod = new Integer(line.getOptionValue(suspectedPeriodOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CHORD_SUSPECTED_PERIOD, suspectedPeriod);
+			compositeConfig.setProperty(PROP_CHORD_SUSPECTED_PERIOD, suspectedPeriod);
 		}
 	}
 

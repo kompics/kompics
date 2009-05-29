@@ -312,12 +312,11 @@ public class MavenLauncher extends ComponentDefinition {
 				status = JobStartResponse.Status.FAIL;
 			} else {
 				// status = mvnExecExec(event, event.getScenario());
-				forkDummyExec(event.getSlaveId(), event.getNumSlaves(), event, event.getScenario());
+				forkDummyExec(event.getNumPeers(), event, event.getScenario());
 			}
 
 			// ProcessWrapper p = executingProcesses.get(id);
-			JobStartResponse response = new JobStartResponse(event, jobId, event.getSlaveId(),
-					status);
+			JobStartResponse response = new JobStartResponse(event, jobId, status);
 			trigger(response, maven);
 		}
 	};
@@ -354,10 +353,10 @@ public class MavenLauncher extends ComponentDefinition {
 		return status;
 	}
 
-	private JobStartResponse.Status forkDummyExec(int slaveId, int numSlaves, JobStartRequest job,
+	private JobStartResponse.Status forkDummyExec(int numPeers, JobStartRequest job,
 			SimulationScenario scenario) {
 		JobStartResponse.Status status;
-		int res = forkProcess(slaveId, numSlaves, job, scenario);
+		int res = forkProcess(numPeers, job, scenario);
 		switch (res) {
 		case 0:
 			status = JobStartResponse.Status.SUCCESS;
@@ -379,7 +378,7 @@ public class MavenLauncher extends ComponentDefinition {
 	 * @param assembly
 	 * @return 0 on success, -1 on failure.
 	 */
-	private int forkProcess(int slaveId, int numPeers, Job job, SimulationScenario scenario) {
+	private int forkProcess(int numPeers, Job job, SimulationScenario scenario) {
 		int res = 0;
 		String classPath = System.getProperty("java.class.path");
 		java.util.List<String> command = new ArrayList<String>();
@@ -389,8 +388,7 @@ public class MavenLauncher extends ComponentDefinition {
 		command.add(classPath);
 		command.add(job.getMainClass());
 		command.add("slave");
-		command.add("-" + Configuration.OPT_PEERS + " " + Integer.toString(slaveId)); 
-		command.add("-" + Configuration.OPT_IDSPACE + " " + Integer.toString(numPeers));				
+		command.add("-" + Configuration.OPT_PEERS + " " + Integer.toString(numPeers)); 
 
 		command.addAll(job.getArgs());
 		command.add("-Dlog4j.properties=log4j.properties");
@@ -439,7 +437,6 @@ public class MavenLauncher extends ComponentDefinition {
 		executingProcesses.put(job.getId(), pw);
 		executingJobs.put(job.getId(), job);
 		new Thread(pw).start();
-		// assembledJobs.remove(job.getId());
 		return res;
 	}
 

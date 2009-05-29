@@ -46,7 +46,7 @@ public abstract class MasterAddressConfiguration extends Configuration {
 	@Override
 	protected void parseAdditionalOptions(String[] args) throws IOException {
 				
-		masterAddressOption = new Option("masteraddress", true, "Address of Master in format host:port:id");
+		masterAddressOption = new Option("master", true, "Address of Master in format host:port:id");
 		masterAddressOption.setArgName("address");
 		options.addOption(masterAddressOption);
 		
@@ -58,7 +58,7 @@ public abstract class MasterAddressConfiguration extends Configuration {
 		if (line.hasOption(masterAddressOption.getOpt()))
 		{
 			String addr = new String(line.getOptionValue(masterAddressOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_MASTER_ADDR, addr);
+			compositeConfig.setProperty(PROP_MASTER_ADDR, addr);
 		}
 		
 	}

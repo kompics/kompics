@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -276,7 +277,7 @@ public class DaemonTest implements Serializable {
 				// if success then remove from loadingJobs, add to loadedJobs
 				if (event.getStatus() == JobLoadResponse.Status.FAIL
 						|| event.getStatus() == JobLoadResponse.Status.DUPLICATE) {
-					logger.warn("JobLoadRequest for {} not success. Status: {}", event.getJobId(),
+					logger.error("JobLoadRequest for {} not success. Status: {}", event.getJobId(),
 							event.getStatus());
 					testObj.fail(true);
 				} else {
@@ -289,46 +290,6 @@ public class DaemonTest implements Serializable {
 
 			}
 		};
-
-		// public Handler<ListJobsLoadedResponseMsg>
-		// handleListJobsLoadedResponse = new
-		// Handler<ListJobsLoadedResponseMsg>() {
-		// public void handle(ListJobsLoadedResponseMsg event) {
-		//
-		// logger.info("ListJobsLoadedResponse returned {} jobs",
-		// event.getSetJobs().size());
-		// Set<Job> listJobsLoaded = event.getSetJobs();
-		//
-		// DaemonAddress daemonAddr = new DaemonAddress(event.getDaemonId(),
-		// event.getSource());
-		//				
-		// SimulationScenario scenario = new SimulationScenario() {
-		// private static final long serialVersionUID = -5355642917108165919L;
-		// };
-		//
-		// boolean jobsFound = true;
-		// for (Job j : listJobsLoaded) {
-		// if (loadedJobs.containsKey(j.getId()) == true) {
-		// logger.info("JobStartRequestMsg sent for job: " + j.getId());
-		// // start a job
-		// trigger(new JobStartRequestMsg(j.getId(), scenario,
-		// event.getDestination(),
-		// daemonAddr), network.getPositive(Network.class));
-		//
-		// } else {
-		// logger.info("ERROR: Found job not loaded: " + j.getId());
-		// jobsFound = false;
-		// }
-		// }
-		// if (jobsFound == false) {
-		// testObj.fail(false);
-		// }
-		//
-		// Iterator<Job> iter = listJobsLoaded.iterator();
-		//
-		// // IndexerTest.semaphore.release(1);
-		// }
-		// };
 
 		public Handler<JobsFoundMsg> handleJobsFound = new Handler<JobsFoundMsg>() {
 			public void handle(JobsFoundMsg event) {
@@ -343,7 +304,7 @@ public class DaemonTest implements Serializable {
 						loadedJobs.put(id, job);
 						logger.info("Added job {} to loaded jobs set.", id);
 
-						trigger(new JobStartRequestMsg(job.getId(), 1, 1, scenario, event
+						trigger(new JobStartRequestMsg(job.getId(), 1, scenario, event
 								.getDestination(), daemonAddr), network.getPositive(Network.class));
 
 					}
@@ -380,14 +341,21 @@ public class DaemonTest implements Serializable {
 		};
 	}
 
-	@org.junit.Test
+	@org.junit.Test @Ignore
 	public void testDaemon() {
 
 		TestDaemonComponent.setTestObj(this);
 
 		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
+		try {
 			Configuration.init(new String[] {}, DaemonConfiguration.class);
-			Kompics.createAndStart(TestDaemonComponent.class, 2);
+			Kompics.createAndStart(DaemonTest.TestDaemonComponent.class, 1);
 		} catch (ConfigurationException e1) {
 			e1.printStackTrace();
 		}

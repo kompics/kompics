@@ -16,12 +16,10 @@ public class JobStartResponse extends Response implements Serializable {
 	private final Status status;
 
 	private final int jobId;
-	private final int slaveId;
 	
-	public JobStartResponse(JobStartRequest request, int jobId, int slaveId, Status status) {
+	public JobStartResponse(JobStartRequest request, int jobId, Status status) {
 		super(request);
 		this.jobId = jobId;
-		this.slaveId = slaveId;
 		this.status = status;
 	}
 
@@ -29,10 +27,6 @@ public class JobStartResponse extends Response implements Serializable {
 		return jobId;
 	}
 
-	public int getSlaveId() {
-		return slaveId;
-	}
-	
 	public Status getStatus() {
 		return status;
 	}

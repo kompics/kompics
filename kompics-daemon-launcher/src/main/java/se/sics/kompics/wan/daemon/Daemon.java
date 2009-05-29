@@ -274,7 +274,7 @@ public class Daemon extends ComponentDefinition {
 	public Handler<JobStartRequestMsg> handleJobStartRequest = new Handler<JobStartRequestMsg>() {
 		public void handle(JobStartRequestMsg event) {
 			int jobId = event.getJobId();
-			int slaveId = event.getSlaveId();
+			logger.info("Starting job {} at Daemon.", jobId);
 			
 			Job job = loadedJobs.get(jobId);
 
@@ -287,11 +287,11 @@ public class Daemon extends ComponentDefinition {
 					status = JobStartResponse.Status.NOT_LOADED;
 				}
 				JobStartResponseMsg response = 
-					new JobStartResponseMsg(jobId, slaveId, status, self, event.getSource());
+					new JobStartResponseMsg(jobId, status, self, event.getSource());
 				trigger(response, net);
 			} else {
-				JobStartRequest jobExec = new JobStartRequest(event.getSlaveId(), 
-						event.getNumDaemons(), job, event.getSimulationScenario());
+				JobStartRequest jobExec = new JobStartRequest( 
+						event.getNumPeers(), job, event.getSimulationScenario());
 				trigger(jobExec, mavenLauncher.getPositive(Maven.class));
 				executingJobs.put(jobId, jobExec);
 			}

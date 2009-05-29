@@ -40,6 +40,18 @@ public class UserInput extends ComponentDefinition {
 		}
 	};
 
+	private int getJob()
+	{
+		System.out.print("\tEnter job id: ");
+		return scanner.nextInt();
+	}
+	
+	private int getNumPeers()
+	{
+		System.out.print("\tEnter the number of peers to start at each host: ");
+		return scanner.nextInt();
+	}
+	
 	private void getInput() {
 		TreeSet<Address> hosts = MasterConfiguration.getHosts();
 		switch (selectOption()) {
@@ -47,14 +59,12 @@ public class UserInput extends ComponentDefinition {
 			trigger(new PrintConnectedDameons(), master);
 			break;
 		case 2:
-			System.out.print("\tEnter job id: ");
-			int jobId = scanner.nextInt();
-			trigger(new PrintDaemonsWithLoadedJob(jobId), master);
+			trigger(new PrintDaemonsWithLoadedJob(getJob()), master);
 			break;
 		case 3:
-			System.out.print("\tEnter daemon id: ");
-			int daemonId = scanner.nextInt();
-			trigger(new PrintLoadedJobs(daemonId), master);
+			System.out.print("\tEnter daemon hostname: ");
+			String host = scanner.next();
+			trigger(new PrintLoadedJobs(host), master);
 			break;
 		case 5: // XXX
 			hosts = getHosts();
@@ -74,6 +84,9 @@ public class UserInput extends ComponentDefinition {
 			String[] args = {};
 			trigger(new InstallJobOnHosts(groupId, artifactId, version,
 					mainClass, Arrays.asList(args), hosts), master);
+			break;
+		case 9:
+			trigger(new StartJobOnHosts(getJob(), getNumPeers()), master);			
 			break;
 		case 0:
 			System.out.println("\tGoodbye.");
@@ -108,10 +121,11 @@ public class UserInput extends ComponentDefinition {
 		System.out.println();
 		System.out.println("Enter a number to select an option from below:");
 		System.out.println("\t1) list connected daemons.");
-		System.out.println("\t2) list all daemons with specified loaded job.");
-		System.out.println("\t3) list loaded jobs for a specified daemon.");
+		System.out.println("\t2) specify a job, and list all daemons that have loaded it.");
+		System.out.println("\t3) specify a daemon, and list all its loaded jobs.");
 		System.out.println("\t4) load a job to all hosts.");
 		System.out.println("\t5) load a job to selected hosts.");
+		System.out.println("\t9) start a job on all hosts that have loaded the job.");
 		System.out.println("\t0) exit program");
 		System.out.print("Enter your choice: ");
 		return scanner.nextInt();

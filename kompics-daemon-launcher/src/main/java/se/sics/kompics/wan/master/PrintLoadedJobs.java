@@ -4,13 +4,13 @@ import se.sics.kompics.Request;
 
 public class PrintLoadedJobs extends Request {
 
-	private final int daemonId;
-	
-	public PrintLoadedJobs(int daemonId) {
-		this.daemonId = daemonId;		
+	private final String host;
+
+	public PrintLoadedJobs(String host) {
+		this.host = host;
 	}
-	
-	public int getDaemonId() {
-		return daemonId;
+
+	public String getHost() {
+		return host;
 	}
 }

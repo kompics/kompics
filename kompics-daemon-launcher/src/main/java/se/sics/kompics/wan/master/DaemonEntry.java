@@ -14,11 +14,19 @@ public final class DaemonEntry implements Comparable<DaemonEntry> {
 	private UUID evictionTimerId;
 
 	private final long addedAt;
+	
+	private final int groupId;
 
+	
 	public DaemonEntry(DaemonAddress daemonAddress, long now, long addedAt) {
+		this(daemonAddress, now, addedAt, 0);
+	}
+	
+	public DaemonEntry(DaemonAddress daemonAddress, long now, long addedAt, int groupId) {
 		this.daemonAddress = daemonAddress;
 		this.refreshedAt = now;
 		this.addedAt = addedAt;
+		this.groupId = groupId;
 	}
 
 	public DaemonAddress getDaemonAddress() {
@@ -47,11 +55,20 @@ public final class DaemonEntry implements Comparable<DaemonEntry> {
 
 	@Override
 	public int compareTo(DaemonEntry that) {
+		if (this.groupId > that.groupId)
+		{
+			return -1;
+		}
+		if (this.groupId < that.groupId)
+		{
+			return 1;
+		}
+		
 		// more recent entries are lower than older entries
 		if (this.refreshedAt > that.refreshedAt)
 			return -1;
 		if (this.refreshedAt < that.refreshedAt)
-			return 1;
+			return 1;		
 		return 0;
 	}
 
@@ -85,5 +102,14 @@ public final class DaemonEntry implements Comparable<DaemonEntry> {
 	public String toString() {
 		
 		return daemonAddress.toString();
+	}
+	
+	public String getHostname()
+	{
+		return daemonAddress.getPeerAddress().getIp().getCanonicalHostName();
+	}
+	
+	public int getGroupId() {
+		return groupId;
 	}
 }

@@ -62,7 +62,7 @@ public class MasterConfiguration extends MasterAddressConfiguration {
 
 	@Override
 	protected void parseAdditionalOptions(String[] args) throws IOException {
-				
+		super.parseAdditionalOptions(args);
 		scenarioClassfileOption = new Option("scenarioclassfile", true, "File containing SimulationScenario class (experiment to be executed).");
 		scenarioClassfileOption.setArgName("filename");
 		options.addOption(scenarioClassfileOption);
@@ -76,16 +76,16 @@ public class MasterConfiguration extends MasterAddressConfiguration {
 
 	@Override
 	protected void processAdditionalOptions() throws IOException {
-		
+		super.processAdditionalOptions();
 		if (line.hasOption(scenarioClassfileOption.getOpt()))
 		{
 			String scf = new String(line.getOptionValue(scenarioClassfileOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_MASTER_SCENARIO_CLASSFILE, scf);
+			compositeConfig.setProperty(PROP_MASTER_SCENARIO_CLASSFILE, scf);
 		}
 		
 		if (line.hasOption(hostsFileOption.getOpt())) {
 			String hostsFilename = new String(line.getOptionValue(hostsFileOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_MASTER_HOSTS_FILENAME, hostsFilename);
+			compositeConfig.setProperty(PROP_MASTER_HOSTS_FILENAME, hostsFilename);
 		}
 	}
 

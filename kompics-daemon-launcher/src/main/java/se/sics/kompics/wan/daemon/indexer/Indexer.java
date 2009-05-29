@@ -79,7 +79,7 @@ public class Indexer extends ComponentDefinition {
 
 	public Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
-			logger.info("Starting Indexing...");
+			logger.debug("Starting Indexing...");
 
 			scheduleIndexing();
 		}
@@ -132,7 +132,7 @@ public class Indexer extends ComponentDefinition {
 
 	private Handler<IndexerTimeout> handleIndexerTimeout = new Handler<IndexerTimeout>() {
 		public void handle(IndexerTimeout event) {
-			logger.info("Indexer timeout expired. Indexing...");
+			logger.debug("Indexer timeout expired. Indexing...");
 
 			if (indexingStopped == false) {
 				File kHome = new File(Daemon.KOMPICS_HOME);

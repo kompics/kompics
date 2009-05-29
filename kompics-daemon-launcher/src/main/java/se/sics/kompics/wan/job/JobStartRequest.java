@@ -10,28 +10,25 @@ public class JobStartRequest extends Job {
 
 	private final SimulationScenario scenario;
 	
-	private final int slaveId;
-	private final int numSlaves;
+	private final int numPeers;
 	
-	public JobStartRequest(int slaveId, int numDaemons, String groupId, String artifactId, String version, String mainClass, 
+	public JobStartRequest(int numDaemons, String groupId, String artifactId, String version, String mainClass, 
 			List<String> args, SimulationScenario scenario, 
 			String repoId, String repoUrl) {
 		super(groupId, artifactId, version, mainClass, args, repoId, repoUrl);
 		this.scenario = scenario;
-		this.slaveId = slaveId;
-		this.numSlaves = numDaemons;
+		this.numPeers = numDaemons;
 	}
 	
-	public JobStartRequest(int slaveId, int numDaemons, String groupId, String artifactId, String version, String mainClass, 
+	public JobStartRequest(int numDaemons, String groupId, String artifactId, String version, String mainClass, 
 			List<String> args, SimulationScenario scenario) {
 		super(groupId, artifactId, version, mainClass, args);
 		this.scenario = scenario;
-		this.slaveId = slaveId;
-		this.numSlaves = numDaemons;
+		this.numPeers = numDaemons;
 	}
 	
-	public JobStartRequest(int slaveId, int numDaemons, Job job, SimulationScenario scenario) {
-		this(slaveId, numDaemons, job.getGroupId(), job.getArtifactId(), job.getVersion(), 
+	public JobStartRequest(int numPeers, Job job, SimulationScenario scenario) {
+		this(numPeers, job.getGroupId(), job.getArtifactId(), job.getVersion(), 
 				job.getMainClass(),	job.getArgs(), scenario, job.getRepoId(), job.getRepoUrl());
 	}
 
@@ -39,12 +36,9 @@ public class JobStartRequest extends Job {
 		return scenario;
 	}
 
-	public int getNumSlaves() {
-		return numSlaves;
+	public int getNumPeers() {
+		return numPeers;
 	}
 	
-	public int getSlaveId() {
-		return slaveId;
-	}
 	
 }

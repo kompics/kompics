@@ -14,15 +14,13 @@ public class JobStartRequestMsg extends DaemonRequestMessage {
 
 	private final SimulationScenario simulationScenario;
 	private final int jobId;
-	private final int slaveId;
-	private final int numDaemons;
+	private final int numPeers;
 	
-	public JobStartRequestMsg(int jobId, int slaveId, int numDaemons, SimulationScenario scenario, Address src, DaemonAddress dest) {
+	public JobStartRequestMsg(int jobId, int numPeers, SimulationScenario scenario, Address src, DaemonAddress dest) {
 		super(src, dest);
 		this.simulationScenario = scenario;
 		this.jobId = jobId;
-		this.slaveId = slaveId;
-		this.numDaemons = numDaemons;
+		this.numPeers = numPeers;
 	}
 	
 	public SimulationScenario getSimulationScenario() {
@@ -33,11 +31,7 @@ public class JobStartRequestMsg extends DaemonRequestMessage {
 		return jobId;
 	}
 	
-	public int getSlaveId() {
-		return slaveId;
-	}
-	
-	public int getNumDaemons() {
-		return numDaemons;
+	public int getNumPeers() {
+		return numPeers;
 	}
 }

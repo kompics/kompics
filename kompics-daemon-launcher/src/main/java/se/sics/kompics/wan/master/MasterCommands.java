@@ -16,5 +16,6 @@ public class MasterCommands extends PortType {
 		positive(PrintDaemonsWithLoadedJob.class);
 		positive(PrintLoadedJobs.class);
 		positive(InstallJobOnHosts.class);
+		positive(StartJobOnHosts.class);
 	}
 }

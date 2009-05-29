@@ -1,8 +1,6 @@
 package se.sics.kompics.wan.main;
 
 import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,19 +19,17 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
-import se.sics.kompics.address.Address;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
-import se.sics.kompics.wan.daemon.DaemonAddress;
-import se.sics.kompics.wan.daemon.ListJobsLoadedRequestMsg;
 import se.sics.kompics.wan.daemon.indexer.Index;
 import se.sics.kompics.wan.daemon.indexer.IndexShutdown;
 import se.sics.kompics.wan.daemon.indexer.Indexer;
 import se.sics.kompics.wan.daemon.indexer.IndexerInit;
 import se.sics.kompics.wan.daemon.indexer.JobsFound;
+import se.sics.kompics.wan.daemon.indexer.ListJobsLoadedRequest;
 import se.sics.kompics.wan.daemon.maven.Maven;
 import se.sics.kompics.wan.daemon.maven.MavenLauncher;
 import se.sics.kompics.wan.job.DummyPomConstructionException;
@@ -266,6 +262,7 @@ public class IndexerTest implements Serializable {
 
 				// if success then remove from loadingJobs, add to loadedJobs
 				if (event.getStatus() != JobLoadResponse.Status.ASSEMBLED) {
+					logger.warn("Failed to assemble job: " + event.getJobId());
 					testObj.fail(true);
 				}
 
@@ -277,24 +274,24 @@ public class IndexerTest implements Serializable {
 
 				Set<Job> listJobsLoaded = event.getSetJobs();
 
-				boolean jobsFound = true;
 				for (Job j : listJobsLoaded) {
 					if (loadedJobs.containsKey(j.getId()) == true) {
-						logger.info("Found already loaded job: " + j.getId());
+						logger.info("Found already loaded job: {}", j.getId());
 					} else {
-						logger.info("ERROR: Found job not loaded: " + j.getId());
-						jobsFound = false;
+						logger.info("Found new job {}", j.getId());
+						listJobsLoaded.add(j);
+//						logger.warn("No job found when listing loaded jobs ");
+//						testObj.fail(false);
 					}
-				}
-				if (jobsFound == false) {
-					testObj.fail(false);
 				}
 
 				Iterator<Job> iter = listJobsLoaded.iterator();
+				while (iter.hasNext())
+				{
+					trigger(new JobStartRequest(1, iter.next(), scenario), mavenLauncher.getPositive(Maven.class));
+				}
 
-				trigger(new JobStartRequest(1, 1, iter.next(), scenario), mavenLauncher.getPositive(Maven.class));
 
-				// IndexerTest.semaphore.release(1);
 			}
 		};
 
@@ -309,16 +306,8 @@ public class IndexerTest implements Serializable {
 					if (loadedJobs.containsKey(id) == false) {
 						loadedJobs.put(id, job);
 						logger.info("Added job {} to loaded jobs set.", id);
-	
-						Address addr;
-						try {
-							addr = new Address(InetAddress.getLocalHost(), 3333, 10);
-							trigger(new ListJobsLoadedRequestMsg(addr, new DaemonAddress(1, addr)),
+						trigger(new ListJobsLoadedRequest(),
 									indexer.getPositive(Index.class));
-						} catch (UnknownHostException e) {
-							e.printStackTrace();
-						}
-	
 					}
 				}
 
@@ -348,7 +337,7 @@ public class IndexerTest implements Serializable {
 
 		TestIndexerComponent.setTestObj(this);
 
-		Kompics.createAndStart(TestIndexerComponent.class, 2);
+		Kompics.createAndStart(TestIndexerComponent.class, 1);
 
 		try {
 			IndexerTest.semaphore.acquire(EVENT_COUNT);

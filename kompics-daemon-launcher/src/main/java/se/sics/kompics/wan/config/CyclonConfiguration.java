@@ -104,33 +104,33 @@ public class CyclonConfiguration extends Configuration {
 		if (line.hasOption(cyclonMonitorIdOption.getOpt()))
 		{
 			int cyclonMonitorId = new Integer(line.getOptionValue(cyclonMonitorIdOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CYCLON_MONITOR_ID, cyclonMonitorId);
+			compositeConfig.setProperty(PROP_CYCLON_MONITOR_ID, cyclonMonitorId);
 		}
 		if (line.hasOption(shufflePeriodOption.getOpt()))
 		{
 			int sp = new Integer(line.getOptionValue(shufflePeriodOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CYCLON_SHUFFLE_PERIOD, sp);
+			compositeConfig.setProperty(PROP_CYCLON_SHUFFLE_PERIOD, sp);
 		}
 		if (line.hasOption(shuffleLengthOption.getOpt()))
 		{
 			int sl = new Integer(line.getOptionValue(shuffleLengthOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CYCLON_SHUFFLE_LENGTH, sl);
+			compositeConfig.setProperty(PROP_CYCLON_SHUFFLE_LENGTH, sl);
 		}
 		if (line.hasOption(shuffleTimeoutOption.getOpt()))
 		{
 			int st = new Integer(line.getOptionValue(shuffleTimeoutOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CYCLON_SHUFFLE_TIMEOUT, st);
+			compositeConfig.setProperty(PROP_CYCLON_SHUFFLE_TIMEOUT, st);
 		}
 		if (line.hasOption(cacheSizeOption.getOpt()))
 		{
 			int cs = new Integer(line.getOptionValue(cacheSizeOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CYCLON_CACHE_SIZE, cs);
+			compositeConfig.setProperty(PROP_CYCLON_CACHE_SIZE, cs);
 		}
 
 		if (line.hasOption(bootstrapRequestPeerCountOption.getOpt()))
 		{
 			int bp = new Integer(line.getOptionValue(bootstrapRequestPeerCountOption.getOpt()));
-			configuration.compositeConfig.setProperty(PROP_CYCLON_BOOTSTRAP_NUM_PEERS, bp);
+			compositeConfig.setProperty(PROP_CYCLON_BOOTSTRAP_NUM_PEERS, bp);
 		}
 
 	}
