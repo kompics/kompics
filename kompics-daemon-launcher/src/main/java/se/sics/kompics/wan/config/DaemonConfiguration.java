@@ -46,7 +46,8 @@ public class DaemonConfiguration extends MasterAddressConfiguration {
 		super(args);
 
 		daemonInitialized = true;
-		// can only set DEFAULT_DAEMON_ID after local peer address is set
+		// generate DAEMON_ID using the local host address.
+		// can only set DEFAULT_DAEMON_ID after local peer address is set.
 		try {
 			InetAddress inet = InetAddress
 					.getByName(compositeConfig.getString(PROP_IP, DEFAULT_IP));
@@ -64,9 +65,6 @@ public class DaemonConfiguration extends MasterAddressConfiguration {
 	@Override
 	protected void parseAdditionalOptions(String[] args) throws IOException {
 		super.parseAdditionalOptions(args);
-//		daemonMasterOption = new Option("masteraddr", true, "Address of Master Server");
-//		daemonMasterOption.setArgName(VAL_ADDRESS);
-//		options.addOption(daemonMasterOption);
 
 		daemonIdOption = new Option("id", true, "Daemon id");
 		daemonIdOption.setArgName(VAL_NUMBER);
@@ -93,10 +91,6 @@ public class DaemonConfiguration extends MasterAddressConfiguration {
 					+ PROP_DAEMON_CONFIG_PROPS_FILE);
 		}
 
-//		if (line.hasOption(daemonMasterOption.getOpt())) {
-//			String masterAddr = new String(line.getOptionValue(daemonMasterOption.getOpt()));
-//			compositeConfig.setProperty(MasterAddressConfiguration.PROP_MASTER_ADDR, masterAddr);
-//		}
 		if (line.hasOption(daemonIdOption.getOpt())) {
 			int daemonId = new Integer(line.getOptionValue(daemonIdOption.getOpt()));
 			compositeConfig.setProperty(PROP_DAEMON_ID, daemonId);

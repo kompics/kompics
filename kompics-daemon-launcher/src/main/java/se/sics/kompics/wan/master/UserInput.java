@@ -62,9 +62,9 @@ public class UserInput extends ComponentDefinition {
 			trigger(new PrintDaemonsWithLoadedJob(getJob()), master);
 			break;
 		case 3:
-			System.out.print("\tEnter daemon hostname: ");
-			String host = scanner.next();
-			trigger(new PrintLoadedJobs(host), master);
+			System.out.print("\tEnter daemon-id: ");
+			int daemonId= scanner.nextInt();
+			trigger(new PrintLoadedJobs(daemonId), master);
 			break;
 		case 5: // XXX
 			hosts = getHosts();

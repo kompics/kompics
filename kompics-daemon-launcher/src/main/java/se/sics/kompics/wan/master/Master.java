@@ -1,14 +1,12 @@
 package se.sics.kompics.wan.master;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
@@ -75,9 +73,9 @@ public class Master extends ComponentDefinition {
 	private Long cacheEpoch;
 
 	/**
-	 * (daemonId, <jobIds>)
+	 * (ip-addr(hostname), <jobIds>)
 	 */
-	private HashMap<String, TreeSet<Integer>> loadedJobs; 
+	private HashMap<Integer, TreeSet<Integer>> loadedHostJobs; 
 	
 	/**
 	 * (jobId, Job)
@@ -94,7 +92,7 @@ public class Master extends ComponentDefinition {
 
 	public Master() {
 		this.registeredDaemons = new ArrayList<DaemonEntry>();
-		this.loadedJobs = new HashMap<String, TreeSet<Integer>>();
+		this.loadedHostJobs = new HashMap<Integer, TreeSet<Integer>>();
 		this.jobs = new HashMap<Integer,Job>();
 		this.cacheEpoch = 1L;
 		this.userInput = create(UserInput.class);
@@ -156,17 +154,22 @@ public class Master extends ComponentDefinition {
 	private Handler<PrintLoadedJobs> handlePrintLoadedJobs = new Handler<PrintLoadedJobs>() {
 		public void handle(PrintLoadedJobs event) {
 
-			if (loadedJobs.size() == 0)
+			int daemonId = event.getDaemonId();
+			
+			if (loadedHostJobs.size() == 0)
 			{
-				logger.info("No loaded jobs for daemon {}", event.getHost());
+				logger.info("No loaded jobs for daemon {}", daemonId);
 			}
 			else
 			{
 				logger.info("======== Start loaded jobs ========");
-				TreeSet<Integer> jobIds = loadedJobs.get(event.getHost());
+				
+				TreeSet<Integer> jobIds = loadedHostJobs.get(daemonId);
 				for (Integer i : jobIds)
 				{
-					logger.info("Job " + i.toString());
+					logger.info("Job {} at {} (" + getDaemonIpFromId(daemonId)+")", 
+							i.toString(), daemonId 
+							);
 				}
 				logger.info("======== End loaded jobs ========");
 			}
@@ -179,7 +182,7 @@ public class Master extends ComponentDefinition {
 		List<DaemonAddress> daemonsFound = new ArrayList<DaemonAddress>();
 		for (DaemonEntry d: registeredDaemons)
 		{
-			TreeSet<Integer> loadedJobsAtD = loadedJobs.get(d.getHostname());
+			TreeSet<Integer> loadedJobsAtD = loadedHostJobs.get(d.getDaemonAddress().getDaemonId());
 			if (loadedJobsAtD != null) {
 				if (loadedJobsAtD.contains(jobId))
 				{
@@ -266,7 +269,7 @@ public class Master extends ComponentDefinition {
 
 	private TreeSet<Integer> getJobsForDaemon(DaemonAddress addr)
 	{
-		TreeSet<Integer> jobIds = loadedJobs.get(addr);
+		TreeSet<Integer> jobIds = loadedHostJobs.get(addr);
 		if (jobIds == null)
 		{
 			jobIds = new TreeSet<Integer>();
@@ -274,12 +277,44 @@ public class Master extends ComponentDefinition {
 		return jobIds;
 	}
 	
+	private DaemonAddress getDaemonAddressFromId(int id)
+	{
+		for (DaemonEntry d : registeredDaemons)
+		{
+			if (d.getDaemonAddress().getDaemonId() == id)
+			{
+				return d.getDaemonAddress();
+			}
+		}
+		return null;
+	}
+
+	private String getDaemonHostnameFromId(int id)
+	{
+		DaemonAddress d = getDaemonAddressFromId(id);
+		if (d != null)
+		{
+			return d.getPeerAddress().getIp().getHostName();
+		}
+		return ("Hostname lookup failed");
+	}
+	
+	private String getDaemonIpFromId(int id)
+	{
+		DaemonAddress d = getDaemonAddressFromId(id);
+		if (d != null)
+		{
+			return d.getPeerAddress().getIp().getHostAddress();
+		}
+		return ("Hostname lookup failed");
+	}
+	
 	private void addJob(DaemonAddress addr, Job job)
 	{
 		jobs.put(job.getId(), job);
 		TreeSet<Integer> jobIds = getJobsForDaemon(addr);
 		jobIds.add(job.getId());
-		loadedJobs.put(addr.getPeerAddress().getIp().getCanonicalHostName(), jobIds);
+		loadedHostJobs.put(addr.getDaemonId(), jobIds);
 	}
 	
 	private Handler<JobLoadResponseMsg> handleJobLoadResponseMsg = new Handler<JobLoadResponseMsg>() {
@@ -288,14 +323,14 @@ public class Master extends ComponentDefinition {
 			logger.info("JobLoadResponse received for {} was {}", 
 					event.getJobId(), event.getStatus());
 			
-			String hostname = event.getSource().getIp().getCanonicalHostName(); 
-			TreeSet<Integer> jobsAtDaemon = loadedJobs.get(hostname);
+			// event.getSource().getIp().getCanonicalHostName();
+			TreeSet<Integer> jobsAtDaemon = loadedHostJobs.get(event.getDaemonId());
 			if (jobsAtDaemon == null)
 			{
 				jobsAtDaemon = new TreeSet<Integer>();
 			}
 			jobsAtDaemon.add(event.getJobId());
-			loadedJobs.put(hostname, jobsAtDaemon);
+			loadedHostJobs.put(event.getDaemonId(), jobsAtDaemon);
 		}
 	};
 	
@@ -326,6 +361,8 @@ public class Master extends ComponentDefinition {
 	private Handler<ConnectMasterRequestMsg> handleConnectMasterRequestMsg = new Handler<ConnectMasterRequestMsg>() {
 		public void handle(ConnectMasterRequestMsg event) {
 
+			logger.debug("Received msg from {}", event.getSource());
+			
 			DaemonAddress daemonAddress = new DaemonAddress(event.getDaemonId(), event.getSource());
 
 			addDaemonToCache(daemonAddress);

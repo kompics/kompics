@@ -166,11 +166,6 @@ public class IndexerTest implements Serializable {
 					
 					logger.info("Creating a dummy pom");
 
-					// need to call maven assembly:assembly if the jar hasn't
-					// been loaded yet.
-					// timeout for a few seconds, if no response then send maven
-					// assembly:assembly
-
 					trigger(new JobLoadRequest(dummy), mavenLauncher.getPositive(Maven.class));
 
 				} catch (DummyPomConstructionException e1) {
@@ -280,8 +275,6 @@ public class IndexerTest implements Serializable {
 					} else {
 						logger.info("Found new job {}", j.getId());
 						listJobsLoaded.add(j);
-//						logger.warn("No job found when listing loaded jobs ");
-//						testObj.fail(false);
 					}
 				}
 
@@ -342,11 +335,9 @@ public class IndexerTest implements Serializable {
 		try {
 			IndexerTest.semaphore.acquire(EVENT_COUNT);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		// Kompics.shutdown();
 	}
 
 	public void pass() {
