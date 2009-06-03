@@ -6,21 +6,15 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import se.sics.kompics.address.Address;
 
 public class LocalNetworkConfiguration
 {	
 	private static final Logger logger = LoggerFactory.getLogger(LocalNetworkConfiguration.class.getName());
 
-	private static int PORT = 7409;
-	
-	private static Set<Integer> ALLOCATED_IDS = new HashSet<Integer>();
+	private static String ipAddr = null;
 		
 	private LocalNetworkConfiguration()
 	{
@@ -30,7 +24,16 @@ public class LocalNetworkConfiguration
 	
 	public synchronized static String findLocalHostAddress()
 	{
+		if (ipAddr != null)
+		{
+			return ipAddr;
+		}
 		InetAddress inet = findLocalInetAddress();
+		if (inet == null)
+		{
+			throw new IllegalStateException("Could not acquire local network address.");
+		//	return "localhost";
+		}
 		return inet.getHostAddress();		
 	}
 	
@@ -61,7 +64,7 @@ public class LocalNetworkConfiguration
 							}
 							catch (Exception e)
 							{
-								logger.warn("Problem with getting IP-address of a network interface.");
+								logger.warn("Problem with getting IP-address of a network interface: {}", e.getMessage());
 							}
 							
 						}
@@ -69,46 +72,13 @@ public class LocalNetworkConfiguration
 		}
 		catch (SocketException e)
 		{
-			logger.debug("Couldn't get the local inet address");
+			logger.warn("Couldn't get the local inet address: {}", e.getMessage());
 			return null;
 		}
 		return loopbackAddr;
 	}
 	
-	/**
-	 * gets the local PORT.
-	 * If this method is called for the first time, a random PORT is generated
-	 * between {@link #LOWER_BOUND_PORT_RANGE} 
-	 * and {@link #UPPER_BOUND_PORT_RANGE} 
-	 * 
-	 * @return a PORT number.
-	 * @see LocalNetworkConfiguration#LOWER_BOUND_PORT_RANGE
-	 * @see LocalNetworkConfiguration#UPPER_BOUND_PORT_RANGE
-	 */
-	public static int getPort()
-	{
-		return PORT; 
-	}
 	
-	public static synchronized Address getAddress(int id)
-	{
-		InetAddress inet = findLocalInetAddress();
-		if (inet == null)
-		{
-			throw new IllegalStateException("Local network address not initialized correctly!");
-		}
-		if (ALLOCATED_IDS.contains(id))
-		{
-			throw new IllegalStateException("The ID for the requested peer has already been allocated!");			
-		}
-		ALLOCATED_IDS.add(id);
-		
-		Address addr = new Address(inet, PORT, id);
-		
-		return addr;
-		
-	}
-
 	private static double getIpAsDouble()
 	{
         byte[] bytes = findLocalInetAddress().getAddress();

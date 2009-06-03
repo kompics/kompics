@@ -27,6 +27,7 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.wan.util.LocalIPAddressNotFound;
+import se.sics.kompics.wan.util.LocalNetworkConfiguration;
 import se.sics.kompics.web.jetty.JettyWebServerInit;
 
 /**
@@ -70,7 +71,7 @@ public abstract class Configuration {
 	/*
 	 * Non-publicly accessible
 	 */
-	protected static final String DEFAULT_IP = "localhost";
+	protected static final String DEFAULT_IP = LocalNetworkConfiguration.findLocalHostAddress();
 	public static final int DEFAULT_PORT = 2323;
 	public static final int DEFAULT_ID = 0;
 

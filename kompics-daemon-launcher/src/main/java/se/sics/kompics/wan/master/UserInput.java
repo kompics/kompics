@@ -85,7 +85,14 @@ public class UserInput extends ComponentDefinition {
 			trigger(new InstallJobOnHosts(groupId, artifactId, version,
 					mainClass, Arrays.asList(args), hosts), master);
 			break;
-		case 9:
+		case 6:
+			int jobId = getJob();
+			trigger(new StopJobOnHosts(jobId), master);
+			break;
+		case 8:
+			trigger(new ShutdownDaemonRequest(), master);
+			break;
+		case 9:			
 			trigger(new StartJobOnHosts(getJob(), getNumPeers()), master);			
 			break;
 		case 0:
@@ -125,6 +132,8 @@ public class UserInput extends ComponentDefinition {
 		System.out.println("\t3) specify a daemon, and list all its loaded jobs.");
 		System.out.println("\t4) load a job to all hosts.");
 		System.out.println("\t5) load a job to selected hosts.");
+		System.out.println("\t6) stop a job on all hosts.");
+		System.out.println("\t8) shutdown all hosts.");
 		System.out.println("\t9) start a job on all hosts that have loaded the job.");
 		System.out.println("\t0) exit program");
 		System.out.print("Enter your choice: ");

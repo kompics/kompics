@@ -46,6 +46,7 @@ import se.sics.kompics.wan.master.ConnectMasterRequest;
 import se.sics.kompics.wan.master.ConnectMasterResponse;
 import se.sics.kompics.wan.master.DisconnectMasterRequest;
 import se.sics.kompics.wan.master.MasterClientConfig;
+import se.sics.kompics.wan.master.ShutdownDaemonRequestMsg;
 
 public class Daemon extends ComponentDefinition {
 
@@ -122,7 +123,7 @@ public class Daemon extends ComponentDefinition {
 		
 		subscribe(handleJobLoadRequest, net);
 		subscribe(handleJobStartRequest, net);
-		subscribe(handleShutdown, net);
+		subscribe(handleShutdownDaemonRequestMsg, net);
 		subscribe(handleJobStopRequest, net);
 		subscribe(handleListJobsLoadedRequest, net);
 
@@ -300,8 +301,8 @@ public class Daemon extends ComponentDefinition {
 	};
 
 
-	public Handler<DaemonShutdownMsg> handleShutdown = new Handler<DaemonShutdownMsg>() {
-		public void handle(DaemonShutdownMsg event) {
+	public Handler<ShutdownDaemonRequestMsg> handleShutdownDaemonRequestMsg = new Handler<ShutdownDaemonRequestMsg>() {
+		public void handle(ShutdownDaemonRequestMsg event) {
 
 			int timeout = event.getTimeout();
 			ScheduleTimeout st = new ScheduleTimeout(timeout);
@@ -330,6 +331,7 @@ public class Daemon extends ComponentDefinition {
 			destroy(indexer);
 			destroy(mavenLauncher);
 
+			System.exit(-1);
 		}
 	};
 	

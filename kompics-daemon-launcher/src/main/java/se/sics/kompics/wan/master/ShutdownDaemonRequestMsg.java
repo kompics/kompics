@@ -1,21 +1,26 @@
 package se.sics.kompics.wan.master;
 
 import se.sics.kompics.address.Address;
-import se.sics.kompics.network.Message;
 import se.sics.kompics.wan.daemon.DaemonAddress;
+import se.sics.kompics.wan.daemon.DaemonRequestMessage;
 
-public final class ShutdownDaemonRequestMsg extends Message {
+public final class ShutdownDaemonRequestMsg extends DaemonRequestMessage {
 
 		private static final long serialVersionUID = -1404086123141879148L;
-		private final DaemonAddress daemon;
 
-		public ShutdownDaemonRequestMsg(DaemonAddress src, Address dest) {
-			super(src.getPeerAddress(), dest);
-			this.daemon = src;
+		private final int timeout;
+		
+		public ShutdownDaemonRequestMsg(int timeout, Address src, DaemonAddress dest) {
+			super(src, dest);
+			this.timeout = timeout;
 		}
 
-
-		public DaemonAddress getDaemon() {
-			return daemon;
+		public ShutdownDaemonRequestMsg(Address src, DaemonAddress dest) {
+			this(0, src, dest);
 		}
+		
+		public int getTimeout() {
+			return timeout;
+		}
+
 	}

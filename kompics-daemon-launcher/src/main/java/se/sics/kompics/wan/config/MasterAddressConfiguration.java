@@ -1,7 +1,6 @@
 package se.sics.kompics.wan.config;
 
 import java.io.IOException;
-import java.net.InetAddress;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
@@ -11,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
-import se.sics.kompics.wan.util.PomUtils;
+import se.sics.kompics.wan.util.LocalNetworkConfiguration;
 
 public abstract class MasterAddressConfiguration extends Configuration {
 
@@ -21,7 +20,8 @@ public abstract class MasterAddressConfiguration extends Configuration {
 
 	protected Option masterAddressOption;
 
-	protected static final String DEFAULT_MASTER_ADDRESS = "localhost:2323:1";
+	protected static final String DEFAULT_MASTER_ADDRESS = 
+		LocalNetworkConfiguration.findLocalHostAddress() + ":2323:1";
 
 	public final static String PROP_MASTER_ADDR = "master.address";
 	

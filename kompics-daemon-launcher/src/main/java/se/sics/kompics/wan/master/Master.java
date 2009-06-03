@@ -1,6 +1,5 @@
 package se.sics.kompics.wan.master;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,6 +19,7 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
@@ -31,6 +31,7 @@ import se.sics.kompics.wan.daemon.DaemonAddress;
 import se.sics.kompics.wan.daemon.JobLoadRequestMsg;
 import se.sics.kompics.wan.daemon.JobLoadResponseMsg;
 import se.sics.kompics.wan.daemon.JobStartRequestMsg;
+import se.sics.kompics.wan.daemon.JobStopRequestMsg;
 import se.sics.kompics.wan.daemon.JobsFoundMsg;
 import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.web.Web;
@@ -116,6 +117,8 @@ public class Master extends ComponentDefinition {
 		subscribe(handlePrintDaemonsWithLoadedJob, userInput.getPositive(MasterCommands.class));
 		subscribe(handleInstallJobOnHosts, userInput.getPositive(MasterCommands.class));
 		subscribe(handleStartJobOnHosts, userInput.getPositive(MasterCommands.class));
+		subscribe(handleStopJobOnHosts, userInput.getPositive(MasterCommands.class));
+		subscribe(handleShutdownDaemonRequest, userInput.getPositive(MasterCommands.class));
 		
 		connect(timer, userInput.getNegative(Timer.class));
 	}
@@ -215,7 +218,19 @@ public class Master extends ComponentDefinition {
 			}
 		}
 	};
+	
+	private Handler<ShutdownDaemonRequest> handleShutdownDaemonRequest = new Handler<ShutdownDaemonRequest>() {
+		public void handle(ShutdownDaemonRequest event) {
 
+			
+			for (DaemonEntry dest : registeredDaemons)
+			{
+				trigger(new ShutdownDaemonRequestMsg(self, dest.getDaemonAddress()), net);
+			}	
+		}
+	};
+
+	
 	private Handler<StartJobOnHosts> handleStartJobOnHosts = new Handler<StartJobOnHosts>() {
 		public void handle(StartJobOnHosts event) {
 			int jobId = event.getJobId();
@@ -227,6 +242,20 @@ public class Master extends ComponentDefinition {
 				logger.info("Starting job {} at {}", jobId, dest);
 				trigger(new JobStartRequestMsg(jobId, event.getNumPeersPerHost(), 
 						scenario, self, dest), net);
+			}
+		}
+	};
+	
+	private Handler<StopJobOnHosts> handleStopJobOnHosts = new Handler<StopJobOnHosts>() {
+		public void handle(StopJobOnHosts event) {
+			int jobId = event.getJobId();
+			List<DaemonAddress> daemonsFound = getDaemonsWithLoadedJob(jobId);
+			
+			logger.info("Stopping job. Num daemons found {} ", daemonsFound.size());
+			for (DaemonAddress dest : daemonsFound)
+			{
+				logger.info("Stopping job {} at {}", jobId, dest);
+				trigger(new JobStopRequestMsg(jobId, self, dest), net);
 			}
 		}
 	};
@@ -252,8 +281,15 @@ public class Master extends ComponentDefinition {
 	
 	private Handler<JobsFoundMsg> handleJobsFoundMsg = new Handler<JobsFoundMsg>() {
 		public void handle(JobsFoundMsg event) {
-			logger.info("{} jobs found on daemon {}", event.getSetJobs().size(), event.getDaemonId());
+			
 			Set<Job> jobSet = event.getSetJobs();
+			
+			logger.info("Job(s) found on daemon {} :", event.getSetJobs().size(), event.getDaemonId());
+			for (Job job : jobSet)
+			{
+				logger.info("{}", job.getId());
+			}
+			
 			DaemonAddress src = new DaemonAddress(event.getDaemonId(), event.getSource());
 			addJobs(src, jobSet);
 		}
