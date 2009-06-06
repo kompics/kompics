@@ -5,7 +5,7 @@ import se.sics.kompics.Response;
 public class JobStopResponse extends Response {
 
 	public enum Status {
-		ALREADY_STOPPED, STOPPED, FAILED_TO_STOP
+		ALREADY_STOPPED, STOPPED, COULD_NOT_FIND_PROCESS_HANDLE_TO_STOP_JOB
 	};
 
 	private final Status status;

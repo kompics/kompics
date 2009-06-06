@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,11 +36,15 @@ import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.wan.job.JobExited;
 import se.sics.kompics.wan.job.JobLoadRequest;
 import se.sics.kompics.wan.job.JobLoadResponse;
+import se.sics.kompics.wan.job.JobReadFromExecutingRequest;
 import se.sics.kompics.wan.job.JobReadFromExecutingResponse;
 import se.sics.kompics.wan.job.JobRemoveRequest;
 import se.sics.kompics.wan.job.JobRemoveResponse;
 import se.sics.kompics.wan.job.JobStartRequest;
 import se.sics.kompics.wan.job.JobStartResponse;
+import se.sics.kompics.wan.job.JobStopRequest;
+import se.sics.kompics.wan.job.JobStopResponse;
+import se.sics.kompics.wan.job.JobWriteToExecutingRequest;
 import se.sics.kompics.wan.master.ConnectMasterRequest;
 import se.sics.kompics.wan.master.ConnectMasterResponse;
 import se.sics.kompics.wan.master.DisconnectMasterRequest;
@@ -108,7 +111,7 @@ public class Daemon extends ComponentDefinition {
 	private Map<Integer, JobStartRequest> executingJobs = new HashMap<Integer, JobStartRequest>();
 	private Map<Integer, JobStartRequest> completedJobs = new HashMap<Integer, JobStartRequest>();
 
-	private Map<Integer, MavenLauncher.ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, MavenLauncher.ProcessWrapper>();
+//	private Map<Integer, MavenLauncher.ProcessWrapper> executingProcesses = new ConcurrentHashMap<Integer, MavenLauncher.ProcessWrapper>();
 
 	private boolean connectedToMaster = false;
 
@@ -126,14 +129,18 @@ public class Daemon extends ComponentDefinition {
 		subscribe(handleShutdownDaemonRequestMsg, net);
 		subscribe(handleJobStopRequest, net);
 		subscribe(handleListJobsLoadedRequest, net);
+		subscribe(handleJobRemoveRequestMsg, net);
+		subscribe(handleJobReadFromExecutingRequestMsg, net);
+		subscribe(handleJobWriteToExecutingRequestMsg, net);
 
 		subscribe(handleJobLoadResponse, mavenLauncher.getPositive(Maven.class));
 		subscribe(handleJobStartResponse, mavenLauncher.getPositive(Maven.class));
 		subscribe(handleJobRemoveResponse, mavenLauncher.getPositive(Maven.class));
 		subscribe(handleJobExited, mavenLauncher.getPositive(Maven.class));
 		subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(Maven.class));
+		subscribe(handleJobStopResponse, mavenLauncher.getPositive(Maven.class));
+		subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(Maven.class));
 		
-		subscribe(handleJobRemoveRequestMsg, net);
 		
 		subscribe(handleShutdownTimeout, timer);
 		subscribe(handleTimerDaemonShutdown, timer);
@@ -389,25 +396,38 @@ public class Daemon extends ComponentDefinition {
 		}
 	}
 
+	public Handler<JobStopResponse> handleJobStopResponse = new Handler<JobStopResponse>() {
+		public void handle(JobStopResponse event) {
+		
+			
+			JobStopResponseMsg response = new JobStopResponseMsg(event, self, masterAddress);
+			trigger(response, net);
+		}
+	};
+
+	
 	public Handler<JobStopRequestMsg> handleJobStopRequest = new Handler<JobStopRequestMsg>() {
 		public void handle(JobStopRequestMsg event) {
 
 			int id = event.getJobId();
-			JobStopResponseMsg.Status status;
+//			JobStopResponse.Status status;
+//
+//			MavenLauncher.ProcessWrapper pw = executingProcesses.get(id);
+//			if (pw == null) {
+//				status = JobStopResponse.Status.COULD_NOT_FIND_PROCESS_HANDLE_TO_STOP_JOB;
+//			} else {
+//				if (pw.destroy() == true) {
+//					status = JobStopResponse.Status.STOPPED;
+//				} else {
+//					status = JobStopResponse.Status.ALREADY_STOPPED;
+//				}
+//			}
 
-			MavenLauncher.ProcessWrapper pw = executingProcesses.get(id);
-			if (pw == null) {
-				status = JobStopResponseMsg.Status.FAILED_TO_STOP;
-			} else {
-				if (pw.destroy() == true) {
-					status = JobStopResponseMsg.Status.STOPPED;
-				} else {
-					status = JobStopResponseMsg.Status.ALREADY_STOPPED;
-				}
-			}
-
-			JobStopResponseMsg response = new JobStopResponseMsg(id, status, self, event.getSource());
-			trigger(response, net);
+//			JobStopResponseMsg response = new JobStopResponseMsg(id, status, self, event.getSource());
+//			trigger(response, net);
+			
+			JobStopRequest stopJob = new JobStopRequest(id);
+			trigger(stopJob,mavenLauncher.getPositive(Maven.class));
 		}
 	};
 
@@ -457,26 +477,26 @@ public class Daemon extends ComponentDefinition {
 
 	
 
-	public Handler<JobMessageRequest> handleJobMessageRequest = new Handler<JobMessageRequest>() {
-		public void handle(JobMessageRequest event) {
-			int id = event.getJobId();
-			JobMessageResponse.Status status;
-			MavenLauncher.ProcessWrapper pw = executingProcesses.get(id);
-			if (pw == null) {
-				status = JobMessageResponse.Status.STOPPED;
-			} else {
-				try {
-					pw.input(event.getMsg());
-
-					status = JobMessageResponse.Status.SUCCESS;
-				} catch (IOException e) {
-					status = JobMessageResponse.Status.FAIL;
-				}
-			}
-
-			JobMessageResponse response = new JobMessageResponse(id, status, self, event
-					.getSource());
-			trigger(response, net);
+	public Handler<JobReadFromExecutingRequestMsg> handleJobReadFromExecutingRequestMsg = new Handler<JobReadFromExecutingRequestMsg>() {
+		public void handle(JobReadFromExecutingRequestMsg event) {
+			JobReadFromExecutingRequest req = new JobReadFromExecutingRequest(event);
+			trigger(req, mavenLauncher.getPositive(Maven.class));
+		}
+	};
+	
+	public Handler<JobWriteToExecutingRequestMsg> handleJobWriteToExecutingRequestMsg = 
+		new Handler<JobWriteToExecutingRequestMsg>() {
+		public void handle(JobWriteToExecutingRequestMsg event) {
+			JobWriteToExecutingRequest req = new JobWriteToExecutingRequest(event);
+			trigger(req, mavenLauncher.getPositive(Maven.class));
+		}
+	};
+	
+	public Handler<JobReadFromExecutingResponse> handleJobMessageResponse = 
+		new Handler<JobReadFromExecutingResponse>() {
+		public void handle(JobReadFromExecutingResponse event) {
+			
+			trigger(new JobReadFromExecutingResponseMsg(event, self, masterAddress), net);
 		}
 	};
 

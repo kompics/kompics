@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +17,6 @@ import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
-import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
@@ -39,7 +37,6 @@ import se.sics.kompics.wan.daemon.DaemonInit;
 import se.sics.kompics.wan.daemon.JobExitedMsg;
 import se.sics.kompics.wan.daemon.JobLoadRequestMsg;
 import se.sics.kompics.wan.daemon.JobLoadResponseMsg;
-import se.sics.kompics.wan.daemon.JobMessageRequest;
 import se.sics.kompics.wan.daemon.JobReadFromExecutingRequestMsg;
 import se.sics.kompics.wan.daemon.JobReadFromExecutingResponseMsg;
 import se.sics.kompics.wan.daemon.JobStartRequestMsg;
@@ -53,8 +50,7 @@ import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.wan.job.JobLoadResponse;
 import se.sics.kompics.wan.job.JobRemoveRequest;
 import se.sics.kompics.wan.job.JobRemoveResponse;
-import se.sics.kompics.wan.job.JobStopRequest;
-import se.sics.kompics.wan.util.LocalIPAddressNotFound;
+import se.sics.kompics.wan.job.JobStopResponse;
 
 /**
  * Unit test for simple App.
@@ -208,7 +204,7 @@ public class DaemonTest implements Serializable {
 				logger.info("Received job execResponse from job-id: {} ", event.getJobId());
 
 				// Read from executing job
-				trigger(new JobMessageRequest(event.getJobId(), "Hi there", event.getDestination(),
+				trigger(new JobReadFromExecutingRequestMsg(event.getJobId(),  event.getDestination(),
 						new DaemonAddress(event.getDaemonId(), event.getSource())), network
 						.getPositive(Network.class));
 
@@ -236,7 +232,7 @@ public class DaemonTest implements Serializable {
 				trigger(new JobReadFromExecutingRequestMsg(event.getJobId(), src, dest), network
 						.getPositive(Network.class));
 
-				ScheduleTimeout st = new ScheduleTimeout(2000);
+				ScheduleTimeout st = new ScheduleTimeout(3*1000);
 				st.setTimeoutEvent(new JobStopTimeout(event.getJobId(), st));
 				trigger(st, timer.getPositive(Timer.class));
 			}
@@ -262,10 +258,18 @@ public class DaemonTest implements Serializable {
 
 		public Handler<JobStopResponseMsg> handleJobStopResponse = new Handler<JobStopResponseMsg>() {
 			public void handle(JobStopResponseMsg event) {
+				
+				if (event.getStatus() == JobStopResponse.Status.STOPPED) {
 				logger.debug("Job stopped : " + event.getJobId() + " : " + event.getStatus()
 						+ " : " + event.getMsg());
-
 				TestDaemonComponent.testObj.pass();
+				}
+				else {
+					logger.debug("Failed to STOP JOB: " + event.getJobId() + " : " + event.getStatus()
+							+ " : " + event.getMsg());
+					TestDaemonComponent.testObj.fail(true);
+					
+				}
 			}
 		};
 
@@ -325,6 +329,8 @@ public class DaemonTest implements Serializable {
 				logger.info(event.getMsg());
 			}
 		};
+		
+	
 
 		public Handler<JobRemoveResponse> handleJobRemoveResponse = new Handler<JobRemoveResponse>() {
 			public void handle(JobRemoveResponse event) {
@@ -341,7 +347,8 @@ public class DaemonTest implements Serializable {
 		};
 	}
 
-	@org.junit.Test @Ignore
+	// @Ignore
+	@org.junit.Test 
 	public void testDaemon() {
 
 		TestDaemonComponent.setTestObj(this);

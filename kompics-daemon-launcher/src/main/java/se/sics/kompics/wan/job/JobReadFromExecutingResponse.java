@@ -9,6 +9,12 @@ public class JobReadFromExecutingResponse extends Response {
 	private final int jobId;
 	private final String msg;
 	
+	public JobReadFromExecutingResponse(JobWriteToExecutingRequest request, int id, String msg) {
+		super(request);
+		this.jobId = id;
+		this.msg = msg;
+	}
+	
 	public JobReadFromExecutingResponse(JobReadFromExecutingRequest request, int id, String msg) {
 		super(request);
 		this.jobId = id;

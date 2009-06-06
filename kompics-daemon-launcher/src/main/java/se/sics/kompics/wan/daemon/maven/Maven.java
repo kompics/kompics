@@ -12,6 +12,7 @@ import se.sics.kompics.wan.job.JobStartRequest;
 import se.sics.kompics.wan.job.JobStartResponse;
 import se.sics.kompics.wan.job.JobStopRequest;
 import se.sics.kompics.wan.job.JobStopResponse;
+import se.sics.kompics.wan.job.JobWriteToExecutingRequest;
 
 
 /**
@@ -26,8 +27,9 @@ public class Maven extends PortType {
 		negative(JobLoadRequest.class);
 		negative(JobStartRequest.class);
 		negative(JobStopRequest.class);
-		negative(JobReadFromExecutingRequest.class);
+		negative(JobReadFromExecutingRequest.class);		
 		negative(JobRemoveRequest.class);
+		negative(JobWriteToExecutingRequest.class);
 		
 		positive(JobStopResponse.class);
 		positive(JobLoadResponse.class);
@@ -35,5 +37,6 @@ public class Maven extends PortType {
 		positive(JobExited.class);
 		positive(JobReadFromExecutingResponse.class);
 		positive(JobRemoveResponse.class);
+		positive(JobReadFromExecutingResponse.class);
 	}
 }

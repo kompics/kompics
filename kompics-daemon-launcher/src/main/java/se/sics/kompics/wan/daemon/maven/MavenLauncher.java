@@ -41,6 +41,7 @@ import se.sics.kompics.wan.job.JobStartRequest;
 import se.sics.kompics.wan.job.JobStartResponse;
 import se.sics.kompics.wan.job.JobStopRequest;
 import se.sics.kompics.wan.job.JobStopResponse;
+import se.sics.kompics.wan.job.JobWriteToExecutingRequest;
 import se.sics.kompics.wan.util.PomUtils;
 
 public class MavenLauncher extends ComponentDefinition {
@@ -150,7 +151,7 @@ public class MavenLauncher extends ComponentDefinition {
 		 * @throws IOException
 		 *             Signals that an I/O exception has occurred.
 		 */
-		public final void input(String string) throws IOException {
+		public final void writeBufferedInput(String string) throws IOException {
 			writeToInput.write(string);
 			writeToInput.write("\n");
 			writeToInput.flush();
@@ -169,14 +170,16 @@ public class MavenLauncher extends ComponentDefinition {
 
 	public MavenLauncher() {
 
-		subscribe(handleJobAssembleRequest, maven);
+		subscribe(handleJobLoadRequest, maven);
 		subscribe(handleJobStartRequest, maven);
 		subscribe(handleJobStopRequest, maven);
-		subscribe(handleJobReadFromExecuting, maven);
 		subscribe(handleJobRemoveRequest, maven);
+		subscribe(handleJobWriteToExecuting, maven);
+		subscribe(handleJobReadFromExecuting, maven);
 	}
 
-	public Handler<JobReadFromExecutingRequest> handleJobReadFromExecuting = new Handler<JobReadFromExecutingRequest>() {
+	public Handler<JobReadFromExecutingRequest> handleJobReadFromExecuting = 
+		new Handler<JobReadFromExecutingRequest>() {
 		public void handle(JobReadFromExecutingRequest event) {
 
 			int jobId = event.getJobId();
@@ -198,6 +201,42 @@ public class MavenLauncher extends ComponentDefinition {
 			}
 			cb.rewind();
 			msg = cb.toString();
+			JobReadFromExecutingResponse resp = new JobReadFromExecutingResponse(event, event
+					.getJobId(), msg);
+			trigger(resp, maven);
+		}
+	};
+	
+	
+	public Handler<JobWriteToExecutingRequest> handleJobWriteToExecuting = 
+		new Handler<JobWriteToExecutingRequest>() {
+		public void handle(JobWriteToExecutingRequest event) {
+
+			int jobId = event.getJobId();
+			ProcessWrapper p = executingProcesses.get(jobId);
+			if (p == null) {
+				throw new IllegalStateException("Process p not found for jobId: " + jobId);
+			}
+
+
+			String msg;
+			try {
+				p.writeBufferedInput(event.getMsg());
+				CharBuffer cb = CharBuffer.allocate(1000);
+				try {
+					cb = p.readBufferedOutput(cb);
+				} catch (IOException e) {
+					e.printStackTrace();
+					cb = CharBuffer.allocate(e.getMessage().length());
+					cb.put(e.getMessage());
+				}
+				cb.rewind();
+				msg = cb.toString();
+			} catch (IOException e1) {
+				msg = e1.toString();
+			}
+			
+			
 			JobReadFromExecutingResponse resp = new JobReadFromExecutingResponse(event, event
 					.getJobId(), msg);
 			trigger(resp, maven);
@@ -272,7 +311,7 @@ public class MavenLauncher extends ComponentDefinition {
 		return true;
 	}
 
-	public Handler<JobLoadRequest> handleJobAssembleRequest = new Handler<JobLoadRequest>() {
+	public Handler<JobLoadRequest> handleJobLoadRequest = new Handler<JobLoadRequest>() {
 		public void handle(JobLoadRequest event) {
 
 			int id = event.getId();
@@ -449,7 +488,7 @@ public class MavenLauncher extends ComponentDefinition {
 			String msg = "Successfully stopped " + id;
 			ProcessWrapper pw = executingProcesses.get(id);
 			if (pw == null) {
-				status = JobStopResponse.Status.FAILED_TO_STOP;
+				status = JobStopResponse.Status.COULD_NOT_FIND_PROCESS_HANDLE_TO_STOP_JOB;
 				msg = "Failed to stop " + id;
 			} else {
 				if (pw.destroy() == true) {
