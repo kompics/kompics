@@ -62,6 +62,12 @@
 			<version>1.2</version>
 		</dependency>
 
+		<dependency>
+               <groupId>org.servebox.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>1.0-passphrase-beta2</version>
+		</dependency>
+
 		<!--
 			<dependency> <groupId>com.sun</groupId>
 			<artifactId>tools</artifactId> <version>${java.version}</version>
@@ -134,6 +140,12 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+    <repository>
+        <id>ServeBox.org</id>
+        <name>ServeBox Repository</name>
+        <url>http://maven.servebox.org/repository</url>
+    </repository>
+		
 	</repositories>
 
 	<reporting>
