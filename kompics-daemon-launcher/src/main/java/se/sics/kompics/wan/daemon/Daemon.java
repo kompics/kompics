@@ -256,7 +256,8 @@ public class Daemon extends ComponentDefinition {
 					try {
 						job = new JobLoadRequest(event.getGroupId(), event
 								.getArtifactId(), event.getVersion(), event.getMainClass(), event
-								.getArgs(), event.getRepoId(), event.getRepoUrl());
+								.getArgs(), event.getRepoId(), event.getRepoUrl(),
+								event.isHideMavenOutput());
 	
 						job.createDummyPomFile();
 						status = JobLoadResponse.Status.POM_CREATED;
@@ -321,7 +322,7 @@ public class Daemon extends ComponentDefinition {
 	public Handler<JobExited> handleJobExited = new Handler<JobExited>() {
 		public void handle(JobExited event) {
 
-			logger.info("Job {} has exited with status {}", event.getJobId(), event.getStatus());
+			logger.info("Job {} has exited with exit value {}", event.getJobId(), event.getExitValue());
 			
 			JobStartRequest job = executingJobs.remove(event.getJobId());
 			completedJobs.put(job.getId(), job);

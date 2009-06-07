@@ -29,10 +29,12 @@ public class JobLoadRequestMsg extends DaemonRequestMessage {
 	
 	private final int jobId;
 	
+	private final boolean hideMavenOutput;
 
 	public JobLoadRequestMsg(String groupId, String artifactId, String version,
 			String repoId, String repoUrl, 
-			String mainClass, List<String> args, Address src, DaemonAddress dest) {
+			String mainClass, List<String> args, boolean hideMavenOutput, 
+			Address src, DaemonAddress dest) {
 		super(src,dest);
 		this.groupId = groupId;
 		this.artifactId = artifactId;
@@ -42,9 +44,10 @@ public class JobLoadRequestMsg extends DaemonRequestMessage {
 		this.mainClass = mainClass;
 		this.args = args;
 		this.jobId = hashCode();
+		this.hideMavenOutput = hideMavenOutput;
 	}
 
-	public JobLoadRequestMsg(Job job, Address src, DaemonAddress dest) {
+	public JobLoadRequestMsg(Job job, boolean hideMavenOutput, Address src, DaemonAddress dest) {
 		super(src,dest);
 		this.groupId = job.getGroupId();
 		this.artifactId = job.getArtifactId();
@@ -54,6 +57,7 @@ public class JobLoadRequestMsg extends DaemonRequestMessage {
 		this.mainClass = job.getMainClass();
 		this.args = job.getArgs();
 		this.jobId = hashCode();
+		this.hideMavenOutput = hideMavenOutput;
 	}
 	
 	public int getJobId() {
@@ -89,5 +93,9 @@ public class JobLoadRequestMsg extends DaemonRequestMessage {
 	@Override
 	public int hashCode() {
 		return PomUtils.generateJobId(groupId, artifactId, version);
+	}
+	
+	public boolean isHideMavenOutput() {
+		return hideMavenOutput;
 	}
 }

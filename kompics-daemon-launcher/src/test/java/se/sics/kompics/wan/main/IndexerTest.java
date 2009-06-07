@@ -166,7 +166,7 @@ public class IndexerTest implements Serializable {
 					
 					logger.info("Creating a dummy pom");
 
-					trigger(new JobLoadRequest(dummy), mavenLauncher.getPositive(Maven.class));
+					trigger(new JobLoadRequest(dummy, true), mavenLauncher.getPositive(Maven.class));
 
 				} catch (DummyPomConstructionException e1) {
 					// TODO Auto-generated catch block

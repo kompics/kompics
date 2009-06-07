@@ -272,7 +272,8 @@ public class Master extends ComponentDefinition {
 			
 			for (DaemonEntry dest : registeredDaemons)
 			{
-				JobLoadRequestMsg job = new JobLoadRequestMsg(event, self, dest.getDaemonAddress());
+				JobLoadRequestMsg job = new JobLoadRequestMsg(event, event.isHideMavenOutput(), 
+						self, dest.getDaemonAddress());
 				trigger(job, net);
 				logger.info("Installing job {} on {}", job.getArtifactId(), dest);
 			}

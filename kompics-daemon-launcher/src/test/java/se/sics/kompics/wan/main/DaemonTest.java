@@ -59,6 +59,8 @@ public class DaemonTest implements Serializable {
 
 	private static final long serialVersionUID = -8704832589507459009L;
 
+	private static final boolean HIDE_MAVEN_EMBEDDER_OUTPUT = true;
+	
 	public static Semaphore semaphore = new Semaphore(0);
 
 	public static final int EVENT_COUNT = 1;
@@ -189,7 +191,7 @@ public class DaemonTest implements Serializable {
 				String repoUrl = "http://kompics.sics.se/maven/snapshotrepository";
 				String mainClass = "se.sics.kompics.manual.example1.Root";
 				JobLoadRequestMsg msg = new JobLoadRequestMsg(groupId, artifactId, version, repoId,
-						repoUrl, mainClass, new ArrayList<String>(), src, dest);
+						repoUrl, mainClass, new ArrayList<String>(), HIDE_MAVEN_EMBEDDER_OUTPUT, src, dest);
 
 				logger.info("JobLoadRequestMsg being sent..");
 
@@ -201,14 +203,14 @@ public class DaemonTest implements Serializable {
 		public Handler<JobStartResponseMsg> handleJobStartResponseMsg = new Handler<JobStartResponseMsg>() {
 			public void handle(JobStartResponseMsg event) {
 
-				logger.info("Received job execResponse from job-id: {} ", event.getJobId());
+				logger.info("Received job start Response from job-id: {} ", event.getJobId());
 
 				// Read from executing job
 				trigger(new JobReadFromExecutingRequestMsg(event.getJobId(),  event.getDestination(),
 						new DaemonAddress(event.getDaemonId(), event.getSource())), network
 						.getPositive(Network.class));
 
-				ScheduleTimeout st = new ScheduleTimeout(5000);
+				ScheduleTimeout st = new ScheduleTimeout(15000);
 				ExecReadTimeout execReadTimeout = new ExecReadTimeout(event.getJobId(), st);
 				st.setTimeoutEvent(execReadTimeout);
 
@@ -249,7 +251,7 @@ public class DaemonTest implements Serializable {
 
 		public Handler<JobExitedMsg> handleJobExited = new Handler<JobExitedMsg>() {
 			public void handle(JobExitedMsg event) {
-				logger.debug("Job exited: " + event.getJobId());
+				logger.debug("Job {} exited with exit value {} ", event.getJobId(), event.getExitValue());
 
 				// trigger(new JobRemoveRequest(dummy),
 				// daemon.getPositive(Maven.class));

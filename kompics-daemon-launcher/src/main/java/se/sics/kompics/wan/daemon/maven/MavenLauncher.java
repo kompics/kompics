@@ -61,11 +61,11 @@ public class MavenLauncher extends ComponentDefinition {
 	public class ProcessWrapper implements Runnable {
 		private final int jobId;
 
-		private Process process;
+		private Process process=null;
 
-		private BufferedWriter writeToInput;
+		private BufferedWriter writeToInput=null;
 
-		private BufferedReader readFromOutput;
+		private BufferedReader readFromOutput=null;
 
 		private final ProcessBuilder processBuilder;
 
@@ -152,16 +152,32 @@ public class MavenLauncher extends ComponentDefinition {
 		 *             Signals that an I/O exception has occurred.
 		 */
 		public final void writeBufferedInput(String string) throws IOException {
+			if (writeToInput == null)
+			{
+				return;
+			}
 			writeToInput.write(string);
 			writeToInput.write("\n");
 			writeToInput.flush();
 		}
 
 		public final String readLineFromOutput() throws IOException {
+			if (readFromOutput == null)
+			{
+				return "Process not initialized yet";
+			}
 			return readFromOutput.readLine();
 		}
 
 		public final CharBuffer readBufferedOutput(CharBuffer cb) throws IOException {
+			if (readFromOutput == null)
+			{
+				return cb.append("Process not initialized yet");
+			}
+			if (readFromOutput.ready() == false)
+			{
+				return cb.append("Process not ready yet");
+			}
 			readFromOutput.read(cb);
 			return cb;
 		}
@@ -372,16 +388,19 @@ public class MavenLauncher extends ComponentDefinition {
 		PrintStream origOut = System.out;
 		PrintStream origErr = System.err;
 
-		System.setOut(new java.io.PrintStream(new java.io.OutputStream() {
-			public void write(int devNull) { // dump output (like writing to
-												// /dev/null)
-			}
-		}));
-		System.setErr(new java.io.PrintStream(new java.io.OutputStream() {
-			public void write(int devNull) { // dump output (like writing to
-												// /dev/null)
-			}
-		}));
+		if (job.isHideMavenOutput() == true)
+		{
+			System.setOut(new java.io.PrintStream(new java.io.OutputStream() {
+				public void write(int devNull) { // dump output (like writing to
+													// /dev/null)
+				}
+			}));
+			System.setErr(new java.io.PrintStream(new java.io.OutputStream() {
+				public void write(int devNull) { // dump output (like writing to
+													// /dev/null)
+				}
+			}));
+		}
 
 		mw.execute("assembly:assembly");
 
@@ -512,9 +531,7 @@ public class MavenLauncher extends ComponentDefinition {
 	 * @param exitMsg
 	 */
 	protected synchronized void notifyProcessExiting(int jobId, int exitValue, String exitMsg) {
-		JobExited.Status status = (exitValue == 0) ? JobExited.Status.EXITED_NORMALLY
-				: JobExited.Status.EXITED_WITH_ERROR;
-		trigger(new JobExited(jobId, status, exitMsg), maven);
+		trigger(new JobExited(jobId, exitValue, exitMsg), maven);
 	}
 
 	// public Handler<JobMessageRequest> handleJobMessageRequest = new

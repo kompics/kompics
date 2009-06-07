@@ -78,12 +78,16 @@ public class UserInput extends ComponentDefinition {
 			String version = scanner.next();
 			System.out.print("\tEnter mainClass: ");
 			String mainClass = scanner.next();
+			System.out.print("\tHide Maven output (y/n): ");
+			String hideMavenOutput = scanner.next();
+			boolean hideOutput = (hideMavenOutput.compareToIgnoreCase("y")==0) ? true : false;
+			
 			// System.out.print("\tEnter any optional args (return for none): ");
 			// String allArgs = scanner.next();
 			// String[] args = allArgs.split(" ");
 			String[] args = {};
 			trigger(new InstallJobOnHosts(groupId, artifactId, version,
-					mainClass, Arrays.asList(args), hosts), master);
+					mainClass, Arrays.asList(args),hideOutput, hosts), master);
 			break;
 		case 6:
 			int jobId = getJob();

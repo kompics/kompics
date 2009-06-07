@@ -5,10 +5,9 @@ import se.sics.kompics.wan.job.JobExited;
 
 public class JobExitedMsg extends DaemonResponseMessage {
 
-
 	private static final long serialVersionUID = -5012778931157572267L;
 
-	private final JobExited.Status status;
+	private final int exitValue;
 
 	private String msg;
 
@@ -17,17 +16,16 @@ public class JobExitedMsg extends DaemonResponseMessage {
 	public JobExitedMsg(JobExited job, DaemonAddress src, Address dest) {
 		super(src, dest);
 		this.jobId = job.getJobId();
-		this.status = job.getStatus();
+		this.exitValue = job.getExitValue();
 		this.msg = job.getMsg();
 	}
-
 
 	public int getJobId() {
 		return jobId;
 	}
 
-	public JobExited.Status getStatus() {
-		return status;
+	public int getExitValue() {
+		return exitValue;
 	}
 
 	public String getMsg() {
