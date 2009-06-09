@@ -50,6 +50,7 @@ import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.wan.job.JobLoadResponse;
 import se.sics.kompics.wan.job.JobRemoveRequest;
 import se.sics.kompics.wan.job.JobRemoveResponse;
+import se.sics.kompics.wan.job.JobStartResponse;
 import se.sics.kompics.wan.job.JobStopResponse;
 
 /**
@@ -190,20 +191,26 @@ public class DaemonTest implements Serializable {
 				String repoId = "sics-snapshot";
 				String repoUrl = "http://kompics.sics.se/maven/snapshotrepository";
 				String mainClass = "se.sics.kompics.manual.example1.Root";
+/*
 				JobLoadRequestMsg msg = new JobLoadRequestMsg(groupId, artifactId, version, repoId,
 						repoUrl, mainClass, new ArrayList<String>(), HIDE_MAVEN_EMBEDDER_OUTPUT, src, dest);
-
 				logger.info("JobLoadRequestMsg being sent..");
-
 				trigger(msg, network.getPositive(Network.class));
-
+*/
 			}
 		};
 
 		public Handler<JobStartResponseMsg> handleJobStartResponseMsg = new Handler<JobStartResponseMsg>() {
 			public void handle(JobStartResponseMsg event) {
 
-				logger.info("Received job start Response from job-id: {} ", event.getJobId());
+				logger.info("Received job start Response {} from job-id: {} ", 
+						event.getSource(), event.getJobId());
+
+				
+				if (event.getStatus() != JobStartResponse.Status.SUCCESS)
+				{
+					testObj.fail(true);
+				}
 
 				// Read from executing job
 				trigger(new JobReadFromExecutingRequestMsg(event.getJobId(),  event.getDestination(),

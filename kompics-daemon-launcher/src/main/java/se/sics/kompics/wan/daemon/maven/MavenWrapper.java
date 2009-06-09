@@ -106,7 +106,7 @@ public class MavenWrapper {
 	            Iterator it = exceptions.iterator();
 	            while (it.hasNext()) {
 	                Exception exception = (Exception) it.next();
-//	                exception.printStackTrace(System.err);
+	                exception.printStackTrace(System.err);
 	            }
 	        }
 			

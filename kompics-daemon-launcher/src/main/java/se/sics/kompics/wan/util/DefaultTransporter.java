@@ -11,6 +11,8 @@ import org.apache.maven.wagon.PathUtils;
 import org.apache.maven.wagon.StreamWagon;
 import org.apache.maven.wagon.Wagon;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
+import org.apache.maven.wagon.providers.http.LightweightHttpWagon;
+import org.apache.maven.wagon.providers.ssh.jsch.ScpWagon;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
 import org.apache.maven.wagon.resource.Resource;
@@ -18,10 +20,6 @@ import org.codehaus.plexus.logging.AbstractLogEnabled;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.codehaus.plexus.util.FileUtils;
-
-
-
-
 
 public class DefaultTransporter extends AbstractLogEnabled implements Transporter, Initializable {
 
@@ -52,7 +50,9 @@ public class DefaultTransporter extends AbstractLogEnabled implements Transporte
 			if("file".equals(protocol))
 				url = URLDecoder.decode(url, "UTF-8");
 			
-			Wagon wagon = wagons.get(protocol);
+			Wagon wagon = new ScpWagon();
+//			Wagon wagon = new LightweightHttpWagon();
+//			Wagon wagon = wagons.get(protocol);
 			Repository repo = getRepository(url);
 			
 //			if(wagon instanceof ScpWagon) {

@@ -11,11 +11,14 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.maven.execution.DefaultMavenExecutionRequest;
+import org.apache.maven.execution.MavenExecutionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,11 +60,11 @@ public class Maven extends ComponentDefinition {
 	public class ProcessWrapper implements Runnable {
 		private final int jobId;
 
-		private Process process=null;
+		private Process process = null;
 
-		private BufferedWriter writeToInput=null;
+		private BufferedWriter writeToInput = null;
 
-		private BufferedReader readFromOutput=null;
+		private BufferedReader readFromOutput = null;
 
 		private final ProcessBuilder processBuilder;
 
@@ -148,8 +151,7 @@ public class Maven extends ComponentDefinition {
 		 *             Signals that an I/O exception has occurred.
 		 */
 		public final void writeBufferedInput(String string) throws IOException {
-			if (writeToInput == null)
-			{
+			if (writeToInput == null) {
 				return;
 			}
 			writeToInput.write(string);
@@ -158,20 +160,17 @@ public class Maven extends ComponentDefinition {
 		}
 
 		public final String readLineFromOutput() throws IOException {
-			if (readFromOutput == null)
-			{
+			if (readFromOutput == null) {
 				return "Process not initialized yet";
 			}
 			return readFromOutput.readLine();
 		}
 
 		public final CharBuffer readBufferedOutput(CharBuffer cb) throws IOException {
-			if (readFromOutput == null)
-			{
+			if (readFromOutput == null) {
 				return cb.append("Process not initialized yet");
 			}
-			if (readFromOutput.ready() == false)
-			{
+			if (readFromOutput.ready() == false) {
 				return cb.append("Process not ready yet");
 			}
 			readFromOutput.read(cb);
@@ -190,8 +189,7 @@ public class Maven extends ComponentDefinition {
 		subscribe(handleJobReadFromExecuting, maven);
 	}
 
-	public Handler<JobReadFromExecutingRequest> handleJobReadFromExecuting = 
-		new Handler<JobReadFromExecutingRequest>() {
+	public Handler<JobReadFromExecutingRequest> handleJobReadFromExecuting = new Handler<JobReadFromExecutingRequest>() {
 		public void handle(JobReadFromExecutingRequest event) {
 
 			int jobId = event.getJobId();
@@ -218,10 +216,8 @@ public class Maven extends ComponentDefinition {
 			trigger(resp, maven);
 		}
 	};
-	
-	
-	public Handler<JobWriteToExecutingRequest> handleJobWriteToExecuting = 
-		new Handler<JobWriteToExecutingRequest>() {
+
+	public Handler<JobWriteToExecutingRequest> handleJobWriteToExecuting = new Handler<JobWriteToExecutingRequest>() {
 		public void handle(JobWriteToExecutingRequest event) {
 
 			int jobId = event.getJobId();
@@ -229,7 +225,6 @@ public class Maven extends ComponentDefinition {
 			if (p == null) {
 				throw new IllegalStateException("Process p not found for jobId: " + jobId);
 			}
-
 
 			String msg;
 			try {
@@ -247,8 +242,7 @@ public class Maven extends ComponentDefinition {
 			} catch (IOException e1) {
 				msg = e1.toString();
 			}
-			
-			
+
 			JobReadFromExecutingResponse resp = new JobReadFromExecutingResponse(event, event
 					.getJobId(), msg);
 			trigger(resp, maven);
@@ -362,8 +356,9 @@ public class Maven extends ComponentDefinition {
 			if (event == null) {
 				status = JobStartResponse.Status.FAIL;
 			} else {
-				// status = mvnExecExec(event, event.getScenario());
-				forkDummyExec(event.getNumPeers(), event, event.getScenario());
+//				status = mvnExecExec(event, event.getScenario());
+				 forkDummyExec(event.getNumPeers(), event,
+				 event.getScenario());
 			}
 
 			// ProcessWrapper p = executingProcesses.get(id);
@@ -384,16 +379,15 @@ public class Maven extends ComponentDefinition {
 		PrintStream origOut = System.out;
 		PrintStream origErr = System.err;
 
-		if (job.isHideMavenOutput() == true)
-		{
+		if (job.isHideMavenOutput() == true) {
 			System.setOut(new java.io.PrintStream(new java.io.OutputStream() {
 				public void write(int devNull) { // dump output (like writing to
-													// /dev/null)
+					// /dev/null)
 				}
 			}));
 			System.setErr(new java.io.PrintStream(new java.io.OutputStream() {
 				public void write(int devNull) { // dump output (like writing to
-													// /dev/null)
+					// /dev/null)
 				}
 			}));
 		}
@@ -426,6 +420,24 @@ public class Maven extends ComponentDefinition {
 	}
 
 	/**
+	 * XXX Currently executing using the assembled jar, not 'maven exec:exec'
+	 */
+	private JobStartResponse.Status mvnExecExec(JobStartRequest job, SimulationScenario scenario) {
+		JobStartResponse.Status status = JobStartResponse.Status.SUCCESS;
+
+		try {
+			MavenWrapper mw = new MavenWrapper(job.getPomFile().getAbsolutePath());
+			executingJobs.put(job.getId(), job);
+			mw.execute("exec:exec");
+		} catch (MavenExecException e) {
+			logger.warn("maven exec:exec failed: " + e.getMessage());
+			status = JobStartResponse.Status.FAIL;
+		}
+		logger.info("maven exec:exec completed...");
+		return status;
+	}
+
+	/**
 	 * @param id
 	 * @param job
 	 * @param scenario
@@ -441,9 +453,7 @@ public class Maven extends ComponentDefinition {
 		classPath = classPath + File.pathSeparatorChar + job.getDummyJarWithDependenciesName();
 		command.add(classPath);
 		command.add(job.getMainClass());
-		command.add("slave");
-		command.add("-" + Configuration.OPT_PEERS + " " + Integer.toString(numPeers)); 
-
+		command.add("-" + Configuration.OPT_PEERS + " " + Integer.toString(numPeers));
 		command.addAll(job.getArgs());
 		command.add("-Dlog4j.properties=log4j.properties");
 		command.add("-DKOMPICS_HOME=" + Daemon.KOMPICS_HOME);
