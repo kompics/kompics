@@ -26,9 +26,9 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
-import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 import se.sics.kompics.wan.util.LocalNetworkConfiguration;
 import se.sics.kompics.web.jetty.JettyWebServerInit;
+
 
 /**
  * This class is not thread-safe for writing, although it is thread-safe for

@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.epfd.diamondp.FailureDetectorConfiguration;
-import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 
 public class ChordConfiguration extends Configuration {
 	private static final Logger logger = LoggerFactory.getLogger(ChordConfiguration.class);

@@ -37,10 +37,11 @@ import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.CyclonConfiguration;
 import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.master.Master;
-import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.jetty.JettyWebServer;
+
+
 
 public final class CyclonWanMasterMain extends ComponentDefinition {
 

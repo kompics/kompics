@@ -3,6 +3,8 @@ package se.sics.kompics.wan.daemon;
 import se.sics.kompics.Init;
 import se.sics.kompics.address.Address;
 
+
+
 public final class DaemonInit extends Init {
 
 	private final int id;

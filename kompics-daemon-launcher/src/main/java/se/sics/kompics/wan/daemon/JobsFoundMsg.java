@@ -9,6 +9,7 @@ import se.sics.kompics.wan.job.Job;
 public class JobsFoundMsg extends DaemonResponseMessage {
 
 
+	private static final long serialVersionUID = -4939393819212736632L;
 	private final Set<Job> setJobs;
 
 	public JobsFoundMsg(Job job, DaemonAddress src, Address dest) {

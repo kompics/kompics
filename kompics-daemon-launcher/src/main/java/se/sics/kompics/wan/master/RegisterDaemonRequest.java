@@ -1,5 +1,6 @@
 package se.sics.kompics.wan.master;
 
+
 import se.sics.kompics.Event;
 import se.sics.kompics.p2p.overlay.OverlayAddress;
 

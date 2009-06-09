@@ -3,6 +3,7 @@ package se.sics.kompics.wan.job;
 import se.sics.kompics.Response;
 
 
+
 public class JobLoadResponse extends Response {
 
 	private static final long serialVersionUID = 1212312401206L;

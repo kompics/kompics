@@ -2,6 +2,7 @@ package se.sics.kompics.wan.master;
 
 import se.sics.kompics.address.Address;
 
+
 public final class MasterClientConfig {
 
 	private final Address masterAddress;

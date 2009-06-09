@@ -50,6 +50,10 @@
 			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>
+
+		
+		<!-- 
+		 -->
 		<dependency>
 			<groupId>se.kth.id2210</groupId>
 			<artifactId>lab2</artifactId>

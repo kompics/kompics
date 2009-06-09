@@ -1,7 +1,6 @@
 
 package se.sics.kompics.wan.main;
 
-import java.io.FileNotFoundException;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -14,8 +13,6 @@ import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.CyclonConfiguration;
 import se.sics.kompics.wan.config.DaemonConfiguration;
 import se.sics.kompics.wan.config.MasterConfiguration;
-import se.sics.kompics.wan.util.HostsParserException;
-import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 
 /**
  * Unit test for simple App.

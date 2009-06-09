@@ -4,6 +4,7 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.wan.daemon.DaemonAddress;
 
+
 public final class KeepAliveDaemonMsg extends Message {
 
 

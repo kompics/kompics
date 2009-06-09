@@ -2,6 +2,7 @@ package se.sics.kompics.wan.master;
 
 import se.sics.kompics.Response;
 
+
 public final class ConnectMasterResponse extends Response {
 
 	private final boolean succeeded;

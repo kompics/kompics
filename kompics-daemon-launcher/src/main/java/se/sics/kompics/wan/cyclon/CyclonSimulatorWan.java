@@ -40,7 +40,6 @@ import se.sics.kompics.p2p.simulator.cyclon.ReceivedMessage;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.timer.Timer;
-import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;

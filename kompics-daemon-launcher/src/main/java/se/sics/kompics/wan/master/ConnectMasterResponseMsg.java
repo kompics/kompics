@@ -5,6 +5,7 @@ import java.util.UUID;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 
+
 public final class ConnectMasterResponseMsg extends Message {
 
 	private static final long serialVersionUID = -1590276498077820239L;

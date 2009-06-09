@@ -2,6 +2,7 @@ package se.sics.kompics.wan.master;
 
 import se.sics.kompics.Request;
 
+
 public class PrintLoadedJobs extends Request {
 
 	private final int daemonId;

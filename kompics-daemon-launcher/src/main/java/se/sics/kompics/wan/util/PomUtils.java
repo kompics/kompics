@@ -1,8 +1,6 @@
 package se.sics.kompics.wan.util;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 public class PomUtils {
 

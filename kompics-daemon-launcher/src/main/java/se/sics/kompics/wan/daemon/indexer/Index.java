@@ -1,7 +1,7 @@
 package se.sics.kompics.wan.daemon.indexer;
 
 import se.sics.kompics.PortType;
-import se.sics.kompics.wan.daemon.ListJobsLoadedRequestMsg;
+
 
 
 /**

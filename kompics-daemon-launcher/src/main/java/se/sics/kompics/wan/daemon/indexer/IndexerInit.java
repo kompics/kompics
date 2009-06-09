@@ -2,6 +2,8 @@ package se.sics.kompics.wan.daemon.indexer;
 
 import se.sics.kompics.Init;
 
+
+
 public final class IndexerInit extends Init {
 
 	private final long indexingPeriod;

@@ -2,6 +2,7 @@ package se.sics.kompics.wan.job;
 
 import se.sics.kompics.Request;
 
+
 /**
  * 
  *  Can include either the jobId or

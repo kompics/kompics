@@ -1,5 +1,6 @@
 package se.sics.kompics.wan.main;
 
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
@@ -21,6 +22,7 @@ import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.MasterConfiguration;
 import se.sics.kompics.wan.master.Master;
 import se.sics.kompics.wan.master.MasterInit;
+
 
 public class MasterMain extends ComponentDefinition {
 

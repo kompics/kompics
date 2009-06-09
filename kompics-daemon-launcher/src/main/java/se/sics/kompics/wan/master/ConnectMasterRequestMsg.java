@@ -6,6 +6,7 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.wan.daemon.DaemonAddress;
 
+
 public final class ConnectMasterRequestMsg extends Message {
 
 	private static final long serialVersionUID = -1590276498077820239L;

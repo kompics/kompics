@@ -1,6 +1,5 @@
 package se.sics.kompics.wan.cyclon;
 
-import java.math.BigInteger;
 import java.net.UnknownHostException;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -24,12 +23,11 @@ import se.sics.kompics.p2p.simulator.cyclon.CyclonSimulatorPort;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.timer.Timer;
-import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.CyclonConfiguration;
-import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.jetty.JettyWebServer;
+
 
 /**
  * The <code>CyclonExecutionMain</code> class.

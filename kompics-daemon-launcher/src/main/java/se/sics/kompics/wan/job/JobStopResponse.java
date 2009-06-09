@@ -2,6 +2,7 @@ package se.sics.kompics.wan.job;
 
 import se.sics.kompics.Response;
 
+
 public class JobStopResponse extends Response {
 
 	public enum Status {

@@ -2,6 +2,7 @@ package se.sics.kompics.wan.daemon.indexer;
 
 import se.sics.kompics.Request;
 
+
 /**
  * 
  * @author Jim Dowling <jdowling@sics.se>

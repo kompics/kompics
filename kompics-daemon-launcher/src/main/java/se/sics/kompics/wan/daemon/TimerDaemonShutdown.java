@@ -23,6 +23,7 @@ package se.sics.kompics.wan.daemon;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;
 
+
 /**
  * Non-cancellable Timer to stop the daemon process.
  * @author Cosmin Arad <cosmin@sics.se>

@@ -1,5 +1,7 @@
 package se.sics.kompics.wan.main;
 
+
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
@@ -22,6 +24,8 @@ import se.sics.kompics.wan.config.DaemonConfiguration;
 import se.sics.kompics.wan.config.MasterAddressConfiguration;
 import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.daemon.DaemonInit;
+
+
 
 public class DaemonMain extends ComponentDefinition {
 

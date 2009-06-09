@@ -24,6 +24,8 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 
+
+
 /**
  * The <code>BootstrapServerInit</code> class.
  * 

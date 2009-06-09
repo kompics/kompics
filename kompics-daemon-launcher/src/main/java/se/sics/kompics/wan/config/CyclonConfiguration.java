@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.address.Address;
-import se.sics.kompics.wan.util.LocalIPAddressNotFound;
 
 public class CyclonConfiguration extends Configuration {
 

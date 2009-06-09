@@ -4,6 +4,7 @@ import se.sics.kompics.Init;
 import se.sics.kompics.wan.daemon.DaemonAddress;
 import se.sics.kompics.wan.master.MasterClientConfig;
 
+
 /**
  * The <code>MasterClientInit</code> class.
  * 

@@ -2,6 +2,8 @@ package se.sics.kompics.wan.job;
 
 import se.sics.kompics.Event;
 
+
+
 public class JobExited extends Event {
 
 	private final int exitValue;

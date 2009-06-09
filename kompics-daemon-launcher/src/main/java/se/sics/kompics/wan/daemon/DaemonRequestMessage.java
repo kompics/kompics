@@ -3,6 +3,7 @@ package se.sics.kompics.wan.daemon;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 
+
 /**
  * The <code>DaemonRequestMessage</code> class.
  * 

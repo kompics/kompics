@@ -18,7 +18,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.xpath.XPathAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -40,6 +39,8 @@ import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.job.DummyPomConstructionException;
 import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.wan.util.PomUtils;
+
+import com.sun.org.apache.xpath.internal.XPathAPI;
 
 
 public class Indexer extends ComponentDefinition {
