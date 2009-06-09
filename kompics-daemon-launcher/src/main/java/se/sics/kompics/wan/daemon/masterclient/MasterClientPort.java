@@ -6,7 +6,7 @@ import se.sics.kompics.wan.master.ConnectMasterResponse;
 import se.sics.kompics.wan.master.DisconnectMasterRequest;
 import se.sics.kompics.wan.master.ShutdownDaemonRequest;
 
-public class MasterClientP extends PortType {
+public class MasterClientPort extends PortType {
 		{
 			positive(ConnectMasterResponse.class);
 			positive(ShutdownDaemonRequest.class);

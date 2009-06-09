@@ -45,7 +45,7 @@ import se.sics.kompics.wan.daemon.JobStopRequestMsg;
 import se.sics.kompics.wan.daemon.JobStopResponseMsg;
 import se.sics.kompics.wan.daemon.JobsFoundMsg;
 import se.sics.kompics.wan.daemon.ListJobsLoadedRequestMsg;
-import se.sics.kompics.wan.daemon.maven.Maven;
+import se.sics.kompics.wan.daemon.maven.MavenPort;
 import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.wan.job.JobLoadResponse;
 import se.sics.kompics.wan.job.JobRemoveRequest;
@@ -321,7 +321,7 @@ public class DaemonTest implements Serializable {
 
 		private void removeJob(int jobId) {
 			Job job = loadedJobs.get(jobId);
-			trigger(new JobRemoveRequest(job), daemon.getNegative(Maven.class));
+			trigger(new JobRemoveRequest(job), daemon.getNegative(MavenPort.class));
 		}
 
 		public Handler<JobReadFromExecutingResponseMsg> handleJobReadFromExecutingResponseMsg = new Handler<JobReadFromExecutingResponseMsg>() {

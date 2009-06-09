@@ -24,14 +24,14 @@ import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
-import se.sics.kompics.wan.daemon.indexer.Index;
+import se.sics.kompics.wan.daemon.indexer.IndexPort;
 import se.sics.kompics.wan.daemon.indexer.IndexShutdown;
 import se.sics.kompics.wan.daemon.indexer.Indexer;
 import se.sics.kompics.wan.daemon.indexer.IndexerInit;
 import se.sics.kompics.wan.daemon.indexer.JobsFound;
 import se.sics.kompics.wan.daemon.indexer.ListJobsLoadedRequest;
+import se.sics.kompics.wan.daemon.maven.MavenPort;
 import se.sics.kompics.wan.daemon.maven.Maven;
-import se.sics.kompics.wan.daemon.maven.MavenLauncher;
 import se.sics.kompics.wan.job.DummyPomConstructionException;
 import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.wan.job.JobExited;
@@ -123,22 +123,22 @@ public class IndexerTest implements Serializable {
 			
 			indexer = create(Indexer.class);
 			timer = create(JavaTimer.class);
-			mavenLauncher = create(MavenLauncher.class);
+			mavenLauncher = create(Maven.class);
 
 			connect(indexer.getNegative(Timer.class), timer.getPositive(Timer.class));
 			
 
-			subscribe(handleListJobsLoadedResponse, indexer.getPositive(Index.class));
-			subscribe(handleJobFoundLocally, indexer.getPositive(Index.class));
+			subscribe(handleListJobsLoadedResponse, indexer.getPositive(IndexPort.class));
+			subscribe(handleJobFoundLocally, indexer.getPositive(IndexPort.class));
 
-			subscribe(handleJobAssemblyResponse, mavenLauncher.getPositive(Maven.class));
-			subscribe(handleJobExecResponse, mavenLauncher.getPositive(Maven.class));
-			subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(Maven.class));
+			subscribe(handleJobAssemblyResponse, mavenLauncher.getPositive(MavenPort.class));
+			subscribe(handleJobExecResponse, mavenLauncher.getPositive(MavenPort.class));
+			subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(MavenPort.class));
 
 			subscribe(handleExecReadTimeout, timer.getPositive(Timer.class));
 			subscribe(handleJobStopTimeout, timer.getPositive(Timer.class));
-			subscribe(handleJobStopResponse, mavenLauncher.getPositive(Maven.class));
-			subscribe(handleJobExited, mavenLauncher.getPositive(Maven.class));
+			subscribe(handleJobStopResponse, mavenLauncher.getPositive(MavenPort.class));
+			subscribe(handleJobExited, mavenLauncher.getPositive(MavenPort.class));
 			
 			subscribe(handleStart, control);
 
@@ -166,7 +166,7 @@ public class IndexerTest implements Serializable {
 					
 					logger.info("Creating a dummy pom");
 
-					trigger(new JobLoadRequest(dummy, true), mavenLauncher.getPositive(Maven.class));
+					trigger(new JobLoadRequest(dummy, true), mavenLauncher.getPositive(MavenPort.class));
 
 				} catch (DummyPomConstructionException e1) {
 					// TODO Auto-generated catch block
@@ -205,7 +205,7 @@ public class IndexerTest implements Serializable {
 				
 				logger.debug("Retrying to read from job: " + event.getJobId());
 				trigger(new JobReadFromExecutingRequest(event.getJobId()), mavenLauncher
-						.getPositive(Maven.class));
+						.getPositive(MavenPort.class));
 
 				ScheduleTimeout st = new ScheduleTimeout(2000);
 				st.setTimeoutEvent(new JobStopTimeout(event.getJobId(), st));				
@@ -217,7 +217,7 @@ public class IndexerTest implements Serializable {
 		public Handler<JobStopTimeout> handleJobStopTimeout = new Handler<JobStopTimeout>() {
 			public void handle(JobStopTimeout event) {
 				logger.warn("Trying to stop a job: " + event.getJobId());
-				trigger(new JobStopRequest(event.getJobId()), mavenLauncher.getPositive(Maven.class));
+				trigger(new JobStopRequest(event.getJobId()), mavenLauncher.getPositive(MavenPort.class));
 				
 				
 			}
@@ -227,7 +227,7 @@ public class IndexerTest implements Serializable {
 			public void handle(JobExited event) {
 				logger.debug("Job exited: " + event.getJobId());
 				
-				trigger(new JobRemoveRequest(dummy), mavenLauncher.getPositive(Maven.class));
+				trigger(new JobRemoveRequest(dummy), mavenLauncher.getPositive(MavenPort.class));
 			}
 		};
 
@@ -237,7 +237,7 @@ public class IndexerTest implements Serializable {
 				logger.debug("Job stopped : " + event.getJobId() + " : " + event.getStatus() +
 						" : " + event.getMsg());
 				
-				trigger(new IndexShutdown(), indexer.getPositive(Index.class));
+				trigger(new IndexShutdown(), indexer.getPositive(IndexPort.class));
 				trigger(new Stop(), indexer.getControl());
 
 				TestIndexerComponent.testObj.pass();
@@ -281,7 +281,7 @@ public class IndexerTest implements Serializable {
 				Iterator<Job> iter = listJobsLoaded.iterator();
 				while (iter.hasNext())
 				{
-					trigger(new JobStartRequest(1, iter.next(), scenario), mavenLauncher.getPositive(Maven.class));
+					trigger(new JobStartRequest(1, iter.next(), scenario), mavenLauncher.getPositive(MavenPort.class));
 				}
 
 
@@ -300,7 +300,7 @@ public class IndexerTest implements Serializable {
 						loadedJobs.put(id, job);
 						logger.info("Added job {} to loaded jobs set.", id);
 						trigger(new ListJobsLoadedRequest(),
-									indexer.getPositive(Index.class));
+									indexer.getPositive(IndexPort.class));
 					}
 				}
 
@@ -310,7 +310,7 @@ public class IndexerTest implements Serializable {
 		private void removeJob(int jobId)
 		{
 				Job job = loadedJobs.get(jobId);
-				trigger(new JobRemoveRequest(job), mavenLauncher.getNegative(Maven.class));
+				trigger(new JobRemoveRequest(job), mavenLauncher.getNegative(MavenPort.class));
 		}
 
 		public Handler<JobRemoveResponse> handleJobRemoveResponse = new Handler<JobRemoveResponse>() {
@@ -318,7 +318,7 @@ public class IndexerTest implements Serializable {
 				
 				logger.info("Job remove response was:" + event.getMsg() + " - " + event.getStatus());
 				
-				trigger(new IndexShutdown(), indexer.getNegative(Index.class));
+				trigger(new IndexShutdown(), indexer.getNegative(IndexPort.class));
 				
 				trigger(new Stop(), indexer.getControl());
 			}

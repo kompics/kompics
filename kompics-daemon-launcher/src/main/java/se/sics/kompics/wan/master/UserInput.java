@@ -15,7 +15,7 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.MasterConfiguration;
 
 public class UserInput extends ComponentDefinition {
-	private Negative<MasterCommands> master = negative(MasterCommands.class);
+	private Negative<MasterPort> master = negative(MasterPort.class);
 	Positive<Timer> timer = positive(Timer.class);
 
 	private final Scanner scanner;

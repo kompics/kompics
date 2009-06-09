@@ -21,16 +21,16 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
-import se.sics.kompics.wan.daemon.indexer.Index;
+import se.sics.kompics.wan.daemon.indexer.IndexPort;
 import se.sics.kompics.wan.daemon.indexer.Indexer;
 import se.sics.kompics.wan.daemon.indexer.IndexerInit;
 import se.sics.kompics.wan.daemon.indexer.JobsFound;
 import se.sics.kompics.wan.daemon.indexer.ListJobsLoadedResponse;
 import se.sics.kompics.wan.daemon.masterclient.MasterClient;
 import se.sics.kompics.wan.daemon.masterclient.MasterClientInit;
-import se.sics.kompics.wan.daemon.masterclient.MasterClientP;
+import se.sics.kompics.wan.daemon.masterclient.MasterClientPort;
+import se.sics.kompics.wan.daemon.maven.MavenPort;
 import se.sics.kompics.wan.daemon.maven.Maven;
-import se.sics.kompics.wan.daemon.maven.MavenLauncher;
 import se.sics.kompics.wan.job.DummyPomConstructionException;
 import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.wan.job.JobExited;
@@ -117,7 +117,7 @@ public class Daemon extends ComponentDefinition {
 
 	public Daemon() {
 
-		mavenLauncher = create(MavenLauncher.class);
+		mavenLauncher = create(Maven.class);
 		indexer = create(Indexer.class);
 		masterClient = create(MasterClient.class); 
 
@@ -133,24 +133,24 @@ public class Daemon extends ComponentDefinition {
 		subscribe(handleJobReadFromExecutingRequestMsg, net);
 		subscribe(handleJobWriteToExecutingRequestMsg, net);
 
-		subscribe(handleJobLoadResponse, mavenLauncher.getPositive(Maven.class));
-		subscribe(handleJobStartResponse, mavenLauncher.getPositive(Maven.class));
-		subscribe(handleJobRemoveResponse, mavenLauncher.getPositive(Maven.class));
-		subscribe(handleJobExited, mavenLauncher.getPositive(Maven.class));
-		subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(Maven.class));
-		subscribe(handleJobStopResponse, mavenLauncher.getPositive(Maven.class));
-		subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(Maven.class));
+		subscribe(handleJobLoadResponse, mavenLauncher.getPositive(MavenPort.class));
+		subscribe(handleJobStartResponse, mavenLauncher.getPositive(MavenPort.class));
+		subscribe(handleJobRemoveResponse, mavenLauncher.getPositive(MavenPort.class));
+		subscribe(handleJobExited, mavenLauncher.getPositive(MavenPort.class));
+		subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(MavenPort.class));
+		subscribe(handleJobStopResponse, mavenLauncher.getPositive(MavenPort.class));
+		subscribe(handleJobReadFromExecutingResponse, mavenLauncher.getPositive(MavenPort.class));
 		
 		
 		subscribe(handleShutdownTimeout, timer);
 		subscribe(handleTimerDaemonShutdown, timer);
 		
-		subscribe(handleJobsFound, indexer.getPositive(Index.class));
+		subscribe(handleJobsFound, indexer.getPositive(IndexPort.class));
 	}
 
 	public Handler<Start> handleStart = new Handler<Start>() {
 		public void handle(Start event) {
-			trigger(new ConnectMasterRequest(), masterClient.getPositive(MasterClientP.class));
+			trigger(new ConnectMasterRequest(), masterClient.getPositive(MasterClientPort.class));
 		}
 	};
 	
@@ -183,7 +183,7 @@ public class Daemon extends ComponentDefinition {
 			
 			logger.info("Disconnect request sending to master...");
 			
-			trigger(event, masterClient.getPositive(MasterClientP.class));
+			trigger(event, masterClient.getPositive(MasterClientPort.class));
 		}
 	};
 
@@ -262,7 +262,7 @@ public class Daemon extends ComponentDefinition {
 						job.createDummyPomFile();
 						status = JobLoadResponse.Status.POM_CREATED;
 						loadingJobs.put(id, job);
-						trigger(job, mavenLauncher.getPositive(Maven.class));
+						trigger(job, mavenLauncher.getPositive(MavenPort.class));
 	
 					} catch (DummyPomConstructionException e) {
 						// XXX store stack trace and send back in msg
@@ -301,7 +301,7 @@ public class Daemon extends ComponentDefinition {
 			} else {
 				JobStartRequest jobExec = new JobStartRequest( 
 						event.getNumPeers(), job, event.getSimulationScenario());
-				trigger(jobExec, mavenLauncher.getPositive(Maven.class));
+				trigger(jobExec, mavenLauncher.getPositive(MavenPort.class));
 				executingJobs.put(jobId, jobExec);
 			}
 
@@ -356,7 +356,7 @@ public class Daemon extends ComponentDefinition {
 			}
 			else
 			{
-				trigger(new JobRemoveRequest(job), mavenLauncher.getNegative(Maven.class));
+				trigger(new JobRemoveRequest(job), mavenLauncher.getNegative(MavenPort.class));
 			}
 		}
 	};
@@ -428,7 +428,7 @@ public class Daemon extends ComponentDefinition {
 //			trigger(response, net);
 			
 			JobStopRequest stopJob = new JobStopRequest(id);
-			trigger(stopJob,mavenLauncher.getPositive(Maven.class));
+			trigger(stopJob,mavenLauncher.getPositive(MavenPort.class));
 		}
 	};
 
@@ -481,7 +481,7 @@ public class Daemon extends ComponentDefinition {
 	public Handler<JobReadFromExecutingRequestMsg> handleJobReadFromExecutingRequestMsg = new Handler<JobReadFromExecutingRequestMsg>() {
 		public void handle(JobReadFromExecutingRequestMsg event) {
 			JobReadFromExecutingRequest req = new JobReadFromExecutingRequest(event);
-			trigger(req, mavenLauncher.getPositive(Maven.class));
+			trigger(req, mavenLauncher.getPositive(MavenPort.class));
 		}
 	};
 	
@@ -489,7 +489,7 @@ public class Daemon extends ComponentDefinition {
 		new Handler<JobWriteToExecutingRequestMsg>() {
 		public void handle(JobWriteToExecutingRequestMsg event) {
 			JobWriteToExecutingRequest req = new JobWriteToExecutingRequest(event);
-			trigger(req, mavenLauncher.getPositive(Maven.class));
+			trigger(req, mavenLauncher.getPositive(MavenPort.class));
 		}
 	};
 	

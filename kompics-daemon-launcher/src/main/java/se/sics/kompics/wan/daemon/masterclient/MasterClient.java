@@ -29,7 +29,7 @@ import se.sics.kompics.wan.master.KeepAliveDaemonMsg;
 
 public class MasterClient extends ComponentDefinition {
 
-	Negative<MasterClientP> masterPort = negative(MasterClientP.class);
+	Negative<MasterClientPort> masterPort = negative(MasterClientPort.class);
 
 	Positive<Network> network = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);

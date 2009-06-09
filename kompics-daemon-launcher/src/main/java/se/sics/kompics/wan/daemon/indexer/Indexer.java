@@ -55,7 +55,7 @@ public class Indexer extends ComponentDefinition {
 
 	private static final Logger logger = LoggerFactory.getLogger(Indexer.class);
 
-	private Negative<Index> indexPort = negative(Index.class);
+	private Negative<IndexPort> indexPort = negative(IndexPort.class);
 	private Positive<Timer> timer = positive(Timer.class);
 
 	private long indexingPeriod;

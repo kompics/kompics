@@ -10,7 +10,7 @@ import se.sics.kompics.PortType;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class MasterCommands extends PortType {
+public class MasterPort extends PortType {
 
 	{
 		positive(PrintConnectedDameons.class);

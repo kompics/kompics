@@ -112,13 +112,13 @@ public class Master extends ComponentDefinition {
 
 		subscribe(handleCacheEvictDaemon, timer);
 
-		subscribe(handlePrintConnectedDameons, userInput.getPositive(MasterCommands.class));
-		subscribe(handlePrintLoadedJobs, userInput.getPositive(MasterCommands.class));
-		subscribe(handlePrintDaemonsWithLoadedJob, userInput.getPositive(MasterCommands.class));
-		subscribe(handleInstallJobOnHosts, userInput.getPositive(MasterCommands.class));
-		subscribe(handleStartJobOnHosts, userInput.getPositive(MasterCommands.class));
-		subscribe(handleStopJobOnHosts, userInput.getPositive(MasterCommands.class));
-		subscribe(handleShutdownDaemonRequest, userInput.getPositive(MasterCommands.class));
+		subscribe(handlePrintConnectedDameons, userInput.getPositive(MasterPort.class));
+		subscribe(handlePrintLoadedJobs, userInput.getPositive(MasterPort.class));
+		subscribe(handlePrintDaemonsWithLoadedJob, userInput.getPositive(MasterPort.class));
+		subscribe(handleInstallJobOnHosts, userInput.getPositive(MasterPort.class));
+		subscribe(handleStartJobOnHosts, userInput.getPositive(MasterPort.class));
+		subscribe(handleStopJobOnHosts, userInput.getPositive(MasterPort.class));
+		subscribe(handleShutdownDaemonRequest, userInput.getPositive(MasterPort.class));
 		
 		connect(timer, userInput.getNegative(Timer.class));
 	}

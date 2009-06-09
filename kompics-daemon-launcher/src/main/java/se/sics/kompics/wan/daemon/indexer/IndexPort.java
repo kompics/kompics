@@ -10,7 +10,7 @@ import se.sics.kompics.PortType;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class Index extends PortType {
+public class IndexPort extends PortType {
 
 	{
 		negative(IndexStart.class);
