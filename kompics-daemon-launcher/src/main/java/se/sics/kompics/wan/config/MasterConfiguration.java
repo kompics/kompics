@@ -55,6 +55,7 @@ public class MasterConfiguration extends MasterAddressConfiguration {
 		super(args);
 		
 		String fName= compositeConfig.getString(PROP_MASTER_HOSTS_FILENAME, DEFAULT_MASTER_HOSTSFILE);
+		
 		hosts = HostsParser.parseHostsFile(fName);
 
 		masterServerInitialized = true;

@@ -19,6 +19,17 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>ch.ethz.ganymed</groupId>
+			<artifactId>ganymed-ssh2</artifactId>
+			<version>build210</version>
+		</dependency>
+		<dependency>
+			<groupId>jsch</groupId>
+			<artifactId>jsch</artifactId>
+			<version>0.1.29</version>
+		</dependency>
+		
+		<dependency>
 			<groupId>xalan</groupId>
 			<artifactId>xalan</artifactId>
 			<version>2.7.1</version>
@@ -51,7 +62,7 @@
 			<scope>compile</scope>
 		</dependency>
 
-		
+
 		<!-- 
 		 -->
 		<dependency>
@@ -74,14 +85,11 @@
 		</dependency>
 
 		<!--
-		<dependency>
-			<groupId>org.servebox.maven.wagon</groupId>
+			<dependency> <groupId>org.servebox.maven.wagon</groupId>
 			<artifactId>wagon-ssh</artifactId>
-			<version>1.0-passphrase-beta2</version>
-		</dependency>		
-			<dependency> <groupId>com.sun</groupId>
-			<artifactId>tools</artifactId> <version>${java.version}</version>
-			<scope>system</scope>
+			<version>1.0-passphrase-beta2</version> </dependency> <dependency>
+			<groupId>com.sun</groupId> <artifactId>tools</artifactId>
+			<version>${java.version}</version> <scope>system</scope>
 			<systemPath>${java.home}/../lib/tools.jar</systemPath> </dependency>
 		-->
 

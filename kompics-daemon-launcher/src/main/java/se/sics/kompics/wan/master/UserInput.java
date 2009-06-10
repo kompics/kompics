@@ -1,5 +1,9 @@
 package se.sics.kompics.wan.master;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.TreeSet;
@@ -13,12 +17,16 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.MasterConfiguration;
+import se.sics.kompics.wan.util.HostsParser;
+import se.sics.kompics.wan.util.HostsParserException;
 
 public class UserInput extends ComponentDefinition {
 	private Negative<MasterPort> master = negative(MasterPort.class);
 	Positive<Timer> timer = positive(Timer.class);
 
 	private final Scanner scanner;
+	
+	TreeSet<Address> hosts = null;
 
 	public UserInput() {
 		subscribe(handleStart, control);
@@ -40,18 +48,16 @@ public class UserInput extends ComponentDefinition {
 		}
 	};
 
-	private int getJob()
-	{
+	private int getJob() {
 		System.out.print("\tEnter job id: ");
 		return scanner.nextInt();
 	}
-	
-	private int getNumPeers()
-	{
+
+	private int getNumPeers() {
 		System.out.print("\tEnter the number of peers to start at each host: ");
 		return scanner.nextInt();
 	}
-	
+
 	private void getInput() {
 		TreeSet<Address> hosts = MasterConfiguration.getHosts();
 		switch (selectOption()) {
@@ -63,7 +69,7 @@ public class UserInput extends ComponentDefinition {
 			break;
 		case 3:
 			System.out.print("\tEnter daemon-id: ");
-			int daemonId= scanner.nextInt();
+			int daemonId = scanner.nextInt();
 			trigger(new PrintLoadedJobs(daemonId), master);
 			break;
 		case 5: // XXX
@@ -80,24 +86,43 @@ public class UserInput extends ComponentDefinition {
 			String mainClass = scanner.next();
 			System.out.print("\tHide Maven output (y/n): ");
 			String hideMavenOutput = scanner.next();
-			boolean hideOutput = (hideMavenOutput.compareToIgnoreCase("y")==0) ? true : false;
-			
+			boolean hideOutput = (hideMavenOutput.compareToIgnoreCase("y") == 0) ? true : false;
+
 			// System.out.print("\tEnter any optional args (return for none): ");
 			// String allArgs = scanner.next();
 			// String[] args = allArgs.split(" ");
 			String[] args = {};
-			trigger(new InstallJobOnHosts(groupId, artifactId, version,
-					mainClass, Arrays.asList(args),hideOutput, hosts), master);
+			trigger(new InstallJobOnHosts(groupId, artifactId, version, mainClass, Arrays
+					.asList(args), hideOutput, hosts), master);
 			break;
 		case 6:
 			int jobId = getJob();
 			trigger(new StopJobOnHosts(jobId), master);
 			break;
+		case 7:
+			int sshAuthOpt = 0;
+			do {
+				sshAuthOpt = selectSshAuthMethod();
+			} while (sshAuthOpt < 1 || sshAuthOpt > 2);
+			switch (sshAuthOpt) {
+			case 1: 
+				break;
+			case 2:
+				break;
+			}
+			
+			hosts = MasterConfiguration.getHosts(); 
+			if (hosts == null)
+			{
+				while (selectHostsFile() == false) ;
+			}
+			
+			break;
 		case 8:
 			trigger(new ShutdownDaemonRequest(), master);
 			break;
-		case 9:			
-			trigger(new StartJobOnHosts(getJob(), getNumPeers()), master);			
+		case 9:
+			trigger(new StartJobOnHosts(getJob(), getNumPeers()), master);
 			break;
 		case 0:
 			System.out.println("\tGoodbye.");
@@ -118,6 +143,26 @@ public class UserInput extends ComponentDefinition {
 		st.setTimeoutEvent(uit);
 		trigger(st, timer);
 	}
+	
+	private boolean selectHostsFile()
+	{
+		boolean succeed = true;
+		System.out.println();
+		System.out.println("Enter the full pathname of the file containing a list" +
+				"of comma-separated hosts in the format host[:port[:id]] ");
+		String filename =  scanner.next();
+		try {
+			TreeSet<Address> hosts = HostsParser.parseHostsFile(filename);
+		} catch (FileNotFoundException e) {
+			System.out.println("File not found: " + e.getMessage());
+			return false;
+		} catch (HostsParserException e) {
+			System.out.println("Hosts file not formatted correctly: " + e.getMessage());
+			return false;
+		}		
+		
+		return succeed;
+	}
 
 	private TreeSet<Address> getHosts() {
 		int first, last;
@@ -126,6 +171,15 @@ public class UserInput extends ComponentDefinition {
 		System.out.println("Enter the end of the range of hosts to use:");
 		last = scanner.nextInt();
 		return MasterConfiguration.getHosts(first, last);
+	}
+
+	private int selectSshAuthMethod() {
+		System.out.println();
+		System.out.println("Enter a number to select an option from below:");
+		System.out.println("\t1) username/password.");
+		System.out.println("\t2) public-key authentication.");
+		System.out.print("Enter your choice: ");
+		return scanner.nextInt();
 	}
 
 	private int selectOption() {
@@ -137,6 +191,7 @@ public class UserInput extends ComponentDefinition {
 		System.out.println("\t4) load a job to all hosts.");
 		System.out.println("\t5) load a job to selected hosts.");
 		System.out.println("\t6) stop a job on all hosts.");
+		System.out.println("\t7) scp (copy) daemon jar file to hosts.");
 		System.out.println("\t8) shutdown all hosts.");
 		System.out.println("\t9) start a job on all hosts that have loaded the job.");
 		System.out.println("\t0) exit program");
