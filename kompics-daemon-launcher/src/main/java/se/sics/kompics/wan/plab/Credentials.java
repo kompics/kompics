@@ -5,6 +5,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 //import com.twmacinta.util.MD5;
 
 /**
@@ -97,7 +99,12 @@ public class Credentials {
 	// this.passwordMD5 = md5.asHex();
 	 }
 
-	private String calcSunMD5(String str) {
+	 private String calcSunMD5(String str) {
+	 	return DigestUtils.md5Hex(str);
+	 }
+
+
+	private String calcSunMD5_old(String str) {
 		byte[] defaultBytes = str.getBytes();
 		try {
 			MessageDigest algorithm = MessageDigest.getInstance("MD5");
