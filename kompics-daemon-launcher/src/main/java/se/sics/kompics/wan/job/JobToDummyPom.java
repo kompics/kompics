@@ -18,6 +18,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.xpath.XPathAPI;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -29,7 +30,7 @@ import org.xml.sax.SAXException;
 import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.util.PomUtils;
 
-import com.sun.org.apache.xpath.internal.XPathAPI;
+
 
 public class JobToDummyPom extends Job implements Serializable {
 
