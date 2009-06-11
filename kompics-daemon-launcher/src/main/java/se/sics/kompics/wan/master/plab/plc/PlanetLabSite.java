@@ -2,7 +2,7 @@ package se.sics.kompics.wan.master.plab.plc;
 
 import java.util.Map;
 
-public class PlanetLabSite implements Comparable{
+public class PlanetLabSite implements Comparable<PlanetLabSite> {
 	private Integer site_id;
 
 	private String name;
@@ -164,11 +164,8 @@ public class PlanetLabSite implements Comparable{
 		return name.hashCode();
 	}
 	
-	public int compareTo(Object obj){
-		if(obj instanceof PlanetLabSite){
+	public int compareTo(PlanetLabSite obj){
 			PlanetLabSite comp = (PlanetLabSite) obj;
 			return this.getName().compareTo(comp.getName());
-		}
-		return -1;
 	}
 }
