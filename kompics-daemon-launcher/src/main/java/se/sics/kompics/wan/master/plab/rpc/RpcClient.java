@@ -1,4 +1,4 @@
-package se.sics.kompics.wan.plab;
+package se.sics.kompics.wan.master.plab.rpc;
 
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -8,6 +8,9 @@ import java.util.Map;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+
+import se.sics.kompics.wan.master.plab.Constants;
+import se.sics.kompics.wan.master.plab.Credentials;
 
 public class RpcClient implements RpcFunctions {
 

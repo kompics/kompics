@@ -1,4 +1,4 @@
-package se.sics.kompics.wan.plab;
+package se.sics.kompics.wan.master.plab;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-//import com.twmacinta.util.MD5;
 
 /**
  * Class holding credentials used both for communication with PLC and for

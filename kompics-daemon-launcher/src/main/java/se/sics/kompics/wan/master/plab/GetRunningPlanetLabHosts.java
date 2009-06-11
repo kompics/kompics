@@ -1,4 +1,4 @@
-package se.sics.kompics.wan.plab;
+package se.sics.kompics.wan.master.plab;
 
 
 import se.sics.kompics.Event;

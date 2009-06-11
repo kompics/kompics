@@ -32,16 +32,23 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	public static final String PROP_PLC_API_ADDRESS = "PlcApiAddress";
 	
 	
-	protected static final int DEFAULT_LOCAL_XML_RPC_PORT = 8088;
-	protected static final String DEFAULT_PLC_API_ADDRESS = "localhost";
+	public static final int DEFAULT_LOCAL_XML_RPC_PORT = 8088;
+	public static final String DEFAULT_PLC_API_ADDRESS = "localhost";
+	public static final String DEFAULT_HTTP_PROXY_HOST = null;
+	public static final int DEFAULT_HTTP_PROXY_PORT = -1;
+	public static final String DEFAULT_HTTP_PROXY_USERNAME = null;
+	public static final String DEFAULT_HTTP_PROXY_PASSWORD = null;
 	
 	/********************************************************/
 	/********* Helper fields ********************************/
 	/********************************************************/
 	
 	protected Option localXmlRpcPortOption;
-
 	protected Option plcApiOption;
+	protected Option httpProxyHostOption;
+	protected Option httpProxyPortOption;
+	protected Option httpProxyUsernameOption;
+	protected Option httpProxyPasswordOption;
 	
 	protected static boolean plInitialized = false;
 	
@@ -67,6 +74,22 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		plcApiOption = new Option("plcApiAddress", true, "PLC API Address");
 		plcApiOption.setArgName("address");
 		options.addOption(plcApiOption);
+		
+		httpProxyHostOption = new Option("httpProxy", true, "Hostname of http proxy server.");
+		httpProxyHostOption.setArgName("host");
+		options.addOption(httpProxyHostOption);
+		
+		httpProxyPortOption = new Option("httpProxyPort", true, "Port number of http proxy server.");
+		httpProxyPortOption.setArgName("number");
+		options.addOption(httpProxyPortOption);
+		
+		httpProxyUsernameOption = new Option("httpProxyUsername", true, "Username for authentication with the http proxy server.");
+		httpProxyUsernameOption.setArgName("username");
+		options.addOption(httpProxyUsernameOption);
+		
+		httpProxyPasswordOption = new Option("httpProxyPassword", true, "Password for authentication with the http proxy server.");
+		httpProxyPasswordOption.setArgName("password");
+		options.addOption(httpProxyPasswordOption);
 	}
 
 	@Override
@@ -82,6 +105,26 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 			String plc = new String(line.getOptionValue(plcApiOption.getOpt()));
 			compositeConfig.setProperty(PROP_PLC_API_ADDRESS, plc);
 		}
+		
+		if (line.hasOption(httpProxyHostOption.getOpt())) {
+			String host = new String(line.getOptionValue(httpProxyHostOption.getOpt()));
+			compositeConfig.setProperty(PROP_HTTP_PROXY_HOST, host);
+		}
+		
+		if (line.hasOption(httpProxyPortOption.getOpt())) {
+			int port = new Integer(line.getOptionValue(httpProxyPortOption.getOpt()));
+			compositeConfig.setProperty(PROP_HTTP_PROXY_PORT, port);
+		}
+		
+		if (line.hasOption(httpProxyUsernameOption.getOpt())) {
+			String user = new String(line.getOptionValue(httpProxyUsernameOption.getOpt()));
+			compositeConfig.setProperty(PROP_HTTP_PROXY_USERNAME, user);
+		}
+		
+		if (line.hasOption(httpProxyPasswordOption.getOpt())) {
+			String pass = new String(line.getOptionValue(httpProxyPasswordOption.getOpt()));
+			compositeConfig.setProperty(PROP_HTTP_PROXY_PASSWORD, pass);
+		}
 	}
 
 	static public int getLocalXmlRpcPort()
@@ -92,6 +135,24 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	static public String getPlcApiAddress()
 	{
 		return configuration.compositeConfig.getString(PROP_PLC_API_ADDRESS, DEFAULT_PLC_API_ADDRESS);
+	}
+	
+	static public String getHttpProxyHost()
+	{
+		return configuration.compositeConfig.getString(PROP_HTTP_PROXY_HOST, DEFAULT_HTTP_PROXY_HOST);
+	}
+	static public int getHttpProxyPort()
+	{
+		return configuration.compositeConfig.getInt(PROP_HTTP_PROXY_PORT, DEFAULT_HTTP_PROXY_PORT);
+	}
+
+	static public String getHttpProxyUsername()
+	{
+		return configuration.compositeConfig.getString(PROP_HTTP_PROXY_USERNAME, DEFAULT_HTTP_PROXY_USERNAME);
+	}
+	static public String getHttpProxyPassword()
+	{
+		return configuration.compositeConfig.getString(PROP_HTTP_PROXY_PASSWORD, DEFAULT_HTTP_PROXY_PASSWORD);
 	}
 
 	
