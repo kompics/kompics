@@ -21,11 +21,11 @@ public class AddAllNodes extends Thread {
 
 	private String statusText = "";
 
-	String slice;
+	String slice = "sics_gradient";
 
-	String myPlcUsername;
+	String myPlcUsername = "jdowling";
 
-	String myPlcPassword;
+	String myPlcPassword = "...";
 
 	public String getStatusText() {
 		return statusText;

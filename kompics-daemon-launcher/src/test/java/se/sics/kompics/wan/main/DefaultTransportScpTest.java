@@ -37,7 +37,7 @@ public class DefaultTransportScpTest extends PlexusTestCase {
 		try {
 			tmp = FileUtils.createTempFile("ambiance-transporter-", ".test", null);
 //			transporter.get("scp://lgranie:po09iu87@svn/home/lgranie/derby.log", tmp);
-			transporter.get("scp://jdowling:oke2Shoo@lqist.com:/home/jdowling/blah.log", tmp);
+			transporter.get("scp://jdowling:password@lqist.com:/home/jdowling/blah.log", tmp);
 			FileInputStream fis = new FileInputStream(tmp);
 			while(fis.read() != -1) {
 				read++;

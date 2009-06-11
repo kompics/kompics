@@ -33,9 +33,6 @@ public class DownloadMD5CheckThread implements MD5Check {
 
 	private final LinkedBlockingQueue<FileInfo> fileMD5Hashes = new LinkedBlockingQueue<FileInfo>();
 
-	// private final Vector<CommandSpec> results = new
-	// Vector<CommandSpec>();
-
 	private int currentFile = 0;
 
 	private boolean success = false;

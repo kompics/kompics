@@ -30,14 +30,14 @@ public class XmlRpcTest {
 			config.setServerURL(new URL("https://www.planet-lab.org/PLCAPI/"));
 			config.setEncoding("iso-8859-1");
 			config.setEnabledForExtensions(true);
-			// config.setBasicUserName("isdal@cs.washington.edu");
+//			config.setBasicUserName("jdowling@sics.se");
 			// config.setBasicPassword(myPlcPassWord);
 			XmlRpcClient client = new XmlRpcClient();
 			//client.setTypeFactory(new MyTypeFactory(client));
 
 			client.setConfig(config);
 			Hashtable auth = new Hashtable();
-			auth.put("Username", "isdal@cs.washington.edu");
+			auth.put("Username", "jdowling@sics.se");
 			auth.put("AuthMethod", "password");
 			auth.put("AuthString", myPlcPassWord);
 			auth.put("Role", "user");
@@ -71,23 +71,4 @@ public class XmlRpcTest {
 			e.printStackTrace();
 		}
 	}
-
-//	public class MyTypeFactory extends TypeFactoryImpl {
-//		public MyTypeFactory(XmlRpcController pController) {
-//			super(pController);
-//		}
-//
-//		public TypeParser getParser(XmlRpcStreamConfig pConfig,
-//				NamespaceContextImpl pContext, String pURI, String pLocalName) {
-//
-//			// System.out.println("pURI: pURI" + " plocalName: " + pLocalName);
-//			return super.getParser(pConfig, pContext, pURI, pLocalName);
-//
-//		}
-//
-//		public TypeSerializer getSerializer(XmlRpcStreamConfig pConfig,
-//				Object pObject) throws SAXException {
-//			return super.getSerializer(pConfig, pObject);
-//		}
-//	}
 }

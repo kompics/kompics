@@ -25,7 +25,7 @@ public class SshTest extends Thread {
 	}
 
 	public SshTest() {
-		Connection sshConn = new Connection("barb");
+		Connection sshConn = new Connection("lqist.com");
 
 		try {
 
@@ -35,8 +35,8 @@ public class SshTest extends Thread {
 					.connect(null, SSH_CONNECT_TIMEOUT,
 							SSH_KEY_EXCHANGE_TIMEOUT);
 
-			if (sshConn.authenticateWithPublicKey("isdal", new File(
-					"H:\\ssh\\identity"), "")) {
+			if (sshConn.authenticateWithPublicKey("jdowling", new File(
+					"/home/jdowling/.ssh/id_rsa"), "")) {
 				System.out.println("Connected");
 
 				Session session = sshConn.openSession();
