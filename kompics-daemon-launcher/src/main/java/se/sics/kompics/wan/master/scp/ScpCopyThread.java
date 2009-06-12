@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import se.sics.kompics.wan.master.plab.rpc.RpcServer;
+import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.ssh.SshConnection;
 import ch.ethz.ssh2.SCPClient;
 
@@ -56,7 +56,8 @@ public class ScpCopyThread implements Runnable {
 				// get a ticket from the RPC server to make sure that
 				// there
 				// are a limited number of concurrent copy operations
-				RpcServer.getInstance().getNetworkIntensiveTicket();
+//				RpcServer.getInstance().getNetworkIntensiveTicket();
+				PlanetLabConfiguration.getNetworkIntensiveTicket();
 
 				if (fileInfo.isLocalFile()) {
 					// System.out.println("uploading(" + available + "): "
@@ -64,7 +65,7 @@ public class ScpCopyThread implements Runnable {
 					try {
 						if(!sshConn.isConnected()){
 							System.out.println("connection problem to: '" + sshConn.getHostname() + "' aborting copy");
-							RpcServer.getInstance().releaseNetworkIntensiveTicket();
+							PlanetLabConfiguration.releaseNetworkIntensiveTicket();
 							return;
 						}
 						scpClient.put(fileInfo.getLocalFile()
@@ -90,7 +91,7 @@ public class ScpCopyThread implements Runnable {
 					if (fileInfo.createLocalDirectoryStructure()) {
 						if(!sshConn.isConnected()){
 							System.out.println("connection problem to: '" + sshConn.getHostname() + "' aborting copy");
-							RpcServer.getInstance().releaseNetworkIntensiveTicket();
+							PlanetLabConfiguration.releaseNetworkIntensiveTicket();
 							return;
 						}
 						BufferedOutputStream localFile = new BufferedOutputStream(
@@ -120,7 +121,7 @@ public class ScpCopyThread implements Runnable {
 				working = false;
 
 				// release the copy ticket
-				RpcServer.getInstance().releaseNetworkIntensiveTicket();
+				PlanetLabConfiguration.releaseNetworkIntensiveTicket();
 
 			} catch (InterruptedException e) {
 				// ignore interupts... probably means that we should

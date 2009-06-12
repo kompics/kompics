@@ -17,23 +17,19 @@ import org.apache.commons.codec.digest.DigestUtils;
  */
 public class Credentials {
 
-	private final String password;
+	protected final String password;
 
-	private String passwordMD5;
+	protected String passwordMD5;
 
-	private final String username;
+	protected final String username;
 
-	private String usernameMD5;
+	protected String usernameMD5;
 
-	private final String slice;
+	protected final String keyPath;
 
-	private final String keyPath;
+	protected final String keyFilePassword;
 
-	private final String keyFilePassword;
-
-	private final String role;
-
-	private boolean ignoreCerificateErrors = false;
+	protected boolean ignoreCerificateErrors = false;
 
 	/**
 	 * Creates a new Config class from a Map containing the following fields:
@@ -59,8 +55,6 @@ public class Credentials {
 
 		this.username = (String) credentials.get("Username");
 		this.password = (String) credentials.get("AuthString");
-		this.slice = (String) credentials.get("Slice");
-		this.role = (String) credentials.get("Role");
 		this.keyPath = (String) credentials.get("PrivateKeyFile");
 		this.keyFilePassword = (String) credentials.get("PrivateKeyPassword");
 		this.ignoreCerificateErrors = this
@@ -87,15 +81,6 @@ public class Credentials {
 	 private void calcMD5() {
 		 this.usernameMD5 = calcSunMD5(this.username);
 		 this.passwordMD5 = calcSunMD5(this.username + this.password);
-	// MD5 md5 = new MD5();
-	// // use the default encoding
-	// md5.Init();
-	// md5.Update(username.getBytes());
-	// this.usernameMD5 = md5.asHex();
-	//
-	// md5.Init();
-	// md5.Update((username + password).getBytes());
-	// this.passwordMD5 = md5.asHex();
 	 }
 
 	 private String calcSunMD5(String str) {
@@ -119,9 +104,6 @@ public class Credentials {
 				hexString.append(hex);
 			}
 
-			// *** Testausgabe
-			System.out.println("string: " + str + "   md5 version is "
-					+ hexString.toString());
 			return hexString.toString();
 		} catch (NoSuchAlgorithmException nsae) {
 			System.err.println("Problem: " + nsae.getMessage());
@@ -129,13 +111,11 @@ public class Credentials {
 		}
 	}
 
-	public Credentials(String username, String password, String slice,
-			String role, String keyPath, String keyFilePassword) {
+	public Credentials(String username, String password,
+			String keyPath, String keyFilePassword) {
 
 		this.password = password;
 		this.username = username;
-		this.slice = slice;
-		this.role = role;
 		this.keyPath = keyPath;
 		this.keyFilePassword = keyFilePassword;
 
@@ -190,20 +170,13 @@ public class Credentials {
 		if (!username.equals(comp.getUsername())) {
 			return false;
 		}
-		if (!slice.equals(comp.getSlice())) {
-			return false;
-		}
-
 		if (!password.equals(comp.getPassword())) {
-			return false;
-		}
-		if (!role.equals(comp.getRole())) {
 			return false;
 		}
 		return true;
 	}
 
-	public boolean equals(Map authMap) {
+	public boolean equals(Map<String, String> authMap) {
 		Credentials c = new Credentials(authMap);
 		return this.equals(c);
 
@@ -217,7 +190,7 @@ public class Credentials {
 		return false;
 	}
 
-	public Map getAuthMap() {
+	public Map<String, String> getAuthMap() {
 		HashMap<String, String> authMap = new HashMap<String, String>();
 		authMap.put("Username", usernameMD5);
 		authMap.put("AuthString", passwordMD5);
@@ -245,13 +218,11 @@ public class Credentials {
 		return password;
 	}
 
-	public Map getPLCMap() {
+	public Map<String, String> getPLCMap() {
 		HashMap<String, String> authMap = new HashMap<String, String>();
 		authMap.put("Username", username);
 		authMap.put("AuthMethod", "password");
 		authMap.put("AuthString", password);
-		authMap.put("Slice", slice);
-		authMap.put("Role", role);
 		return authMap;
 	}
 
@@ -259,13 +230,6 @@ public class Credentials {
 		return ignoreCerificateErrors;
 	}
 
-	public String getRole() {
-		return role;
-	}
-
-	public String getSlice() {
-		return slice;
-	}
 
 	public String getUsername() {
 		return username;
@@ -275,8 +239,6 @@ public class Credentials {
 		int code = 0;
 		code += username.hashCode();
 		code += password.hashCode();
-		// code += slice.hashCode();
-		// code += role.hashCode();
 
 		return code;
 	}

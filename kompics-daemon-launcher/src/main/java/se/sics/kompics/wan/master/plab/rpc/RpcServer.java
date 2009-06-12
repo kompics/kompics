@@ -13,6 +13,9 @@ import org.apache.xmlrpc.webserver.WebServer;
 
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.plab.Credentials;
+import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.master.ssh.ConnectionController;
+
 import se.sics.kompics.wan.master.ssh.ConnectionController;
 
 //import edu.washington.cs.pl_if.Constants;
@@ -62,7 +65,7 @@ public class RpcServer {
 		return time;
 	}
 
-	public void startController(Credentials cred){
+	public void startController(PlanetLabCredentials cred){
 		if(controller == null){
 			System.out.println("Starting controller " + cred.toString());
 			this.authCred = cred;

@@ -13,11 +13,12 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -29,6 +30,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.ws.commons.util.NamespaceContextImpl;
 import org.apache.xmlrpc.XmlRpcException;
@@ -45,18 +53,7 @@ import org.xml.sax.SAXException;
 
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.plab.Credentials;
-
-
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 
 public class PLCentralCache implements Runnable {
 
@@ -68,7 +65,7 @@ public class PLCentralCache implements Runnable {
 
 	public final static double MAX_PLC_CACHE_AGE = 24;
 
-	private final Credentials cred;
+	private final PlanetLabCredentials cred;
 
 	private ConcurrentHashMap<PlanetLabHost, PlanetLabSite> hostToSiteMapping;
 
@@ -87,7 +84,7 @@ public class PLCentralCache implements Runnable {
 
 	private PlanetLabStore store;
 
-	public PLCentralCache(Credentials cred) {
+	public PLCentralCache(PlanetLabCredentials cred) {
 		// this.ignoreCertificateErrors();
 		this.cred = cred;
 		Thread t = new Thread(this);
@@ -309,7 +306,7 @@ public class PLCentralCache implements Runnable {
 	private Object executeRPC(String command, Vector<Object> params) {
 		Object res = new Object();
 		String url = PlanetLabConfiguration.getPlcApiAddress(); 
-			//Main.getConfig(Constants.PLC_API_ADDRESS);
+
 		if(url== null){
 			url = "https://www.planet-lab.org/PLCAPI/";
 		}

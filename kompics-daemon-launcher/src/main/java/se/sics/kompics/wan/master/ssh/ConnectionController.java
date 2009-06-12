@@ -7,6 +7,7 @@ import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import se.sics.kompics.wan.master.plab.Credentials;
+import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.master.plab.plc.PLCentralController;
 import se.sics.kompics.wan.master.plab.plc.PlanetLabHost;
 import se.sics.kompics.wan.master.plab.plc.PlanetLabSite;
@@ -25,7 +26,7 @@ public class ConnectionController extends Thread {
 
 	private PLCentralController plcConnection;
 
-	public ConnectionController(Credentials cred) {
+	public ConnectionController(PlanetLabCredentials cred) {
 
 		// This is the credentials that will be used, all functions will run as
 		// this
@@ -95,7 +96,7 @@ public class ConnectionController extends Thread {
 		// make sure we are not currently connected to the host
 		if (host.getConnectionId() < 0) {
 
-			SshConnection conn = new SshConnection(this, host);
+			SshConnection conn = new SshConnection(this.getCredentials(), host);
 			connections.add(conn);
 
 			hostId = connections.size() - 1;
@@ -278,7 +279,7 @@ public class ConnectionController extends Thread {
 			return null;
 		}
 
-		return connections.get(connectionId).getHost();
+		return (PlanetLabHost) connections.get(connectionId).getHost();
 	}
 
 	public void getCoMonData() {

@@ -12,12 +12,15 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.configuration.ConfigurationException;
+
+import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.plc.PlanetLabHost;
+import se.sics.kompics.wan.master.plab.Credentials;
+import se.sics.kompics.wan.master.plab.ExperimentHost;
 import se.sics.kompics.wan.master.plab.rpc.RpcFunctions;
 import se.sics.kompics.wan.master.scp.download.DownloadManager;
 import se.sics.kompics.wan.master.scp.upload.UploadManager;
-
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.ConnectionMonitor;
 import ch.ethz.ssh2.HTTPProxyData;
@@ -34,7 +37,7 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 
 	public static final int LOG_DEVEL = 2;
 
-	public static final int LOG_LEVEL = 1;
+	public static final int LOG_LEVEL = 3;
 
 	public static final int SSH_CONNECT_TIMEOUT = 15000;
 
@@ -42,7 +45,7 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 
 	public static final String EXIT_CODE_IDENTIFIER = "=:=:=EXIT STATUS==";
 
-	private PlanetLabHost plHost;
+	private ExperimentHost plHost;
 
 	private LinkedBlockingQueue<CommandSpec> commandQueue = new LinkedBlockingQueue<CommandSpec>();
 
@@ -58,7 +61,9 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 
 	private volatile int currentCommand = 0;
 
-	private ConnectionController controller;
+//	private ConnectionController controller;
+	
+	private Credentials credentials;
 
 	private Connection sshConn;
 
@@ -72,8 +77,17 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		try {
+			Configuration.init(args, PlanetLabConfiguration.class);
+		} catch (ConfigurationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		// TODO Auto-generated method stub
-		SshConnection conn = new SshConnection(null, new PlanetLabHost("barb"));
+		Credentials cred = new Credentials("jdowling", "password", "/home/jdowling/.ssh/id_rsa", "none");
+		SshConnection conn = new SshConnection(cred, new ExperimentHost("lqist.com"));
 		Thread t = new Thread(conn);
 		t.start();
 
@@ -83,7 +97,7 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 
 			// conn.queueCommand("sleep 10");
 
-			conn.queueCommand("ls /testzyx");
+			conn.queueCommand("ls -larth");
 			Thread.sleep(2000);
 			conn.halt();
 			t.join();
@@ -100,10 +114,12 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 	 * @param hostname
 	 *            hostname to connect to
 	 */
-	public SshConnection(ConnectionController controller, PlanetLabHost hostname) {
+	public SshConnection(Credentials cred, ExperimentHost hostname) {
 		this.setName("sshconn: " + hostname.getHostname());
-		this.controller = controller;
+//		this.controller = controller;
 		this.plHost = hostname;
+		this.credentials = cred;
+		
 		commandStatus.add(0, new CommandSpec("#connect", SSH_CONNECT_TIMEOUT,
 				commandStatus.size(), true));
 
@@ -172,7 +188,7 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 		return commandStatus.get(commandNum).getExecutionTime();
 	}
 
-	public PlanetLabHost getHost() {
+	public ExperimentHost getHost() {
 		return this.plHost;
 	}
 
@@ -301,8 +317,8 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 		// only run if we were able to connect
 		if (this.connect(commandStatus.get(0)) == false) {
 			// tell the controller, there might be a disconnect policy
-			// System.err.println("connect failed");
-			controller.handleFailedConnect(plHost);
+			 System.err.println("connect failed");
+//			controller.handleFailedConnect(plHost);
 			return;
 		}
 		isConnected = true;
@@ -556,10 +572,14 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 						SSH_KEY_EXCHANGE_TIMEOUT);
 
 				// try to authenticate
-				if (sshConn.authenticateWithPublicKey(controller
-						.getCredentials().getSlice(), new File(controller
-						.getCredentials().getKeyPath()), controller
-						.getCredentials().getKeyFilePassword())) {
+//				if (sshConn.authenticateWithPublicKey(controller
+//						.getCredentials().getSlice(), new File(controller
+//						.getCredentials().getKeyPath()), controller
+//						.getCredentials().getKeyFilePassword())) {
+				
+				if (sshConn.authenticateWithPublicKey(credentials.getUsername()
+						, new File(credentials.getKeyPath()), credentials.getKeyFilePassword())) 
+				{				
 
 					// ok, authentiaction succesfull, return the connection
 					commandSpec.recievedControllData("connect successful");

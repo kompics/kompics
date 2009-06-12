@@ -9,7 +9,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 
-import se.sics.kompics.wan.master.plab.Constants;
+import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.plab.Credentials;
 
 public class RpcClient implements RpcFunctions {
@@ -31,13 +31,13 @@ public class RpcClient implements RpcFunctions {
 
 	protected RpcClient() {
 //		String portString = Main.getConfig(Constants.LOCAL_XML_RPC_PORT);
-		String portString = Constants.LOCAL_XML_RPC_PORT;
-		int port;
-		if (portString != null) {
-			port = Integer.parseInt(portString);
-		} else {
-			port = Constants.LOCAL_XML_RPC_PORT_DEFAULT;
-		}
+//		String portString = Constants.LOCAL_XML_RPC_PORT;
+		int port = PlanetLabConfiguration.getLocalXmlRpcPort();
+//		if (portString != null) {
+//			port = Integer.parseInt(portString);
+//		} else {
+//			port = Constants.LOCAL_XML_RPC_PORT_DEFAULT;
+//		}
 		XMLRPC_PATH = ":" + port + "/xmlrpc";
 	}
 

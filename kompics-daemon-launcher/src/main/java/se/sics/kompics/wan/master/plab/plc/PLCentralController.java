@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import se.sics.kompics.wan.master.plab.Credentials;
+import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.master.plab.plc.comon.CoMonManager;
 
 
@@ -17,7 +17,7 @@ public class PLCentralController {
 
 	private CoMonManager manager;
 
-	public PLCentralController(Credentials cred) {
+	public PLCentralController(PlanetLabCredentials cred) {
 		this.cache = new PLCentralCache(cred);
 	}
 

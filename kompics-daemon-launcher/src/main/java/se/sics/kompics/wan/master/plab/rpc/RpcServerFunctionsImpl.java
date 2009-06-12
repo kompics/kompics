@@ -205,7 +205,7 @@ public class RpcServerFunctionsImpl implements RpcFunctions {
 			String command = conn.getCommand(currentCommandNum);
 			double executionTime = conn.getExecutionTime(currentCommandNum);
 			boolean isCompleted = conn.isCommandCompleted(currentCommandNum);
-			PlanetLabSite plSite = controller.getPlanetLabSite(conn.getHost());
+			PlanetLabSite plSite = controller.getPlanetLabSite((PlanetLabHost) conn.getHost());
 			String site = null;
 			if (plSite != null) {
 				site = plSite.getAbbreviated_name();

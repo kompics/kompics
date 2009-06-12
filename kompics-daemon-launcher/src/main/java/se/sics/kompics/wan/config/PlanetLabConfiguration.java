@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.concurrent.Semaphore;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
@@ -33,11 +34,11 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	
 	
 	public static final int DEFAULT_LOCAL_XML_RPC_PORT = 8088;
-	public static final String DEFAULT_PLC_API_ADDRESS = "localhost";
-	public static final String DEFAULT_HTTP_PROXY_HOST = null;
+	public static final String DEFAULT_PLC_API_ADDRESS = "https://www.planet-lab.org/PLCAPI/";
+	public static final String DEFAULT_HTTP_PROXY_HOST = "";
 	public static final int DEFAULT_HTTP_PROXY_PORT = -1;
-	public static final String DEFAULT_HTTP_PROXY_USERNAME = null;
-	public static final String DEFAULT_HTTP_PROXY_PASSWORD = null;
+	public static final String DEFAULT_HTTP_PROXY_USERNAME = "";
+	public static final String DEFAULT_HTTP_PROXY_PASSWORD = "";
 	
 	/********************************************************/
 	/********* Helper fields ********************************/
@@ -51,6 +52,11 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	protected Option httpProxyPasswordOption;
 	
 	protected static boolean plInitialized = false;
+	
+	// creates the queue used to limit the number of concurrent network intensive
+	// threads. The queue is fair meaning that it operates in a FIFO manner
+	private static Semaphore networkIntensiveTicket = new Semaphore(5, true);
+
 	
 	/**
 	 * 
@@ -163,4 +169,34 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 			throw new IllegalStateException("MasterServerConfiguration not initialized  before use.");
 		}
 	}
+	
+	public static int getNetworkIntensiveTicket() throws InterruptedException {
+		networkIntensiveTicket.acquire();
+		return networkIntensiveTicket.availablePermits();
+	}
+	
+	public static int releaseNetworkIntensiveTicket() {
+		networkIntensiveTicket.release();
+		return networkIntensiveTicket.availablePermits();
+	}
+	
+	/**
+	 * increase the number of concurrent network intensive threads that are
+	 * allowed to run. Note that this only can be increased
+	 * 
+	 * @param newLimit
+	 *            the new limit
+	 */
+	public static void increaseConcurrentCopyLimit(int newLimit) {
+		int currentLimit = networkIntensiveTicket.getQueueLength()
+				+ networkIntensiveTicket.availablePermits();
+		int diff = newLimit - currentLimit;
+		if (currentLimit < newLimit) {
+			networkIntensiveTicket.release(diff);
+		} else {
+			// only increase is allowed
+		}
+		return;
+	}
+
 }
