@@ -1,5 +1,6 @@
 package se.sics.kompics.wan.master.ssh;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,11 +8,12 @@ import java.util.Vector;
 
 import se.sics.kompics.wan.master.plab.rpc.RpcServer;
 
-//import edu.washington.cs.pl_if.rpc.server.RpcServer;
 
-public class CommandSpec {
+public class CommandSpec implements Serializable {
 
 	// private Integer outputReadPos = 0;
+
+	private static final long serialVersionUID = -6608381371840392678L;
 
 	public static final int RETURN_KILLED = -1;
 

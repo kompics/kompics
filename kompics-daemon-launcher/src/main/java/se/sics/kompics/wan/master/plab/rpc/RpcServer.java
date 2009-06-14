@@ -16,13 +16,7 @@ import se.sics.kompics.wan.master.plab.Credentials;
 import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.master.ssh.ConnectionController;
 
-import se.sics.kompics.wan.master.ssh.ConnectionController;
 
-//import edu.washington.cs.pl_if.Constants;
-//import edu.washington.cs.pl_if.Credentials;
-//import edu.washington.cs.pl_if.Main;
-//import edu.washington.cs.pl_if.gui.GuiMain;
-//import edu.washington.cs.pl_if.ssh.ConnectionController;
 
 public class RpcServer {
 
