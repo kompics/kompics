@@ -1,6 +1,6 @@
 package se.sics.kompics.wan.master.ssh;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.Request;
 import ch.ethz.ssh2.Session;
 
 /**
@@ -9,7 +9,7 @@ import ch.ethz.ssh2.Session;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class SshCommand extends Event {
+public class SshCommandRequest extends Request {
 
 	private final String command;
 	
@@ -19,7 +19,7 @@ public class SshCommand extends Event {
 	
 	private final boolean stopOnError;
 	
-	public SshCommand(Session session, String command,
+	public SshCommandRequest(Session session, String command,
 			double timeout, boolean stopOnError) {
 		this.command = command;
 		this.session = session;

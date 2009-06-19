@@ -9,16 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.sics.kompics.wan.master.ssh.CommandSpec;
+import se.sics.kompics.wan.master.ssh.SshComponent;
 import se.sics.kompics.wan.master.ssh.SshConnection;
 import ch.ethz.ssh2.Session;
 
 public class RemoteDirMD5Info {
 
-	private final SshConnection sshConn;
+	private final SshComponent.SshConn sshConn;
 
 	// private Session session = null;
 
-	public RemoteDirMD5Info(SshConnection sshConn) {
+	public RemoteDirMD5Info(SshComponent.SshConn sshConn) {
 		this.sshConn = sshConn;
 
 	}
@@ -31,6 +32,8 @@ public class RemoteDirMD5Info {
 		Session session = null;
 		ArrayList<FileInfo> remoteFiles = new ArrayList<FileInfo>();
 		// System.out.println("Starting shell");
+		
+		
 		if (null != (session = sshConn.startShell())) {
 			// System.out.println("Running command: " + command.getCommand());
 			sshConn.runCommand(command, session);
@@ -46,7 +49,7 @@ public class RemoteDirMD5Info {
 					// System.out.println(line);
 					// System.out.println(md5 + "." + path);
 					remoteFiles.add(new FileInfo(path, md5, sshConn
-							.getHostname()));
+							.getExpHost().getHostname()));
 				}
 
 			}

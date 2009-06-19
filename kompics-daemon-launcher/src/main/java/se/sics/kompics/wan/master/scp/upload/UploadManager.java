@@ -4,6 +4,7 @@ import java.io.File;
 
 import se.sics.kompics.wan.master.scp.LocalDirMD5Info;
 import se.sics.kompics.wan.master.ssh.CommandSpec;
+import se.sics.kompics.wan.master.ssh.SshComponent;
 import se.sics.kompics.wan.master.ssh.SshConnection;
 
 
@@ -22,7 +23,7 @@ public class UploadManager {
 		return instance;
 	}
 
-	public boolean uploadDir(SshConnection conn, File baseDir,
+	public boolean uploadDir(SshComponent.SshConn conn, File baseDir,
 			CommandSpec commandSpec) {
 		try {
 			UploadMD5CheckThread md5Check;

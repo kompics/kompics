@@ -9,6 +9,7 @@ import se.sics.kompics.wan.master.scp.LocalDirMD5Info;
 import se.sics.kompics.wan.master.scp.MD5Check;
 import se.sics.kompics.wan.master.scp.ScpCopyThread;
 import se.sics.kompics.wan.master.ssh.CommandSpec;
+import se.sics.kompics.wan.master.ssh.SshComponent;
 import se.sics.kompics.wan.master.ssh.SshConnection;
 import ch.ethz.ssh2.Session;
 
@@ -29,7 +30,7 @@ public class DownloadMD5CheckThread implements MD5Check {
 
 	private final Thread scpCopyThreadThread;
 
-	private final SshConnection sshConn;
+	private final SshComponent.SshConn sshConn;
 
 	private final LinkedBlockingQueue<FileInfo> fileMD5Hashes = new LinkedBlockingQueue<FileInfo>();
 
@@ -39,7 +40,7 @@ public class DownloadMD5CheckThread implements MD5Check {
 
 	private boolean quit = false;
 
-	public DownloadMD5CheckThread(SshConnection sshConn,
+	public DownloadMD5CheckThread(SshComponent.SshConn sshConn,
 			List<FileInfo> fileMD5Hashes, CommandSpec commandSpec) {
 		this.sshConn = sshConn;
 		this.commandResults = commandSpec;
@@ -50,7 +51,7 @@ public class DownloadMD5CheckThread implements MD5Check {
 
 		scpCopyThread = new ScpCopyThread(sshConn, this);
 		scpCopyThreadThread = new Thread(scpCopyThread);
-		scpCopyThreadThread.setName("ScpThread: " + sshConn.getHostname());
+		scpCopyThreadThread.setName("ScpThread: " + sshConn.getExpHost().getHostname());
 		scpCopyThreadThread.start();
 
 	}
@@ -141,7 +142,7 @@ public class DownloadMD5CheckThread implements MD5Check {
 			scpCopyThreadThread.join();
 			success = true;
 			commandResults.setExitCode(0, "copied " + copyCount);
-			System.out.print(sshConn.getHostname() + ": done MD5");
+			System.out.print(sshConn.getExpHost().getHostname() + ": done MD5");
 		} catch (InterruptedException e) {
 
 		}

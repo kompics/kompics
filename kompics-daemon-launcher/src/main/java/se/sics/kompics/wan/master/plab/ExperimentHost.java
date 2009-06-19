@@ -52,7 +52,7 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 	/**
 	 * only here for testing and fallback, don't use...
 	 * 
-	 * @param hostname
+	 * @param data.hostname
 	 */
 
 	public String getBwlimit() {

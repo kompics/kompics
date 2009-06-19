@@ -99,6 +99,7 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 
 			conn.queueCommand("ls -larth");
 			Thread.sleep(2000);
+			// use 'session' object to identify session to halt
 			conn.halt();
 			t.join();
 			// System.out.println(conn.getOutput());
@@ -700,8 +701,10 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 	}
 
 	public boolean upload(File fileOrDir, CommandSpec commandSpec) {
-		return UploadManager.getInstance().uploadDir(this, fileOrDir,
-				commandSpec);
+//		return UploadManager.getInstance().uploadDir(this, fileOrDir,
+//				commandSpec);
+		return false;
+		
 	}
 
 	public boolean download(String remotePath, File localBaseDir,
@@ -714,8 +717,9 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 		DownloadManager dManager = DownloadManager.getInstance();
 		dManager.setLocalFilenameType(localNamingType);
 
-		return dManager.downloadDir(this, remotePath, localBaseDir, fileFilter,
-				commandSpec);
+//		return dManager.downloadDir(this, remotePath, localBaseDir, fileFilter,
+//				commandSpec);
+		return false;
 	}
 
 	private void statusChange(String status, int level) {

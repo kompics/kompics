@@ -62,9 +62,9 @@ public class DaemonTest implements Serializable {
 
 	private static final boolean HIDE_MAVEN_EMBEDDER_OUTPUT = true;
 	
-	public static Semaphore semaphore = new Semaphore(0);
+	private static Semaphore semaphore = new Semaphore(0);
 
-	public static final int EVENT_COUNT = 1;
+	private static final int EVENT_COUNT = 1;
 
 	static SimulationScenario scenario = new SimulationScenario() {
 

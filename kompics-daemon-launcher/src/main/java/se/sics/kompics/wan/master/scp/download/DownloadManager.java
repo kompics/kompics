@@ -8,7 +8,7 @@ import se.sics.kompics.wan.master.scp.FileInfo;
 import se.sics.kompics.wan.master.scp.MD5Check;
 import se.sics.kompics.wan.master.scp.RemoteDirMD5Info;
 import se.sics.kompics.wan.master.ssh.CommandSpec;
-import se.sics.kompics.wan.master.ssh.SshConnection;
+import se.sics.kompics.wan.master.ssh.SshComponent;
 
 
 public class DownloadManager {
@@ -63,7 +63,7 @@ public class DownloadManager {
 		return true;
 	}
 
-	public boolean downloadDir(SshConnection conn, String remotePath,
+	public boolean downloadDir(SshComponent.SshConn conn, String remotePath,
 			File localBaseDir, String fileFilter, CommandSpec commandSpec) {
 
 		this.setBaseDir(localBaseDir);

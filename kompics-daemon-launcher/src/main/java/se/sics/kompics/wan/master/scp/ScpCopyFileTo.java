@@ -1,10 +1,7 @@
 package se.sics.kompics.wan.master.scp;
 
-import java.io.File;
-
 import se.sics.kompics.Event;
-import se.sics.kompics.wan.master.plab.Credentials;
-import se.sics.kompics.wan.master.plab.ExperimentHost;
+import ch.ethz.ssh2.SCPClient;
 
 /**
  * The <code>ConnectSsh</code> class.
@@ -14,25 +11,25 @@ import se.sics.kompics.wan.master.plab.ExperimentHost;
  */
 public class ScpCopyFileTo extends Event {
 
-	private Credentials credentials;
-	private File baseDir;
+	private final String hostname;
+	private final FileInfo fileInfo;
+	private final SCPClient scpClient;
 
-	public ScpCopyFileTo(Credentials credentials, File baseDir) {
-		this.credentials = credentials;
-		this.baseDir = baseDir;
+	public ScpCopyFileTo(String hostname, FileInfo fileInfo, SCPClient scpClient) {
+		this.hostname = hostname;
+		this.fileInfo = fileInfo;
+		this.scpClient = scpClient;
 	}
 
-	/**
-	 * @return the credentials
-	 */
-	public Credentials getCredentials() {
-		return credentials;
+	public String getHostname() {
+		return hostname;
 	}
 
-	/**
-	 * @return the baseDir
-	 */
-	public File getBaseDir() {
-		return baseDir;
+	public FileInfo getFileInfo() {
+		return fileInfo;
+	}
+
+	public SCPClient getScpClient() {
+		return scpClient;
 	}
 }

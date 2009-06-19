@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.ssh.SshConnection;
+import se.sics.kompics.wan.master.ssh.SshComponent;
 import ch.ethz.ssh2.SCPClient;
 
 
@@ -19,7 +19,7 @@ import ch.ethz.ssh2.SCPClient;
  */
 public class ScpCopyThread implements Runnable {
 
-	private final SshConnection sshConn;
+	private final SshComponent.SshConn sshConn;
 
 	private final LinkedBlockingQueue<FileInfo> fileQueue = new LinkedBlockingQueue<FileInfo>();
 
@@ -29,7 +29,7 @@ public class ScpCopyThread implements Runnable {
 
 	private volatile boolean working = false;
 
-	public ScpCopyThread(SshConnection sshConn, MD5Check checkThread) {
+	public ScpCopyThread(SshComponent.SshConn sshConn, MD5Check checkThread) {
 		this.sshConn = sshConn;
 		this.checkThread = checkThread;
 
@@ -41,7 +41,7 @@ public class ScpCopyThread implements Runnable {
 		try {
 			scpClient = sshConn.getConnection().createSCPClient();
 		} catch (IOException e2) {
-			System.err.println(sshConn.getHostname()
+			System.err.println(sshConn.getExpHost().getHostname()
 					+ ": could not create ssh client");
 			return;
 		}
@@ -64,7 +64,7 @@ public class ScpCopyThread implements Runnable {
 					// + fileInfo.toString());
 					try {
 						if(!sshConn.isConnected()){
-							System.out.println("connection problem to: '" + sshConn.getHostname() + "' aborting copy");
+							System.out.println("connection problem to: '" + sshConn.getExpHost().getHostname() + "' aborting copy");
 							PlanetLabConfiguration.releaseNetworkIntensiveTicket();
 							return;
 						}
@@ -75,7 +75,7 @@ public class ScpCopyThread implements Runnable {
 						// some problem with the scp client
 						if (e1.getMessage().contains(
 								"Error during SCP transfer")) {
-							System.out.println(sshConn.getHostname()
+							System.out.println(sshConn.getExpHost().getHostname()
 									+ ": disconnected during SCP transfer");
 							System.err.println(e1.getCause().getMessage());
 						}
@@ -90,7 +90,7 @@ public class ScpCopyThread implements Runnable {
 					// + fileInfo.getLocalFile().getCanonicalPath());
 					if (fileInfo.createLocalDirectoryStructure()) {
 						if(!sshConn.isConnected()){
-							System.out.println("connection problem to: '" + sshConn.getHostname() + "' aborting copy");
+							System.out.println("connection problem to: '" + sshConn.getExpHost().getHostname() + "' aborting copy");
 							PlanetLabConfiguration.releaseNetworkIntensiveTicket();
 							return;
 						}
@@ -104,7 +104,7 @@ public class ScpCopyThread implements Runnable {
 							// some problem with the scp client
 							if (e1.getMessage().contains(
 									"Error during SCP transfer")) {
-								System.out.println(sshConn.getHostname()
+								System.out.println(sshConn.getExpHost().getHostname()
 										+ ": disconnected during SCP transfer");
 								System.err.println(e1.getCause().getMessage());
 							}
