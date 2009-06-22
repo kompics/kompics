@@ -60,13 +60,13 @@ public class SshComponent extends ComponentDefinition {
 	private int sessionCounter = 0;
 	
 	// (session, status)
-	private Map<Session, SshConn> activeSshConnections = new HashMap<Session, SshConn>();
+	private Map<Integer, SshConn> activeSshConnections = new HashMap<Integer, SshConn>();
 
-	private Map<Integer, Session> sessionIds = new HashMap<Integer, Session>();
+	private Map<Integer, Session> sessionObjMap = new HashMap<Integer, Session>();
 	
 	// private String status = "disconnected";
 
-	private Map<Session, List<CommandSpec>> commandStatus = new HashMap<Session, List<CommandSpec>>();
+	private Map<Integer, List<CommandSpec>> sessionCommandsMap = new HashMap<Integer, List<CommandSpec>>();
 
 	private AtomicBoolean quit = new AtomicBoolean(false);
 
@@ -255,67 +255,82 @@ public class SshComponent extends ComponentDefinition {
 	public Handler<SshCommandRequest> handleSshCommand = new Handler<SshCommandRequest>() {
 		public void handle(SshCommandRequest event) {
 			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event
-					.getTimeout(), commandStatus.size(), event.isStopOnError());
+					.getTimeout(), sessionCommandsMap.size(), event.isStopOnError());
 
-			addSession(event.getSession(), commandSpec);			
+			int sessionId = event.getSessionId();
 			
 			
 			// XXX get sshConn from somewhere
-			SshConn conn = activeSshConnections.get(event.getSession());
+			SshConn conn = activeSshConnections.get(sessionId);
+			Session session = sessionObjMap.get(sessionId);
+			
 
 			String command = commandSpec.getCommand();
 			boolean commandFailed = false;
 
 			String commandResponse = "success";
-			if (command.startsWith("#")) {
-				runSpecialCommand(conn, commandSpec);
-			}// run the command in the current session
-			else {
-				try {
-					commandFailed = runCommand(commandSpec, event.getSession(),
-							activeSshConnections.get(event.getSession())) < 0;
-				} catch (IOException e) {
-					commandResponse = e.getMessage();
-					commandFailed = true;
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					commandResponse = e.getMessage();
-					commandFailed = true;
+
+			if (conn == null || session == null || validSession(session) == false)
+			{
+				commandResponse = "SshConn or Session obj was null";
+			}
+			else { // process command
+				if (command.startsWith("#")) {
+					runSpecialCommand(conn, commandSpec);
+				}// run the command in the current session
+				else {
+					try {
+						commandFailed = (runCommand(commandSpec, session, conn) < 0) ? true : false;
+					} catch (IOException e) {
+						commandResponse = e.getMessage();
+						commandFailed = true;
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						commandResponse = e.getMessage();
+						commandFailed = true;
+					}
 				}
 			}
-
-			// send commandFailed
-
 			
-			trigger(new SshCommandResponse(event, event.getSession(), commandResponse, !commandFailed), sshPort);
+			trigger(new SshCommandResponse(event, sessionId, commandResponse, !commandFailed), sshPort);
 		}
 	};
 
+	private boolean validSession(Session session)
+	{
+		if (session.getExitStatus() == null)
+		{
+			return true;
+		}
+		return false;
+	}
+	
 	public Handler<SshConnectRequest> handleSshConnectRequest = new Handler<SshConnectRequest>() {
 		public void handle(SshConnectRequest event) {
 
-			Session session = connect(event.getCredentials(), event
+			int sessionId = connect(event.getCredentials(), event
 					.getHostname(), new CommandSpec("#connect",
-					SSH_CONNECT_TIMEOUT, commandStatus.size(), true));
+					SSH_CONNECT_TIMEOUT, sessionCommandsMap.size(), true));
 
-			// if connection request succeed
-			addSession(session, new CommandSpec("#connect", SSH_CONNECT_TIMEOUT, commandStatus.size(), true));
-			// trigger SshConnectResponse
+			trigger(new SshConnectResponse(event, sessionId), sshPort);
 		}
 	};
 	
 	
-	private void addSession(Session session, CommandSpec command)
+	private int addSession(Session session, CommandSpec command)
 	{
-		List<CommandSpec> listCommands = commandStatus.get(session);
+		List<CommandSpec> listCommands = sessionCommandsMap.get(sessionCounter);
 		if (listCommands == null) {
 			listCommands = new ArrayList<CommandSpec>();
 		}
 		listCommands.add(command);
-		commandStatus.put(session, listCommands);
+		sessionCommandsMap.put((int) sessionCounter, listCommands);
 
-		sessionIds.put(sessionIds, session);
-		sessionIds++;
+		sessionObjMap.put((int) sessionCounter, session);
+		
+		sessionCounter++;
+		
+		return sessionCounter;
 	}
 
 	public int runCommand(CommandSpec commandSpec, Session session,
@@ -339,6 +354,7 @@ public class SshComponent extends ComponentDefinition {
 			// session.waitForCondition(ChannelCondition.STDOUT_DATA
 			// | ChannelCondition.STDERR_DATA, Math
 			// .round(1000.0 / DATA_POLLING_FREQ));
+			// XXX why sleep here?
 			Thread.sleep(50);
 			line = stdout.readLine();
 			errLine = stderr.readLine();
@@ -528,7 +544,7 @@ public class SshComponent extends ComponentDefinition {
 		return split;
 	}
 
-	private Session connect(Credentials credentials, ExperimentHost expHost,
+	private int connect(Credentials credentials, ExperimentHost expHost,
 			CommandSpec commandSpec) {
 
 		Connection connection = new Connection(expHost.getHostname());
@@ -540,14 +556,16 @@ public class SshComponent extends ComponentDefinition {
 		List<SshConn> listActiveConns = new ArrayList<SshConn>(
 				activeSshConnections.values());
 
+		
 		if (listActiveConns.contains(sshConnection) == true) {
-			Set<Session> sessions = activeSshConnections.keySet();
-			for (Session s : sessions) {
-				if (activeSshConnections.get(s).compareTo(sshConnection) == 0) {
-					return s;
+			
+			Set<Integer> sessions = activeSshConnections.keySet();
+			for (Integer sId: sessions) {
+				if (activeSshConnections.get(sId).compareTo(sshConnection) == 0) {
+					return sId;
 				}
 			}
-			throw new IllegalStateException("Shouldn't get this far.");
+			throw new IllegalStateException("Found active connection, but no session object.");
 		}
 
 		commandSpec.started();
@@ -585,6 +603,7 @@ public class SshComponent extends ComponentDefinition {
 		}
 		// try to open the connection
 
+		int sessionId;
 		try {
 			// try to connect
 			connection.connect(null, SSH_CONNECT_TIMEOUT,
@@ -607,15 +626,16 @@ public class SshComponent extends ComponentDefinition {
 
 				Session session = startShell(sshConnection);
 
-				activeSshConnections.put(session, sshConnection);
-
-				return session;
+//				activeSshConnections.put(session, sshConnection);
+//				return session;
+				sessionId = addSession(session, new CommandSpec("#connect", SSH_CONNECT_TIMEOUT, sessionCommandsMap.size(), true));
 
 			} else {
 				// well, authentication failed
 				statusChange(sshConnection, "auth failed", LOG_DEVEL);
 				commandSpec.setExitCode(1, "auth failed");
 				commandSpec.recievedControllErr("auth failed");
+				sessionId = -1;
 			}
 
 			// handle errors...
@@ -628,6 +648,7 @@ public class SshComponent extends ComponentDefinition {
 				commandSpec.setExitCode(3, "conn timeout");
 			}
 			commandSpec.recievedControllErr(e.getMessage());
+			sessionId = -1;
 		} catch (IOException e) {
 
 			if (e.getCause() != null) {
@@ -673,9 +694,10 @@ public class SshComponent extends ComponentDefinition {
 				statusChange(sshConnection, e.getMessage(), LOG_DEVEL);
 			}
 
+			sessionId = -1;
 		}
 
-		return null;
+		return sessionId;
 
 	}
 
@@ -755,10 +777,8 @@ public class SshComponent extends ComponentDefinition {
 			
 			return true;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return false;
@@ -973,11 +993,6 @@ public class SshComponent extends ComponentDefinition {
 	}
 
 	
-	
-	
-//	public void downloadMD5Checker(SshConn sshConn, List<FileInfo> fileMD5Hashes, CommandSpec commandSpec) {
-//	}
-
 	public void checkFile(FileInfo file) {
 		try {
 			fileMD5Hashes.put(file);
@@ -1031,7 +1046,7 @@ public class SshComponent extends ComponentDefinition {
 		session.close();
 		boolean status = (activeSshConnections.remove(session) == null) ? false : true; 
 		
-		commandStatus.remove(session);
+		sessionCommandsMap.remove(session);
 
 		return status;
 	}

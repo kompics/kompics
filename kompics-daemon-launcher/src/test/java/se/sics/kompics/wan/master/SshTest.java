@@ -9,6 +9,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
+import se.sics.kompics.Kompics;
 import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.timer.ScheduleTimeout;
@@ -17,6 +18,7 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
+import se.sics.kompics.wan.main.DaemonTest;
 import se.sics.kompics.wan.master.plab.Credentials;
 import se.sics.kompics.wan.master.plab.ExperimentHost;
 import se.sics.kompics.wan.master.ssh.HaltRequest;
@@ -193,12 +195,13 @@ public class SshTest  {
 	}
 
 	@org.junit.Test 
-	public void sshCompTest()
+	public void testSsh()
 	{
 		
 		setTestObj(this);
 		try {
 			Configuration.init(new String[]{}, PlanetLabConfiguration.class);
+			Kompics.createAndStart(SshTest.TestSshComponent.class, 1);
 		} catch (ConfigurationException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

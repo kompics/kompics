@@ -13,16 +13,16 @@ public class SshCommandRequest extends Request {
 
 	private final String command;
 	
-	private final Session session;
+	private final int sessionId;
 	
 	private final double timeout;
 	
 	private final boolean stopOnError;
 	
-	public SshCommandRequest(Session session, String command,
+	public SshCommandRequest(int sessionId, String command,
 			double timeout, boolean stopOnError) {
 		this.command = command;
-		this.session = session;
+		this.sessionId = sessionId;
 		this.timeout = timeout;
 		this.stopOnError = stopOnError;
 	}
@@ -34,11 +34,12 @@ public class SshCommandRequest extends Request {
 		return command;
 	}
 	
+
 	/**
-	 * @return the session
+	 * @return the sessionId
 	 */
-	public Session getSession() {
-		return session;
+	public int getSessionId() {
+		return sessionId;
 	}
 	
 	/**

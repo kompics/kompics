@@ -12,16 +12,16 @@ import ch.ethz.ssh2.Session;
 public class SshCommandResponse extends Response {
 
 	private final String commandResponse;
-	
-	private final Session session;
-	
+
+	private final int sessionId;
+
 	private final boolean status;
-	
-	public SshCommandResponse(SshCommandRequest request, Session session, String commandResponse,
-			 boolean status) {
+
+	public SshCommandResponse(SshCommandRequest request, int sessionId,
+			String commandResponse, boolean status) {
 		super(request);
 		this.commandResponse = commandResponse;
-		this.session = session;
+		this.sessionId = sessionId;
 		this.status = status;
 	}
 
@@ -31,14 +31,14 @@ public class SshCommandResponse extends Response {
 	public String getCommandResponse() {
 		return commandResponse;
 	}
-	
+
 	/**
-	 * @return the session
+	 * @return the sessionId
 	 */
-	public Session getSession() {
-		return session;
+	public int getSessionId() {
+		return sessionId;
 	}
-	
+
 	/**
 	 * @return the stopOnError
 	 */

@@ -1,7 +1,6 @@
 package se.sics.kompics.wan.master.ssh;
 
 import se.sics.kompics.Response;
-import ch.ethz.ssh2.Session;
 
 /**
  * The <code>ConnectSsh</code> class.
@@ -11,19 +10,17 @@ import ch.ethz.ssh2.Session;
  */
 public class SshConnectResponse extends Response {
 
-	private final Session session;
-	
-	public SshConnectResponse(SshConnectRequest request, Session session) {
+	private final int sessionId;
+
+	public SshConnectResponse(SshConnectRequest request, int sessionId) {
 		super(request);
-		this.session = session;
+		this.sessionId = sessionId;
 	}
 
-	
 	/**
-	 * @return the session
+	 * @return the sessionId
 	 */
-	public Session getSession() {
-		return session;
+	public int getSessionId() {
+		return sessionId;
 	}
-
 }
