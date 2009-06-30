@@ -34,6 +34,7 @@ import se.sics.kompics.wan.master.scp.upload.UploadMD5Response;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.ConnectionMonitor;
 import ch.ethz.ssh2.HTTPProxyData;
+import ch.ethz.ssh2.SCPClient;
 import ch.ethz.ssh2.Session;
 
 public class SshComponent extends ComponentDefinition {
@@ -769,8 +770,9 @@ public class SshComponent extends ComponentDefinition {
 			// XXX other component will launch a thread that returns the result
 			
 			Session s1 = null;
+			SCPClient scpClient = conn.getConnection().createSCPClient();
 			if (null != (s1 = startShell(conn))) {
-				trigger(new DownloadMD5Request(s1, fileList, commandSpec), 
+				trigger(new DownloadMD5Request(scpClient, fileList, commandSpec), 
 						md5Checker.getPositive(DownloadMgrPort.class));
 //				downloadMD5Checker(conn, fileList, commandSpec);
 			}
@@ -1025,7 +1027,8 @@ public class SshComponent extends ComponentDefinition {
 	{
 		public void handle(HaltRequest event) {
 			
-			Session session = event.getSession();
+//			Session session = event.getSession();
+			int sessionId = event.getSessionId();
 			
 //			this.isConnected = false;
 //			commandQueue.clear();
@@ -1033,20 +1036,29 @@ public class SshComponent extends ComponentDefinition {
 //			this.interrupt();
 //			this.disconnect();
 
-			removeSession(session);
+			removeSession(sessionId);
 			
 			trigger(new HaltResponse(event, true), sshPort);
 		}
 	};
 
 	
-	private boolean removeSession(Session session)
+	private boolean removeSession(int sessionId)
 	{
 		// XXX check semantics of close()
+		
+		Session session = this.sessionObjMap.get(sessionId);
+		
+		if (session == null)
+		{
+			return false;
+		}
+		
 		session.close();
 		boolean status = (activeSshConnections.remove(session) == null) ? false : true; 
 		
 		sessionCommandsMap.remove(session);
+		sessionObjMap.remove(sessionId);
 
 		return status;
 	}

@@ -1,7 +1,6 @@
 package se.sics.kompics.wan.master.ssh;
 
 import se.sics.kompics.Request;
-import ch.ethz.ssh2.Session;
 
 /**
  * The <code>ConnectSsh</code> class.
@@ -11,13 +10,13 @@ import ch.ethz.ssh2.Session;
  */
 public class HaltRequest extends Request {
 
-	private final Session session;
+	private final int sessionId;
 
-	public HaltRequest(Session session) {
-		this.session = session;
+	public HaltRequest(int sessionId) {
+		this.sessionId = sessionId;
 	}
 
-	public Session getSession() {
-		return session;
+	public int getSessionId() {
+		return sessionId;
 	}
 }

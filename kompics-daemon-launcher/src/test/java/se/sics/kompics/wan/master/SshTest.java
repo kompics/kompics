@@ -110,7 +110,7 @@ public class SshTest  {
 		public Handler<SshConnectResponse> handleSshConnectResponse = new Handler<SshConnectResponse>() {
 			public void handle(SshConnectResponse event) {
 
-				SshCommandRequest command = new SshCommandRequest(event.getSession(), "ls -la", 
+				SshCommandRequest command = new SshCommandRequest(event.getSessionId(), "ls -la", 
 						10*1000, true);
 				trigger(command, sshPort);
 			}
@@ -119,7 +119,7 @@ public class SshTest  {
 		public Handler<SshCommandResponse> handleCommandResponse = new Handler<SshCommandResponse>() {
 			public void handle(SshCommandResponse event) {
 
-				trigger(new HaltRequest(event.getSession()), sshPort);
+				trigger(new HaltRequest(event.getSessionId()), sshPort);
 			}
 		};
 		

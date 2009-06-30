@@ -56,7 +56,7 @@ public class ScpTest extends Thread {
 		
 //		sshConn.upload(new File("pom.xml"), commandSpec);
 		
-		UploadManager.getInstance().uploadDir(sshConn, new File("pom.xml"), commandSpec);
+//		UploadManager.getInstance().uploadDir(sshConn, new File("pom.xml"), commandSpec);
 		
 //		try {
 //			RpcClient.getInstance().startClient(InetAddress.getLocalHost(), cred);
