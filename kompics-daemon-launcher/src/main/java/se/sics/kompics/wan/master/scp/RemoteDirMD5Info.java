@@ -82,16 +82,16 @@ public class RemoteDirMD5Info {
 			if (localMD5.equals(remoteMD5)) {
 				md5match = true;
 				// System.out.println("passed");
-				commandResults.recievedControllData("passed: "
+				commandResults.receivedControlData("passed: "
 						+ file.getFullRemotePath());
 			} else {
-				commandResults.recievedControllErr("copying (md5 failed):"
+				commandResults.receivedControlErr("copying (md5 failed):"
 						+ file.getFullRemotePath());
 			}
 			// System.out.println("size: "
 			// + commandSpec.getProcOutput(0).size());
 		} else {
-			commandResults.recievedControllErr("copying (missing):"
+			commandResults.receivedControlErr("copying (missing):"
 					+ file.getFullRemotePath());
 		}
 		return md5match;

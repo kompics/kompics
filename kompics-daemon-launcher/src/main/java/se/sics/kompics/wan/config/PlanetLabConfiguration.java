@@ -1,12 +1,6 @@
 package se.sics.kompics.wan.config;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.Iterator;
-import java.util.TreeSet;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.cli.Option;
@@ -14,10 +8,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.kompics.address.Address;
-import se.sics.kompics.simulator.SimulationScenario;
-import se.sics.kompics.simulator.SimulationScenarioLoadException;
-import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
 
 public class PlanetLabConfiguration extends MasterConfiguration {
@@ -40,6 +30,10 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	public static final String DEFAULT_HTTP_PROXY_USERNAME = "";
 	public static final String DEFAULT_HTTP_PROXY_PASSWORD = "";
 	
+	
+	public static final String SPECIAL_COMMAND_UPLOAD_DIR = "#upload";
+	public static final String SPECIAL_COMMAND_DOWNLOAD_DIR = "#download";
+	
 	/********************************************************/
 	/********* Helper fields ********************************/
 	/********************************************************/
@@ -57,6 +51,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	// threads. The queue is fair meaning that it operates in a FIFO manner
 	private static Semaphore networkIntensiveTicket = new Semaphore(5, true);
 
+	private static long startTime = System.currentTimeMillis();
 	
 	/**
 	 * 
@@ -197,6 +192,18 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 			// only increase is allowed
 		}
 		return;
+	}
+
+	
+	/**
+	 * Time since the master started. 
+	 * 
+	 * @return number of milliseconds since the master started.
+	 */
+
+	public static long getTime() {
+		long currentTime = System.currentTimeMillis();
+		return (currentTime - startTime) ;
 	}
 
 }

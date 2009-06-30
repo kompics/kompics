@@ -83,12 +83,12 @@ public class DownloadMD5CheckThread implements MD5Check {
 						// does the md5 match?
 						if (md5match) {
 							// System.out.println("passed");
-							commandResults.recievedControllData("passed: "
+							commandResults.receivedControlData("passed: "
 									+ file.getFullRemotePath() + " -> "
 									+ file.getLocalFile().getCanonicalPath());
 						} else {
 							commandResults
-									.recievedControllErr("copying (md5 failed):"
+									.receivedControlErr("copying (md5 failed):"
 											+ file.getFullRemotePath()
 											+ " -> "
 											+ file.getLocalFile()
@@ -97,7 +97,7 @@ public class DownloadMD5CheckThread implements MD5Check {
 						// System.out.println("size: "
 						// + commandSpec.getProcOutput(0).size());
 					} else {
-						commandResults.recievedControllErr("copying (missing): "
+						commandResults.receivedControlErr("copying (missing): "
 								+ file.getFullRemotePath()
 								+ " -> "
 								+ file.getLocalFile()

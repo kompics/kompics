@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import se.sics.kompics.wan.master.plab.rpc.RpcServer;
+import se.sics.kompics.wan.config.PlanetLabConfiguration;
 
 
 public class CommandSpec implements Serializable {
@@ -19,11 +19,11 @@ public class CommandSpec implements Serializable {
 
 	public static final int RETURN_TIMEDOUT = -2;
 
-	private double startTime = 0.0;
+	private long startTime = 0;
 
-	private double lastDataTime = -1;
+	private long lastDataTime = -1;
 
-	private double completionTime = -1;
+	private long completionTime = -1;
 
 	private int exitCode;
 
@@ -56,10 +56,10 @@ public class CommandSpec implements Serializable {
 	}
 
 	public void started() {
-		this.startTime = RpcServer.getTime();
-		this.lastDataTime = RpcServer.getTime();
+		this.startTime = PlanetLabConfiguration.getTime();
+		this.lastDataTime = PlanetLabConfiguration.getTime(); 
 		this.started = true;
-		// add the command (to simulate console echo
+		// add the command (to simulate console echo)
 		procOutput.add(new OutputLine(command, OutputLine.TYPE_COMMAND, this));
 	}
 
@@ -75,19 +75,19 @@ public class CommandSpec implements Serializable {
 		return started;
 	}
 
-	public void recievedControllData(String line) {
+	public void receivedControlData(String line) {
 		synchronized (procOutput) {
 			this.procOutput.add(new OutputLine(line, OutputLine.TYPE_CONTROLL,
 					this));
-			this.lastDataTime = RpcServer.getTime();
+			this.lastDataTime = PlanetLabConfiguration.getTime();
 		}
 	}
 
-	public void recievedControllErr(String line) {
+	public void receivedControlErr(String line) {
 		synchronized (procOutput) {
 			this.procOutput.add(new OutputLine(line,
 					OutputLine.TYPE_CONTROLL_ERR, this));
-			this.lastDataTime = RpcServer.getTime();
+			this.lastDataTime = PlanetLabConfiguration.getTime();
 		}
 	}
 
@@ -95,7 +95,7 @@ public class CommandSpec implements Serializable {
 		synchronized (procOutput) {
 			this.procOutput.add(new OutputLine(line, OutputLine.TYPE_STDOUT,
 					this));
-			this.lastDataTime = RpcServer.getTime();
+			this.lastDataTime = PlanetLabConfiguration.getTime();
 		}
 	}
 
@@ -103,7 +103,7 @@ public class CommandSpec implements Serializable {
 		synchronized (procOutput) {
 			this.procOutput.add(new OutputLine(line, OutputLine.TYPE_STDERR,
 					this));
-			this.lastDataTime = RpcServer.getTime();
+			this.lastDataTime = PlanetLabConfiguration.getTime();
 		}
 	}
 
@@ -144,7 +144,7 @@ public class CommandSpec implements Serializable {
 		if (isCompleted()) {
 			return completionTime - startTime;
 		} else {
-			return Math.max(0, RpcServer.getTime() - startTime);
+			return Math.max(0, PlanetLabConfiguration.getTime() - startTime);
 		}
 	}
 
@@ -165,7 +165,7 @@ public class CommandSpec implements Serializable {
 	}
 
 	public void setExitCode(int code, String exitCodeString) {
-		this.completionTime = RpcServer.getTime();
+		this.completionTime = PlanetLabConfiguration.getTime();
 		this.exitCode = code;
 		this.exitCodeString = exitCodeString;
 	}
@@ -188,9 +188,9 @@ public class CommandSpec implements Serializable {
 		return procOutput.get(procOutput.size() - 1).getLine();
 	}
 
-	public List<Map> getProcOutput(int startPos) {
+	public List<Map<String, Object>> getProcOutput(int startPos) {
 
-		List<Map> outputLines = new Vector<Map>();
+		List<Map<String, Object>> outputLines = new Vector<Map<String, Object>>();
 		for (int i = startPos; i < procOutput.size(); i++) {
 			outputLines.add(procOutput.get(i).toMap());
 		}

@@ -3,7 +3,7 @@ package se.sics.kompics.wan.master.ssh;
 import java.util.HashMap;
 import java.util.Map;
 
-import se.sics.kompics.wan.master.plab.rpc.RpcServer;
+import se.sics.kompics.wan.config.PlanetLabConfiguration;
 
 
 public class OutputLine {
@@ -28,7 +28,7 @@ public class OutputLine {
 		super();
 		this.line = line_;
 		this.type = type;
-		this.time = RpcServer.getTime();
+		this.time = PlanetLabConfiguration.getTime();
 		this.command = command_;
 	}
 

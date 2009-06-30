@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -18,17 +19,21 @@ import se.sics.kompics.wan.master.scp.download.DownloadMD5Request;
 import se.sics.kompics.wan.master.scp.download.DownloadMD5Response;
 import se.sics.kompics.wan.master.scp.upload.UploadMD5Request;
 import se.sics.kompics.wan.master.ssh.CommandSpec;
+import se.sics.kompics.wan.master.ssh.SshPort;
 import ch.ethz.ssh2.SCPClient;
 import ch.ethz.ssh2.Session;
 
 public class ScpComponent extends ComponentDefinition {
 
-	private Negative<ScpPort> scpPort;
+	private Negative<ScpPort> scpPort = negative(ScpPort.class);
 
-	private Positive<DownloadMgrPort> downloadMgrPort;
+	private Negative<DownloadMgrPort> downloadMgrPort = negative(DownloadMgrPort.class);
 
 	private ConcurrentLinkedQueue<CopyThread> executingCopyThreads = new ConcurrentLinkedQueue<CopyThread>();
 
+	
+	private final List<FileInfo> fileMD5Hashes = new ArrayList<FileInfo>();
+	
 	public class CopyThread extends Thread {
 		private AtomicBoolean quit = new AtomicBoolean(false);
 		private AtomicBoolean working = new AtomicBoolean(false);
@@ -146,7 +151,7 @@ public class ScpComponent extends ComponentDefinition {
 
 	public ScpComponent() {
 		subscribe(handleScpCopyFileTo, scpPort);
-		
+				
 		subscribe(handleDownloadMD5Request, downloadMgrPort);
 		subscribe(handleUploadMD5Request, downloadMgrPort);
 
@@ -304,4 +309,9 @@ public class ScpComponent extends ComponentDefinition {
 		executingCopyThreads.remove(copyThread);
 
 	}
+	
+	private void checkFile(FileInfo file) {
+		fileMD5Hashes.add(file);
+	}
+	
 }

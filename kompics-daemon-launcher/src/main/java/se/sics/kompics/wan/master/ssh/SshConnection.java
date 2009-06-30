@@ -449,13 +449,13 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 				commandSpec.setExitCode(CommandSpec.RETURN_TIMEDOUT,
 						"timed out");
 				commandSpec
-						.recievedControllErr("timeout after "
+						.receivedControlErr("timeout after "
 								+ (Math
 										.round(commandSpec.getExecutionTime() * 10.0) / 10.0)
 								+ " s");
 				if (commandSpec.isStopOnError()) {
 					commandSpec
-							.recievedControllErr("command is stop on error, halting");
+							.receivedControlErr("command is stop on error, halting");
 				}
 				return commandSpec.getExitCode();
 			}
@@ -464,13 +464,13 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 			if (commandSpec.isKilled()) {
 				commandSpec.setExitCode(CommandSpec.RETURN_KILLED, "killed");
 				commandSpec
-						.recievedControllErr("killed after "
+						.receivedControlErr("killed after "
 								+ (Math
 										.round(commandSpec.getExecutionTime() * 10.0) / 10.0)
 								+ " s");
 				if (commandSpec.isStopOnError()) {
 					commandSpec
-							.recievedControllErr("command is stop on error, halting");
+							.receivedControlErr("command is stop on error, halting");
 				}
 				return commandSpec.getExitCode();
 			}
@@ -583,7 +583,7 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 				{				
 
 					// ok, authentiaction succesfull, return the connection
-					commandSpec.recievedControllData("connect successful");
+					commandSpec.receivedControlData("connect successful");
 					isConnected = true;
 					return true;
 
@@ -591,7 +591,7 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 					// well, authentication failed
 					statusChange("auth failed", LOG_DEVEL);
 					commandSpec.setExitCode(1, "auth failed");
-					commandSpec.recievedControllErr("auth failed");
+					commandSpec.receivedControlErr("auth failed");
 				}
 
 				// handle errors...
@@ -603,11 +603,11 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 				} else {
 					commandSpec.setExitCode(3, "conn timeout");
 				}
-				commandSpec.recievedControllErr(e.getMessage());
+				commandSpec.receivedControlErr(e.getMessage());
 			} catch (IOException e) {
 
 				if (e.getCause() != null) {
-					commandSpec.recievedControllErr(e.getCause().getMessage());
+					commandSpec.receivedControlErr(e.getCause().getMessage());
 					if (e.getCause().getMessage().contains("Connection reset")) {
 						statusChange(e.getCause().getMessage(), LOG_DEVEL);
 						commandSpec.setExitCode(2, "conn reset");

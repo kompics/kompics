@@ -10,7 +10,6 @@ import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
-import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;
@@ -18,13 +17,13 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.main.DaemonTest;
 import se.sics.kompics.wan.master.plab.Credentials;
 import se.sics.kompics.wan.master.plab.ExperimentHost;
 import se.sics.kompics.wan.master.ssh.HaltRequest;
 import se.sics.kompics.wan.master.ssh.HaltResponse;
 import se.sics.kompics.wan.master.ssh.SshCommandRequest;
 import se.sics.kompics.wan.master.ssh.SshCommandResponse;
+import se.sics.kompics.wan.master.ssh.SshComponent;
 import se.sics.kompics.wan.master.ssh.SshConnectRequest;
 import se.sics.kompics.wan.master.ssh.SshConnectResponse;
 import se.sics.kompics.wan.master.ssh.SshPort;
@@ -54,7 +53,9 @@ public class SshTest  {
 
 	public static class TestSshComponent extends ComponentDefinition {
 		
-		private Positive<SshPort> sshPort;
+//		private Positive<SshPort> sshPort;
+
+		private Component sshComponent;
 
 		private Component timer;
 		
@@ -65,23 +66,25 @@ public class SshTest  {
 		public TestSshComponent() {
 
 			timer = create(JavaTimer.class);
-//			connect(daemon.getNegative(Timer.class), timer.getPositive(Timer.class));
+			sshComponent = create(SshComponent.class);
 			
-			subscribe(handleCommandResponse, sshPort);
-			subscribe(handleSshConnectResponse, sshPort);
-			subscribe(handleHaltResponse, sshPort);
+			subscribe(handleCommandResponse, sshComponent.getPositive(SshPort.class));
+			subscribe(handleSshConnectResponse, sshComponent.getPositive(SshPort.class));
+			subscribe(handleHaltResponse, sshComponent.getPositive(SshPort.class));
 			
 			subscribe(handleSshConnectTimeout, timer.getPositive(Timer.class));
+			subscribe(handleStart, control);
 		}
 
 		public Handler<Start> handleStart = new Handler<Start>() {
 			public void handle(Start event) {
 
 				// TODO Auto-generated method stub
-				Credentials cred = new Credentials("jdowling", "password", "/home/jdowling/.ssh/id_rsa", "none");
+				Credentials cred = new Credentials("jdowling", "oke2Shoo", 
+						"/home/jdowling/.ssh/id_rsa", "");
 				ExperimentHost host = new ExperimentHost("lqist.com");
 				
-				trigger(new SshConnectRequest(cred, host), sshPort);
+				trigger(new SshConnectRequest(cred, host), sshComponent.getPositive(SshPort.class));
 
 				ScheduleTimeout st = new ScheduleTimeout(SSH_CONNECT_TIMEOUT);
 				SshConnectTimeout connectTimeout = new SshConnectTimeout(st);
@@ -102,7 +105,8 @@ public class SshTest  {
 				}
 				outstandingTimeouts.remove(event.getTimeoutId());
 
-				testObj.fail(true);
+//				testObj.fail(true);
+				System.out.println("Ssh connect timeout");
 			}
 		};
 		
@@ -112,14 +116,16 @@ public class SshTest  {
 
 				SshCommandRequest command = new SshCommandRequest(event.getSessionId(), "ls -la", 
 						10*1000, true);
-				trigger(command, sshPort);
+				trigger(command, sshComponent.getPositive(SshPort.class));
 			}
 		};
 		
 		public Handler<SshCommandResponse> handleCommandResponse = new Handler<SshCommandResponse>() {
 			public void handle(SshCommandResponse event) {
 
-				trigger(new HaltRequest(event.getSessionId()), sshPort);
+				System.out.println(event.getCommandResponse());
+				
+				trigger(new HaltRequest(event.getSessionId()), sshComponent.getPositive(SshPort.class));
 			}
 		};
 		

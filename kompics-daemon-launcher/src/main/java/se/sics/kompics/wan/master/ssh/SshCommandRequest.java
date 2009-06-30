@@ -1,7 +1,6 @@
 package se.sics.kompics.wan.master.ssh;
 
 import se.sics.kompics.Request;
-import ch.ethz.ssh2.Session;
 
 /**
  * The <code>ConnectSsh</code> class.
@@ -11,13 +10,13 @@ import ch.ethz.ssh2.Session;
  */
 public class SshCommandRequest extends Request {
 
-	private final String command;
+	protected final String command;
 	
-	private final int sessionId;
+	protected final int sessionId;
 	
-	private final double timeout;
+	protected final double timeout;
 	
-	private final boolean stopOnError;
+	protected final boolean stopOnError;
 	
 	public SshCommandRequest(int sessionId, String command,
 			double timeout, boolean stopOnError) {

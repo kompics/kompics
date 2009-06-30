@@ -57,12 +57,12 @@ public class DownloadMgr extends ComponentDefinition {
 							// does the md5 match?
 							if (md5match) {
 								// System.out.println("passed");
-								commandSpec.recievedControllData("passed: "
+								commandSpec.receivedControlData("passed: "
 										+ file.getFullRemotePath() + " -> "
 										+ file.getLocalFile().getCanonicalPath());
 							} else {
 								commandSpec
-										.recievedControllErr("copying (md5 failed):"
+										.receivedControlErr("copying (md5 failed):"
 												+ file.getFullRemotePath()
 												+ " -> "
 												+ file.getLocalFile()
@@ -71,7 +71,7 @@ public class DownloadMgr extends ComponentDefinition {
 							// System.out.println("size: "
 							// + commandSpec.getProcOutput(0).size());
 						} else {
-							commandSpec.recievedControllErr("copying (missing): "
+							commandSpec.receivedControlErr("copying (missing): "
 									+ file.getFullRemotePath()
 									+ " -> "
 									+ file.getLocalFile()
