@@ -53,10 +53,6 @@ public class ScpCopyThread implements Runnable {
 				FileInfo fileInfo = fileQueue.take();
 				working = true;
 
-				// get a ticket from the RPC server to make sure that
-				// there
-				// are a limited number of concurrent copy operations
-//				RpcServer.getInstance().getNetworkIntensiveTicket();
 				PlanetLabConfiguration.getNetworkIntensiveTicket();
 
 				if (fileInfo.isLocalFile()) {
