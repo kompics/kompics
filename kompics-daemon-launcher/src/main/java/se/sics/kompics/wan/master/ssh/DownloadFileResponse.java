@@ -13,12 +13,18 @@ import se.sics.kompics.Response;
 public class DownloadFileResponse extends Response {
 
 	private final File file;
-
-	public DownloadFileResponse(DownloadFileRequest request, File file) {
+	private final int sessionId;
+	
+	public DownloadFileResponse(DownloadFileRequest request, int sessionId, File file) {
 		super(request);
 		this.file = file;
+		this.sessionId = sessionId;
 	}
 
+	public int getSessionId() {
+		return sessionId;
+	}
+	
 	public File getFile() {
 		return file;
 	}

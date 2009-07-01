@@ -1,5 +1,6 @@
 package se.sics.kompics.wan.master;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
@@ -19,14 +20,20 @@ import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.plab.Credentials;
 import se.sics.kompics.wan.master.plab.ExperimentHost;
+import se.sics.kompics.wan.master.scp.DownloadUploadMgr;
+import se.sics.kompics.wan.master.scp.DownloadUploadPort;
+import se.sics.kompics.wan.master.scp.ScpComponent;
+import se.sics.kompics.wan.master.scp.ScpPort;
+import se.sics.kompics.wan.master.ssh.DownloadFileRequest;
+import se.sics.kompics.wan.master.ssh.DownloadFileResponse;
 import se.sics.kompics.wan.master.ssh.HaltRequest;
 import se.sics.kompics.wan.master.ssh.HaltResponse;
-import se.sics.kompics.wan.master.ssh.SshCommandRequest;
-import se.sics.kompics.wan.master.ssh.SshCommandResponse;
 import se.sics.kompics.wan.master.ssh.SshComponent;
 import se.sics.kompics.wan.master.ssh.SshConnectRequest;
 import se.sics.kompics.wan.master.ssh.SshConnectResponse;
 import se.sics.kompics.wan.master.ssh.SshPort;
+import se.sics.kompics.wan.master.ssh.UploadFileRequest;
+import se.sics.kompics.wan.master.ssh.UploadFileResponse;
 
 public class ScpTest  {
 
@@ -53,9 +60,9 @@ public class ScpTest  {
 
 	public static class TestSshComponent extends ComponentDefinition {
 		
-//		private Positive<SshPort> sshPort;
-
 		private Component sshComponent;
+		private Component scpComponent;
+		private Component downloadUploadMgComponent;
 
 		private Component timer;
 		
@@ -67,8 +74,17 @@ public class ScpTest  {
 
 			timer = create(JavaTimer.class);
 			sshComponent = create(SshComponent.class);
+			scpComponent = create(ScpComponent.class);
+			downloadUploadMgComponent = create(DownloadUploadMgr.class);
 			
-			subscribe(handleCommandResponse, sshComponent.getPositive(SshPort.class));
+			connect(sshComponent.getNegative(DownloadUploadPort.class),
+					downloadUploadMgComponent.getPositive(DownloadUploadPort.class));
+
+			connect(downloadUploadMgComponent.getNegative(ScpPort.class),
+					scpComponent.getPositive(ScpPort.class));
+
+			subscribe(handleDownloadFileResponse, sshComponent.getPositive(SshPort.class));
+			subscribe(handleUploadFileResponse, sshComponent.getPositive(SshPort.class));
 			subscribe(handleSshConnectResponse, sshComponent.getPositive(SshPort.class));
 			subscribe(handleHaltResponse, sshComponent.getPositive(SshPort.class));
 			
@@ -80,7 +96,7 @@ public class ScpTest  {
 			public void handle(Start event) {
 
 				// TODO Auto-generated method stub
-				Credentials cred = new Credentials("jdowling", "", 
+				Credentials cred = new Credentials("jdowling", "oke2Shoo", 
 						"/home/jdowling/.ssh/id_rsa", "");
 				ExperimentHost host = new ExperimentHost("lqist.com");
 				
@@ -114,18 +130,35 @@ public class ScpTest  {
 		public Handler<SshConnectResponse> handleSshConnectResponse = new Handler<SshConnectResponse>() {
 			public void handle(SshConnectResponse event) {
 
-				SshCommandRequest command = new SshCommandRequest(event.getSessionId(), "ls -la", 
-						10*1000, true);
+				// remotePath  localFileOrDir fileFilter localNameType 
+				DownloadFileRequest command = new DownloadFileRequest(event.getSessionId(), 
+						"/home/jdowling/blah /home/jdowling/ * " + SshComponent.FLAT, 
+				10*1000, true);
 				trigger(command, sshComponent.getPositive(SshPort.class));
 			}
 		};
 		
-		public Handler<SshCommandResponse> handleCommandResponse = new Handler<SshCommandResponse>() {
-			public void handle(SshCommandResponse event) {
+		public Handler<DownloadFileResponse> handleDownloadFileResponse = 
+			new Handler<DownloadFileResponse>() {
+			public void handle(DownloadFileResponse event) {
 
-				System.out.println(event.getCommandResponse());
+				System.out.println(event.getFile().getAbsolutePath());
+				UploadFileRequest command = new UploadFileRequest(event.getSessionId(), 
+						new File("/home/jdowling/blah"), 
+						10*1000, true);
+				trigger(command, sshComponent.getPositive(SshPort.class));
 				
-				trigger(new HaltRequest(event.getSessionId()), sshComponent.getPositive(SshPort.class));
+			}
+		};
+		
+		public Handler<UploadFileResponse> handleUploadFileResponse = 
+			new Handler<UploadFileResponse>() {
+			public void handle(UploadFileResponse event) {
+
+				System.out.println(event.getFile().getAbsolutePath());
+				
+				trigger(new HaltRequest(event.getSessionId()), 
+						sshComponent.getPositive(SshPort.class));
 			}
 		};
 		

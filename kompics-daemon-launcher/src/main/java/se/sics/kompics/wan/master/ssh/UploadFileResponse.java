@@ -13,10 +13,16 @@ import se.sics.kompics.Response;
 public class UploadFileResponse extends Response {
 
 	private final File file;
+	private final int sessionId;
 
-	public UploadFileResponse(UploadFileRequest request, File file) {
+	public UploadFileResponse(UploadFileRequest request, int sessionId, File file) {
 		super(request);
+		this.sessionId = sessionId;
 		this.file = file;
+	}
+	
+	public int getSessionId() {
+		return sessionId;
 	}
 
 	public File getFile() {
