@@ -1,6 +1,7 @@
 package se.sics.kompics.wan.master.scp;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.Request;
+import se.sics.kompics.wan.master.ssh.CommandSpec;
 import ch.ethz.ssh2.SCPClient;
 
 /**
@@ -9,26 +10,29 @@ import ch.ethz.ssh2.SCPClient;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class ScpCopyFileTo extends Event {
+public class ScpCopyFileRequest extends Request {
 
-	private final String hostname;
 	private final FileInfo fileInfo;
 	private final SCPClient scpClient;
+	private final CommandSpec commandSpec;
 
-	public ScpCopyFileTo(String hostname, FileInfo fileInfo, SCPClient scpClient) {
-		this.hostname = hostname;
+	public ScpCopyFileRequest(FileInfo fileInfo, CommandSpec commandSpec, SCPClient scpClient) {
 		this.fileInfo = fileInfo;
+		this.commandSpec = commandSpec;
 		this.scpClient = scpClient;
-	}
-
-	public String getHostname() {
-		return hostname;
 	}
 
 	public FileInfo getFileInfo() {
 		return fileInfo;
 	}
 
+	/**
+	 * @return the commandSpec
+	 */
+	public CommandSpec getCommandSpec() {
+		return commandSpec;
+	}
+	
 	public SCPClient getScpClient() {
 		return scpClient;
 	}

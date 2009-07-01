@@ -455,7 +455,7 @@ public class SshComponent extends ComponentDefinition {
 			return split;
 		}
 
-		public boolean downloadDir(SshComponent.SshConn conn, String remotePath, File localBaseDir,
+		private boolean downloadDir(SshComponent.SshConn conn, String remotePath, File localBaseDir,
 				String fileFilter, String localNamingType, CommandSpec commandSpec) {
 
 			createLocalDir(localBaseDir);
@@ -486,13 +486,7 @@ public class SshComponent extends ComponentDefinition {
 				// XXX other component will launch a thread that returns the
 				// result
 
-				Session s1 = null;
-				SCPClient scpClient = conn.getConnection().createSCPClient();
-				if (null != (s1 = startShell(conn))) {
-					trigger(new DownloadMD5Request(scpClient, fileList, commandSpec),
-							downloadMgrPort); // md5Checker.getPositive(DownloadMgrPort.class)
-					// downloadMD5Checker(conn, fileList, commandSpec);
-				}
+				sendDownloadRequest(sessionId, conn, fileList, commandSpec);
 
 				return true;
 			} catch (IOException e) {
@@ -960,4 +954,22 @@ public class SshComponent extends ComponentDefinition {
 
 		return status;
 	}
+	
+	synchronized private void sendDownloadRequest(int sessionId, SshComponent.SshConn conn, List<FileInfo> fileList,
+			CommandSpec commandSpec) throws IOException
+	{
+		Session s1 = null;
+		SCPClient scpClient = conn.getConnection().createSCPClient();
+		if (null != (s1 = startShell(conn))) {
+			trigger(new DownloadMD5Request(sessionId, scpClient, fileList, commandSpec),
+					downloadMgrPort); // md5Checker.getPositive(DownloadMgrPort.class)
+			// downloadMD5Checker(conn, fileList, commandSpec);
+		}
+	}
+	
+	synchronized private void sendUploadRequest()
+	{
+		
+	}
+	
 }

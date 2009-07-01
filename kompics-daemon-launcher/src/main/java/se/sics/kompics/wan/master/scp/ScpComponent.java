@@ -38,13 +38,13 @@ public class ScpComponent extends ComponentDefinition {
 		private AtomicBoolean quit = new AtomicBoolean(false);
 		private AtomicBoolean working = new AtomicBoolean(false);
 		private SCPClient scpClient;
-		private final String hostname;
+//		private final String hostname;
 
 		private final LinkedBlockingQueue<FileInfo> fileQueue = new LinkedBlockingQueue<FileInfo>();
 
 		public CopyThread(SCPClient scpClient, String hostname) {
 			this.scpClient = scpClient;
-			this.hostname = hostname;
+//			this.hostname = hostname;
 		}
 
 		public void run() {
@@ -73,8 +73,8 @@ public class ScpComponent extends ComponentDefinition {
 							// some problem with the scp client
 							if (e1.getMessage().contains(
 									"Error during SCP transfer")) {
-								System.out.println(hostname
-										+ ": disconnected during SCP transfer");
+//								System.out.println(hostname
+//										+ ": disconnected during SCP transfer");
 								System.err.println(e1.getCause().getMessage());
 							}
 						}
@@ -85,6 +85,9 @@ public class ScpComponent extends ComponentDefinition {
 
 						trigger(new DownloadMD5Response(fileInfo, true),
 								md5CheckerPort);
+						
+						trigger(new ScpCopyFileResponse(event, fileInfo, event, scpClient));
+						
 					} else {
 						// this is a remote file
 						// System.out.println("downloading(" + available + "):"
@@ -150,7 +153,7 @@ public class ScpComponent extends ComponentDefinition {
 	}
 
 	public ScpComponent() {
-		subscribe(handleScpCopyFileTo, scpPort);
+		subscribe(handleScpCopyFileRequest, scpPort);
 				
 		subscribe(handleDownloadMD5Request, downloadMgrPort);
 		subscribe(handleUploadMD5Request, downloadMgrPort);
@@ -180,96 +183,6 @@ public class ScpComponent extends ComponentDefinition {
 	};
 	
 	
-			while (!quit.get()) {
-				FileInfo file;
-				try {
-
-					// XXX change this
-					file = fileMD5Hashes.take();
-
-					// check if the file exists locally
-					LocalDirMD5Info localMD5checker = LocalDirMD5Info
-							.getInstance();
-					String localMD5 = localMD5checker.getFileMD5(file
-							.getLocalFile());
-
-					String remoteMD5 = file.getMd5();
-					System.out.println("local_: " + localMD5);
-					System.out.println("remote: " + remoteMD5);
-
-					boolean md5match = remoteMD5.equals(localMD5);
-
-					// localMD5 is null if file not found
-					if (localMD5 != null) {
-						// does the md5 match?
-						if (md5match) {
-							// System.out.println("passed");
-							commandSpec.recievedControllData("passed: "
-									+ file.getFullRemotePath() + " -> "
-									+ file.getLocalFile().getCanonicalPath());
-						} else {
-							commandSpec
-									.recievedControllErr("copying (md5 failed):"
-											+ file.getFullRemotePath()
-											+ " -> "
-											+ file.getLocalFile()
-													.getCanonicalPath());
-						}
-						// System.out.println("size: "
-						// + commandSpec.getProcOutput(0).size());
-					} else {
-						commandSpec.recievedControllErr("copying (missing): "
-								+ file.getFullRemotePath() + " -> "
-								+ file.getLocalFile().getCanonicalPath());
-					}
-					// System.out.println(commandSpec.toString());
-
-					if (!md5match) {
-
-						// TODO create dir, but maybe not always
-						file.getLocalFile();
-						if (file.getCopyCount() < 3) {
-							// System.out.println("sending to copy thread: "
-							// + file.getFullRemotePath());
-
-							// XXX send the file to the ScpComponent
-							scpCopyThread.copyFile(file);
-							copyCount++;
-						}
-					}
-					currentFile++;
-
-					// check if we are done (all queues are empty)
-					boolean scpDone = scpCopyThread.isDone();
-					boolean md5Done = fileMD5Hashes.isEmpty();
-					if (scpDone && md5Done) {
-						System.out.println("all done");
-						quit = true;
-						scpCopyThread.halt();
-						scpCopyThreadThread.interrupt();
-					}
-				} catch (InterruptedException e) {
-					// ignore, application shutdown
-				} catch (IOException e) {
-					if (e.getMessage().contains("SSH channel closed")) {
-						// ignore, probably happened in the shell session to...
-
-					}
-				}
-			}
-			// }
-			session.close();
-			// try {
-			// scpCopyThreadThread.join();
-			// success = true;
-			// commandResults.setExitCode(0, "copied " + copyCount);
-			// System.out.print(sshConn.getExpHost().getHostname() +
-			// ": done MD5");
-			// } catch (InterruptedException e) {
-
-		}
-
-	};
 
 	public Handler<UploadMD5Request> handleUploadMD5Request = new Handler<UploadMD5Request>() {
 		public void handle(UploadMD5Request event) {
@@ -277,8 +190,8 @@ public class ScpComponent extends ComponentDefinition {
 		}
 	};
 
-	private Handler<ScpCopyFileTo> handleScpCopyFileTo = new Handler<ScpCopyFileTo>() {
-		public void handle(ScpCopyFileTo event) {
+	private Handler<ScpCopyFileRequest> handleScpCopyFileRequest = new Handler<ScpCopyFileRequest>() {
+		public void handle(ScpCopyFileRequest event) {
 
 			SCPClient scpClient = event.getScpClient();
 			String hostname = event.getHostname();

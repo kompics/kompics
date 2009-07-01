@@ -35,7 +35,7 @@ public class FileInfo {
 	}
 
 	/**
-	 * constructur used when downloading
+	 * constructor used when downloading
 	 * 
 	 * @param remotePath
 	 * @param md5

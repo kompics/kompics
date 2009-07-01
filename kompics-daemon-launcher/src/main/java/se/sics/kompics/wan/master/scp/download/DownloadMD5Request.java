@@ -19,10 +19,13 @@ public class DownloadMD5Request extends Request {
 	private final SCPClient scpClient;
 	private final List<FileInfo> fileMD5Hashes;
 	private final CommandSpec commandSpec;
-
-	public DownloadMD5Request(SCPClient scpClient,
+	private final int sessionId;
+	
+	
+	public DownloadMD5Request(int sessionId, SCPClient scpClient,
 			List<FileInfo> fileMD5Hashes, CommandSpec commandSpec) {
 		super();
+		this.sessionId = sessionId;
 		this.scpClient = scpClient;
 		this.fileMD5Hashes = fileMD5Hashes;
 		this.commandSpec = commandSpec;
@@ -40,4 +43,10 @@ public class DownloadMD5Request extends Request {
 		return scpClient;
 	}
 
+	/**
+	 * @return the sessionId
+	 */
+	public int getSessionId() {
+		return sessionId;
+	}
 }
