@@ -91,10 +91,12 @@ public class DownloadUploadMgr extends ComponentDefinition {
 			System.out.println("local_: " + localMD5);
 			System.out.println("remote: " + remoteMD5);
 
-			boolean md5match = (remoteMD5.compareTo(localMD5) == 0) ? true : false;
-
+			boolean md5match;
+			
 			// localMD5 is null if file not found
 			if (localMD5 != null) {
+
+				md5match = (remoteMD5.compareTo(localMD5) == 0) ? true : false;
 
 				if (md5match) {
 					// System.out.println("passed");
@@ -116,6 +118,7 @@ public class DownloadUploadMgr extends ComponentDefinition {
 				commandSpec.receivedControlErr("copying (missing): "
 						+ file.getFullRemotePath() + " -> "
 						+ file.getLocalFile().getCanonicalPath());
+				md5match = false;
 			}
 			System.out.println(commandSpec.toString());
 

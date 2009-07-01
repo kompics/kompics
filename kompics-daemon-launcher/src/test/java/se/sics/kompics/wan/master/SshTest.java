@@ -30,9 +30,9 @@ import se.sics.kompics.wan.master.ssh.SshPort;
 
 public class SshTest  {
 
-	public static final int SSH_CONNECT_TIMEOUT = 15000;
+	public static final int SSH_CONNECT_TIMEOUT = 30 * 1000;
 
-	public static final int SSH_KEY_EXCHANGE_TIMEOUT = 15000;
+	public static final int SSH_KEY_EXCHANGE_TIMEOUT = 30 * 1000;
 
 	private static Semaphore semaphore = new Semaphore(0);
 
@@ -80,9 +80,9 @@ public class SshTest  {
 			public void handle(Start event) {
 
 				// TODO Auto-generated method stub
-				Credentials cred = new Credentials("jdowling", "", 
+				Credentials cred = new Credentials("jdowling", "oke2Shoo", 
 						"/home/jdowling/.ssh/id_rsa", "");
-				ExperimentHost host = new ExperimentHost("lqist.com");
+				ExperimentHost host = new ExperimentHost("lucan.sics.se");
 				
 				trigger(new SshConnectRequest(cred, host), sshComponent.getPositive(SshPort.class));
 
@@ -140,64 +140,6 @@ public class SshTest  {
 	
 	public SshTest() {
 		
-		/*
-		Connection sshConn = new Connection("lqist.com");
-
-		try {
-
-			System.out.println("Connecting");
-
-			sshConn
-					.connect(null, SSH_CONNECT_TIMEOUT,
-							SSH_KEY_EXCHANGE_TIMEOUT);
-
-			if (sshConn.authenticateWithPublicKey("jdowling", new File(
-					"/home/jdowling/.ssh/id_rsa"), "")) {
-				System.out.println("Connected");
-
-				Session session = sshConn.openSession();
-
-				StreamGobbler stdout = new StreamGobbler(session.getStdout());
-
-				OutputStream stdin = session.getStdin();
-
-				// session.execCommand("ls /bin");
-				session.startShell();
-				// session.execCommand("ls");
-
-				stdin.write("ls -la\n".getBytes());
-				stdin.write("echo \"=:=:=EXIT STATUS==$?==\"\n".getBytes());
-
-				session.waitForCondition(ChannelCondition.STDOUT_DATA, 5000);
-
-				Thread.sleep(200);
-				while (stdout.available() > 0) {
-					byte[] response = new byte[stdout.available()];
-
-					stdout.read(response, 0, response.length);
-					System.out.println(new String(response));
-					Thread.sleep(200);
-				}
-				int cond = session.waitForCondition(ChannelCondition.EOF, 5000);
-				System.out.println( "EOF.. = " + cond);
-				session.waitForCondition(ChannelCondition.EXIT_SIGNAL, 5000);
-				System.out.println("exit: " + session.getExitStatus());
-
-				session.close();
-				sshConn.close();
-
-			}
-
-		} catch (SocketTimeoutException e) {
-			System.err.println("connection timeout: " + e.getMessage());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 	}
 
 	@org.junit.Test 

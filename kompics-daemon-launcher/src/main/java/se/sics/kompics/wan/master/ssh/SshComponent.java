@@ -28,6 +28,7 @@ import se.sics.kompics.wan.master.scp.download.DownloadManager;
 import se.sics.kompics.wan.master.scp.upload.UploadMD5Request;
 import se.sics.kompics.wan.master.scp.upload.UploadMD5Response;
 import ch.ethz.ssh2.Connection;
+import ch.ethz.ssh2.ConnectionInfo;
 import ch.ethz.ssh2.ConnectionMonitor;
 import ch.ethz.ssh2.HTTPProxyData;
 import ch.ethz.ssh2.SCPClient;
@@ -59,20 +60,20 @@ public class SshComponent extends ComponentDefinition {
 
 	// (sessionId, sshConn)
 	private Map<Integer, SshConn> activeSshConnections = new ConcurrentHashMap<Integer, SshConn>();
-	// (sessionId, session)	
+	// (sessionId, session)
 	private Map<Integer, Session> activeSessions = new ConcurrentHashMap<Integer, Session>();
-	
+
 	// (commandId, sshCommand)
-	private Map<Integer, SshCommand> activeSshCommands = new ConcurrentHashMap<Integer, SshCommand>(); 
+	private Map<Integer, SshCommand> activeSshCommands = new ConcurrentHashMap<Integer, SshCommand>();
 	// (commandId, numFilesRemaining)
 	private Map<Integer, Integer> outstandingUploadFiles = new HashMap<Integer, Integer>();
 
-	
 	public static final String FLAT = "flat";
 
 	public static final String HIERARCHY = "hierarchy";
 
 	public static final String[] NAMING_TYPES = { HIERARCHY, FLAT };
+
 	//	
 	// private volatile String downloadDirectoryType = HIERARCHY;
 
@@ -85,7 +86,8 @@ public class SshComponent extends ComponentDefinition {
 		private final Credentials credentials;
 		private Connection connection;
 
-		public SshConn(ExperimentHost host, Credentials credentials, Connection connection) {
+		public SshConn(ExperimentHost host, Credentials credentials,
+				Connection connection) {
 			super();
 			this.status = "created";
 			this.hostname = host;
@@ -98,8 +100,7 @@ public class SshComponent extends ComponentDefinition {
 		}
 
 		public void connectionLost(Throwable reason) {
-			 statusChange("connection lost, (HANDLE THIS?)", LOG_ERROR);
-
+			statusChange("connection lost, (HANDLE THIS?)", LOG_ERROR);
 			isConnected = false;
 		}
 
@@ -178,7 +179,8 @@ public class SshComponent extends ComponentDefinition {
 		public int compareTo(SshConn that) {
 			// we can have several connections to the same host with different
 			// usernames
-			if ((!credentials.equals(that.credentials)) || (hostname.compareTo(that.hostname) != 0)) {
+			if ((!credentials.equals(that.credentials))
+					|| (hostname.compareTo(that.hostname) != 0)) {
 				return -1;
 			}
 
@@ -206,27 +208,31 @@ public class SshComponent extends ComponentDefinition {
 		private Session session;
 		private CommandSpec commandSpec;
 
-		public SshCommand(SshCommandRequest event, int sessionId, SshConn conn, Session session,
-				CommandSpec commandSpec) {
+		public SshCommand(SshCommandRequest event, int sessionId, SshConn conn,
+				Session session, CommandSpec commandSpec) {
 			this.event = event;
 			this.sessionId = sessionId;
 			this.conn = conn;
 			this.session = session;
 			this.commandSpec = commandSpec;
 		}
-		
+
 		public CommandSpec getCommandSpec() {
 			return commandSpec;
 		}
+
 		public SshConn getConn() {
 			return conn;
 		}
+
 		public SshCommandRequest getSshCommandRequest() {
 			return event;
 		}
+
 		public int getSessionId() {
 			return sessionId;
 		}
+
 		public Session getSession() {
 			return session;
 		}
@@ -234,59 +240,60 @@ public class SshComponent extends ComponentDefinition {
 		@Override
 		public void run() {
 
-//			List<Thread> t = activeThreads.get(session);
-//			if (t != null && t.size() > 0) {
-//				System.out.println("Currently waiting on " + t.size() + " commands to finish.");
-//			}
-
+			// List<Thread> t = activeThreads.get(session);
+			// if (t != null && t.size() > 0) {
+			// System.out.println("Currently waiting on " + t.size() +
+			// " commands to finish.");
+			// }
 
 			runCommand();
 		}
 
-		public void stop()
-		{
+		public void stop() {
 			Thread.currentThread().interrupt();
 		}
-		
+
 		public int runCommand() {
 			int res = -1;
 
-			synchronized (session) {
-				String command = commandSpec.getCommand();
+			// synchronized (session) {
+			String command = commandSpec.getCommand();
 
-				String commandResponse = "success";
+			String commandResponse = "success";
 
-				boolean commandFailed = true;
+			boolean commandFailed = true;
 
-				if (conn == null || session == null || validSession(session) == false) {
-					commandResponse = "SshConn or Session obj was null";
-				} else { // process command
-					if (command.startsWith("#")) {
-						runSpecialCommand(conn, commandSpec);
-						commandFailed = false;
-					}// run the command in the current session
-					else {
-						try {
-							res = runNormalCommand(conn, session, commandSpec);
-							if (res == 0) {
-								commandFailed = false;
-							}
-						} catch (IOException e) {
-							res = -1;
-							e.printStackTrace();
-						} catch (InterruptedException e) {
-							res = -1;
-							e.printStackTrace();
+			if (conn == null || session == null
+					|| validSession(session) == false) {
+				commandResponse = "SshConn or Session obj was null";
+			} else { // process command
+				if (command.startsWith("#")) {
+					runSpecialCommand(conn, commandSpec);
+					commandFailed = false;
+				}// run the command in the current session
+				else {
+					try {
+						res = runNormalCommand(conn, session, commandSpec);
+						if (res == 0) {
+							commandFailed = false;
 						}
-						System.out.println("Result of ssh command was: " + res);
+					} catch (IOException e) {
+						res = -1;
+						e.printStackTrace();
+					} catch (InterruptedException e) {
+						res = -1;
+						e.printStackTrace();
 					}
+					System.out.println("Result of ssh command was: " + res);
 				}
-				sendCommandResponse(event, sessionId, commandResponse, commandFailed);
-
-//				activeThreads.remove(sessionId);
-				
-				activeSshCommands.remove(sessionId);
 			}
+			sendCommandResponse(event, sessionId, commandResponse,
+					commandFailed);
+
+			// activeThreads.remove(sessionId);
+
+			activeSshCommands.remove(sessionId);
+			// }
 
 			return res;
 		}
@@ -295,7 +302,8 @@ public class SshComponent extends ComponentDefinition {
 			// handle these in a special way...
 			String[] command = parseParameters(commandSpec.getCommand());
 			if (command.length > 0) {
-				if (command[0].equals(PlanetLabConfiguration.SPECIAL_COMMAND_UPLOAD_DIR)) {
+				if (command[0]
+						.equals(PlanetLabConfiguration.SPECIAL_COMMAND_UPLOAD_DIR)) {
 					if (command.length == 2) {
 						File fileOrDir = new File(command[1]);
 						if (fileOrDir.exists()) {
@@ -311,33 +319,36 @@ public class SshComponent extends ComponentDefinition {
 						String localNameType = command[4];
 						if (localFileOrDir.exists()) {
 
-							download(conn, remotePath, localFileOrDir, fileFilter, localNameType,
-									commandSpec);
+							download(conn, remotePath, localFileOrDir,
+									fileFilter, localNameType, commandSpec);
 						}
 					} else {
-						System.err.println("parse error '" + commandSpec.getCommand() + "'"
-								+ "length=" + command.length);
+						System.err.println("parse error '"
+								+ commandSpec.getCommand() + "'" + "length="
+								+ command.length);
 					}
 				} else {
 					System.err.println("unknown command '" + command[0] + "'");
 				}
 			} else {
-				System.out.println("parameter parsing problem: '" + commandSpec.getCommand() + "'");
+				System.out.println("parameter parsing problem: '"
+						+ commandSpec.getCommand() + "'");
 			}
 		}
 
-		public boolean upload(SshComponent.SshConn conn, File baseDir, CommandSpec commandSpec) {
+		public boolean upload(SshComponent.SshConn conn, File baseDir,
+				CommandSpec commandSpec) {
 			try {
-				List<FileInfo> listMD5FileHashes = LocalDirMD5Info.getInstance().getFileInfo(
-						baseDir);
+				List<FileInfo> listMD5FileHashes = LocalDirMD5Info
+						.getInstance().getFileInfo(baseDir);
 				SCPClient scpClient = conn.getConnection().createSCPClient();
-				
+
 				int commandId = commandSpec.getCommandId();
 				int numFiles = listMD5FileHashes.size();
 				outstandingUploadFiles.put(commandId, numFiles);
-				
-				UploadMD5Request req = new UploadMD5Request(sessionId, scpClient, 
-						listMD5FileHashes, commandSpec);
+
+				UploadMD5Request req = new UploadMD5Request(sessionId,
+						scpClient, listMD5FileHashes, commandSpec);
 
 				trigger(req, downloadUploadPort);
 
@@ -349,22 +360,21 @@ public class SshComponent extends ComponentDefinition {
 			return false;
 		}
 
-		public boolean download(SshConn conn, String remotePath, File localBaseDir,
-				String fileFilter, String localNamingType, CommandSpec commandSpec) {
+		public boolean download(SshConn conn, String remotePath,
+				File localBaseDir, String fileFilter, String localNamingType,
+				CommandSpec commandSpec) {
 			// sanity checks
 			if (fileFilter == null || fileFilter.length() == 0) {
 				// match everything
 				fileFilter = ".";
 			}
-			return downloadDir(conn, remotePath, localBaseDir, fileFilter, localNamingType,
-					commandSpec);
+			return downloadDir(conn, remotePath, localBaseDir, fileFilter,
+					localNamingType, commandSpec);
 		}
 
-
-
-		private boolean downloadDir(SshComponent.SshConn conn, String remotePath,
-				File localBaseDir, String fileFilter, String localNamingType,
-				CommandSpec commandSpec) {
+		private boolean downloadDir(SshComponent.SshConn conn,
+				String remotePath, File localBaseDir, String fileFilter,
+				String localNamingType, CommandSpec commandSpec) {
 
 			createLocalDir(localBaseDir);
 
@@ -373,7 +383,8 @@ public class SshComponent extends ComponentDefinition {
 			System.out.println("Getting file list");
 			List<FileInfo> fileList;
 			try {
-				fileList = getRemoteFileList(conn, remotePath, fileFilter, commandSpec);
+				fileList = getRemoteFileList(conn, remotePath, fileFilter,
+						commandSpec);
 				for (FileInfo info : fileList) {
 					if (downloadDirectoryType.equals(FLAT)) {
 						info.setLocalFlatFile(localBaseDir);
@@ -395,13 +406,13 @@ public class SshComponent extends ComponentDefinition {
 
 				// sendDownloadRequest(sessionId, conn, fileList, commandSpec);
 
-//				Session s1 = startShell(conn);
+				// Session s1 = startShell(conn);
 				SCPClient scpClient = conn.getConnection().createSCPClient();
-//				if (s1 != null) {
-//					int sId = addSession(session, conn);
-					trigger(new DownloadMD5Request(sessionId, scpClient, fileList, commandSpec),
-							downloadUploadPort);
-//				}
+				// if (s1 != null) {
+				// int sId = addSession(session, conn);
+				trigger(new DownloadMD5Request(sessionId, scpClient, fileList,
+						commandSpec), downloadUploadPort);
+				// }
 
 				return true;
 			} catch (IOException e) {
@@ -418,13 +429,16 @@ public class SshComponent extends ComponentDefinition {
 			} else if (baseDir.mkdirs()) {
 				return true;
 			} else {
-				System.err.println("could not create local directory for downloads: " + baseDir);
+				System.err
+						.println("could not create local directory for downloads: "
+								+ baseDir);
 				return false;
 			}
 		}
 
-		public List<FileInfo> getRemoteFileList(SshConn sshConn, String remoteDir, String filter,
-				CommandSpec baseCommand) throws IOException, InterruptedException {
+		public List<FileInfo> getRemoteFileList(SshConn sshConn,
+				String remoteDir, String filter, CommandSpec baseCommand)
+				throws IOException, InterruptedException {
 			baseCommand.started();
 			baseCommand.receivedData("getting remote file list");
 			CommandSpec command = this.generateCommand(remoteDir, filter);
@@ -438,7 +452,7 @@ public class SshComponent extends ComponentDefinition {
 				// int sflId = addSession(sessionFileList, sshConn);
 
 				System.out.println("Running command: " + command.getCommand());
-				runNormalCommand(sshConn, sessionFileList , command);
+				runNormalCommand(sshConn, sessionFileList, command);
 				int numFiles = command.getLineNum();
 				// System.out.println("got " + numFiles + " lines");
 				for (int i = 1; i < numFiles; i++) {
@@ -450,14 +464,15 @@ public class SshComponent extends ComponentDefinition {
 						String path = line.substring(index + 2);
 						// System.out.println(line);
 						// System.out.println(md5 + "." + path);
-						remoteFiles
-								.add(new FileInfo(path, md5, sshConn.getExpHost().getHostname()));
+						remoteFiles.add(new FileInfo(path, md5, sshConn
+								.getExpHost().getHostname()));
 					}
 
 				}
 				sessionFileList.close();
 			}
-			baseCommand.receivedData("calculated md5 of " + remoteFiles.size() + " files");
+			baseCommand.receivedData("calculated md5 of " + remoteFiles.size()
+					+ " files");
 			baseCommand.setExitCode(0);
 
 			return remoteFiles;
@@ -465,10 +480,11 @@ public class SshComponent extends ComponentDefinition {
 
 		private CommandSpec generateCommand(String remoteDir, String filter) {
 			if (filter != null && filter != "") {
-				return new CommandSpec("md5sum `find " + remoteDir + " | grep " + filter
-						+ "` 2> /dev/null", 0, -1, false);
+				return new CommandSpec("md5sum `find " + remoteDir + " | grep "
+						+ filter + "` 2> /dev/null", 0, -1, false);
 			} else {
-				return new CommandSpec("md5sum `find " + remoteDir + "` 2> /dev/null", 0, -1, false);
+				return new CommandSpec("md5sum `find " + remoteDir
+						+ "` 2> /dev/null", 0, -1, false);
 			}
 		}
 
@@ -478,14 +494,14 @@ public class SshComponent extends ComponentDefinition {
 			} else if (HIERARCHY.equals(type)) {
 				return HIERARCHY;
 			} else {
-				System.out.println("unknown local naming type: '" + type + "', using default '"
-						+ DownloadManager.HIERARCHY + "'");
+				System.out.println("unknown local naming type: '" + type
+						+ "', using default '" + DownloadManager.HIERARCHY
+						+ "'");
 				return HIERARCHY;
 			}
 		}
 
 	}
-
 
 	public SshComponent() {
 
@@ -502,8 +518,8 @@ public class SshComponent extends ComponentDefinition {
 
 	public Handler<SshCommandRequest> handleSshCommand = new Handler<SshCommandRequest>() {
 		public void handle(SshCommandRequest event) {
-			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event.getTimeout(),
-					commandIdCounter++, event.isStopOnError());
+			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event
+					.getTimeout(), commandIdCounter++, event.isStopOnError());
 
 			int sessionId = event.getSessionId();
 			int commandId = commandIdCounter;
@@ -511,7 +527,13 @@ public class SshComponent extends ComponentDefinition {
 			SshConn conn = activeSshConnections.get(sessionId);
 			Session session = activeSessions.get(sessionId);
 
-			runSshCommand(event, sessionId, conn, session, commandSpec);
+			if (session != null) {
+				runSshCommand(event, sessionId, conn, session, commandSpec);
+			} else {
+				System.err
+						.println("No session available to execute the command");
+			}
+
 		}
 	};
 
@@ -525,13 +547,15 @@ public class SshComponent extends ComponentDefinition {
 	 */
 	private void sendCommandResponse(SshCommandRequest event, int sessionId,
 			String commandResponse, boolean commandFailed) {
-		trigger(new SshCommandResponse(event, sessionId, commandResponse, !commandFailed), sshPort);
+		trigger(new SshCommandResponse(event, sessionId, commandResponse,
+				!commandFailed), sshPort);
 	}
 
-	public void runSshCommand(SshCommandRequest event, int sessionId, SshConn conn,
-			Session session, CommandSpec commandSpec) {
+	public void runSshCommand(SshCommandRequest event, int sessionId,
+			SshConn conn, Session session, CommandSpec commandSpec) {
 
-		SshCommand sshCommand = new SshCommand(event, sessionId, conn, session, commandSpec);
+		SshCommand sshCommand = new SshCommand(event, sessionId, conn, session,
+				commandSpec);
 		Thread t = new Thread(sshCommand);
 		t.run();
 
@@ -548,8 +572,9 @@ public class SshComponent extends ComponentDefinition {
 	public Handler<SshConnectRequest> handleSshConnectRequest = new Handler<SshConnectRequest>() {
 		public void handle(SshConnectRequest event) {
 
-			int sessionId = connect(event.getCredentials(), event.getHostname(), new CommandSpec(
-					"#connect", SSH_CONNECT_TIMEOUT, commandIdCounter++, true));
+			int sessionId = connect(event.getCredentials(),
+					event.getHostname(), new CommandSpec("#connect",
+							SSH_CONNECT_TIMEOUT, commandIdCounter++, true));
 
 			trigger(new SshConnectResponse(event, sessionId), sshPort);
 		}
@@ -565,13 +590,15 @@ public class SshComponent extends ComponentDefinition {
 		return sessionIdCounter;
 	}
 
-	private int connect(Credentials credentials, ExperimentHost expHost, CommandSpec commandSpec) {
+	private int connect(Credentials credentials, ExperimentHost expHost,
+			CommandSpec commandSpec) {
 
 		Connection connection = new Connection(expHost.getHostname());
 
 		SshConn sshConnection = new SshConn(expHost, credentials, connection);
 
-		List<SshConn> listActiveConns = new ArrayList<SshConn>(activeSshConnections.values());
+		List<SshConn> listActiveConns = new ArrayList<SshConn>(
+				activeSshConnections.values());
 
 		if (listActiveConns.contains(sshConnection) == true) {
 
@@ -581,7 +608,8 @@ public class SshComponent extends ComponentDefinition {
 					return sId;
 				}
 			}
-			throw new IllegalStateException("Found active connection, but no session object.");
+			throw new IllegalStateException(
+					"Found active connection, but no session object.");
 		}
 
 		commandSpec.started();
@@ -603,15 +631,18 @@ public class SshComponent extends ComponentDefinition {
 			// if username AND password is specified
 			if (username != PlanetLabConfiguration.DEFAULT_HTTP_PROXY_USERNAME
 					&& password != PlanetLabConfiguration.DEFAULT_HTTP_PROXY_PASSWORD) {
-				connection.setProxyData(new HTTPProxyData(hostname, port, username, password));
-				System.out.println("ssh connect with http proxy and auth, host=" + hostname
-						+ " port=" + port + "user=" + username);
+				connection.setProxyData(new HTTPProxyData(hostname, port,
+						username, password));
+				System.out
+						.println("ssh connect with http proxy and auth, host="
+								+ hostname + " port=" + port + "user="
+								+ username);
 			} else {
 				// ok, only hostname and port
 				connection.setProxyData(new HTTPProxyData(
 						PlanetLabConfiguration.getHttpProxyHost(), port));
-				System.out.println("ssh connect with http proxy, host=" + hostname + " port="
-						+ port);
+				System.out.println("ssh connect with http proxy, host="
+						+ hostname + " port=" + port);
 			}
 		}
 
@@ -619,7 +650,8 @@ public class SshComponent extends ComponentDefinition {
 		int sessionId;
 		try {
 			// try to connect
-			connection.connect(null, SSH_CONNECT_TIMEOUT, SSH_KEY_EXCHANGE_TIMEOUT);
+			ConnectionInfo cInfo = connection.connect(null,
+					SSH_CONNECT_TIMEOUT, SSH_KEY_EXCHANGE_TIMEOUT);
 
 			// try to authenticate
 			// if (sshConn.authenticateWithPublicKey(controller
@@ -627,8 +659,19 @@ public class SshComponent extends ComponentDefinition {
 			// .getCredentials().getKeyPath()), controller
 			// .getCredentials().getKeyFilePassword())) {
 
-			if (connection.authenticateWithPublicKey(credentials.getUsername(), new File(
-					credentials.getKeyPath()), credentials.getKeyFilePassword())) {
+			if (connection.authenticateWithPassword(credentials.getUsername(),
+					credentials.getPassword())) {
+				// ok, authentiaction succesfull, return the connection
+				commandSpec.receivedControlData("connect successful");
+				// isConnected = true;
+				sshConnection.setConnected(true);
+
+				Session session = startShell(sshConnection);
+				sessionId = addSession(session, sshConnection);
+			}
+			else if (connection.authenticateWithPublicKey(credentials
+					.getUsername(), new File(credentials.getKeyPath()),
+					credentials.getKeyFilePassword())) {
 
 				// ok, authentiaction succesfull, return the connection
 				commandSpec.receivedControlData("connect successful");
@@ -644,11 +687,13 @@ public class SshComponent extends ComponentDefinition {
 				commandSpec.setExitCode(1, "auth failed");
 				commandSpec.receivedControlErr("auth failed");
 				sessionId = -1;
+				System.err.println("Authentication failed!");
 			}
 
 			// handle errors...
 		} catch (SocketTimeoutException e) {
-			sshConnection.statusChange("connection timeout: " + e.getMessage(), LOG_DEVEL);
+			sshConnection.statusChange("connection timeout: " + e.getMessage(),
+					LOG_DEVEL);
 			if (e.getMessage().contains("kex")) {
 				commandSpec.setExitCode(4, "kex timeout");
 			} else {
@@ -661,23 +706,30 @@ public class SshComponent extends ComponentDefinition {
 			if (e.getCause() != null) {
 				commandSpec.receivedControlErr(e.getCause().getMessage());
 				if (e.getCause().getMessage().contains("Connection reset")) {
-					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
+					sshConnection.statusChange(e.getCause().getMessage(),
+							LOG_DEVEL);
 					commandSpec.setExitCode(2, "conn reset");
 
-				} else if (e.getCause().getMessage().contains("Connection refused")) {
-					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
+				} else if (e.getCause().getMessage().contains(
+						"Connection refused")) {
+					sshConnection.statusChange(e.getCause().getMessage(),
+							LOG_DEVEL);
 					commandSpec.setExitCode(2, "conn refused");
 
-				} else if (e.getCause().getMessage().contains("Premature connection close")) {
-					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
+				} else if (e.getCause().getMessage().contains(
+						"Premature connection close")) {
+					sshConnection.statusChange(e.getCause().getMessage(),
+							LOG_DEVEL);
 					commandSpec.setExitCode(2, "prem close");
 
 				} else if (e.getCause() instanceof java.net.UnknownHostException) {
-					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
+					sshConnection.statusChange(e.getCause().getMessage(),
+							LOG_DEVEL);
 					commandSpec.setExitCode(2, "dns unknown");
 
 				} else if (e.getCause() instanceof NoRouteToHostException) {
-					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
+					sshConnection.statusChange(e.getCause().getMessage(),
+							LOG_DEVEL);
 					commandSpec.setExitCode(2, "no route");
 				} else if (e.getMessage().contains("Publickey")) {
 					sshConnection.statusChange(e.getMessage(), LOG_DEVEL);
@@ -707,14 +759,16 @@ public class SshComponent extends ComponentDefinition {
 			try {
 				session = conn.getConnection().openSession();
 			} catch (IOException e) {
-				conn.statusChange("could not open session: " + e.getMessage(), LOG_ERROR);
+				conn.statusChange("could not open session: " + e.getMessage(),
+						LOG_ERROR);
 				return null;
 			}
 
 			try {
 				session.startShell();
 			} catch (IOException e) {
-				conn.statusChange("could not start shell: " + e.getMessage(), LOG_ERROR);
+				conn.statusChange("could not start shell: " + e.getMessage(),
+						LOG_ERROR);
 				return null;
 			}
 		}
@@ -725,17 +779,19 @@ public class SshComponent extends ComponentDefinition {
 		public void handle(DownloadMD5Response event) {
 			int commandId = event.getCommandId();
 			SshCommand sc = activeSshCommands.get(commandId);
-			int sessionId = sc.getSessionId();
 			
-			DownloadFileRequest req = (DownloadFileRequest) sc.getSshCommandRequest();
+			int sessionId = sc.getSessionId();
+
+			DownloadFileRequest req = (DownloadFileRequest) sc
+					.getSshCommandRequest();
 			if (req != null) {
-				
-				String[] commands = parseParameters(req.getCommand()); 
+
+				String[] commands = parseParameters(req.getCommand());
 				File file = new File(commands[1]);
 				trigger(new DownloadFileResponse(req, sessionId, file), sshPort);
-			}
-			else {
-				System.err.println("Couldnt find request for command: " + commandId);
+			} else {
+				System.err.println("Couldnt find request for command: "
+						+ commandId);
 			}
 		}
 	};
@@ -743,31 +799,32 @@ public class SshComponent extends ComponentDefinition {
 	public Handler<UploadMD5Response> handleUploadMD5Response = new Handler<UploadMD5Response>() {
 		public void handle(UploadMD5Response event) {
 			int commandId = event.getCommandId();
-			
+
 			SshCommand sc = activeSshCommands.get(commandId);
-			
+
 			Session session = sc.getSession();
 			SshConn conn = sc.getConn();
 			CommandSpec command = sc.getCommandSpec();
-			
+
 			FileInfo fileInfo = event.getFile();
-			
+
 			try {
 				checkRemoteFile(conn, session, command, fileInfo);
 				int uploadsRemaining = outstandingUploadFiles.get(commandId);
 				uploadsRemaining--;
 				if (uploadsRemaining <= 0) {
-					UploadFileRequest req = (UploadFileRequest) sc.getSshCommandRequest(); 
-									
+					UploadFileRequest req = (UploadFileRequest) sc
+							.getSshCommandRequest();
+
 					int sessionId = sc.getSessionId();
-					trigger( new UploadFileResponse(req, sessionId, fileInfo.getLocalFile()), sshPort);
+					trigger(new UploadFileResponse(req, sessionId, fileInfo
+							.getLocalFile()), sshPort);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-
 
 		}
 	};
@@ -800,7 +857,8 @@ public class SshComponent extends ComponentDefinition {
 		}
 
 		session.close();
-		boolean status = (activeSshConnections.remove(session) == null) ? false : true;
+		boolean status = (activeSshConnections.remove(session) == null) ? false
+				: true;
 
 		// sessionCommandsMap.remove(session);
 		activeSessions.remove(sessionId);
@@ -822,14 +880,15 @@ public class SshComponent extends ComponentDefinition {
 	// }
 	// }
 
-	public static int runNormalCommand(SshConn sshConn, Session session, CommandSpec commandSpec)
-			throws IOException, InterruptedException {
+	public static int runNormalCommand(SshConn sshConn, Session session,
+			CommandSpec commandSpec) throws IOException, InterruptedException {
 
 		LineReader stdout = new LineReader(session.getStdout());
 		LineReader stderr = new LineReader(session.getStderr());
 		OutputStream stdin = session.getStdin();
 
-		sshConn.statusChange("executing: '" + commandSpec.getCommand() + "'", LOG_FULL);
+		sshConn.statusChange("executing: '" + commandSpec.getCommand() + "'",
+				LOG_FULL);
 		stdin.write(commandSpec.getCommand().getBytes());
 		stdin.write(("\necho \"" + EXIT_CODE_IDENTIFIER + "$?\"\n").getBytes());
 		commandSpec.started();
@@ -857,8 +916,9 @@ public class SshComponent extends ComponentDefinition {
 				if (line.startsWith(EXIT_CODE_IDENTIFIER)) {
 					String[] split = line.split("==");
 					commandSpec.setExitCode(Integer.parseInt(split[1]));
-					sshConn.statusChange(commandSpec.getCommand() + " completed, code="
-							+ commandSpec.getExitCode() + " time=" + commandSpec.getExecutionTime()
+					sshConn.statusChange(commandSpec.getCommand()
+							+ " completed, code=" + commandSpec.getExitCode()
+							+ " time=" + commandSpec.getExecutionTime()
 							/ 1000.0, LOG_FULL);
 					return commandSpec.getExitCode();
 				}
@@ -869,11 +929,16 @@ public class SshComponent extends ComponentDefinition {
 			}
 
 			if (commandSpec.isTimedOut()) {
-				commandSpec.setExitCode(CommandSpec.RETURN_TIMEDOUT, "timed out");
-				commandSpec.receivedControlErr("timeout after "
-						+ (Math.round(commandSpec.getExecutionTime() * 10.0) / 10.0) + " s");
+				commandSpec.setExitCode(CommandSpec.RETURN_TIMEDOUT,
+						"timed out");
+				commandSpec
+						.receivedControlErr("timeout after "
+								+ (Math
+										.round(commandSpec.getExecutionTime() * 10.0) / 10.0)
+								+ " s");
 				if (commandSpec.isStopOnError()) {
-					commandSpec.receivedControlErr("command is stop on error, halting");
+					commandSpec
+							.receivedControlErr("command is stop on error, halting");
 				}
 				return commandSpec.getExitCode();
 			}
@@ -881,10 +946,14 @@ public class SshComponent extends ComponentDefinition {
 			// handle the case when the command is killed
 			if (commandSpec.isKilled()) {
 				commandSpec.setExitCode(CommandSpec.RETURN_KILLED, "killed");
-				commandSpec.receivedControlErr("killed after "
-						+ (Math.round(commandSpec.getExecutionTime() * 10.0) / 10.0) + " s");
+				commandSpec
+						.receivedControlErr("killed after "
+								+ (Math
+										.round(commandSpec.getExecutionTime() * 10.0) / 10.0)
+								+ " s");
 				if (commandSpec.isStopOnError()) {
-					commandSpec.receivedControlErr("command is stop on error, halting");
+					commandSpec
+							.receivedControlErr("command is stop on error, halting");
 				}
 				return commandSpec.getExitCode();
 			}
@@ -899,11 +968,10 @@ public class SshComponent extends ComponentDefinition {
 		// we should never make it down here... unless quiting
 		return Integer.MIN_VALUE;
 	}
-	
-	
-	public boolean checkRemoteFile(SshComponent.SshConn conn,
-			Session session, CommandSpec commandResults,
-			FileInfo file) throws IOException, InterruptedException {
+
+	public boolean checkRemoteFile(SshComponent.SshConn conn, Session session,
+			CommandSpec commandResults, FileInfo file) throws IOException,
+			InterruptedException {
 
 		CommandSpec commandSpec = this.md5CheckCommand(file);
 		if (SshComponent.runNormalCommand(conn, session, commandSpec) < 0) {
@@ -943,44 +1011,41 @@ public class SshComponent extends ComponentDefinition {
 				false);
 	}
 
-
-	public Handler<DownloadFileRequest> handleDownloadFileRequest = 
-		new Handler<DownloadFileRequest>() {
+	public Handler<DownloadFileRequest> handleDownloadFileRequest = new Handler<DownloadFileRequest>() {
 		public void handle(DownloadFileRequest event) {
-			
-			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event.getTimeout(),
-					commandIdCounter++, event.isStopOnError());
+
+			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event
+					.getTimeout(), commandIdCounter++, event.isStopOnError());
 
 			int sessionId = event.getSessionId();
 			SshConn conn = activeSshConnections.get(sessionId);
 			Session session = activeSessions.get(sessionId);
 
 			runSshCommand(event, sessionId, conn, session, commandSpec);
-			
+
 		}
 	};
 
-	public Handler<UploadFileRequest> handleUploadFileRequest = 
-		new Handler<UploadFileRequest>() {
+	public Handler<UploadFileRequest> handleUploadFileRequest = new Handler<UploadFileRequest>() {
 		public void handle(UploadFileRequest event) {
 
-			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event.getTimeout(),
-					commandIdCounter++, event.isStopOnError());
+			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event
+					.getTimeout(), commandIdCounter++, event.isStopOnError());
 
 			int sessionId = event.getSessionId();
 			SshConn conn = activeSshConnections.get(sessionId);
 			Session session = activeSessions.get(sessionId);
-			
+
 			runSshCommand(event, sessionId, conn, session, commandSpec);
 
 		}
 	};
 
-	
 	private String[] parseParameters(String parameters) {
 		String[] split = new String[0];
 		if (parameters.contains("\"") && parameters.contains("'")) {
-			System.err.println("sorry... arguments can only contain either \" or ', not both");
+			System.err
+					.println("sorry... arguments can only contain either \" or ', not both");
 			return split;
 		}
 
@@ -1029,5 +1094,5 @@ public class SshComponent extends ComponentDefinition {
 
 		return split;
 	}
-	
+
 }
