@@ -14,7 +14,7 @@ import se.sics.kompics.wan.master.scp.upload.UploadMD5Response;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class DownloadMgrPort extends PortType {
+public class DownloadUploadPort extends PortType {
 
 	{
 		negative(DownloadMD5Request.class);

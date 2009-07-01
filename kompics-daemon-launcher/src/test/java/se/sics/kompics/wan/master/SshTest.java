@@ -80,7 +80,7 @@ public class SshTest  {
 			public void handle(Start event) {
 
 				// TODO Auto-generated method stub
-				Credentials cred = new Credentials("jdowling", "oke2Shoo", 
+				Credentials cred = new Credentials("jdowling", "", 
 						"/home/jdowling/.ssh/id_rsa", "");
 				ExperimentHost host = new ExperimentHost("lqist.com");
 				

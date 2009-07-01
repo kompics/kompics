@@ -15,10 +15,15 @@ public class SshPort extends PortType {
 	{
 		negative(SshConnectRequest.class);
 		negative(SshCommandRequest.class);
-		negative(HaltRequest.class);
+		negative(HaltRequest.class);		
+		negative(DownloadFileRequest.class);
+		negative(UploadFileRequest.class);
 		
 		positive(SshConnectResponse.class);
 		positive(SshCommandResponse.class);
 		positive(HaltResponse.class);
+		positive(DownloadFileResponse.class);
+		positive(UploadFileResponse.class);
+
 	}
 }

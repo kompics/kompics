@@ -228,4 +228,23 @@ public class FileInfo {
 		// localPath = localPath.replaceAll("/", File.separator);
 		return newString.toString();
 	}
+	
+	@Override
+	public int hashCode() {
+		
+		int id=0;
+		if (localFile != null)
+		{
+			id += localFile.hashCode();
+		}
+		if (remotePath != null)
+		{
+			id += remotePath.hashCode();
+		}
+		if (remoteHostname != null) {
+			id += remoteHostname.hashCode();
+		}
+		
+		return super.hashCode();
+	}
 }

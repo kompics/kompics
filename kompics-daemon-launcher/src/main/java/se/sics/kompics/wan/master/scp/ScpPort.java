@@ -13,9 +13,13 @@ import se.sics.kompics.PortType;
 public class ScpPort extends PortType {
 
 	{
-		negative(ScpCopyFileRequest.class);
-		negative(ScpCopyFileResponse.class);
+		negative(ScpGetFileRequest.class);
+		negative(ScpPutFileRequest.class);
 		
-		positive(ScpCopyFinished.class);
+		
+		positive(ScpGetFileResponse.class);
+		positive(ScpPutFileResponse.class);
+		positive(ScpGetFinished.class);
+		positive(ScpPutFinished.class);
 	}
 }

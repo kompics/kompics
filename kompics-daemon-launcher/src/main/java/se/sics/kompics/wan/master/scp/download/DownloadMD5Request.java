@@ -6,7 +6,6 @@ import se.sics.kompics.Request;
 import se.sics.kompics.wan.master.scp.FileInfo;
 import se.sics.kompics.wan.master.ssh.CommandSpec;
 import ch.ethz.ssh2.SCPClient;
-import ch.ethz.ssh2.Session;
 
 /**
  * The <code>ConnectSsh</code> class.
@@ -20,7 +19,7 @@ public class DownloadMD5Request extends Request {
 	private final List<FileInfo> fileMD5Hashes;
 	private final CommandSpec commandSpec;
 	private final int sessionId;
-	
+
 	
 	public DownloadMD5Request(int sessionId, SCPClient scpClient,
 			List<FileInfo> fileMD5Hashes, CommandSpec commandSpec) {
@@ -30,7 +29,7 @@ public class DownloadMD5Request extends Request {
 		this.fileMD5Hashes = fileMD5Hashes;
 		this.commandSpec = commandSpec;
 	}
-
+	
 	public CommandSpec getCommandSpec() {
 		return commandSpec;
 	}

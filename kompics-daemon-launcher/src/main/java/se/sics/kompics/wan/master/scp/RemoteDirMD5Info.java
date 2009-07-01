@@ -34,27 +34,27 @@ public class RemoteDirMD5Info {
 		// System.out.println("Starting shell");
 		
 		
-		if (null != (session = sshConn.startShell())) {
-			// System.out.println("Running command: " + command.getCommand());
-			sshConn.runCommand(command, session);
-			int numFiles = command.getLineNum();
-			// System.out.println("got " + numFiles + " lines");
-			for (int i = 1; i < numFiles; i++) {
-				String line = command.getProcLine(i);
-				int index = line.indexOf(" ");
-
-				if (index > 0) {
-					String md5 = line.substring(0, index);
-					String path = line.substring(index + 2);
-					// System.out.println(line);
-					// System.out.println(md5 + "." + path);
-					remoteFiles.add(new FileInfo(path, md5, sshConn
-							.getExpHost().getHostname()));
-				}
-
-			}
-			session.close();
-		}
+//		if (null != (session = sshConn.startShell())) {
+//			// System.out.println("Running command: " + command.getCommand());
+//			sshConn.runCommand(command, session);
+//			int numFiles = command.getLineNum();
+//			// System.out.println("got " + numFiles + " lines");
+//			for (int i = 1; i < numFiles; i++) {
+//				String line = command.getProcLine(i);
+//				int index = line.indexOf(" ");
+//
+//				if (index > 0) {
+//					String md5 = line.substring(0, index);
+//					String path = line.substring(index + 2);
+//					// System.out.println(line);
+//					// System.out.println(md5 + "." + path);
+//					remoteFiles.add(new FileInfo(path, md5, sshConn
+//							.getExpHost().getHostname()));
+//				}
+//
+//			}
+//			session.close();
+//		}
 		baseCommand.receivedData("calculated md5 of " + remoteFiles.size()
 				+ " files");
 		baseCommand.setExitCode(0);
@@ -66,11 +66,11 @@ public class RemoteDirMD5Info {
 			FileInfo file) throws IOException, InterruptedException {
 
 		CommandSpec commandSpec = this.md5CheckCommand(file);
-		if (sshConn.runCommand(commandSpec, session) < 0) {
-			// timeout or killed...
-
-			return false;
-		}
+//		if (sshConn.runCommand(commandSpec, session) < 0) {
+//			// timeout or killed...
+//
+//			return false;
+//		}
 		boolean md5match = false;
 		// does the file exists? md5sum returns 0 on success
 		if (commandSpec.getExitCode() == 0) {

@@ -9,6 +9,14 @@ import ch.ethz.ssh2.SCPClient;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class ScpCopyFinished extends Event {
+public class ScpGetFinished extends Event {
 
+	private final int commandId;
+	public ScpGetFinished(int commandId) {
+		this.commandId = commandId;
+	}
+	
+	public int getCommandId() {
+		return commandId;
+	}
 }

@@ -1,6 +1,6 @@
 package se.sics.kompics.wan.master.scp;
 
-import se.sics.kompics.Request;
+import se.sics.kompics.Response;
 import se.sics.kompics.wan.master.ssh.CommandSpec;
 import ch.ethz.ssh2.SCPClient;
 
@@ -10,13 +10,15 @@ import ch.ethz.ssh2.SCPClient;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class ScpCopyFileRequest extends Request {
+public class ScpGetFileResponse extends Response {
 
 	private final FileInfo fileInfo;
-	private final SCPClient scpClient;
 	private final CommandSpec commandSpec;
+	private final SCPClient scpClient;
 
-	public ScpCopyFileRequest(FileInfo fileInfo, CommandSpec commandSpec, SCPClient scpClient) {
+	public ScpGetFileResponse(ScpGetFileRequest request, FileInfo fileInfo,
+			CommandSpec commandSpec, SCPClient scpClient) {
+		super(request);
 		this.fileInfo = fileInfo;
 		this.commandSpec = commandSpec;
 		this.scpClient = scpClient;
@@ -26,14 +28,12 @@ public class ScpCopyFileRequest extends Request {
 		return fileInfo;
 	}
 
-	/**
-	 * @return the commandSpec
-	 */
 	public CommandSpec getCommandSpec() {
 		return commandSpec;
 	}
-	
+
 	public SCPClient getScpClient() {
 		return scpClient;
 	}
+
 }

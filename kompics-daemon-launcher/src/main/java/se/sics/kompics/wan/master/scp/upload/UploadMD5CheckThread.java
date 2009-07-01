@@ -62,7 +62,7 @@ public class UploadMD5CheckThread implements MD5Check {
 	public void run() {
 		int copyCount = 0;
 		Session session = null;
-		if (null != (session = sshConn.startShell())) {
+//		if (null != (session = sshConn.startShell())) {
 			commandResults.started();
 			RemoteDirMD5Info remoteMD5Checker = new RemoteDirMD5Info(sshConn);
 			while (!quit) {
@@ -74,17 +74,17 @@ public class UploadMD5CheckThread implements MD5Check {
 							commandResults, file);
 					// System.out.println(commandSpec.toString());
 
-					if (!md5match) {
-
-						// TODO create dir, but maybe not always
-						sshConn.runCommand(new CommandSpec("mkdir -p "
-								+ file.getRemoteDir(), 0, -1, false), session);
-
-						if (file.getCopyCount() < 3) {
-							scpCopyThread.copyFile(file);
-							copyCount++;
-						}
-					}
+//					if (!md5match) {
+//
+//						// TODO create dir, but maybe not always
+//						sshConn.runCommand(new CommandSpec("mkdir -p "
+//								+ file.getRemoteDir(), 0, -1, false), session);
+//
+//						if (file.getCopyCount() < 3) {
+//							scpCopyThread.copyFile(file);
+//							copyCount++;
+//						}
+//					}
 					currentFile++;
 
 					// check if we are done (all queues are empty)
@@ -105,7 +105,7 @@ public class UploadMD5CheckThread implements MD5Check {
 					}
 				}
 			}
-		}
+//		}
 		session.close();
 		try {
 			scpCopyThreadThread.join();

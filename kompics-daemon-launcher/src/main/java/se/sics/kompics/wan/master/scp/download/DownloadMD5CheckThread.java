@@ -59,7 +59,7 @@ public class DownloadMD5CheckThread implements MD5Check {
 	public void run() {
 		int copyCount = 0;
 		Session session = null;
-		if (null != (session = sshConn.startShell())) {
+//		if (null != (session = sshConn.startShell())) {
 			commandResults.started();
 			while (!quit) {
 				FileInfo file;
@@ -136,7 +136,7 @@ public class DownloadMD5CheckThread implements MD5Check {
 					}
 				}
 			}
-		}
+//		}
 		session.close();
 		try {
 			scpCopyThreadThread.join();

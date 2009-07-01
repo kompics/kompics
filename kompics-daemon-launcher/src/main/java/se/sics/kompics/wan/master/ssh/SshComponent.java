@@ -11,22 +11,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.plab.Credentials;
 import se.sics.kompics.wan.master.plab.ExperimentHost;
-import se.sics.kompics.wan.master.scp.DownloadMgrPort;
+import se.sics.kompics.wan.master.scp.DownloadUploadPort;
 import se.sics.kompics.wan.master.scp.FileInfo;
 import se.sics.kompics.wan.master.scp.LocalDirMD5Info;
 import se.sics.kompics.wan.master.scp.download.DownloadMD5Request;
 import se.sics.kompics.wan.master.scp.download.DownloadMD5Response;
 import se.sics.kompics.wan.master.scp.download.DownloadManager;
-import se.sics.kompics.wan.master.scp.upload.UploadMD5CheckThread;
+import se.sics.kompics.wan.master.scp.upload.UploadMD5Request;
 import se.sics.kompics.wan.master.scp.upload.UploadMD5Response;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.ConnectionMonitor;
@@ -52,32 +53,35 @@ public class SshComponent extends ComponentDefinition {
 
 	private Negative<SshPort> sshPort = negative(SshPort.class);
 
-	private Positive<DownloadMgrPort> downloadMgrPort = positive(DownloadMgrPort.class);
-	// private Component md5Checker;
+	private Negative<DownloadUploadPort> downloadUploadPort = negative(DownloadUploadPort.class);
 
-	private int sessionCounter = 0;
+	private int sessionIdCounter = 0;
 
 	private int commandIdCounter = 0;
 
-	private Map<Integer, SshConn> activeSshConnections = new HashMap<Integer, SshConn>();
+	private Map<Integer, SshConn> activeSshConnections = new ConcurrentHashMap<Integer, SshConn>();
+	private Map<Integer, Session> activeSessions = new ConcurrentHashMap<Integer, Session>();
+	private Map<Integer, SshCommand> activeSshCommands = new ConcurrentHashMap<Integer, SshCommand>(); 
+	
+	private Map<Integer, DownloadFileRequest> activeDownloads = 
+		new ConcurrentHashMap<Integer, DownloadFileRequest>();
 
-	private Map<Integer, Session> sessionObjMap = new HashMap<Integer, Session>();
+	private Map<Integer, UploadFileRequest> activeUploads= 
+		new ConcurrentHashMap<Integer, UploadFileRequest>();
+	
+	private Map<Integer, Integer> commandOutstandingFiles = new HashMap<Integer, Integer>();
 
-	private Map<Integer, String> sessionStatusMap = new HashMap<Integer, String>();
-
-	private Map<Integer, List<Thread>> activeCommands = new HashMap<Integer, List<Thread>>();
-
+	
 	private AtomicBoolean quit = new AtomicBoolean(false);
 
 	private static final String FLAT = "flat";
 
 	private static final String HIERARCHY = "hierarchy";
 
-	private static final String[] NAMING_TYPES = { HIERARCHY, FLAT };
-	
-	private volatile String downloadDirectoryType = HIERARCHY;
+	// private static final String[] NAMING_TYPES = { HIERARCHY, FLAT };
+	//	
+	// private volatile String downloadDirectoryType = HIERARCHY;
 
-	
 	public class SshConn implements ConnectionMonitor, Comparable<SshConn> {
 
 		private String status;
@@ -100,7 +104,7 @@ public class SshComponent extends ComponentDefinition {
 		}
 
 		public void connectionLost(Throwable reason) {
-			// statusChange("connection lost, (HANDLE THIS?)", LOG_ERROR);
+			 statusChange("connection lost, (HANDLE THIS?)", LOG_ERROR);
 
 			isConnected = false;
 		}
@@ -191,9 +195,17 @@ public class SshComponent extends ComponentDefinition {
 			return 0;
 
 		}
+
+		private void statusChange(String status, int level) {
+
+			setStatus(status);
+			if (level <= LOG_LEVEL) {
+				System.out.println(getExpHost() + ": " + status);
+			}
+		}
 	}
 
-	private class SshCommand implements Runnable {
+	public class SshCommand implements Runnable {
 		private SshCommandRequest event;
 		private int sessionId;
 		private SshConn conn;
@@ -208,22 +220,43 @@ public class SshComponent extends ComponentDefinition {
 			this.session = session;
 			this.commandSpec = commandSpec;
 		}
+		
+		public CommandSpec getCommandSpec() {
+			return commandSpec;
+		}
+		public SshConn getConn() {
+			return conn;
+		}
+		public SshCommandRequest getEvent() {
+			return event;
+		}
+		public int getSessionId() {
+			return sessionId;
+		}
+		public Session getSession() {
+			return session;
+		}
 
 		@Override
 		public void run() {
 
-			List<Thread> t = activeCommands.get(session);
-			if (t != null && t.size() > 0) {
-				System.out.println("Currently waiting on " + t.size() + " commands to finish.");
-			}
+//			List<Thread> t = activeThreads.get(session);
+//			if (t != null && t.size() > 0) {
+//				System.out.println("Currently waiting on " + t.size() + " commands to finish.");
+//			}
+
 
 			runCommand();
 		}
 
-		private int runCommand()
+		public void stop()
 		{
-			int res=-1;
-			
+			Thread.currentThread().interrupt();
+		}
+		
+		public int runCommand() {
+			int res = -1;
+
 			synchronized (session) {
 				String command = commandSpec.getCommand();
 
@@ -256,90 +289,15 @@ public class SshComponent extends ComponentDefinition {
 				}
 				sendCommandResponse(event, sessionId, commandResponse, commandFailed);
 
-				activeCommands.remove(sessionId);
+//				activeThreads.remove(sessionId);
+				
+				activeSshCommands.remove(sessionId);
 			}
 
 			return res;
 		}
-		
-		private int runNormalCommand(SshConn sshConn, Session session, CommandSpec commandSpec)
-				throws IOException, InterruptedException {
 
-			LineReader stdout = new LineReader(session.getStdout());
-			LineReader stderr = new LineReader(session.getStderr());
-			OutputStream stdin = session.getStdin();
-
-			statusChange(sshConn, "executing: '" + commandSpec.getCommand() + "'", LOG_FULL);
-			stdin.write(commandSpec.getCommand().getBytes());
-			stdin.write(("\necho \"" + EXIT_CODE_IDENTIFIER + "$?\"\n").getBytes());
-			commandSpec.started();
-
-			String line;
-			String errLine;
-
-			do {
-
-				// session.waitForCondition(ChannelCondition.STDOUT_DATA
-				// | ChannelCondition.STDERR_DATA, Math
-				// .round(1000.0 / DATA_POLLING_FREQ));
-				// XXX why sleep here?
-				// Thread.sleep(50);
-				line = stdout.readLine();
-				errLine = stderr.readLine();
-
-				// check if we got any data on stderr
-				while (errLine != null) {
-					commandSpec.receivedErr(errLine);
-					errLine = stderr.readLine();
-				}
-				// check for data on stdout
-				while (line != null) {
-					if (line.startsWith(EXIT_CODE_IDENTIFIER)) {
-						String[] split = line.split("==");
-						commandSpec.setExitCode(Integer.parseInt(split[1]));
-						statusChange(sshConn, commandSpec.getCommand() + " completed, code="
-								+ commandSpec.getExitCode() + " time="
-								+ commandSpec.getExecutionTime() / 1000.0, LOG_FULL);
-						return commandSpec.getExitCode();
-					}
-					commandSpec.receivedData(line);
-
-					System.out.println(line);
-					line = stdout.readLine();
-				}
-
-				if (commandSpec.isTimedOut()) {
-					commandSpec.setExitCode(CommandSpec.RETURN_TIMEDOUT, "timed out");
-					commandSpec.receivedControlErr("timeout after "
-							+ (Math.round(commandSpec.getExecutionTime() * 10.0) / 10.0) + " s");
-					if (commandSpec.isStopOnError()) {
-						commandSpec.receivedControlErr("command is stop on error, halting");
-					}
-					return commandSpec.getExitCode();
-				}
-
-				// handle the case when the command is killed
-				if (commandSpec.isKilled()) {
-					commandSpec.setExitCode(CommandSpec.RETURN_KILLED, "killed");
-					commandSpec.receivedControlErr("killed after "
-							+ (Math.round(commandSpec.getExecutionTime() * 10.0) / 10.0) + " s");
-					if (commandSpec.isStopOnError()) {
-						commandSpec.receivedControlErr("command is stop on error, halting");
-					}
-					return commandSpec.getExitCode();
-				}
-
-				if (line == null) {
-					line = "";
-				}
-
-			} while (!line.startsWith(EXIT_CODE_IDENTIFIER) && (quit.get() == false));
-
-			// we should never make it down here... unless quiting
-			return Integer.MIN_VALUE;
-		}
-
-		private void runSpecialCommand(SshConn conn, CommandSpec commandSpec) {
+		public void runSpecialCommand(SshConn conn, CommandSpec commandSpec) {
 			// handle these in a special way...
 			String[] command = parseParameters(commandSpec.getCommand());
 			if (command.length > 0) {
@@ -358,6 +316,7 @@ public class SshComponent extends ComponentDefinition {
 						String fileFilter = command[3];
 						String localNameType = command[4];
 						if (localFileOrDir.exists()) {
+
 							download(conn, remotePath, localFileOrDir, fileFilter, localNameType,
 									commandSpec);
 						}
@@ -375,17 +334,22 @@ public class SshComponent extends ComponentDefinition {
 
 		public boolean upload(SshComponent.SshConn conn, File baseDir, CommandSpec commandSpec) {
 			try {
-				UploadMD5CheckThread md5Check;
+				List<FileInfo> listMD5FileHashes = LocalDirMD5Info.getInstance().getFileInfo(
+						baseDir);
+				SCPClient scpClient = conn.getConnection().createSCPClient();
+				
+				int commandId = commandSpec.getCommandId();
+				int numFiles = listMD5FileHashes.size();
+				commandOutstandingFiles.put(commandId, numFiles);
+				
+				UploadMD5Request req = new UploadMD5Request(sessionId, scpClient, 
+						listMD5FileHashes, commandSpec);
 
-				md5Check = new UploadMD5CheckThread(conn, LocalDirMD5Info.getInstance()
-						.getFileInfo(baseDir), commandSpec);
-
-				// no need to fire it up as a thread, just call the run method
-				md5Check.run();
-
-				return true;
+				trigger(req, downloadUploadPort);
 
 			} catch (InterruptedException e) {
+				commandSpec.receivedErr("local i/o error, " + e.getMessage());
+			} catch (IOException e) {
 				commandSpec.receivedErr("local i/o error, " + e.getMessage());
 			}
 			return false;
@@ -402,61 +366,11 @@ public class SshComponent extends ComponentDefinition {
 					commandSpec);
 		}
 
-		private String[] parseParameters(String parameters) {
-			String[] split = new String[0];
-			if (parameters.contains("\"") && parameters.contains("'")) {
-				System.err.println("sorry... arguments can only contain either \" or ', not both");
-				return split;
-			}
 
-			if (parameters.contains("\"") || parameters.contains("'")) {
-				// handle specially
 
-				ArrayList<String> params = new ArrayList<String>();
-				boolean withinQuotes = false;
-				StringBuffer tmpBuffer = new StringBuffer();
-				for (int i = 0; i < parameters.length(); i++) {
-
-					char c = parameters.charAt(i);
-					// System.out.println("processing: " + c);
-					if (c == '"' || c == '\'') {
-						withinQuotes = !withinQuotes;
-						// System.out.println("w=" + withinQuotes);
-						// continue to the next character
-					} else {
-						if (c == ' ' && !withinQuotes) {
-							// we reached a space, and we are not between
-							// quoutes,
-							// add to list and flush buffer
-							params.add(tmpBuffer.toString());
-
-							// System.out.println("found: " +
-							// tmpBuffer.toString()
-							// + "(" + params.size() + ")");
-							tmpBuffer = new StringBuffer();
-						} else {
-							// if the char is not ' ' or '"' or '\'', append to
-							// stringbuffer
-
-							tmpBuffer.append(c);
-							// System.out.println("adding: " +
-							// tmpBuffer.toString());
-						}
-					}
-				}
-				if (tmpBuffer.length() > 0) {
-					params.add(tmpBuffer.toString());
-				}
-				split = params.toArray(split);
-			} else {
-				split = parameters.split(" ");
-			}
-
-			return split;
-		}
-
-		private boolean downloadDir(SshComponent.SshConn conn, String remotePath, File localBaseDir,
-				String fileFilter, String localNamingType, CommandSpec commandSpec) {
+		private boolean downloadDir(SshComponent.SshConn conn, String remotePath,
+				File localBaseDir, String fileFilter, String localNamingType,
+				CommandSpec commandSpec) {
 
 			createLocalDir(localBaseDir);
 
@@ -474,19 +388,26 @@ public class SshComponent extends ComponentDefinition {
 					}
 				}
 				System.out.println("starting md5 check thread");
-				
-				
-//				 MD5Check md5Check = new DownloadMD5CheckThread(conn,
-//				 fileList,
-//				 commandSpec);
-//				 md5Check.run();
+
+				// MD5Check md5Check = new DownloadMD5CheckThread(conn,
+				// fileList,
+				// commandSpec);
+				// md5Check.run();
 
 				// XXX send this as event to another component that will return
 				// the result asynchronously
 				// XXX other component will launch a thread that returns the
 				// result
 
-				sendDownloadRequest(sessionId, conn, fileList, commandSpec);
+				// sendDownloadRequest(sessionId, conn, fileList, commandSpec);
+
+//				Session s1 = startShell(conn);
+				SCPClient scpClient = conn.getConnection().createSCPClient();
+//				if (s1 != null) {
+//					int sId = addSession(session, conn);
+					trigger(new DownloadMD5Request(sessionId, scpClient, fileList, commandSpec),
+							downloadUploadPort);
+//				}
 
 				return true;
 			} catch (IOException e) {
@@ -515,11 +436,15 @@ public class SshComponent extends ComponentDefinition {
 			CommandSpec command = this.generateCommand(remoteDir, filter);
 			Session session = null;
 			ArrayList<FileInfo> remoteFiles = new ArrayList<FileInfo>();
-			 System.out.println("Starting shell");
+			System.out.println("Starting shell");
 
-			if (null != (session = startShell(sshConn))) {
-				 System.out.println("Running command: " +
-				 command.getCommand());
+			Session sessionFileList = startShell(sshConn);
+			if (sessionFileList != null) {
+				// no need to store this session locally, it's closed at end of
+				// if stmt
+				// int sflId = addSession(sessionFileList, sshConn);
+
+				System.out.println("Running command: " + command.getCommand());
 				runNormalCommand(sshConn, session, command);
 				int numFiles = command.getLineNum();
 				// System.out.println("got " + numFiles + " lines");
@@ -537,7 +462,7 @@ public class SshComponent extends ComponentDefinition {
 					}
 
 				}
-				session.close();
+				sessionFileList.close();
 			}
 			baseCommand.receivedData("calculated md5 of " + remoteFiles.size() + " files");
 			baseCommand.setExitCode(0);
@@ -553,9 +478,8 @@ public class SshComponent extends ComponentDefinition {
 				return new CommandSpec("md5sum `find " + remoteDir + "` 2> /dev/null", 0, -1, false);
 			}
 		}
-		
-			
-		public String getLocalFilenameType(String type) {
+
+		private String getLocalFilenameType(String type) {
 			if (FLAT.equals(type)) {
 				return FLAT;
 			} else if (HIERARCHY.equals(type)) {
@@ -567,108 +491,20 @@ public class SshComponent extends ComponentDefinition {
 			}
 		}
 
-//		public boolean checkRemoteFile(Session session, CommandSpec commandResults, FileInfo file)
-//				throws IOException, InterruptedException {
-//
-//			SshConn sshConn = activeSshConnections.get(session);
-//			if (sshConn == null) {
-//				throw new IOException("No connection for session");
-//			}
-//
-//			CommandSpec commandSpec = this.md5CheckCommand(file);
-//			if (runCommand(sshConn, commandSpec, session) < 0) {
-//				// timeout or killed...
-//
-//				return false;
-//			}
-//			boolean md5match = false;
-//			// does the file exists? md5sum returns 0 on success
-//			if (commandSpec.getExitCode() == 0) {
-//				// does the md5 match?
-//				String localMD5 = file.getMd5();
-//				String remoteMD5 = commandSpec.getProcLine(1).split(" ")[0];
-//				// System.out.println("checking "
-//				// + file.getRemoteFileName());
-//				if (localMD5.equals(remoteMD5)) {
-//					md5match = true;
-//					// System.out.println("passed");
-//					commandResults.receivedControlData("passed: " + file.getFullRemotePath());
-//				} else {
-//					commandResults.receivedControlErr("copying (md5 failed):"
-//							+ file.getFullRemotePath());
-//				}
-//				// System.out.println("size: "
-//				// + commandSpec.getProcOutput(0).size());
-//			} else {
-//				commandResults.receivedControlErr("copying (missing):" + file.getFullRemotePath());
-//			}
-//			return md5match;
-//
-//		}
-
-		private CommandSpec md5CheckCommand(FileInfo file) {
-			return new CommandSpec("md5sum " + file.getFullRemotePath(), 0, 0, false);
-		}
 	}
 
-	private class LineReader {
-		InputStream inputStream;
-
-		StringBuffer buf;
-
-		public LineReader(InputStream inputStream) {
-			this.inputStream = inputStream;
-			this.buf = new StringBuffer();
-		}
-
-		public String readLine() throws IOException {
-
-			// System.out.println(b)
-			int available = inputStream.available();
-			if (available > 0) {
-				byte[] byteBuffer = new byte[1];
-				while (inputStream.read(byteBuffer, 0, 1) > 0) {
-					String str = new String(byteBuffer);
-					if (str.equals("\n") || str.equals("\r")) {
-						if (buf.length() > 0) {
-							String ret = buf.toString();
-							buf = new StringBuffer();
-							return ret;
-						} else {
-							continue;
-						}
-					}
-					buf.append(str);
-				}
-			}
-			return null;
-
-		}
-
-		public String readRest() throws IOException {
-			int available = inputStream.available();
-			if (available > 0) {
-				byte[] byteBuffer = new byte[available];
-				inputStream.read(byteBuffer, 0, available);
-				buf.append(new String(byteBuffer));
-				return buf.toString();
-			}
-			return "";
-		}
-
-		
-		
-	}
 
 	public SshComponent() {
 
 		subscribe(handleSshCommand, sshPort);
 		subscribe(handleSshConnectRequest, sshPort);
 		subscribe(handleHaltRequest, sshPort);
+		subscribe(handleDownloadFileRequest, sshPort);
+		subscribe(handleUploadFileRequest, sshPort);
 
 		// md5Checker = create(DownloadMgr.class);
-		subscribe(handleDownloadMD5Response, downloadMgrPort);
-		subscribe(handleUploadMD5Response, downloadMgrPort);
+		subscribe(handleDownloadMD5Response, downloadUploadPort);
+		subscribe(handleUploadMD5Response, downloadUploadPort);
 
 	}
 
@@ -678,13 +514,15 @@ public class SshComponent extends ComponentDefinition {
 					commandIdCounter++, event.isStopOnError());
 
 			int sessionId = event.getSessionId();
+			int commandId = commandIdCounter;
+
 			SshConn conn = activeSshConnections.get(sessionId);
-			Session session = sessionObjMap.get(sessionId);
+			Session session = activeSessions.get(sessionId);
 
 			runSshCommand(event, sessionId, conn, session, commandSpec);
 		}
 	};
-	
+
 	/**
 	 * Called by SshCommand thread.
 	 * 
@@ -701,15 +539,11 @@ public class SshComponent extends ComponentDefinition {
 	public void runSshCommand(SshCommandRequest event, int sessionId, SshConn conn,
 			Session session, CommandSpec commandSpec) {
 
-		Thread t = new Thread(new SshCommand(event, sessionId, conn, session, commandSpec));
+		SshCommand sshCommand = new SshCommand(event, sessionId, conn, session, commandSpec);
+		Thread t = new Thread(sshCommand);
 		t.run();
 
-		List<Thread> listCommands = activeCommands.get(sessionId);
-		if (listCommands == null) {
-			listCommands = new ArrayList<Thread>();
-		}
-		listCommands.add(t);
-		activeCommands.put(sessionId, listCommands);
+		activeSshCommands.put(commandSpec.getCommandId(), sshCommand);
 	}
 
 	private boolean validSession(Session session) {
@@ -730,13 +564,13 @@ public class SshComponent extends ComponentDefinition {
 	};
 
 	private int addSession(Session session, SshConn sshConnection) {
-		sessionCounter++;
+		sessionIdCounter++;
 
-		activeSshConnections.put((int) sessionCounter, sshConnection);
+		activeSshConnections.put((int) sessionIdCounter, sshConnection);
 
-		sessionObjMap.put((int) sessionCounter, session);
+		activeSessions.put((int) sessionIdCounter, session);
 
-		return sessionCounter;
+		return sessionIdCounter;
 	}
 
 	private int connect(Credentials credentials, ExperimentHost expHost, CommandSpec commandSpec) {
@@ -810,12 +644,11 @@ public class SshComponent extends ComponentDefinition {
 				sshConnection.setConnected(true);
 
 				Session session = startShell(sshConnection);
-
 				sessionId = addSession(session, sshConnection);
 
 			} else {
 				// well, authentication failed
-				statusChange(sshConnection, "auth failed", LOG_DEVEL);
+				sshConnection.statusChange("auth failed", LOG_DEVEL);
 				commandSpec.setExitCode(1, "auth failed");
 				commandSpec.receivedControlErr("auth failed");
 				sessionId = -1;
@@ -823,7 +656,7 @@ public class SshComponent extends ComponentDefinition {
 
 			// handle errors...
 		} catch (SocketTimeoutException e) {
-			this.statusChange(sshConnection, "connection timeout: " + e.getMessage(), LOG_DEVEL);
+			sshConnection.statusChange("connection timeout: " + e.getMessage(), LOG_DEVEL);
 			if (e.getMessage().contains("kex")) {
 				commandSpec.setExitCode(4, "kex timeout");
 			} else {
@@ -836,26 +669,26 @@ public class SshComponent extends ComponentDefinition {
 			if (e.getCause() != null) {
 				commandSpec.receivedControlErr(e.getCause().getMessage());
 				if (e.getCause().getMessage().contains("Connection reset")) {
-					statusChange(sshConnection, e.getCause().getMessage(), LOG_DEVEL);
+					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
 					commandSpec.setExitCode(2, "conn reset");
 
 				} else if (e.getCause().getMessage().contains("Connection refused")) {
-					statusChange(sshConnection, e.getCause().getMessage(), LOG_DEVEL);
+					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
 					commandSpec.setExitCode(2, "conn refused");
 
 				} else if (e.getCause().getMessage().contains("Premature connection close")) {
-					statusChange(sshConnection, e.getCause().getMessage(), LOG_DEVEL);
+					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
 					commandSpec.setExitCode(2, "prem close");
 
 				} else if (e.getCause() instanceof java.net.UnknownHostException) {
-					statusChange(sshConnection, e.getCause().getMessage(), LOG_DEVEL);
+					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
 					commandSpec.setExitCode(2, "dns unknown");
 
 				} else if (e.getCause() instanceof NoRouteToHostException) {
-					statusChange(sshConnection, e.getCause().getMessage(), LOG_DEVEL);
+					sshConnection.statusChange(e.getCause().getMessage(), LOG_DEVEL);
 					commandSpec.setExitCode(2, "no route");
 				} else if (e.getMessage().contains("Publickey")) {
-					statusChange(sshConnection, e.getMessage(), LOG_DEVEL);
+					sshConnection.statusChange(e.getMessage(), LOG_DEVEL);
 					commandSpec.setExitCode(2, "auth error");
 				} else {
 					System.err.println("NEW EXCEPTION TYPE, handle...");
@@ -866,7 +699,7 @@ public class SshComponent extends ComponentDefinition {
 				commandSpec.receivedErr(e.getMessage());
 				commandSpec.setExitCode(255, "other");
 
-				statusChange(sshConnection, e.getMessage(), LOG_DEVEL);
+				sshConnection.statusChange(e.getMessage(), LOG_DEVEL);
 			}
 
 			sessionId = -1;
@@ -882,39 +715,66 @@ public class SshComponent extends ComponentDefinition {
 			try {
 				session = conn.getConnection().openSession();
 			} catch (IOException e) {
-				statusChange(conn, "could not open session: " + e.getMessage(), LOG_ERROR);
+				conn.statusChange("could not open session: " + e.getMessage(), LOG_ERROR);
 				return null;
 			}
 
 			try {
 				session.startShell();
 			} catch (IOException e) {
-				statusChange(conn, "could not start shell: " + e.getMessage(), LOG_ERROR);
+				conn.statusChange("could not start shell: " + e.getMessage(), LOG_ERROR);
 				return null;
 			}
 		}
 		return session;
 	}
 
-	private void statusChange(SshConn connection, String status, int level) {
-
-		connection.setStatus(status);
-		if (level <= LOG_LEVEL) {
-			System.out.println(connection.getExpHost() + ": " + status);
-		}
-	}
-
-
-
-
 	public Handler<DownloadMD5Response> handleDownloadMD5Response = new Handler<DownloadMD5Response>() {
 		public void handle(DownloadMD5Response event) {
-
+			int commandId = event.getCommandId();
+			
+			DownloadFileRequest req = activeDownloads.get(commandId);
+			if (req != null) {
+				
+				String[] commands = parseParameters(req.getCommand()); 
+				File file = new File(commands[1]);
+				trigger(new DownloadFileResponse(req, file), sshPort);
+			}
+			else {
+				System.err.println("Couldnt find request for command: " + commandId);
+			}
 		}
 	};
 
 	public Handler<UploadMD5Response> handleUploadMD5Response = new Handler<UploadMD5Response>() {
 		public void handle(UploadMD5Response event) {
+			int commandId = event.getCommandId();
+			
+			SshCommand sc = activeSshCommands.get(commandId);
+			
+			Session session = sc.getSession();
+			SshConn conn = sc.getConn();
+			CommandSpec command = sc.getCommandSpec();
+			
+			FileInfo fileInfo = event.getFile();
+			
+			try {
+				checkRemoteFile(conn, session, command, fileInfo);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			int uploadsRemaining = commandOutstandingFiles.get(commandId);
+			uploadsRemaining--;
+			if (uploadsRemaining <= 0) {
+				UploadFileRequest req = activeUploads.get(commandId);
+								
+				trigger( new UploadFileResponse(req, fileInfo.getLocalFile()), sshPort);
+			}
 
 		}
 	};
@@ -940,7 +800,7 @@ public class SshComponent extends ComponentDefinition {
 	private boolean removeSession(int sessionId) {
 		// XXX check semantics of close()
 
-		Session session = this.sessionObjMap.get(sessionId);
+		Session session = this.activeSessions.get(sessionId);
 
 		if (session == null) {
 			return false;
@@ -950,26 +810,235 @@ public class SshComponent extends ComponentDefinition {
 		boolean status = (activeSshConnections.remove(session) == null) ? false : true;
 
 		// sessionCommandsMap.remove(session);
-		sessionObjMap.remove(sessionId);
+		activeSessions.remove(sessionId);
 
 		return status;
 	}
-	
-	synchronized private void sendDownloadRequest(int sessionId, SshComponent.SshConn conn, List<FileInfo> fileList,
-			CommandSpec commandSpec) throws IOException
-	{
-		Session s1 = null;
-		SCPClient scpClient = conn.getConnection().createSCPClient();
-		if (null != (s1 = startShell(conn))) {
-			trigger(new DownloadMD5Request(sessionId, scpClient, fileList, commandSpec),
-					downloadMgrPort); // md5Checker.getPositive(DownloadMgrPort.class)
-			// downloadMD5Checker(conn, fileList, commandSpec);
-		}
+
+	// synchronized private void sendDownloadRequest(int sessionId,
+	// SshComponent.SshConn conn, List<FileInfo> fileList,
+	// CommandSpec commandSpec) throws IOException
+	// {
+	// Session s1 = null;
+	// SCPClient scpClient = conn.getConnection().createSCPClient();
+	// if (null != (s1 = startShell(conn))) {
+	// trigger(new DownloadMD5Request(sessionId, scpClient, fileList,
+	// commandSpec),
+	// downloadUploadPort); // md5Checker.getPositive(DownloadMgrPort.class)
+	// // downloadMD5Checker(conn, fileList, commandSpec);
+	// }
+	// }
+
+	public static int runNormalCommand(SshConn sshConn, Session session, CommandSpec commandSpec)
+			throws IOException, InterruptedException {
+
+		LineReader stdout = new LineReader(session.getStdout());
+		LineReader stderr = new LineReader(session.getStderr());
+		OutputStream stdin = session.getStdin();
+
+		sshConn.statusChange("executing: '" + commandSpec.getCommand() + "'", LOG_FULL);
+		stdin.write(commandSpec.getCommand().getBytes());
+		stdin.write(("\necho \"" + EXIT_CODE_IDENTIFIER + "$?\"\n").getBytes());
+		commandSpec.started();
+
+		String line;
+		String errLine;
+
+		do {
+
+			// session.waitForCondition(ChannelCondition.STDOUT_DATA
+			// | ChannelCondition.STDERR_DATA, Math
+			// .round(1000.0 / DATA_POLLING_FREQ));
+			// XXX why sleep here?
+			// Thread.sleep(50);
+			line = stdout.readLine();
+			errLine = stderr.readLine();
+
+			// check if we got any data on stderr
+			while (errLine != null) {
+				commandSpec.receivedErr(errLine);
+				errLine = stderr.readLine();
+			}
+			// check for data on stdout
+			while (line != null) {
+				if (line.startsWith(EXIT_CODE_IDENTIFIER)) {
+					String[] split = line.split("==");
+					commandSpec.setExitCode(Integer.parseInt(split[1]));
+					sshConn.statusChange(commandSpec.getCommand() + " completed, code="
+							+ commandSpec.getExitCode() + " time=" + commandSpec.getExecutionTime()
+							/ 1000.0, LOG_FULL);
+					return commandSpec.getExitCode();
+				}
+				commandSpec.receivedData(line);
+
+				System.out.println(line);
+				line = stdout.readLine();
+			}
+
+			if (commandSpec.isTimedOut()) {
+				commandSpec.setExitCode(CommandSpec.RETURN_TIMEDOUT, "timed out");
+				commandSpec.receivedControlErr("timeout after "
+						+ (Math.round(commandSpec.getExecutionTime() * 10.0) / 10.0) + " s");
+				if (commandSpec.isStopOnError()) {
+					commandSpec.receivedControlErr("command is stop on error, halting");
+				}
+				return commandSpec.getExitCode();
+			}
+
+			// handle the case when the command is killed
+			if (commandSpec.isKilled()) {
+				commandSpec.setExitCode(CommandSpec.RETURN_KILLED, "killed");
+				commandSpec.receivedControlErr("killed after "
+						+ (Math.round(commandSpec.getExecutionTime() * 10.0) / 10.0) + " s");
+				if (commandSpec.isStopOnError()) {
+					commandSpec.receivedControlErr("command is stop on error, halting");
+				}
+				return commandSpec.getExitCode();
+			}
+
+			if (line == null) {
+				line = "";
+			}
+
+		} while (!line.startsWith(EXIT_CODE_IDENTIFIER));
+		// && (quit.get() == false)
+
+		// we should never make it down here... unless quiting
+		return Integer.MIN_VALUE;
 	}
 	
-	synchronized private void sendUploadRequest()
-	{
-		
+	
+	public boolean checkRemoteFile(SshComponent.SshConn conn,
+			Session session, CommandSpec commandResults,
+			FileInfo file) throws IOException, InterruptedException {
+
+		CommandSpec commandSpec = this.md5CheckCommand(file);
+		if (SshComponent.runNormalCommand(conn, session, commandSpec) < 0) {
+			// timeout or killed...
+
+			return false;
+		}
+		boolean md5match = false;
+		// does the file exists? md5sum returns 0 on success
+		if (commandSpec.getExitCode() == 0) {
+			// does the md5 match?
+			String localMD5 = file.getMd5();
+			String remoteMD5 = commandSpec.getProcLine(1).split(" ")[0];
+			// System.out.println("checking "
+			// + file.getRemoteFileName());
+			if (localMD5.equals(remoteMD5)) {
+				md5match = true;
+				// System.out.println("passed");
+				commandResults.receivedControlData("passed: "
+						+ file.getFullRemotePath());
+			} else {
+				commandResults.receivedControlErr("copying (md5 failed):"
+						+ file.getFullRemotePath());
+			}
+			// System.out.println("size: "
+			// + commandSpec.getProcOutput(0).size());
+		} else {
+			commandResults.receivedControlErr("copying (missing):"
+					+ file.getFullRemotePath());
+		}
+		return md5match;
+
+	}
+
+	private CommandSpec md5CheckCommand(FileInfo file) {
+		return new CommandSpec("md5sum " + file.getFullRemotePath(), 0, 0,
+				false);
+	}
+
+
+	public Handler<DownloadFileRequest> handleDownloadFileRequest = 
+		new Handler<DownloadFileRequest>() {
+		public void handle(DownloadFileRequest event) {
+			
+			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event.getTimeout(),
+					commandIdCounter++, event.isStopOnError());
+
+			int sessionId = event.getSessionId();
+			SshConn conn = activeSshConnections.get(sessionId);
+			Session session = activeSessions.get(sessionId);
+
+			activeDownloads.put(commandIdCounter, event);
+			
+			runSshCommand(event, sessionId, conn, session, commandSpec);
+			
+		}
+	};
+
+	public Handler<UploadFileRequest> handleUploadFileRequest = 
+		new Handler<UploadFileRequest>() {
+		public void handle(UploadFileRequest event) {
+
+			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event.getTimeout(),
+					commandIdCounter++, event.isStopOnError());
+
+			int sessionId = event.getSessionId();
+			SshConn conn = activeSshConnections.get(sessionId);
+			Session session = activeSessions.get(sessionId);
+			
+			activeUploads.put(commandIdCounter, event);
+
+			runSshCommand(event, sessionId, conn, session, commandSpec);
+
+		}
+	};
+
+	
+	private String[] parseParameters(String parameters) {
+		String[] split = new String[0];
+		if (parameters.contains("\"") && parameters.contains("'")) {
+			System.err.println("sorry... arguments can only contain either \" or ', not both");
+			return split;
+		}
+
+		if (parameters.contains("\"") || parameters.contains("'")) {
+			// handle specially
+
+			ArrayList<String> params = new ArrayList<String>();
+			boolean withinQuotes = false;
+			StringBuffer tmpBuffer = new StringBuffer();
+			for (int i = 0; i < parameters.length(); i++) {
+
+				char c = parameters.charAt(i);
+				// System.out.println("processing: " + c);
+				if (c == '"' || c == '\'') {
+					withinQuotes = !withinQuotes;
+					// System.out.println("w=" + withinQuotes);
+					// continue to the next character
+				} else {
+					if (c == ' ' && !withinQuotes) {
+						// we reached a space, and we are not between
+						// quoutes,
+						// add to list and flush buffer
+						params.add(tmpBuffer.toString());
+
+						// System.out.println("found: " +
+						// tmpBuffer.toString()
+						// + "(" + params.size() + ")");
+						tmpBuffer = new StringBuffer();
+					} else {
+						// if the char is not ' ' or '"' or '\'', append to
+						// stringbuffer
+
+						tmpBuffer.append(c);
+						// System.out.println("adding: " +
+						// tmpBuffer.toString());
+					}
+				}
+			}
+			if (tmpBuffer.length() > 0) {
+				params.add(tmpBuffer.toString());
+			}
+			split = params.toArray(split);
+		} else {
+			split = parameters.split(" ");
+		}
+
+		return split;
 	}
 	
 }

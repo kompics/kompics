@@ -5,8 +5,7 @@ import java.util.List;
 import se.sics.kompics.Request;
 import se.sics.kompics.wan.master.scp.FileInfo;
 import se.sics.kompics.wan.master.ssh.CommandSpec;
-import se.sics.kompics.wan.master.ssh.SshComponent;
-import se.sics.kompics.wan.master.ssh.SshComponent.SshConn;
+import ch.ethz.ssh2.SCPClient;
 
 /**
  * The <code>ConnectSsh</code> class.
@@ -16,14 +15,17 @@ import se.sics.kompics.wan.master.ssh.SshComponent.SshConn;
  */
 public class UploadMD5Request extends Request {
 
-	private final SshConn sshConn;
+	private final SCPClient scpClient;
 	private final List<FileInfo> fileMD5Hashes;
 	private final CommandSpec commandSpec;
-
-	public UploadMD5Request(SshConn sshConn, List<FileInfo> fileMD5Hashes,
-			CommandSpec commandSpec) {
+	private final int sessionId;
+	
+	
+	public UploadMD5Request(int sessionId, SCPClient scpClient,
+			List<FileInfo> fileMD5Hashes, CommandSpec commandSpec) {
 		super();
-		this.sshConn = sshConn;
+		this.sessionId = sessionId;
+		this.scpClient = scpClient;
 		this.fileMD5Hashes = fileMD5Hashes;
 		this.commandSpec = commandSpec;
 	}
@@ -36,8 +38,14 @@ public class UploadMD5Request extends Request {
 		return fileMD5Hashes;
 	}
 
-	public SshConn getSshConn() {
-		return sshConn;
+	public SCPClient getScpClient() {
+		return scpClient;
 	}
 
+	/**
+	 * @return the sessionId
+	 */
+	public int getSessionId() {
+		return sessionId;
+	}
 }
