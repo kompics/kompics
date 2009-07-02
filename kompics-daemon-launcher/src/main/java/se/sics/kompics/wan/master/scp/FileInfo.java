@@ -171,16 +171,25 @@ public class FileInfo {
 		}
 	}
 
+//	public void setLocalFlatFile(File localBaseDir) throws IOException {
+//		String remoteFlatPath = this.stripSlashes(remotePath);
+//		remoteFlatPath = remoteFlatPath.replaceAll("/", "_");
+//		String localPath = localBaseDir.getCanonicalPath() remotePath
+//				+ remoteHostname + "_" + remoteFlatPath;
+//
+//		// System.out.println("localPath='" + localPath + "'");
+//		localPath = this.fixFileSeparator(localPath, File.separatorChar);
+//		// System.out.println("localPath='" + localPath + "'");
+//
+//		localFile = new File(localPath);
+//	}
+	
 	public void setLocalFlatFile(File localBaseDir) throws IOException {
-		String remoteFlatPath = this.stripSlashes(remotePath);
-		remoteFlatPath = remoteFlatPath.replaceAll("/", "_");
-		String localPath = localBaseDir.getCanonicalPath() + File.separator
-				+ remoteHostname + "_" + remoteFlatPath;
-
-		// System.out.println("localPath='" + localPath + "'");
+		int pos = remotePath.lastIndexOf('/');
+		String remoteFile = remotePath.substring(pos+1, remotePath.length()); 
+		
+		String localPath = localBaseDir.getCanonicalPath() + File.separatorChar + remoteFile;
 		localPath = this.fixFileSeparator(localPath, File.separatorChar);
-		// System.out.println("localPath='" + localPath + "'");
-
 		localFile = new File(localPath);
 	}
 

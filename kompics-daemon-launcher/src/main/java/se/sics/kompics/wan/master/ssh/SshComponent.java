@@ -795,17 +795,12 @@ public class SshComponent extends ComponentDefinition {
 	public Handler<DownloadMD5Response> handleDownloadMD5Response = new Handler<DownloadMD5Response>() {
 		public void handle(DownloadMD5Response event) {
 			int commandId = event.getCommandId();
-			System.out.println("DownloadMD5Response, command-id:" + commandId + " keys: " + activeSshCommands.keySet().size());
-			for (int i : activeSshCommands.keySet()) {
-				System.out.print(" " + i);
-			}
 			SshCommand sc = activeSshCommands.get(commandId);
 			int sessionId = sc.getCommandId();
 
 			DownloadFileRequest req = (DownloadFileRequest) sc
 					.getSshCommandRequest();
 			if (req != null) {
-
 				String[] commands = parseParameters(req.getCommand());
 				File file = new File(commands[1]);
 				trigger(new DownloadFileResponse(req, sessionId, file), sshPort);

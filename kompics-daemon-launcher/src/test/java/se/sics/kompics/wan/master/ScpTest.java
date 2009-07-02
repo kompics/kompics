@@ -142,7 +142,10 @@ public class ScpTest  {
 			new Handler<DownloadFileResponse>() {
 			public void handle(DownloadFileResponse event) {
 
+				System.out.println("ScpTest has successfully downloaded: ");
 				System.out.println(event.getFile().getAbsolutePath());
+				
+				System.out.println("ScpTest now uploading...");
 				UploadFileRequest command = new UploadFileRequest(event.getSessionId(), 
 						new File("/home/jdowling/blah"), "/home/jdowling/", true, 
 						10*1000, true);
