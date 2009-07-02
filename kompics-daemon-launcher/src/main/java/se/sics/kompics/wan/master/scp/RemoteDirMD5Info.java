@@ -17,8 +17,6 @@ public class RemoteDirMD5Info {
 
 	private final SshComponent.SshConn sshConn;
 
-	// private Session session = null;
-
 	public RemoteDirMD5Info(SshComponent.SshConn sshConn) {
 		this.sshConn = sshConn;
 

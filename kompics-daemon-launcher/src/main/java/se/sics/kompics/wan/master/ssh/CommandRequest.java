@@ -8,7 +8,7 @@ import se.sics.kompics.Request;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class SshCommandRequest extends Request {
+public class CommandRequest extends Request {
 
 	protected final String command;
 	
@@ -18,7 +18,7 @@ public class SshCommandRequest extends Request {
 	
 	protected final boolean stopOnError;
 	
-	public SshCommandRequest(int sessionId, String command,
+	public CommandRequest(int sessionId, String command,
 			double timeout, boolean stopOnError) {
 		this.command = command;
 		this.sessionId = sessionId;

@@ -21,8 +21,8 @@ import se.sics.kompics.wan.master.plab.Credentials;
 import se.sics.kompics.wan.master.plab.ExperimentHost;
 import se.sics.kompics.wan.master.ssh.HaltRequest;
 import se.sics.kompics.wan.master.ssh.HaltResponse;
-import se.sics.kompics.wan.master.ssh.SshCommandRequest;
-import se.sics.kompics.wan.master.ssh.SshCommandResponse;
+import se.sics.kompics.wan.master.ssh.CommandRequest;
+import se.sics.kompics.wan.master.ssh.CommandResponse;
 import se.sics.kompics.wan.master.ssh.SshComponent;
 import se.sics.kompics.wan.master.ssh.SshConnectRequest;
 import se.sics.kompics.wan.master.ssh.SshConnectResponse;
@@ -82,7 +82,7 @@ public class SshTest  {
 				// TODO Auto-generated method stub
 				Credentials cred = new Credentials("jdowling", "oke2Shoo", 
 						"/home/jdowling/.ssh/id_rsa", "");
-				ExperimentHost host = new ExperimentHost("lucan.sics.se");
+				ExperimentHost host = new ExperimentHost("lqist.com");
 				
 				trigger(new SshConnectRequest(cred, host), sshComponent.getPositive(SshPort.class));
 
@@ -114,14 +114,14 @@ public class SshTest  {
 		public Handler<SshConnectResponse> handleSshConnectResponse = new Handler<SshConnectResponse>() {
 			public void handle(SshConnectResponse event) {
 
-				SshCommandRequest command = new SshCommandRequest(event.getSessionId(), "ls -la", 
+				CommandRequest command = new CommandRequest(event.getSessionId(), "ls -la", 
 						10*1000, true);
 				trigger(command, sshComponent.getPositive(SshPort.class));
 			}
 		};
 		
-		public Handler<SshCommandResponse> handleCommandResponse = new Handler<SshCommandResponse>() {
-			public void handle(SshCommandResponse event) {
+		public Handler<CommandResponse> handleCommandResponse = new Handler<CommandResponse>() {
+			public void handle(CommandResponse event) {
 
 				System.out.println(event.getCommandResponse());
 				

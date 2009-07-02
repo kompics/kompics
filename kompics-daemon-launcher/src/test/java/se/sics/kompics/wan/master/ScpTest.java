@@ -98,7 +98,7 @@ public class ScpTest  {
 				// TODO Auto-generated method stub
 				Credentials cred = new Credentials("jdowling", "oke2Shoo", 
 						"/home/jdowling/.ssh/id_rsa", "");
-				ExperimentHost host = new ExperimentHost("lucan.sics.se");
+				ExperimentHost host = new ExperimentHost("lqist.com");
 				
 				trigger(new SshConnectRequest(cred, host), sshComponent.getPositive(SshPort.class));
 
@@ -132,7 +132,7 @@ public class ScpTest  {
 
 				// remotePath  localFileOrDir fileFilter localNameType 
 				DownloadFileRequest command = new DownloadFileRequest(event.getSessionId(), 
-						"/home/jdowling/blah.lucan /home/jdowling/ bla " + SshComponent.FLAT, 
+						"/home/jdowling/blah.lqist", "/home/jdowling/", "", SshComponent.FLAT, 
 				10*1000, true);
 				trigger(command, sshComponent.getPositive(SshPort.class));
 			}
@@ -144,7 +144,7 @@ public class ScpTest  {
 
 				System.out.println(event.getFile().getAbsolutePath());
 				UploadFileRequest command = new UploadFileRequest(event.getSessionId(), 
-						new File("/home/jdowling/blah"), 
+						new File("/home/jdowling/blah"), "/home/jdowling/", true, 
 						10*1000, true);
 				trigger(command, sshComponent.getPositive(SshPort.class));
 				

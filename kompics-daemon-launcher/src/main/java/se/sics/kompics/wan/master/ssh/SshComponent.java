@@ -68,11 +68,11 @@ public class SshComponent extends ComponentDefinition {
 	// (commandId, numFilesRemaining)
 	private Map<Integer, Integer> outstandingUploadFiles = new HashMap<Integer, Integer>();
 
+//	public static enum FileType { HIERARCHICAL, FLAT} ;
+	
 	public static final String FLAT = "flat";
-
 	public static final String HIERARCHY = "hierarchy";
-
-	public static final String[] NAMING_TYPES = { HIERARCHY, FLAT };
+//	public static final String[] NAMING_TYPES = { HIERARCHY, FLAT };
 
 	//	
 	// private volatile String downloadDirectoryType = HIERARCHY;
@@ -202,16 +202,18 @@ public class SshComponent extends ComponentDefinition {
 	}
 
 	public class SshCommand implements Runnable {
-		private SshCommandRequest event;
+		private CommandRequest event;
 		private int sessionId;
+		private int commandId;
 		private SshConn conn;
 		private Session session;
 		private CommandSpec commandSpec;
 
-		public SshCommand(SshCommandRequest event, int sessionId, SshConn conn,
+		public SshCommand(CommandRequest event, int sessionId, int commandId, SshConn conn,
 				Session session, CommandSpec commandSpec) {
 			this.event = event;
 			this.sessionId = sessionId;
+			this.commandId = commandId;
 			this.conn = conn;
 			this.session = session;
 			this.commandSpec = commandSpec;
@@ -225,12 +227,16 @@ public class SshComponent extends ComponentDefinition {
 			return conn;
 		}
 
-		public SshCommandRequest getSshCommandRequest() {
+		public CommandRequest getSshCommandRequest() {
 			return event;
 		}
-
+		
 		public int getSessionId() {
 			return sessionId;
+		}
+
+		public int getCommandId() {
+			return commandId;
 		}
 
 		public Session getSession() {
@@ -287,13 +293,8 @@ public class SshComponent extends ComponentDefinition {
 					System.out.println("Result of ssh command was: " + res);
 				}
 			}
-			sendCommandResponse(event, sessionId, commandResponse,
+			sendCommandResponse(event, sessionId, commandId, commandResponse,
 					commandFailed);
-
-			// activeThreads.remove(sessionId);
-
-			activeSshCommands.remove(sessionId);
-			// }
 
 			return res;
 		}
@@ -304,10 +305,11 @@ public class SshComponent extends ComponentDefinition {
 			if (command.length > 0) {
 				if (command[0]
 						.equals(PlanetLabConfiguration.SPECIAL_COMMAND_UPLOAD_DIR)) {
-					if (command.length == 2) {
+					if (command.length == 3) {
 						File fileOrDir = new File(command[1]);
+						String remotePath = command[2];
 						if (fileOrDir.exists()) {
-							upload(conn, fileOrDir, commandSpec);
+							upload(conn, fileOrDir, remotePath, commandSpec);
 						}
 					}
 				} else if (command[0]
@@ -336,18 +338,24 @@ public class SshComponent extends ComponentDefinition {
 			}
 		}
 
-		public boolean upload(SshComponent.SshConn conn, File baseDir,
+		public boolean upload(SshComponent.SshConn conn, File baseDir, String remotePath,
 				CommandSpec commandSpec) {
 			try {
 				List<FileInfo> listMD5FileHashes = LocalDirMD5Info
 						.getInstance().getFileInfo(baseDir);
+				
+				for (FileInfo f : listMD5FileHashes)
+				{
+					f.setRemotePath(f.getLocalFile(), remotePath);
+				}
+				
 				SCPClient scpClient = conn.getConnection().createSCPClient();
 
 				int commandId = commandSpec.getCommandId();
 				int numFiles = listMD5FileHashes.size();
 				outstandingUploadFiles.put(commandId, numFiles);
 
-				UploadMD5Request req = new UploadMD5Request(sessionId,
+				UploadMD5Request req = new UploadMD5Request(commandId,
 						scpClient, listMD5FileHashes, commandSpec);
 
 				trigger(req, downloadUploadPort);
@@ -386,9 +394,9 @@ public class SshComponent extends ComponentDefinition {
 				fileList = getRemoteFileList(conn, remotePath, fileFilter,
 						commandSpec);
 				for (FileInfo info : fileList) {
-					if (downloadDirectoryType.equals(FLAT)) {
+					if (downloadDirectoryType.compareTo(FLAT) == 0) {
 						info.setLocalFlatFile(localBaseDir);
-					} else if (downloadDirectoryType.equals(HIERARCHY)) {
+					} else if (downloadDirectoryType.compareTo(HIERARCHY)==0) {
 						info.setLocalHierarchicalFile(localBaseDir);
 					}
 				}
@@ -410,7 +418,7 @@ public class SshComponent extends ComponentDefinition {
 				SCPClient scpClient = conn.getConnection().createSCPClient();
 				// if (s1 != null) {
 				// int sId = addSession(session, conn);
-				trigger(new DownloadMD5Request(sessionId, scpClient, fileList,
+				trigger(new DownloadMD5Request(commandId, scpClient, fileList,
 						commandSpec), downloadUploadPort);
 				// }
 
@@ -481,17 +489,17 @@ public class SshComponent extends ComponentDefinition {
 		private CommandSpec generateCommand(String remoteDir, String filter) {
 			if (filter != null && filter != "") {
 				return new CommandSpec("md5sum `find " + remoteDir + " | grep "
-						+ filter + "` 2> /dev/null", 0, -1, false);
+						+ filter + "` 2> /dev/null", 0, ++commandIdCounter, false);
 			} else {
 				return new CommandSpec("md5sum `find " + remoteDir
-						+ "` 2> /dev/null", 0, -1, false);
+						+ "` 2> /dev/null", 0, ++commandIdCounter, false);
 			}
 		}
 
 		private String getLocalFilenameType(String type) {
-			if (FLAT.equals(type)) {
+			if (FLAT.compareTo(type)==0) {
 				return FLAT;
-			} else if (HIERARCHY.equals(type)) {
+			} else if (HIERARCHY.compareTo(type)==0) {
 				return HIERARCHY;
 			} else {
 				System.out.println("unknown local naming type: '" + type
@@ -505,7 +513,7 @@ public class SshComponent extends ComponentDefinition {
 
 	public SshComponent() {
 
-		subscribe(handleSshCommand, sshPort);
+		subscribe(handleSshCommandRequest, sshPort);
 		subscribe(handleSshConnectRequest, sshPort);
 		subscribe(handleHaltRequest, sshPort);
 		subscribe(handleDownloadFileRequest, sshPort);
@@ -515,9 +523,14 @@ public class SshComponent extends ComponentDefinition {
 		subscribe(handleUploadMD5Response, downloadUploadPort);
 
 	}
+	
+	public Handler<CommandRequest> handleSshCommandRequest = new Handler<CommandRequest>() {
+		public void handle(CommandRequest event) {
 
-	public Handler<SshCommandRequest> handleSshCommand = new Handler<SshCommandRequest>() {
-		public void handle(SshCommandRequest event) {
+			if (event.getClass().toString().compareTo(CommandRequest.class.toString()) != 0) {
+				return;
+			}
+			
 			CommandSpec commandSpec = new CommandSpec(event.getCommand(), event
 					.getTimeout(), commandIdCounter++, event.isStopOnError());
 
@@ -537,6 +550,7 @@ public class SshComponent extends ComponentDefinition {
 		}
 	};
 
+	
 	/**
 	 * Called by SshCommand thread.
 	 * 
@@ -545,20 +559,23 @@ public class SshComponent extends ComponentDefinition {
 	 * @param commandResponse
 	 * @param commandFailed
 	 */
-	private void sendCommandResponse(SshCommandRequest event, int sessionId,
+	private void sendCommandResponse(CommandRequest event, int sessionId, int commandId,
 			String commandResponse, boolean commandFailed) {
-		trigger(new SshCommandResponse(event, sessionId, commandResponse,
+		trigger(new CommandResponse(event, sessionId, commandResponse,
 				!commandFailed), sshPort);
+		
+		activeSshCommands.remove(commandId);
 	}
 
-	public void runSshCommand(SshCommandRequest event, int sessionId,
+	public void runSshCommand(CommandRequest event, int sessionId,
 			SshConn conn, Session session, CommandSpec commandSpec) {
 
-		SshCommand sshCommand = new SshCommand(event, sessionId, conn, session,
+		int commandId = commandSpec.getCommandId();
+
+		SshCommand sshCommand = new SshCommand(event, sessionId, commandId, conn, session,
 				commandSpec);
 		Thread t = new Thread(sshCommand);
 		t.run();
-		int commandId = commandSpec.getCommandId();
 		activeSshCommands.put(commandId, sshCommand);
 	}
 
@@ -778,9 +795,12 @@ public class SshComponent extends ComponentDefinition {
 	public Handler<DownloadMD5Response> handleDownloadMD5Response = new Handler<DownloadMD5Response>() {
 		public void handle(DownloadMD5Response event) {
 			int commandId = event.getCommandId();
+			System.out.println("DownloadMD5Response, command-id:" + commandId + " keys: " + activeSshCommands.keySet().size());
+			for (int i : activeSshCommands.keySet()) {
+				System.out.print(" " + i);
+			}
 			SshCommand sc = activeSshCommands.get(commandId);
-			
-			int sessionId = sc.getSessionId();
+			int sessionId = sc.getCommandId();
 
 			DownloadFileRequest req = (DownloadFileRequest) sc
 					.getSshCommandRequest();
@@ -793,6 +813,8 @@ public class SshComponent extends ComponentDefinition {
 				System.err.println("Couldnt find request for command: "
 						+ commandId);
 			}
+			
+			activeSshCommands.remove(commandId);
 		}
 	};
 
@@ -816,7 +838,7 @@ public class SshComponent extends ComponentDefinition {
 					UploadFileRequest req = (UploadFileRequest) sc
 							.getSshCommandRequest();
 
-					int sessionId = sc.getSessionId();
+					int sessionId = sc.getCommandId();
 					trigger(new UploadFileResponse(req, sessionId, fileInfo
 							.getLocalFile()), sshPort);
 				}
@@ -824,6 +846,9 @@ public class SshComponent extends ComponentDefinition {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
+			}
+			finally {
+				activeSshCommands.remove(commandId);
 			}
 
 		}
@@ -1066,8 +1091,7 @@ public class SshComponent extends ComponentDefinition {
 				} else {
 					if (c == ' ' && !withinQuotes) {
 						// we reached a space, and we are not between
-						// quoutes,
-						// add to list and flush buffer
+						// quotes, add to list and flush buffer
 						params.add(tmpBuffer.toString());
 
 						// System.out.println("found: " +

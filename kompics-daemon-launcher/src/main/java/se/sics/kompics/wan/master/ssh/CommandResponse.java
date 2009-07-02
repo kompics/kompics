@@ -9,7 +9,7 @@ import ch.ethz.ssh2.Session;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class SshCommandResponse extends Response {
+public class CommandResponse extends Response {
 
 	private final String commandResponse;
 
@@ -17,7 +17,7 @@ public class SshCommandResponse extends Response {
 
 	private final boolean status;
 
-	public SshCommandResponse(SshCommandRequest request, int sessionId,
+	public CommandResponse(CommandRequest request, int sessionId,
 			String commandResponse, boolean status) {
 		super(request);
 		this.commandResponse = commandResponse;

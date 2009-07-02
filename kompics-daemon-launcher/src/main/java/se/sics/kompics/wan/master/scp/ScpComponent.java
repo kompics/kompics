@@ -146,36 +146,8 @@ public class ScpComponent extends ComponentDefinition {
 		subscribe(handleScpGetFileRequest, scpPort);
 		subscribe(handleScpPutFileRequest, scpPort);
 
-		subscribe(handleDownloadMD5Request, downloadUploadPort);
-		subscribe(handleUploadMD5Request, downloadUploadPort);
-
 	}
 
-	public Handler<DownloadMD5Request> handleDownloadMD5Request = new Handler<DownloadMD5Request>() {
-		public void handle(DownloadMD5Request event) {
-
-			// CommandSpec commandSpec = event.getCommandSpec();
-			// Session session = event.getSession();
-			// List<FileInfo> fileMD5Hashes = event.getFileMD5Hashes();
-			//
-			// int copyCount = 0;
-			//
-			// commandSpec.started();
-			//
-			// // CopyThread scpCopyThread = new CopyThread(, this);
-			// scpCopyThreadThread = new Thread(scpCopyThread);
-			// scpCopyThreadThread.setName("ScpThread: " +
-			// sshConn.getExpHost().getHostname());
-			// scpCopyThreadThread.start();
-
-		}
-	};
-
-	public Handler<UploadMD5Request> handleUploadMD5Request = new Handler<UploadMD5Request>() {
-		public void handle(UploadMD5Request event) {
-
-		}
-	};
 
 	private Handler<ScpPutFileRequest> handleScpPutFileRequest = new Handler<ScpPutFileRequest>() {
 		public void handle(ScpPutFileRequest event) {
