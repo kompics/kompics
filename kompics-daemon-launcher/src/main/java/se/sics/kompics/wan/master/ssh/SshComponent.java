@@ -558,8 +558,8 @@ public class SshComponent extends ComponentDefinition {
 				commandSpec);
 		Thread t = new Thread(sshCommand);
 		t.run();
-
-		activeSshCommands.put(commandSpec.getCommandId(), sshCommand);
+		int commandId = commandSpec.getCommandId();
+		activeSshCommands.put(commandId, sshCommand);
 	}
 
 	private boolean validSession(Session session) {
