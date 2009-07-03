@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import se.sics.kompics.wan.master.plab.Credentials;
 import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.master.plab.plc.PLCentralController;
 import se.sics.kompics.wan.master.plab.plc.PlanetLabHost;

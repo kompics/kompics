@@ -10,7 +10,6 @@ import java.util.List;
 
 import se.sics.kompics.wan.master.ssh.CommandSpec;
 import se.sics.kompics.wan.master.ssh.SshComponent;
-import se.sics.kompics.wan.master.ssh.SshConnection;
 import ch.ethz.ssh2.Session;
 
 public class RemoteDirMD5Info {

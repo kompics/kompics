@@ -1,6 +1,12 @@
 package se.sics.kompics.wan.master.scp;
 
 import se.sics.kompics.PortType;
+import se.sics.kompics.wan.master.scp.events.ScpGetFileRequest;
+import se.sics.kompics.wan.master.scp.events.ScpGetFileResponse;
+import se.sics.kompics.wan.master.scp.events.ScpGetFinished;
+import se.sics.kompics.wan.master.scp.events.ScpPutFileRequest;
+import se.sics.kompics.wan.master.scp.events.ScpPutFileResponse;
+import se.sics.kompics.wan.master.scp.events.ScpPutFinished;
 
 
 

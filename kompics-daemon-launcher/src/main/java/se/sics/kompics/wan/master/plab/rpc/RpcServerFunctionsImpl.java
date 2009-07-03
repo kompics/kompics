@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import se.sics.kompics.wan.master.plab.Credentials;
 import se.sics.kompics.wan.master.plab.plc.PlanetLabHost;
 import se.sics.kompics.wan.master.plab.plc.PlanetLabSite;
 import se.sics.kompics.wan.master.ssh.CommandSpec;
 import se.sics.kompics.wan.master.ssh.ConnectionController;
+import se.sics.kompics.wan.master.ssh.Credentials;
 import se.sics.kompics.wan.master.ssh.SshConnection;
 
 

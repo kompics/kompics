@@ -1,6 +1,8 @@
 package se.sics.kompics.wan.master.plab;
 
 import se.sics.kompics.PortType;
+import se.sics.kompics.wan.master.plab.events.GetRunningPlanetLabHostsRequest;
+import se.sics.kompics.wan.master.plab.events.GetRunningPlanetLabHostsResponse;
 
 
 
@@ -13,6 +15,9 @@ import se.sics.kompics.PortType;
 public class PlanetLabPort extends PortType {
 
 	{
-		negative(GetRunningPlanetLabHosts.class);
+		negative(GetRunningPlanetLabHostsRequest.class);
+		
+		
+		positive(GetRunningPlanetLabHostsResponse.class);
 	}
 }

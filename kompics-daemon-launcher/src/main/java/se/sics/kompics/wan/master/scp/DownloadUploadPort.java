@@ -1,10 +1,10 @@
 package se.sics.kompics.wan.master.scp;
 
 import se.sics.kompics.PortType;
-import se.sics.kompics.wan.master.scp.download.DownloadMD5Request;
-import se.sics.kompics.wan.master.scp.download.DownloadMD5Response;
-import se.sics.kompics.wan.master.scp.upload.UploadMD5Request;
-import se.sics.kompics.wan.master.scp.upload.UploadMD5Response;
+import se.sics.kompics.wan.master.scp.events.DownloadMD5Request;
+import se.sics.kompics.wan.master.scp.events.DownloadMD5Response;
+import se.sics.kompics.wan.master.scp.events.UploadMD5Request;
+import se.sics.kompics.wan.master.scp.events.UploadMD5Response;
 
 
 

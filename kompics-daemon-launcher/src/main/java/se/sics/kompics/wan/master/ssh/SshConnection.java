@@ -16,11 +16,8 @@ import org.apache.commons.configuration.ConfigurationException;
 
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.Credentials;
-import se.sics.kompics.wan.master.plab.ExperimentHost;
 import se.sics.kompics.wan.master.plab.rpc.RpcFunctions;
-import se.sics.kompics.wan.master.scp.download.DownloadManager;
-import se.sics.kompics.wan.master.scp.upload.UploadManager;
+import sun.jkernel.DownloadManager;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.ConnectionMonitor;
 import ch.ethz.ssh2.HTTPProxyData;
@@ -714,8 +711,8 @@ public class SshConnection extends Thread implements ConnectionMonitor {
 			// match everything
 			fileFilter = ".";
 		}
-		DownloadManager dManager = DownloadManager.getInstance();
-		dManager.setLocalFilenameType(localNamingType);
+//		DownloadManager dManager = DownloadManager.getInstance();
+//		dManager.setLocalFilenameType(localNamingType);
 
 //		return dManager.downloadDir(this, remotePath, localBaseDir, fileFilter,
 //				commandSpec);

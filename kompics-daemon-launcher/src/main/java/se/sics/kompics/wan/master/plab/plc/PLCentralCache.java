@@ -52,7 +52,6 @@ import org.apache.xmlrpc.serializer.TypeSerializer;
 import org.xml.sax.SAXException;
 
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.Credentials;
 import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 
 public class PLCentralCache implements Runnable {
@@ -568,7 +567,7 @@ public class PLCentralCache implements Runnable {
 	}
 
 	/**
-	 * send all RPC queris to plc to create the disk store
+	 * send all RPC queries to plc to create the disk store
 	 * 
 	 * @return
 	 */

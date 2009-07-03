@@ -160,7 +160,7 @@ public class PLCentralController {
 	}
 
 	/**
-	 * filter out all nodes that not are in "boot" state
+	 * filter out all nodes that are not in "boot" state
 	 * 
 	 * @param hostSiteMapping
 	 * @return

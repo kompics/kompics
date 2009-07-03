@@ -2,8 +2,8 @@ package se.sics.kompics.wan.master.plab.plc;
 
 import java.util.Map;
 
-import se.sics.kompics.wan.master.plab.ExperimentHost;
 import se.sics.kompics.wan.master.plab.plc.comon.CoMonStat;
+import se.sics.kompics.wan.master.ssh.ExperimentHost;
 
 
 public class PlanetLabHost extends ExperimentHost {

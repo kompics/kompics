@@ -1,6 +1,16 @@
 package se.sics.kompics.wan.master.ssh;
 
 import se.sics.kompics.PortType;
+import se.sics.kompics.wan.master.ssh.events.CommandRequest;
+import se.sics.kompics.wan.master.ssh.events.CommandResponse;
+import se.sics.kompics.wan.master.ssh.events.DownloadFileRequest;
+import se.sics.kompics.wan.master.ssh.events.DownloadFileResponse;
+import se.sics.kompics.wan.master.ssh.events.HaltRequest;
+import se.sics.kompics.wan.master.ssh.events.HaltResponse;
+import se.sics.kompics.wan.master.ssh.events.SshConnectRequest;
+import se.sics.kompics.wan.master.ssh.events.SshConnectResponse;
+import se.sics.kompics.wan.master.ssh.events.UploadFileRequest;
+import se.sics.kompics.wan.master.ssh.events.UploadFileResponse;
 
 
 

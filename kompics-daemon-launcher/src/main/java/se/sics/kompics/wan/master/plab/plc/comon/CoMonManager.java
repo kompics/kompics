@@ -42,6 +42,7 @@ public class CoMonManager implements Runnable {
 		// TODO Auto-generated method stub
 		totalBytes = 0;
 		progress = 0;
+		BufferedReader in = null;
 		try {
 			URL url = new URL(COMON_URL);
 
@@ -51,7 +52,7 @@ public class CoMonManager implements Runnable {
 			// ok, this IS an uggly hack :-)
 			totalBytes = 240717;// connection.getContentLength();
 
-			BufferedReader in = new BufferedReader(new InputStreamReader(url
+			in = new BufferedReader(new InputStreamReader(url
 					.openStream()));
 
 			String titleLine = in.readLine();
@@ -86,6 +87,15 @@ public class CoMonManager implements Runnable {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException e) {
+					System.err.println("Problem closing connection to CoMonManager URL");
+				}
+			}
 		}
 		progress = 1.0;
 	}

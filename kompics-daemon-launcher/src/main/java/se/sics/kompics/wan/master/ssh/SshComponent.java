@@ -17,16 +17,23 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.Credentials;
-import se.sics.kompics.wan.master.plab.ExperimentHost;
 import se.sics.kompics.wan.master.scp.DownloadUploadPort;
 import se.sics.kompics.wan.master.scp.FileInfo;
 import se.sics.kompics.wan.master.scp.LocalDirMD5Info;
-import se.sics.kompics.wan.master.scp.download.DownloadMD5Request;
-import se.sics.kompics.wan.master.scp.download.DownloadMD5Response;
-import se.sics.kompics.wan.master.scp.download.DownloadManager;
-import se.sics.kompics.wan.master.scp.upload.UploadMD5Request;
-import se.sics.kompics.wan.master.scp.upload.UploadMD5Response;
+import se.sics.kompics.wan.master.scp.events.DownloadMD5Request;
+import se.sics.kompics.wan.master.scp.events.DownloadMD5Response;
+import se.sics.kompics.wan.master.scp.events.UploadMD5Request;
+import se.sics.kompics.wan.master.scp.events.UploadMD5Response;
+import se.sics.kompics.wan.master.ssh.events.CommandRequest;
+import se.sics.kompics.wan.master.ssh.events.CommandResponse;
+import se.sics.kompics.wan.master.ssh.events.DownloadFileRequest;
+import se.sics.kompics.wan.master.ssh.events.DownloadFileResponse;
+import se.sics.kompics.wan.master.ssh.events.HaltRequest;
+import se.sics.kompics.wan.master.ssh.events.HaltResponse;
+import se.sics.kompics.wan.master.ssh.events.SshConnectRequest;
+import se.sics.kompics.wan.master.ssh.events.SshConnectResponse;
+import se.sics.kompics.wan.master.ssh.events.UploadFileRequest;
+import se.sics.kompics.wan.master.ssh.events.UploadFileResponse;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.ConnectionInfo;
 import ch.ethz.ssh2.ConnectionMonitor;
@@ -291,10 +298,13 @@ public class SshComponent extends ComponentDefinition {
 						e.printStackTrace();
 					}
 					System.out.println("Result of ssh command was: " + res);
+
+					// not necessary for DownloadRequest and UploadRequest commands
+					sendCommandResponse(event, sessionId, commandId, commandResponse,
+							commandFailed);
 				}
 			}
-			sendCommandResponse(event, sessionId, commandId, commandResponse,
-					commandFailed);
+
 
 			return res;
 		}
@@ -310,6 +320,9 @@ public class SshComponent extends ComponentDefinition {
 						String remotePath = command[2];
 						if (fileOrDir.exists()) {
 							upload(conn, fileOrDir, remotePath, commandSpec);
+						}
+						else {
+							System.err.println("File not found for uploading: " + fileOrDir.getPath());
 						}
 					}
 				} else if (command[0]
@@ -449,7 +462,7 @@ public class SshComponent extends ComponentDefinition {
 				throws IOException, InterruptedException {
 			baseCommand.started();
 			baseCommand.receivedData("getting remote file list");
-			CommandSpec command = this.generateCommand(remoteDir, filter);
+			CommandSpec command = this.generateCommand(remoteDir, filter, baseCommand.getTimeout());
 			ArrayList<FileInfo> remoteFiles = new ArrayList<FileInfo>();
 			System.out.println("Starting shell");
 
@@ -486,13 +499,13 @@ public class SshComponent extends ComponentDefinition {
 			return remoteFiles;
 		}
 
-		private CommandSpec generateCommand(String remoteDir, String filter) {
+		private CommandSpec generateCommand(String remoteDir, String filter, double timeout) {
 			if (filter != null && filter != "") {
 				return new CommandSpec("md5sum `find " + remoteDir + " | grep "
-						+ filter + "` 2> /dev/null", 0, ++commandIdCounter, false);
+						+ filter + "` 2> /dev/null", timeout, ++commandIdCounter, false);
 			} else {
 				return new CommandSpec("md5sum `find " + remoteDir
-						+ "` 2> /dev/null", 0, ++commandIdCounter, false);
+						+ "` 2> /dev/null", timeout, ++commandIdCounter, false);
 			}
 		}
 
@@ -503,7 +516,7 @@ public class SshComponent extends ComponentDefinition {
 				return HIERARCHY;
 			} else {
 				System.out.println("unknown local naming type: '" + type
-						+ "', using default '" + DownloadManager.HIERARCHY
+						+ "', using default '" + HIERARCHY
 						+ "'");
 				return HIERARCHY;
 			}
@@ -795,7 +808,15 @@ public class SshComponent extends ComponentDefinition {
 	public Handler<DownloadMD5Response> handleDownloadMD5Response = new Handler<DownloadMD5Response>() {
 		public void handle(DownloadMD5Response event) {
 			int commandId = event.getCommandId();
+			boolean status = event.isStatus();
+
 			SshCommand sc = activeSshCommands.get(commandId);
+			
+			if (sc == null && status == false)
+			{
+				return;
+			}
+			
 			int sessionId = sc.getCommandId();
 
 			DownloadFileRequest req = (DownloadFileRequest) sc
@@ -803,10 +824,9 @@ public class SshComponent extends ComponentDefinition {
 			if (req != null) {
 				String[] commands = parseParameters(req.getCommand());
 				File file = new File(commands[1]);
-				trigger(new DownloadFileResponse(req, sessionId, file), sshPort);
+				trigger(new DownloadFileResponse(req, sessionId, file, status), sshPort);
 			} else {
-				System.err.println("Couldnt find request for command: "
-						+ commandId);
+				throw new IllegalStateException("Couldnt find request for command: " + commandId);
 			}
 			
 			activeSshCommands.remove(commandId);
@@ -816,9 +836,15 @@ public class SshComponent extends ComponentDefinition {
 	public Handler<UploadMD5Response> handleUploadMD5Response = new Handler<UploadMD5Response>() {
 		public void handle(UploadMD5Response event) {
 			int commandId = event.getCommandId();
-
+			boolean status = event.isStatus();
 			SshCommand sc = activeSshCommands.get(commandId);
 
+			if (sc == null && status == false)
+			{
+				return;
+			}
+
+			
 			Session session = sc.getSession();
 			SshConn conn = sc.getConn();
 			CommandSpec command = sc.getCommandSpec();
@@ -916,13 +942,14 @@ public class SshComponent extends ComponentDefinition {
 		String line;
 		String errLine;
 
+		boolean quit = false;
 		do {
 
 			// session.waitForCondition(ChannelCondition.STDOUT_DATA
 			// | ChannelCondition.STDERR_DATA, Math
 			// .round(1000.0 / DATA_POLLING_FREQ));
 			// XXX why sleep here?
-			Thread.sleep(50);
+//			Thread.sleep(50);
 			line = stdout.readLine();
 			errLine = stderr.readLine();
 
@@ -930,6 +957,7 @@ public class SshComponent extends ComponentDefinition {
 			while (errLine != null) {
 				commandSpec.receivedErr(errLine);
 				errLine = stderr.readLine();
+//				quit = true;
 			}
 			// check for data on stdout
 			while (line != null) {
@@ -982,8 +1010,7 @@ public class SshComponent extends ComponentDefinition {
 				line = "";
 			}
 
-		} while (!line.startsWith(EXIT_CODE_IDENTIFIER));
-		// && (quit.get() == false)
+		} while (!line.startsWith(EXIT_CODE_IDENTIFIER) && quit == false);
 
 		// we should never make it down here... unless quiting
 		return Integer.MIN_VALUE;

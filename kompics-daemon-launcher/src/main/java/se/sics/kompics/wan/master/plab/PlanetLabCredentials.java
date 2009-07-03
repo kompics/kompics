@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import se.sics.kompics.wan.master.ssh.Credentials;
+
 
 /**
  * Class holding credentials used both for communication with PLC and for

@@ -17,16 +17,16 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.Credentials;
-import se.sics.kompics.wan.master.plab.ExperimentHost;
-import se.sics.kompics.wan.master.ssh.HaltRequest;
-import se.sics.kompics.wan.master.ssh.HaltResponse;
-import se.sics.kompics.wan.master.ssh.CommandRequest;
-import se.sics.kompics.wan.master.ssh.CommandResponse;
+import se.sics.kompics.wan.master.ssh.Credentials;
+import se.sics.kompics.wan.master.ssh.ExperimentHost;
 import se.sics.kompics.wan.master.ssh.SshComponent;
-import se.sics.kompics.wan.master.ssh.SshConnectRequest;
-import se.sics.kompics.wan.master.ssh.SshConnectResponse;
 import se.sics.kompics.wan.master.ssh.SshPort;
+import se.sics.kompics.wan.master.ssh.events.CommandRequest;
+import se.sics.kompics.wan.master.ssh.events.CommandResponse;
+import se.sics.kompics.wan.master.ssh.events.HaltRequest;
+import se.sics.kompics.wan.master.ssh.events.HaltResponse;
+import se.sics.kompics.wan.master.ssh.events.SshConnectRequest;
+import se.sics.kompics.wan.master.ssh.events.SshConnectResponse;
 
 public class SshTest  {
 

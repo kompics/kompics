@@ -18,22 +18,22 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.Credentials;
-import se.sics.kompics.wan.master.plab.ExperimentHost;
 import se.sics.kompics.wan.master.scp.DownloadUploadMgr;
 import se.sics.kompics.wan.master.scp.DownloadUploadPort;
 import se.sics.kompics.wan.master.scp.ScpComponent;
 import se.sics.kompics.wan.master.scp.ScpPort;
-import se.sics.kompics.wan.master.ssh.DownloadFileRequest;
-import se.sics.kompics.wan.master.ssh.DownloadFileResponse;
-import se.sics.kompics.wan.master.ssh.HaltRequest;
-import se.sics.kompics.wan.master.ssh.HaltResponse;
+import se.sics.kompics.wan.master.ssh.Credentials;
+import se.sics.kompics.wan.master.ssh.ExperimentHost;
 import se.sics.kompics.wan.master.ssh.SshComponent;
-import se.sics.kompics.wan.master.ssh.SshConnectRequest;
-import se.sics.kompics.wan.master.ssh.SshConnectResponse;
 import se.sics.kompics.wan.master.ssh.SshPort;
-import se.sics.kompics.wan.master.ssh.UploadFileRequest;
-import se.sics.kompics.wan.master.ssh.UploadFileResponse;
+import se.sics.kompics.wan.master.ssh.events.DownloadFileRequest;
+import se.sics.kompics.wan.master.ssh.events.DownloadFileResponse;
+import se.sics.kompics.wan.master.ssh.events.HaltRequest;
+import se.sics.kompics.wan.master.ssh.events.HaltResponse;
+import se.sics.kompics.wan.master.ssh.events.SshConnectRequest;
+import se.sics.kompics.wan.master.ssh.events.SshConnectResponse;
+import se.sics.kompics.wan.master.ssh.events.UploadFileRequest;
+import se.sics.kompics.wan.master.ssh.events.UploadFileResponse;
 
 public class ScpTest  {
 
@@ -41,6 +41,8 @@ public class ScpTest  {
 
 	public static final int SSH_KEY_EXCHANGE_TIMEOUT = 15000;
 
+	public static final String FILE_TO_COPY = "/home/jdowling/lqist.blah";
+	public static final String FILE_TARGET_DIR =  "/home/jdowling/";
 	private static Semaphore semaphore = new Semaphore(0);
 
 	private static final int EVENT_COUNT = 1;
@@ -132,7 +134,7 @@ public class ScpTest  {
 
 				// remotePath  localFileOrDir fileFilter localNameType 
 				DownloadFileRequest command = new DownloadFileRequest(event.getSessionId(), 
-						"/home/jdowling/blah.lqist", "/home/jdowling/", "", SshComponent.FLAT, 
+						FILE_TO_COPY, FILE_TARGET_DIR, "", SshComponent.HIERARCHY, 
 				10*1000, true);
 				trigger(command, sshComponent.getPositive(SshPort.class));
 			}
@@ -142,12 +144,17 @@ public class ScpTest  {
 			new Handler<DownloadFileResponse>() {
 			public void handle(DownloadFileResponse event) {
 
-				System.out.println("ScpTest has successfully downloaded: ");
+				System.out.println("ScpTest download result: " + event.isStatus());
 				System.out.println(event.getFile().getAbsolutePath());
+				
+				if (event.isStatus() == false) {
+					testObj.fail(true);
+					return;
+				}
 				
 				System.out.println("ScpTest now uploading...");
 				UploadFileRequest command = new UploadFileRequest(event.getSessionId(), 
-						new File("/home/jdowling/blah"), "/home/jdowling/", true, 
+						new File(FILE_TO_COPY), FILE_TARGET_DIR, true, 
 						10*1000, true);
 				trigger(command, sshComponent.getPositive(SshPort.class));
 				
@@ -168,7 +175,6 @@ public class ScpTest  {
 		public Handler<HaltResponse> handleHaltResponse = new Handler<HaltResponse>() {
 			public void handle(HaltResponse event) {
 				testObj.pass();
-
 			}
 		};
 	};
@@ -261,14 +267,14 @@ public class ScpTest  {
 	}
 	
 	public void pass() {
-		org.junit.Assert.assertTrue(true);
 		semaphore.release();
+		org.junit.Assert.assertTrue(true);
 	}
 
 	public void fail(boolean release) {
-		org.junit.Assert.assertTrue(false);
 		if (release == true) {
 			semaphore.release();
 		}
+		org.junit.Assert.assertTrue(false);
 	}
 }

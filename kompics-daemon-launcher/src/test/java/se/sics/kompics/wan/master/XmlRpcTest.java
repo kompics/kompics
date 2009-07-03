@@ -37,7 +37,7 @@ public class XmlRpcTest {
 
 			client.setConfig(config);
 			Hashtable auth = new Hashtable();
-			auth.put("Username", "jdowling@sics.se");
+			auth.put("Username", "kost@sics.se");
 			auth.put("AuthMethod", "password");
 			auth.put("AuthString", myPlcPassWord);
 			auth.put("Role", "user");
