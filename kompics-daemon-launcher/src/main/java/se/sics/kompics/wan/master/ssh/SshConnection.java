@@ -17,7 +17,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.plab.rpc.RpcFunctions;
-import sun.jkernel.DownloadManager;
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.ConnectionMonitor;
 import ch.ethz.ssh2.HTTPProxyData;
