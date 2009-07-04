@@ -14,7 +14,7 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
-import se.sics.kompics.wan.master.plab.events.GetRunningPlanetLabHostsRequest;
+import se.sics.kompics.wan.master.plab.plc.events.GetRunningPlanetLabHostsRequest;
 import se.sics.kompics.wan.master.ssh.Credentials;
 
 public class RpcComponent extends ComponentDefinition {

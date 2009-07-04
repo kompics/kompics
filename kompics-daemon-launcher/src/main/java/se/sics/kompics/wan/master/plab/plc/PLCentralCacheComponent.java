@@ -58,7 +58,7 @@ import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
-import se.sics.kompics.wan.master.plab.events.GetRunningPlanetLabHostsRequest;
+import se.sics.kompics.wan.master.plab.plc.events.GetRunningPlanetLabHostsRequest;
 
 public class PLCentralCacheComponent extends ComponentDefinition {
 

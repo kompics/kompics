@@ -7,12 +7,15 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import se.sics.kompics.wan.util.HostsParserException;
 
 public class PlanetLabConfiguration extends MasterConfiguration {
 
-	private static final Logger logger = LoggerFactory.getLogger(PlanetLabConfiguration.class);
+//	private static ApplicationContext ctx; 
+//	public static final String PLANETLAB_APP_CONTEXT = "applicationContext-planetLabCache.xml";
 	
 	public static final String PROP_LOCAL_XML_RPC_PORT = "XmlRpcPort";
 	
@@ -63,6 +66,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		super(args);
 		
 		plInitialized = true;
+//		ctx = new ClassPathXmlApplicationContext(PLANETLAB_APP_CONTEXT);
 	}
 
 	@Override
@@ -205,5 +209,9 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		long currentTime = System.currentTimeMillis();
 		return (currentTime - startTime) ;
 	}
+	
+//	public static ApplicationContext getCtx() {
+//		return ctx;
+//	}
 
 }
