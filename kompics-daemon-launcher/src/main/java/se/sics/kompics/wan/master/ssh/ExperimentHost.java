@@ -2,8 +2,31 @@ package se.sics.kompics.wan.master.ssh;
 
 import java.util.Map;
 
+import se.sics.kompics.wan.master.plab.PLabSite;
+
 public class ExperimentHost implements Comparable<ExperimentHost> {
 
+	public static final String NODE_ID 			= "node_id";
+	public static final String HOSTNAME 		= "hostname";
+	public static final String BOOT_STATE 		= "boot_state";
+	public static final String IP 				= "ip";
+	public static final String BWLIMIT	 		= "bwlimit";
+	public static final String CPU_LOAD 		= "cpu_load";
+	public static final String MODEL			= "model";
+	public static final String VERSION  		= "version";
+	public static final String SSH_RSA_KEY		= "ssh_rsa_key";
+	public static final String SESSION			= "session"; //session requires admin priv
+	public static final String NODENETWORK_ID 	= "nodenetwork_id";
+	public static final String METHOD			= "method";
+	public static final String TYPE				= "type";
+	public static final String MAC 				= "mac";
+	public static final String GATEWAY			= "gateway";
+	public static final String NETWORK			= "network";
+	public static final String BROADCAST		= "broadcast";
+	public static final String NETMASK			= "netmask";
+	public static final String DNS1				= "dns1";
+	public static final String DNS2				= "dns2";
+	
 	protected String boot_state;
 
 	protected String bwlimit;
@@ -27,13 +50,13 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 	}
 
 	public ExperimentHost(Map<String, String> nodeInfo) {
-		node_id = Integer.parseInt(nodeInfo.get("node_id"));
-		hostname = (String) nodeInfo.get("hostname");
-		boot_state = (String) nodeInfo.get("boot_state");
-		ip = nodeInfo.get("ip");
-		site = Integer.parseInt(nodeInfo.get("site_id"));
-		bwlimit = nodeInfo.get("bwlimit");
-		cpuLoad = Integer.parseInt(nodeInfo.get("cpu_load"));
+		node_id = Integer.parseInt(nodeInfo.get(ExperimentHost.NODE_ID));
+		hostname = (String) nodeInfo.get(ExperimentHost.HOSTNAME);
+		boot_state = (String) nodeInfo.get(ExperimentHost.BOOT_STATE);
+		ip = nodeInfo.get(ExperimentHost.IP);
+		site = Integer.parseInt(nodeInfo.get(PLabSite.SITE_ID));
+		bwlimit = nodeInfo.get(ExperimentHost.BWLIMIT);
+		cpuLoad = Integer.parseInt(nodeInfo.get(ExperimentHost.CPU_LOAD));
 	}
 
 	public ExperimentHost(String hostname) {

@@ -14,8 +14,8 @@ import se.sics.kompics.wan.util.HostsParserException;
 
 public class PlanetLabConfiguration extends MasterConfiguration {
 
-//	private static ApplicationContext ctx; 
-//	public static final String PLANETLAB_APP_CONTEXT = "applicationContext-planetLabCache.xml";
+	private static ApplicationContext ctx; 
+	public static final String PLANETLAB_APP_CONTEXT = "applicationContext-planetLabCache.xml";
 	
 	public static final String PROP_LOCAL_XML_RPC_PORT = "XmlRpcPort";
 	
@@ -66,7 +66,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		super(args);
 		
 		plInitialized = true;
-//		ctx = new ClassPathXmlApplicationContext(PLANETLAB_APP_CONTEXT);
+		ctx = new ClassPathXmlApplicationContext(PLANETLAB_APP_CONTEXT);
 	}
 
 	@Override
@@ -210,8 +210,8 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		return (currentTime - startTime) ;
 	}
 	
-//	public static ApplicationContext getCtx() {
-//		return ctx;
-//	}
+	public static ApplicationContext getCtx() {
+		return ctx;
+	}
 
 }

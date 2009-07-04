@@ -3,6 +3,21 @@ package se.sics.kompics.wan.master.plab;
 import java.util.Map;
 
 public class PLabSite implements Comparable<PLabSite> {
+
+	public static final String SITE_ID 				= "site_id";
+	public static final String NAME 				= "name";
+	public static final String ABBREVIATED_NAME 	= "abbreviated_name";
+	public static final String LATITUDE 			= "latitude";
+	public static final String LONGITUDE 			= "longitude";
+	public static final String LOGIN_BASE 			= "login_base";
+	public static final String IS_PUBLIC			= "is_public";
+	public static final String NODEGROUP_ID 		= "nodegroup_id";
+	public static final String ORGANIZATION_ID 		= "organization_id";
+	public static final String URL 					= "url";
+	public static final String EXT_CONSORTIUM_ID 	= "ext_consortium_id";
+	public static final String MAX_SLICES 			= "max_slices";
+	
+	
 	private Integer site_id;
 
 	private String name;
@@ -31,36 +46,37 @@ public class PLabSite implements Comparable<PLabSite> {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	public PLabSite(Map map) {
-		site_id = (Integer) map.get("site_id");
-		name = (String) map.get("name");
-		abbreviated_name = (String) map.get("abbreviated_name");
-		login_base = (String) map.get("login_base");
-		is_public = (Boolean) map.get("is_public");
+		site_id = (Integer) map.get(PLabSite.SITE_ID);
+		name = (String) map.get(PLabSite.NAME);
+		abbreviated_name = (String) map.get(PLabSite.ABBREVIATED_NAME);
+		login_base = (String) map.get(PLabSite.LOGIN_BASE);
+		is_public = (Boolean) map.get(PLabSite.IS_PUBLIC);
 		try {
-			latitude = (Double) map.get("latitude");
-			longitude = (Double) map.get("longitude");
+			latitude = (Double) map.get(PLabSite.LATITUDE);
+			longitude = (Double) map.get(PLabSite.LONGITUDE);
 		} catch (ClassCastException e) {
 			latitude = null;
 			longitude = null;
 			//System.err.println("error with latitude or longitude of " + name);
 		}
-		url = (String) map.get("url");
-		nodegroup_id = (Integer) map.get("nodegroup_id");
+		url = (String) map.get(PLabSite.URL);
+		nodegroup_id = (Integer) map.get(PLabSite.NODEGROUP_ID);
 
 		try {
-			organization_id = (String)map.get("organization_id");
+			organization_id = (String)map.get(ORGANIZATION_ID);
 		} catch (ClassCastException e) {
 			//System.err.println("error with organization_id of: " + name);
 		}
 		
 		try{
-			ext_consortium_id = (Integer) map.get("ext_consortium_id");
+			ext_consortium_id = (Integer) map.get(PLabSite.EXT_CONSORTIUM_ID);
 		} catch (ClassCastException e) {
 			//System.err.println("error with ext_consortium_id of: " + name);
 		}
 		
-		max_slices = (Integer) map.get("max_slices");
+		max_slices = (Integer) map.get(PLabSite.MAX_SLICES);
 	}
 
 	public String getAbbreviated_name() {

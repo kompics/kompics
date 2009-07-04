@@ -14,7 +14,7 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
-import se.sics.kompics.wan.master.plab.plc.events.GetRunningPlanetLabHostsRequest;
+import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.master.ssh.Credentials;
 
 public class RpcComponent extends ComponentDefinition {
@@ -27,8 +27,8 @@ public class RpcComponent extends ComponentDefinition {
 		subscribe(handleGetRunningPlanetLabHosts, net);
 	}
 
-	private Handler<GetRunningPlanetLabHostsRequest> handleGetRunningPlanetLabHosts = new Handler<GetRunningPlanetLabHostsRequest>() {
-		public void handle(GetRunningPlanetLabHostsRequest event) {
+	private Handler<GetNodesForSliceRequest> handleGetRunningPlanetLabHosts = new Handler<GetNodesForSliceRequest>() {
+		public void handle(GetNodesForSliceRequest event) {
 
 			// Use XML-RPC interface to Co-Mon to get the status of executing
 			// hosts.

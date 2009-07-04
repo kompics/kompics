@@ -1,11 +1,7 @@
 package se.sics.kompics.wan.master.plab;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.codec.digest.DigestUtils;
 
 import se.sics.kompics.wan.master.ssh.Credentials;
 
@@ -19,6 +15,15 @@ import se.sics.kompics.wan.master.ssh.Credentials;
  */
 public class PlanetLabCredentials extends Credentials {
 
+	public static final String USERNAME = "Username";
+	public static final String AUTHSTRING = "AuthString";
+	public static final String AUTHMETHOD = "AuthMethod";
+	 public static final String SLICE = "Slice";
+	 public static final String ROLE = "Role";
+	 public static final String PRIVATE_KEY_FILE = "PrivateKeyFile";
+	 public static final String PRIVATE_KEY_PASSWORD = "PrivateKeyPassword";
+
+	
 	private final String slice;
 
 	private final String role;
@@ -26,8 +31,8 @@ public class PlanetLabCredentials extends Credentials {
 
 	public PlanetLabCredentials(Map<String, String> credentials) {
 		super(credentials);
-		this.slice = (String) credentials.get("Slice");
-		this.role = (String) credentials.get("Role");
+		this.slice = (String) credentials.get(PlanetLabCredentials.SLICE);
+		this.role = (String) credentials.get(PlanetLabCredentials.ROLE);
 	}
 
 	public PlanetLabCredentials(String username, String password, String slice,
@@ -114,12 +119,12 @@ public class PlanetLabCredentials extends Credentials {
 
 	public Map<String, String> getAuthMap() {
 		HashMap<String, String> authMap = new HashMap<String, String>();
-		authMap.put("Username", usernameMD5);
-		authMap.put("AuthString", passwordMD5);
-		 authMap.put("Slice", slice);
-		 authMap.put("Role", role);
-		 authMap.put("PrivateKeyFile", keyPath);
-		 authMap.put("PrivateKeyPassword", keyFilePassword);
+		authMap.put(PlanetLabCredentials.USERNAME, usernameMD5);
+		authMap.put(PlanetLabCredentials.AUTHSTRING, passwordMD5);
+		 authMap.put(PlanetLabCredentials.SLICE, slice);
+		 authMap.put(PlanetLabCredentials.ROLE, role);
+		 authMap.put(PlanetLabCredentials.PRIVATE_KEY_FILE, keyPath);
+		 authMap.put(PlanetLabCredentials.PRIVATE_KEY_PASSWORD, keyFilePassword);
 		return authMap;
 	}
 
@@ -127,11 +132,11 @@ public class PlanetLabCredentials extends Credentials {
 	@Override
 	public Map<String,String> getPLCMap() {
 		HashMap<String, String> authMap = new HashMap<String, String>();
-		authMap.put("Username", username);
-		authMap.put("AuthMethod", "password");
-		authMap.put("AuthString", password);
-		authMap.put("Slice", slice);
-		authMap.put("Role", role);
+		authMap.put(PlanetLabCredentials.USERNAME, username);
+		authMap.put(PlanetLabCredentials.AUTHMETHOD, "password");
+		authMap.put(PlanetLabCredentials.AUTHSTRING, password);
+		authMap.put(PlanetLabCredentials.SLICE, slice);
+		authMap.put(PlanetLabCredentials.ROLE, role);
 		return authMap;
 	}
 
@@ -145,10 +150,10 @@ public class PlanetLabCredentials extends Credentials {
 
 	public int hashCode() {
 		int code = 0;
+		code += slice.hashCode();
 		code += username.hashCode();
 		code += password.hashCode();
-		// code += slice.hashCode();
-		// code += role.hashCode();
+		code += role.hashCode();
 
 		return code;
 	}

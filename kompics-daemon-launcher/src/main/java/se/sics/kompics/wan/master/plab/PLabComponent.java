@@ -1,14 +1,5 @@
-package se.sics.kompics.wan.master.plab.plc;
+package se.sics.kompics.wan.master.plab;
 
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -17,8 +8,8 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -27,8 +18,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -57,82 +46,123 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceRequest;
+import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceResponse;
+import se.sics.kompics.wan.master.plab.plc.events.GetNodesRequest;
+import se.sics.kompics.wan.master.plab.plc.events.GetNodesResponse;
+import se.sics.kompics.wan.master.plab.plc.events.PlanetLabInit;
+import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesRequest;
+import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesResponse;
+import se.sics.kompics.wan.master.ssh.ExperimentHost;
 
-public class PLCentralCacheComponent extends ComponentDefinition {
+public class PLabComponent extends ComponentDefinition {
 
-	
+	private Negative<PLabPort> pLabPort = negative(PLabPort.class);
+
+	private Negative<Network> net = negative(Network.class);
+	private Positive<Timer> timer = positive(Timer.class);
+
 	private static int DNS_RESOLVER_MAX_THREADS = 10;
 
 	private static final String PLC_DISK_CACHE_FILE = "plc_disk_cache.xml.gz";
 
 	public final static double MAX_PLC_CACHE_AGE = 24;
 
-
-	private Negative<Network> net = negative(Network.class);
-	Positive<Timer> timer = positive(Timer.class);
-
 	private double progress = 0.0;
 
-	
 	private boolean retryingWithCertIgnore = false;
 
-	
-	public PLCentralCacheComponent() {
+	private PLabService pLabService;
 
-		subscribe(handleGetRunningPlanetLabHosts, net);
+	private PlanetLabCredentials cred;
+
+	public PLabComponent() {
+
+		subscribe(handleGetNodesForSliceRequest, pLabPort);
+		subscribe(handleQueryPLabSitesRequest, pLabPort);
+
+		subscribe(handlePlanetLabInit, control);
 	}
 
-	private Handler<GetNodesForSliceRequest> handleGetRunningPlanetLabHosts = new Handler<GetNodesForSliceRequest>() {
-		public void handle(GetNodesForSliceRequest event) {
+	public Handler<PlanetLabInit> handlePlanetLabInit = new Handler<PlanetLabInit>() {
+		public void handle(PlanetLabInit event) {
 
-			// Use XML-RPC interface to Co-Mon to get the status of executing
-			// hosts.
+			pLabService = (PLabService) PlanetLabConfiguration.getCtx()
+					.getBean("PLabService");
+
+			PlanetLabCredentials cred = event.getCred();
+			long startTime = System.currentTimeMillis();
+			System.out.println("sending PLC queries");
+			progress = 0.2;
+
+			// query for hosts
+			PLabHost[] hosts = getNodes();
+			long time = System.currentTimeMillis() - startTime;
+			System.out.println("PLC host query done: " + time + "ms");
+
+			// start the dns resolver
+
+			ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
+					DNS_RESOLVER_MAX_THREADS, hosts);
+			dnsLookups.performLookups();
+
+			progress = 0.4;
+			List<PLabSite> sites = getSites();
+			time = System.currentTimeMillis() - startTime;
+			System.out.println("PLC site query done: " + time + "ms");
+
+			progress = 0.6;
+			int[] sliceNodes = getNodesForSlice();
+			time = System.currentTimeMillis() - startTime;
+			System.out.println("PLC slice query done: " + time + "ms");
+
+			progress = 0.8;
+			// HashMap<Integer, Integer> hostToSiteMapping = this
+			// .queryPLCHostToSiteMapping();
+			// time = System.currentTimeMillis() - startTime;
+			System.out.println("PLC all queries done: " + time + "ms");
+
+			System.out.println("waiting for hostnames to get resolved");
+
+			dnsLookups.join();
+
+			time = System.currentTimeMillis() - startTime;
+			System.out.println("dns queries done: " + time + "ms");
+
+			progress = 0.9;
+			// for (int i = 0; i < hosts.length; i++) {
+			// PlanetLabHost host = hosts[i];
+			// host.setSite(hostToSiteMapping.get(host.getNode_id()));
+			// }
+
+//			PlanetLabStore diskStore = new PlanetLabStore(cred.getSlice(), cred
+//					.getUsernameMD5());
+//			diskStore.setHosts(hosts);
+//			diskStore.setSites(sites);
+			System.out.println("hosts : " + hosts.length);
+			System.out.println("sites : " + sites.size());
+//			diskStore.setSliceNodes(sliceNodes);
+//			return diskStore;
+
 		}
 	};
 
+	private Handler<GetNodesForSliceRequest> handleGetNodesForSliceRequest = new Handler<GetNodesForSliceRequest>() {
+		public void handle(GetNodesForSliceRequest event) {
 
-	private PlanetLabSite[] queryPLCSites(PlanetLabCredentials cred) {
-		Vector<Object> params = new Vector<Object>();
-		params.add(cred.getPLCMap());
+			int[] sliceNodes = getNodesForSlice();
 
-		HashMap<String, Object> filter = new HashMap<String, Object>();
-		params.add(filter);
+			GetNodesForSliceResponse respEvent = new GetNodesForSliceResponse(
+					event, sliceNodes);
 
-		ArrayList<String> returnFields = new ArrayList<String>();
-		returnFields.add("site_id");
-		returnFields.add("name");
-		returnFields.add("abbreviated_name");
-		returnFields.add("latitude");
-		returnFields.add("longitude");
-		params.add(returnFields);
+			trigger(respEvent, pLabPort);
 
-		PlanetLabSite[] sites;
-
-		Object response = this.executeRPC(cred, "GetSites", params);
-		if (!(response instanceof Object[])) {
-			// there was an error, return empty set
-			sites = new PlanetLabSite[0];
-		} else {
-			Object[] result = (Object[]) response;
-			sites = new PlanetLabSite[result.length];
-
-			for (int i = 0; i < result.length; i++) {
-				Map map = (Map) result[i];
-				// System.out.println("Parsing site" +
-				// map.get("abbreviated_name"));
-				PlanetLabSite site = new PlanetLabSite(map);
-				sites[i] = site;
-
-			}
 		}
-		return sites;
-	}
+	};
 
-	private int[] queryPLCSliceNodes(PlanetLabCredentials cred) {
+	private int[] getNodesForSlice() {
 
-		Vector<Object> params = new Vector<Object>();
+		List<Object> params = new ArrayList<Object>();
 		params.add(cred.getPLCMap());
 
 		HashMap<String, Object> filter = new HashMap<String, Object>();
@@ -143,141 +173,116 @@ public class PLCentralCacheComponent extends ComponentDefinition {
 		returnFields.add("node_ids");
 		params.add(returnFields);
 
-		Object response = this.executeRPC(cred, "GetSlices", params);
+		Object response = executeRPC(cred, "GetSlices", params);
 
+		int[] sliceNodes = new int[0];
 		if (response instanceof Object[]) {
 			Object[] result = (Object[]) response;
 			if (result.length > 0) {
 				Map map = (Map) result[0];
 				Object[] nodes = (Object[]) map.get("node_ids");
-				int[] sliceNodes = new int[nodes.length];
+				sliceNodes = new int[nodes.length];
 				for (int i = 0; i < nodes.length; i++) {
 					sliceNodes[i] = (Integer) nodes[i];
 					// System.out.println(nodes[i]);
 				}
-				return sliceNodes;
 			}
 		}
-		return new int[0];
+		return sliceNodes;
 	}
+
+	private Handler<GetNodesRequest> handleGetNodesRequest = new Handler<GetNodesRequest>() {
+		public void handle(GetNodesRequest event) {
+
+			PLabHost[] hosts = getNodes();
+			GetNodesResponse respEvent = new GetNodesResponse(event, hosts);
+			trigger(respEvent, pLabPort);
+		}
+	};
 	
-	
-	private PlanetLabStore sendPLCQueries(PlanetLabCredentials cred) {
-		long startTime = System.currentTimeMillis();
-		System.out.println("sending PLC queries");
-		progress = 0.2;
-
-		// query for hosts
-		PlanetLabHost[] hosts = this.queryPLCHosts(cred);
-		long time = System.currentTimeMillis() - startTime;
-		System.out.println("PLC host query done: " + time + "ms");
-
-		// start the dns resolver
-
-		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
-				DNS_RESOLVER_MAX_THREADS, hosts);
-		dnsLookups.performLookups();
-
-		progress = 0.4;
-		PlanetLabSite[] sites = this.queryPLCSites(cred);
-		time = System.currentTimeMillis() - startTime;
-		System.out.println("PLC site query done: " + time + "ms");
-
-		progress = 0.6;
-		int[] sliceNodes = this.queryPLCSliceNodes(cred);
-		time = System.currentTimeMillis() - startTime;
-		System.out.println("PLC slice query done: " + time + "ms");
-
-		progress = 0.8;
-		// HashMap<Integer, Integer> hostToSiteMapping = this
-		// .queryPLCHostToSiteMapping();
-		// time = System.currentTimeMillis() - startTime;
-		System.out.println("PLC all queries done: " + time + "ms");
-
-		System.out.println("waiting for hostnames to get resolved");
-
-		dnsLookups.join();
-
-		time = System.currentTimeMillis() - startTime;
-		System.out.println("dns queries done: " + time + "ms");
-
-		progress = 0.9;
-		// for (int i = 0; i < hosts.length; i++) {
-		// PlanetLabHost host = hosts[i];
-		// host.setSite(hostToSiteMapping.get(host.getNode_id()));
-		// }
-
-		PlanetLabStore diskStore = new PlanetLabStore(cred.getSlice(), cred
-				.getUsernameMD5());
-		diskStore.setHosts(hosts);
-		diskStore.setSites(sites);
-		System.out.println("hosts : " + hosts.length);
-		System.out.println("sites : " + sites.length);
-		diskStore.setSliceNodes(sliceNodes);
-		return diskStore;
-	}
-	
-	private PlanetLabHost[] queryPLCHosts(PlanetLabCredentials cred) {
-		// this.debugListMethods();
-		// this.debugGetMethodHelp("GetNodes");
-
+	private PLabHost[] getNodes()
+	{
 		Vector<String> fields = new Vector<String>();
-		fields.add("node_id");
-		fields.add("hostname");
-		fields.add("boot_state");
-		fields.add("ip");
-		fields.add("bwlimit");
-		fields.add("site_id");
+		fields.add(ExperimentHost.NODE_ID);
+		fields.add(ExperimentHost.HOSTNAME);
+		fields.add(ExperimentHost.BOOT_STATE);
+		fields.add(ExperimentHost.IP);
+		fields.add(ExperimentHost.BWLIMIT);
+		fields.add(PLabSite.SITE_ID);
 
-		// fields.add("model");
-		// fields.add("version");
-		// fields.add("ssh_rsa_key");
-		// fields.add("session"); //session requires admin priv
-		// fields.add("nodenetwork_id");
-		// fields.add("method");
-		// fields.add("type");
-		// fields.add("mac");
-		// fields.add("gateway");
-		// fields.add("network");
-		// fields.add("broadcast");
-		// fields.add("netmask");
-		// fields.add("dns1");
-		// fields.add("dns2");
-		Vector<Object> params = new Vector<Object>();
+		List<Object> params = new ArrayList<Object>();
 		params.add(cred.getPLCMap());
 		// plc api change, an empty map will return all nodes
 		params.add(new HashMap());
 		params.add(fields);
-		PlanetLabHost[] hosts;
-		Object response = this.executeRPC(cred, "GetNodes", params);
+		PLabHost[] hosts;
+		Object response = executeRPC(cred, "GetNodes", params);
 		if (!(response instanceof Object[])) {
 			// there was an error, return empty set
-			hosts = new PlanetLabHost[0];
+			hosts = new PLabHost[0];
 		} else {
 			Object[] result = (Object[]) response;
-			hosts = new PlanetLabHost[result.length];
+			hosts = new PLabHost[result.length];
 			for (int i = 0; i < result.length; i++) {
 				Map map = (Map) result[i];
-				PlanetLabHost host = new PlanetLabHost(map);
+				PLabHost host = new PLabHost(map);
 				hosts[i] = host;
 				// System.out.println(host.getHostname());
 			}
 		}
-
 		return hosts;
 	}
-
 	
-	private Object executeRPC(PlanetLabCredentials cred, String command, Vector<Object> params) {
-		Object res = new Object();
-		String url = PlanetLabConfiguration.getPlcApiAddress(); 
+	
+	private Handler<QueryPLabSitesRequest> handleQueryPLabSitesRequest = new Handler<QueryPLabSitesRequest>() {
+		public void handle(QueryPLabSitesRequest event) {
 
-		if(url== null){
-			url = "https://www.planet-lab.org/PLCAPI/";
+			List<PLabSite> sites = getSites();
+
+			QueryPLabSitesResponse respEvent = new QueryPLabSitesResponse(
+					event, sites);
+
+			trigger(respEvent, pLabPort);
 		}
+	};
+
+	private List<PLabSite> getSites() {
+		List<Object> rpcParams = new ArrayList<Object>();
+		rpcParams.add(cred.getPLCMap());
+
+		HashMap<String, Object> filter = new HashMap<String, Object>();
+		rpcParams.add(filter);
+
+		ArrayList<String> returnValues = new ArrayList<String>();
+		returnValues.add(PLabSite.NAME);
+		returnValues.add(PLabSite.ABBREVIATED_NAME);
+		returnValues.add(PLabSite.SITE_ID);
+		returnValues.add(PLabSite.LATITUDE);
+		returnValues.add(PLabSite.LONGITUDE);
+		rpcParams.add(returnValues);
+
+		List<PLabSite> sites = new ArrayList<PLabSite>();
+
+		Object response = executeRPC(cred, "GetSites", rpcParams);
+		if (response instanceof Object[]) {
+			Object[] result = (Object[]) response;
+			for (Object res : result) {
+				Map map = (Map) res;
+				PLabSite site = new PLabSite(map);
+				sites.add(site);
+			}
+		}
+		return sites;
+	}
+	
+	private Object executeRPC(PlanetLabCredentials cred, String command,
+			List<Object> params) {
+		Object res = new Object();
+		String url = PlanetLabConfiguration.getPlcApiAddress();
+
 		XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
 		try {
-			//System.out.println("using plc api at: " + url);
+			// System.out.println("using plc api at: " + url);
 			config.setServerURL(new URL(url));
 			config.setEncoding("iso-8859-1");
 			config.setEnabledForExtensions(true);
@@ -289,7 +294,6 @@ public class PLCentralCacheComponent extends ComponentDefinition {
 
 			res = (Object) client.execute(command, params);
 		} catch (XmlRpcException e) {
-			// TODO Auto-generated catch block
 			if (e.getMessage().contains(
 					"java.security.cert.CertPathValidatorException")) {
 				System.err
@@ -313,13 +317,15 @@ public class PLCentralCacheComponent extends ComponentDefinition {
 				// e.printStackTrace();
 			}
 		} catch (MalformedURLException e) {
-			System.err.println("There was an error when trying to connect to: " + url);
-			System.err.println("Did you specify it correctly in the config file?");
+			System.err.println("There was an error when trying to connect to: "
+					+ url);
+			System.err
+					.println("Did you specify it correctly in the config file?");
 		}
 
 		return res;
 	}
-	
+
 	private void ignoreCertificateErrors() {
 		retryingWithCertIgnore = true;
 		// Create a trust manager that does not validate certificate chains
@@ -364,77 +370,6 @@ public class PLCentralCacheComponent extends ComponentDefinition {
 		}
 	}
 
-	private PlanetLabStore hostStoreReadFromDisk(PlanetLabCredentials cred) {
-		// Deserialize an object
-		try {
-			XMLDecoder decoder = new XMLDecoder(new GZIPInputStream(
-					new BufferedInputStream(new FileInputStream(
-							PLC_DISK_CACHE_FILE))));
-
-			PlanetLabStore store = (PlanetLabStore) decoder.readObject();
-			decoder.close();
-			if (store != null) {
-				Date currentTime = new Date();
-				double storeAge = (currentTime.getTime() - store
-						.getCreationTime().getTime())
-						/ (60.0 * 60.0 * 1000);
-				int hostNum = store.getHosts().length;
-
-				if (!cred.getSlice().equals(store.getSlice())) {
-					System.err
-							.println("Plc disk cache created with different slice");
-					return null;
-				}
-				if (!cred.getUsernameMD5().equals(store.getUsername())) {
-					System.err
-							.println("Plc disk cache created with different username");
-
-				}
-
-				if (storeAge < MAX_PLC_CACHE_AGE && hostNum > 0) {
-					System.out.println("Using plc disk cache, (age="
-							+ (Math.round(storeAge * 100) / 100.0) + "h)");
-					return store;
-				} else {
-					System.out.println("PLC disk cache to old (age="
-							+ (Math.round(storeAge * 100) / 100.0) + "h)");
-				}
-
-			} else {
-				System.err.println("disk cache store == null");
-			}
-
-		} catch (FileNotFoundException e) {
-			System.out.println("Disk cache not found");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	private void hostStoreWriteToDisk(PlanetLabStore store) {
-		try {
-			// Serialize object into XML
-			XMLEncoder encoder = new XMLEncoder(new GZIPOutputStream(
-					new BufferedOutputStream(new FileOutputStream(
-							PLC_DISK_CACHE_FILE))));
-			encoder.writeObject(store);
-			encoder.close();
-		} catch (FileNotFoundException e) {
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	private void removeDiskCache() {
-		File diskCache = new File(PLC_DISK_CACHE_FILE);
-		diskCache.delete();
-
-	}
-	
-	
 	private class MyTypeFactory extends TypeFactoryImpl {
 		public MyTypeFactory(XmlRpcController pController) {
 			super(pController);
@@ -461,14 +396,15 @@ public class PLCentralCacheComponent extends ComponentDefinition {
 		}
 	}
 	
+	
 	private class ParallelDNSLookup {
 		private final ExecutorService threadPool;
 
-		private final PlanetLabHost[] hosts;
+		private final PLabHost[] hosts;
 
 		private final ConcurrentLinkedQueue<Future<String>> tasks;
 
-		public ParallelDNSLookup(int numThreads, PlanetLabHost[] hosts) {
+		public ParallelDNSLookup(int numThreads, PLabHost[] hosts) {
 			this.threadPool = Executors.newFixedThreadPool(numThreads);
 			this.tasks = new ConcurrentLinkedQueue<Future<String>>();
 			this.hosts = hosts;
@@ -476,7 +412,7 @@ public class PLCentralCacheComponent extends ComponentDefinition {
 
 		public void performLookups() {
 			for (int i = 0; i < hosts.length; i++) {
-				PlanetLabHost host = hosts[i];
+				PLabHost host = hosts[i];
 				Future<String> task = threadPool.submit(new ResolveIPHandler(
 						host, i));
 				tasks.add(task);
@@ -507,11 +443,11 @@ public class PLCentralCacheComponent extends ComponentDefinition {
 	}
 
 	private class ResolveIPHandler implements Callable<String> {
-		private PlanetLabHost host;
+		private PLabHost host;
 
 		int num;
 
-		public ResolveIPHandler(PlanetLabHost host, int num) {
+		public ResolveIPHandler(PLabHost host, int num) {
 			this.host = host;
 			this.num = num;
 		}
