@@ -5,8 +5,7 @@ import java.util.List;
 
 public interface PLabHostDao {
 
-
-	public abstract void store(List<PLabHost> listHosts);
-	public abstract List<PLabHost> loadAllHosts( );
+	public void store(List<PLabHost> listHosts);
+	public List<PLabHost> loadAllHosts( );
 
 }

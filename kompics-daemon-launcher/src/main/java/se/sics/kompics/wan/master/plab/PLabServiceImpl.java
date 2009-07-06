@@ -21,21 +21,21 @@ public class PLabServiceImpl implements PLabService {
 	/**
 	 * @return the pLabHostDao
 	 */
-	public PLabHostDao getpLabHostDao() {
+	public PLabHostDao getPLabHostDao() {
 		return pLabHostDao;
 	}
 
 	/**
 	 * @param pLabHostDao the pLabHostDao to set
 	 */
-	public void setpLabHostDao(PLabHostDao pLabHostDao) {
+	public void setPLabHostDao(PLabHostDao pLabHostDao) {
 		this.pLabHostDao = pLabHostDao;
 	}
 
 	@Override
 	public List<PLabHost> getHostsFromDB() {
 
-		return getpLabHostDao().loadAllHosts();
+		return getPLabHostDao().loadAllHosts();
 	}
 
 	/*
@@ -48,7 +48,7 @@ public class PLabServiceImpl implements PLabService {
 	@Override
 	public void storeHostsToDB(List<PLabHost> hosts) {
 
-		getpLabHostDao().store(hosts);
+		getPLabHostDao().store(hosts);
 
 	}
 

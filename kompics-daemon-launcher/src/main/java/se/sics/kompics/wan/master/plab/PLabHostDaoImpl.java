@@ -3,33 +3,32 @@ package se.sics.kompics.wan.master.plab;
 import java.util.List;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 // extends HibernateDaoSupport 
-public class PLabHostDaoImpl implements PLabHostDao {
+public class PLabHostDaoImpl  implements PLabHostDao {
 
-	// private SessionFactory sessionFactory = null;
+	 private SessionFactory sessionFactory = null;
 
-	private static final SessionFactory sessionFactory;
+//	private static final SessionFactory sessionFactory;
 
-	static {
-		try { // Create the SessionFactory from hibernate.cfg.xml
-			sessionFactory = new Configuration().configure().buildSessionFactory();
-		} catch (Throwable ex) {
-			// Make sure you log the exception, as it might be swallowed
-			System.err.println("Initial SessionFactory creation failed." + ex);
-			throw new ExceptionInInitializerError(ex);
-		}
+//	static {
+//		try { // Create the SessionFactory from hibernate.cfg.xml
+//			sessionFactory = new Configuration().configure().buildSessionFactory();
+//		} catch (Throwable ex) {
+//			// Make sure you log the exception, as it might be swallowed
+//			System.err.println("Initial SessionFactory creation failed." + ex);
+//			throw new ExceptionInInitializerError(ex);
+//		}
+//	}
+
+	public SessionFactory getSessionFactory() {
+		return this.sessionFactory;
 	}
 
-//	public SessionFactory getSessionFactory() {
-//		return this.sessionFactory;
-//	}
-//
-//	public void setSessionFactory(SessionFactory sessionFactory) {
-//		this.sessionFactory = sessionFactory;
-//	}
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override

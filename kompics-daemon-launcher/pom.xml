@@ -19,20 +19,39 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.jmock</groupId>
+			<artifactId>jmock-junit4</artifactId>
+			<version>2.5.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
 			<version>20040616</version>
 		</dependency>
+		<!--
+			<dependency> <groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId> <version>10.4.2.0</version>
+			</dependency>
+		-->
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate</artifactId>
-			<version>3.2.6.ga</version>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.6</version>
 		</dependency>
+
 		<dependency>
 			<groupId>hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>1.8.0.7</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate</artifactId>
+			<version>3.2.6.ga</version>
+		</dependency>
+
 		<dependency>
 			<groupId>javax.transaction</groupId>
 			<artifactId>jta</artifactId>
@@ -185,6 +204,37 @@
 						<mainClass>se.sics.kompics.wan.main.MasterMain</mainClass>
 					-->
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>hibernate3-maven-plugin</artifactId>
+				<version>2.2</version>
+
+<!-- 
+				<configuration>
+					<components>
+						<component>
+							<name>hbm2ddl</name>
+							<implementation>jdbc:hsqldb:hsql://localhost</implementation>
+						</component>
+						<component>
+							<name>hbm2hbmxml</name>
+							<outputDirectory>src/main/resources</outputDirectory>
+						</component>
+					</components>
+					<componentProperties>
+						<drop>false</drop>
+						<configurationfile>/src/main/resources/hibernate.cfg.xml</configurationfile>
+					</componentProperties>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>hsqldb</groupId>
+						<artifactId>hsqldb</artifactId>
+						<version>1.8.0.7</version>
+					</dependency>
+				</dependencies>
+ -->
 			</plugin>
 		</plugins>
 	</build>

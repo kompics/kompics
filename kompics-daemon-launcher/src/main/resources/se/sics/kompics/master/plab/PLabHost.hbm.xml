@@ -2,19 +2,20 @@
 <!DOCTYPE hibernate-mapping PUBLIC
      "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
      "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
-<hibernate-mapping package="se.sics.kompics.master.plab">
+<hibernate-mapping package="se.sics.kompics.wan.master.plab">
 	<class name="PLabHost" table="PLabHost">
 
-		<id name="id" column="id">
+		<id name="id" type="java.lang.Integer" column="id">
 			<generator class="native" />
- 		</id>
+		</id>
 
-<!-- 
-		<property name="hostname" column="hostname" />
-		<property name="boot_state" column="boot_state" />
-		<property name="version" column="version" />
-		<property name="bwlimit" column="bwlimit" />
-		<property name="model" column="model" />
- -->		
+		<property name="hostname" type="java.lang.String" column="hostname" />
+
+		<property name="boot_state" />
+		<!-- 
+		<property name="version" />
+		<property name="bwlimit" />
+		<property name="model" />
+		-->
 	</class>
 </hibernate-mapping>
