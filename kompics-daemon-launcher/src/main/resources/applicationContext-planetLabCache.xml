@@ -5,6 +5,7 @@
     http://www.springframework.org/schema/util
     http://www.springframework.org/schema/util/spring-util-2.0.xsd">
 
+<!--
 	<bean id="PLabService" parent="txnProxyTemplate">
 		<property name="target">
 			<bean class="se.sics.kompics.master.plab.PLabServiceImpl" scope="prototype">
@@ -12,19 +13,19 @@
 			</bean>
 		</property>
 	</bean>
-
-<!-- 
+ -->
+ 
 	<bean id="PLabService" class="se.sics.kompics.master.plab.PLabServiceImpl"
 		scope="prototype">
 		<property name="PLabHostDao" ref="PLabHostDao" />
 	</bean>
- -->
+
 	<bean id="PLabHostDao" class="se.sics.kompics.master.plab.PLabHostDaoImpl"
 		scope="prototype">
 		<property name="sessionFactory" ref="sessionFactory" />
 	</bean>
 
-
+<!--
 	<bean id="transactionManager"
 		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
 		<property name="sessionFactory">
@@ -43,7 +44,8 @@
 			</props>
 		</property>
 	</bean>
-
+ -->
+ 
 	<bean id="sessionFactory"
 		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean"
 		scope="singleton">

@@ -13,5 +13,5 @@ public interface PLabService {
 
 	public List<PLabHost> getHostsFromDB();
 	
-	public void storeHostsToDB(List<PLabHost> hosts);
+	public void storeHostsToDB(List<PLabHost> listHosts);
 }

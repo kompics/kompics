@@ -15,7 +15,8 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 	public static final String MODEL			= "model";
 	public static final String VERSION  		= "version";
 	public static final String SSH_RSA_KEY		= "ssh_rsa_key";
-	public static final String SESSION			= "session"; //session requires admin priv
+	//session needs administration privileges
+	public static final String SESSION			= "session"; 
 	public static final String NODENETWORK_ID 	= "nodenetwork_id";
 	public static final String METHOD			= "method";
 	public static final String TYPE				= "type";
@@ -71,12 +72,6 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 	public String getBoot_state() {
 		return boot_state;
 	}
-
-	/**
-	 * only here for testing and fallback, don't use...
-	 * 
-	 * @param data.hostname
-	 */
 
 	public String getBwlimit() {
 		return bwlimit;

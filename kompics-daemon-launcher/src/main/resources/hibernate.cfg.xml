@@ -13,11 +13,12 @@
 		<property name="connection.pool_size">2</property>
 		<!-- SQL dialect -->
 		<property name="dialect">org.hibernate.dialect.HSQLDialect</property>
-		<!-- To drop and re-create the database schema on start-up: "auto"-->
-		<property name="hbm2ddl.update">create</property>
+		<!-- To drop and re-create the database schema on start-up: auto   
+		to store old values - "create"-->
+		<property name="hbm2ddl.update">auto</property>
 		<!-- Echo all executed SQL to stdout -->
 		<property name="show_sql">true</property>
-		<mapping resource="se/sics/kompics/master/plan/PLabHost.hbm.xml" />
+		<mapping resource="se/sics/kompics/master/plab/PLabHost.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>
      

@@ -10,6 +10,7 @@ public class PLabHost extends ExperimentHost {
 
 	private CoMonStat coMonStat;
 
+	private int id;
 
 	public PLabHost() {
 		super();
@@ -24,6 +25,21 @@ public class PLabHost extends ExperimentHost {
 		super(hostname);
 	}
 
+
+	/**
+	 * @return the id
+	 */
+	public int getId() {
+		return id;
+	}
+
+	/**
+	 * @param id the id to set
+	 */
+	public void setId(int id) {
+		this.id = id;
+	}
+	
 	public CoMonStat getComMonStat() {
 		return coMonStat;
 	}

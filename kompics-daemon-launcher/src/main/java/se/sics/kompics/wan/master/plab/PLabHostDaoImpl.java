@@ -2,12 +2,13 @@ package se.sics.kompics.wan.master.plab;
 
 import java.util.List;
 
+import org.hibernate.SessionFactory;
 import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
-public class PLabHostDaoImpl extends HibernateDaoSupport implements PLabHostDao {
+// extends HibernateDaoSupport 
+public class PLabHostDaoImpl implements PLabHostDao {
 
-//	private SessionFactory sessionFactory = null;
+	private SessionFactory sessionFactory = null;
 
 	/*
 	 * private static final SessionFactory sessionFactory;
@@ -18,13 +19,13 @@ public class PLabHostDaoImpl extends HibernateDaoSupport implements PLabHostDao 
 	 * be swallowed System.err.println("Initial SessionFactory creation failed."
 	 * + ex); throw new ExceptionInInitializerError(ex); } }
 	 */
-//	public SessionFactory getSessionFactory() {
-//		return sessionFactory;
-//	}
-//
-//	public void setSessionFactory(SessionFactory sessionFactory) {
-//		this.sessionFactory = sessionFactory;
-//	}
+	public SessionFactory getSessionFactory() {
+		return sessionFactory;
+	}
+
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -32,8 +33,8 @@ public class PLabHostDaoImpl extends HibernateDaoSupport implements PLabHostDao 
 //		Session session = sessionFactory.openSession();
 //		List<PLabHost> list = session.createQuery("From PLabHost").list();
 
-//		HibernateTemplate ht = new HibernateTemplate(sessionFactory);
-		HibernateTemplate ht = new HibernateTemplate();
+		HibernateTemplate ht = new HibernateTemplate(sessionFactory);
+//		HibernateTemplate ht = new HibernateTemplate();
 		List<PLabHost> list = (List<PLabHost>) ht.find("From PLabHost");
 		return list;
 
@@ -44,7 +45,7 @@ public class PLabHostDaoImpl extends HibernateDaoSupport implements PLabHostDao 
 
 //		Session session = sessionFactory.openSession();
 //		session.getTransaction().begin();
-		HibernateTemplate ht = new HibernateTemplate(); // sessionFactory
+		HibernateTemplate ht = new HibernateTemplate(sessionFactory); // 
 		
 		for (PLabHost host : listHosts) {
 //			session.save(host);
