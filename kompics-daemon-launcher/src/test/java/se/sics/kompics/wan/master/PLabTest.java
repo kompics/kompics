@@ -74,7 +74,7 @@ public class PLabTest  {
 
 				// TODO Auto-generated method stub
 				PlanetLabCredentials cred = 
-					new PlanetLabCredentials("kost", "kostjap", "sics_grid4all",
+					new PlanetLabCredentials("", "", "",
 							"user",
 						"/home/jdowling/.ssh/id_rsa", "");
 				PLabHost host = new PLabHost("lqist.com");
