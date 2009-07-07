@@ -22,6 +22,15 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	public static final String PROP_HTTP_PROXY_USERNAME = "HttpProxyUsername";
 	public static final String PROP_HTTP_PROXY_PASSWORD = "HttpProxyPassword";
 	public static final String PROP_PLC_API_ADDRESS = "PlcApiAddress";
+	public static final String PROP_USE_GUI = "gui";
+	
+	public static final String PROP_PL_USER = "Username";
+	public static final String PROP_PL_PASSWORD = "AuthString";
+	public static final String PROP_PL_AUTHMETHOD = "AuthMethod";
+	public static final String PROP_PL_SLICE = "Slice";
+	public static final String PROP_PL_ROLE = "Role"; 
+	public static final String PROP_PL_PRIVATE_KEY_FILE = "PrivateKeyFile";
+	public static final String PROP_PL_PRIVATE_KEY_PASSWORD =  "PrivateKeyPassword";
 	
 	
 	public static final int DEFAULT_LOCAL_XML_RPC_PORT = 8088;
@@ -30,7 +39,15 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	public static final int DEFAULT_HTTP_PROXY_PORT = -1;
 	public static final String DEFAULT_HTTP_PROXY_USERNAME = "";
 	public static final String DEFAULT_HTTP_PROXY_PASSWORD = "";
+	public static final boolean DEFAULT_USE_GUI = true;
 	
+	public static final String DEFAULT_PL_USER = "kost@sics.se";
+	public static final String DEFAULT_PL_PASSWORD = "";
+	public static final String DEFAULT_PL_AUTHMETHOD = "password";
+	public static final String DEFAULT_PL_SLICE = "sics_grid4all";
+	public static final String DEFAULT_PL_ROLE = "user"; // user, pi, tech
+	public static final String DEFAULT_PL_PRIVATE_KEY_FILE = "~/.ssh/id_rsa";
+	public static final String DEFAULT_PL_PRIVATE_KEY_PASSWORD = "";
 	
 	public static final String SPECIAL_COMMAND_UPLOAD_DIR = "#upload";
 	public static final String SPECIAL_COMMAND_DOWNLOAD_DIR = "#download";
@@ -45,6 +62,14 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	protected Option httpProxyPortOption;
 	protected Option httpProxyUsernameOption;
 	protected Option httpProxyPasswordOption;
+	protected Option guiOption;
+	protected Option plUserOption;
+	protected Option plPasswordOption;
+	protected Option plAuthMethodOption;
+	protected Option plSliceOption;
+	protected Option plRoleOption;
+	protected Option plPrivateKeyFileOption;
+	protected Option plPrivateKeyPasswordOption;
 	
 	protected static boolean plInitialized = false;
 	
@@ -93,6 +118,40 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		httpProxyPasswordOption = new Option("httpProxyPassword", true, "Password for authentication with the http proxy server.");
 		httpProxyPasswordOption.setArgName("password");
 		options.addOption(httpProxyPasswordOption);
+		
+		guiOption = new Option("gui", true, "start using the swing graphical user interface (GUI).");
+		guiOption.setArgName("gui");
+		options.addOption(guiOption);
+		
+		plUserOption = new Option("user", true, "planetlab user account (e.g., username@yourinstitution.domain)");
+		plUserOption.setArgName("user");
+		options.addOption(plUserOption);
+
+		
+		plPasswordOption = new Option("password", true, "password for planetlab user account.");
+		plPasswordOption.setArgName("password");
+		options.addOption(plPasswordOption);
+
+		plAuthMethodOption = new Option("authMethod", true, "planetlab authentication method.");
+		plAuthMethodOption.setArgName("authMethod");
+		options.addOption(plAuthMethodOption);
+
+		plSliceOption = new Option("slice", true, "Planetlab slice name.");
+		plSliceOption.setArgName("slice");
+		options.addOption(plSliceOption);
+
+		plRoleOption = new Option("role", true, "Planetlab user role (from options: user, tech, pi)");
+		plRoleOption.setArgName("role");
+		options.addOption(plRoleOption);
+
+		plPrivateKeyFileOption = new Option("keyfile", true, "Private ssh key registered with Planetlab user account.");
+		plPrivateKeyFileOption.setArgName("keyfile");
+		options.addOption(plPrivateKeyFileOption);
+
+		plPrivateKeyPasswordOption = new Option("keypasswd", true, "Password (if one) for private ssh key registered with Planetlab user account.");
+		plPrivateKeyPasswordOption.setArgName("keypasswd");
+		options.addOption(plPrivateKeyPasswordOption);
+
 	}
 
 	@Override
@@ -128,6 +187,41 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 			String pass = new String(line.getOptionValue(httpProxyPasswordOption.getOpt()));
 			compositeConfig.setProperty(PROP_HTTP_PROXY_PASSWORD, pass);
 		}
+		
+		if (line.hasOption(guiOption.getOpt())) {
+			String pass = new String(line.getOptionValue(guiOption.getOpt()));
+			compositeConfig.setProperty(PROP_USE_GUI, pass);
+		}
+		
+		if (line.hasOption(plUserOption.getOpt())) {
+			String user = new String(line.getOptionValue(plUserOption.getOpt()));
+			compositeConfig.setProperty(PROP_PL_USER, user);
+		}
+		if (line.hasOption(plPasswordOption.getOpt())) {
+			String pass = new String(line.getOptionValue(plPasswordOption.getOpt()));
+			compositeConfig.setProperty(PROP_PL_PASSWORD, pass);
+		}
+		if (line.hasOption(plAuthMethodOption.getOpt())) {
+			String auth = new String(line.getOptionValue(plAuthMethodOption.getOpt()));
+			compositeConfig.setProperty(PROP_PL_AUTHMETHOD, auth);
+		}
+		if (line.hasOption(plSliceOption.getOpt())) {
+			String slice = new String(line.getOptionValue(plSliceOption.getOpt()));
+			compositeConfig.setProperty(PROP_PL_SLICE, slice);
+		}
+		if (line.hasOption(plRoleOption.getOpt())) {
+			String role = new String(line.getOptionValue(plRoleOption.getOpt()));
+			compositeConfig.setProperty(PROP_PL_ROLE, role);
+		}
+		if (line.hasOption(plPrivateKeyFileOption.getOpt())) {
+			String key = new String(line.getOptionValue(plPrivateKeyFileOption.getOpt()));
+			compositeConfig.setProperty(PROP_PL_PRIVATE_KEY_FILE, key);
+		}
+		if (line.hasOption(plPrivateKeyPasswordOption.getOpt())) {
+			String pass = new String(line.getOptionValue(plPrivateKeyPasswordOption.getOpt()));
+			compositeConfig.setProperty(PROP_PL_PRIVATE_KEY_PASSWORD, pass);
+		}
+		
 	}
 
 	static public int getLocalXmlRpcPort()
@@ -153,11 +247,54 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	{
 		return configuration.compositeConfig.getString(PROP_HTTP_PROXY_USERNAME, DEFAULT_HTTP_PROXY_USERNAME);
 	}
+	
 	static public String getHttpProxyPassword()
 	{
 		return configuration.compositeConfig.getString(PROP_HTTP_PROXY_PASSWORD, DEFAULT_HTTP_PROXY_PASSWORD);
 	}
+	
+	static public boolean isGUI()
+	{
+		return configuration.compositeConfig.getBoolean(PROP_USE_GUI, DEFAULT_USE_GUI);
+	}
 
+	
+	static public String getUsername()
+	{
+		return configuration.compositeConfig.getString(PROP_PL_USER, DEFAULT_PL_USER);
+	}
+	
+	static public String getPassword()
+	{
+		return configuration.compositeConfig.getString(PROP_PL_PASSWORD, DEFAULT_PL_PASSWORD);
+	}
+	
+	static public String getAuthMethod()
+	{
+		return configuration.compositeConfig.getString(PROP_PL_AUTHMETHOD, DEFAULT_PL_AUTHMETHOD);
+	}
+	
+	static public String getSlice()
+	{
+		return configuration.compositeConfig.getString(PROP_PL_SLICE, DEFAULT_PL_SLICE);
+	}
+	
+	static public String getRole()
+	{
+		return configuration.compositeConfig.getString(PROP_PL_ROLE, DEFAULT_PL_ROLE);
+	}
+	
+	static public String getPrivateKeyFile()
+	{
+		return configuration.compositeConfig.getString(PROP_PL_PRIVATE_KEY_FILE, 
+				DEFAULT_PL_PRIVATE_KEY_FILE);
+	}
+	
+	static public String getPrivateKeyFilePassword()
+	{
+		return configuration.compositeConfig.getString(PROP_PL_PRIVATE_KEY_PASSWORD, 
+				DEFAULT_PL_PRIVATE_KEY_PASSWORD);
+	}
 	
 	static protected void planetLabInitialized() {
 		baseInitialized();

@@ -1,4 +1,4 @@
-package se.sics.kompics.wan.master;
+package se.sics.kompics.wan.ui;
 
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;

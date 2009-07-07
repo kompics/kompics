@@ -10,6 +10,7 @@ public class PLabHostDaoImpl  implements PLabHostDao {
 
 	 private SessionFactory sessionFactory = null;
 
+	 private HibernateTemplate ht = null;
 //	private static final SessionFactory sessionFactory;
 
 //	static {
@@ -28,6 +29,7 @@ public class PLabHostDaoImpl  implements PLabHostDao {
 
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		this.sessionFactory = sessionFactory;
+		ht = new HibernateTemplate(sessionFactory);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -36,9 +38,7 @@ public class PLabHostDaoImpl  implements PLabHostDao {
 		// Session session = sessionFactory.openSession();
 		// List<PLabHost> list = session.createQuery("From PLabHost").list();
 
-		HibernateTemplate ht = new HibernateTemplate(sessionFactory);
-		// HibernateTemplate ht = new HibernateTemplate();
-		List<PLabHost> list = (List<PLabHost>) ht.find("From PLabHost");
+		List<PLabHost> list = (List<PLabHost>) ht.find("from PLabHost");
 		return list;
 
 	}
@@ -48,7 +48,6 @@ public class PLabHostDaoImpl  implements PLabHostDao {
 
 		// Session session = sessionFactory.openSession();
 		// session.getTransaction().begin();
-		HibernateTemplate ht = new HibernateTemplate(sessionFactory); // 
 
 		for (PLabHost host : listHosts) {
 			// session.save(host);

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -37,8 +36,11 @@ import org.apache.xmlrpc.parser.NullParser;
 import org.apache.xmlrpc.parser.TypeParser;
 import org.apache.xmlrpc.serializer.NullSerializer;
 import org.apache.xmlrpc.serializer.TypeSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
+import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
@@ -46,6 +48,8 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
+import se.sics.kompics.wan.master.Master;
+import se.sics.kompics.wan.master.MasterInit;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesRequest;
@@ -54,17 +58,22 @@ import se.sics.kompics.wan.master.plab.plc.events.PlanetLabInit;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesRequest;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesResponse;
 import se.sics.kompics.wan.master.ssh.ExperimentHost;
+import se.sics.kompics.wan.master.ssh.SshComponent;
 
 public class PLabComponent extends ComponentDefinition {
 
 	private Negative<PLabPort> pLabPort = negative(PLabPort.class);
 
+	private final Logger logger = LoggerFactory.getLogger(PLabComponent.class);
+	
 	private Negative<Network> net = negative(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
 
+	private Component master;
+	
+//	private Component ssh;
+	
 	private static int DNS_RESOLVER_MAX_THREADS = 10;
-
-	private static final String PLC_DISK_CACHE_FILE = "plc_disk_cache.xml.gz";
 
 	public final static double MAX_PLC_CACHE_AGE = 24;
 
@@ -78,6 +87,10 @@ public class PLabComponent extends ComponentDefinition {
 
 	public PLabComponent() {
 
+		master = create(Master.class);
+//		ssh = create(SshComponent.class);
+		
+		
 		subscribe(handleGetNodesForSliceRequest, pLabPort);
 		subscribe(handleQueryPLabSitesRequest, pLabPort);
 
@@ -87,6 +100,12 @@ public class PLabComponent extends ComponentDefinition {
 	public Handler<PlanetLabInit> handlePlanetLabInit = new Handler<PlanetLabInit>() {
 		public void handle(PlanetLabInit event) {
 
+			MasterInit mInit = new MasterInit(event.getMaster(), 
+					event.getBootConfig(), event.getMonitorConfig());
+			trigger(mInit, master.getControl());
+			
+			
+			
 			pLabService = (PLabService) PlanetLabConfiguration.getCtx()
 					.getBean("PLabService");
 
@@ -96,7 +115,7 @@ public class PLabComponent extends ComponentDefinition {
 			progress = 0.2;
 
 			// query for hosts
-			PLabHost[] hosts = getNodes();
+			List<PLabHost> hosts = getNodes();
 			long time = System.currentTimeMillis() - startTime;
 			System.out.println("PLC host query done: " + time + "ms");
 
@@ -139,7 +158,7 @@ public class PLabComponent extends ComponentDefinition {
 //					.getUsernameMD5());
 //			diskStore.setHosts(hosts);
 //			diskStore.setSites(sites);
-			System.out.println("hosts : " + hosts.length);
+			System.out.println("hosts : " + hosts.size());
 			System.out.println("sites : " + sites.size());
 //			diskStore.setSliceNodes(sliceNodes);
 //			return diskStore;
@@ -194,20 +213,20 @@ public class PLabComponent extends ComponentDefinition {
 	private Handler<GetNodesRequest> handleGetNodesRequest = new Handler<GetNodesRequest>() {
 		public void handle(GetNodesRequest event) {
 
-			PLabHost[] hosts = getNodes();
+			List<PLabHost> hosts = getNodes();
 			GetNodesResponse respEvent = new GetNodesResponse(event, hosts);
 			trigger(respEvent, pLabPort);
 		}
 	};
 	
-	private PLabHost[] getNodes()
+	private List<PLabHost> getNodes()
 	{
-		Vector<String> fields = new Vector<String>();
+		List<String> fields = new ArrayList<String>();
 		fields.add(ExperimentHost.NODE_ID);
 		fields.add(ExperimentHost.HOSTNAME);
 		fields.add(ExperimentHost.BOOT_STATE);
-		fields.add(ExperimentHost.IP);
-		fields.add(ExperimentHost.BWLIMIT);
+//		fields.add(ExperimentHost.IP);
+//		fields.add(ExperimentHost.BWLIMIT);
 		fields.add(PLabSite.SITE_ID);
 
 		List<Object> params = new ArrayList<Object>();
@@ -215,20 +234,19 @@ public class PLabComponent extends ComponentDefinition {
 		// plc api change, an empty map will return all nodes
 		params.add(new HashMap());
 		params.add(fields);
-		PLabHost[] hosts;
+		
+		List<PLabHost> hosts = new ArrayList<PLabHost>();
 		Object response = executeRPC(cred, "GetNodes", params);
-		if (!(response instanceof Object[])) {
-			// there was an error, return empty set
-			hosts = new PLabHost[0];
-		} else {
+		if (response instanceof Object[]) {
 			Object[] result = (Object[]) response;
-			hosts = new PLabHost[result.length];
-			for (int i = 0; i < result.length; i++) {
-				Map map = (Map) result[i];
+			for (Object obj : result) {
+				Map map = (Map) obj;
 				PLabHost host = new PLabHost(map);
-				hosts[i] = host;
-				// System.out.println(host.getHostname());
+				hosts.add(host);
 			}
+		}
+		else {
+			logger.warn("Nothing returned by GetNodes");
 		}
 		return hosts;
 	}
@@ -400,21 +418,22 @@ public class PLabComponent extends ComponentDefinition {
 	private class ParallelDNSLookup {
 		private final ExecutorService threadPool;
 
-		private final PLabHost[] hosts;
+		private final List<PLabHost> hosts;
 
 		private final ConcurrentLinkedQueue<Future<String>> tasks;
 
-		public ParallelDNSLookup(int numThreads, PLabHost[] hosts) {
+		public ParallelDNSLookup(int numThreads, List<PLabHost> hosts) {
+			this.hosts = new ArrayList<PLabHost>(hosts);
+			
 			this.threadPool = Executors.newFixedThreadPool(numThreads);
 			this.tasks = new ConcurrentLinkedQueue<Future<String>>();
-			this.hosts = hosts;
 		}
 
 		public void performLookups() {
-			for (int i = 0; i < hosts.length; i++) {
-				PLabHost host = hosts[i];
+			int i = 0;
+			for (PLabHost host : hosts) {
 				Future<String> task = threadPool.submit(new ResolveIPHandler(
-						host, i));
+						host, i++));
 				tasks.add(task);
 			}
 		}

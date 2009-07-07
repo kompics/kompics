@@ -34,6 +34,7 @@ import se.sics.kompics.wan.daemon.JobStartRequestMsg;
 import se.sics.kompics.wan.daemon.JobStopRequestMsg;
 import se.sics.kompics.wan.daemon.JobsFoundMsg;
 import se.sics.kompics.wan.job.Job;
+import se.sics.kompics.wan.ui.UserInputMaster;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.WebResponse;
@@ -48,16 +49,16 @@ import se.sics.kompics.web.WebResponse;
 public class Master extends ComponentDefinition {
 
 	private final Logger logger = LoggerFactory.getLogger(Master.class);
-	
-	Positive<Network> net = positive(Network.class);
-	Positive<Timer> timer = positive(Timer.class);
-	Negative<Web> web = negative(Web.class);
-	
+
 	static SimulationScenario scenario = new SimulationScenario() {
 
 		private static final long serialVersionUID = -1117143406424329L;
 	};
 
+	
+	Positive<Network> net = positive(Network.class);
+	Positive<Timer> timer = positive(Timer.class);
+	Negative<Web> web = negative(Web.class);
 	
 	private Component userInput;
 
@@ -96,7 +97,7 @@ public class Master extends ComponentDefinition {
 		this.loadedHostJobs = new HashMap<Integer, TreeSet<Integer>>();
 		this.jobs = new HashMap<Integer,Job>();
 		this.cacheEpoch = 1L;
-		this.userInput = create(UserInput.class);
+		this.userInput = create(UserInputMaster.class);
 		
 		outstandingTimeouts = new HashSet<UUID>();
 

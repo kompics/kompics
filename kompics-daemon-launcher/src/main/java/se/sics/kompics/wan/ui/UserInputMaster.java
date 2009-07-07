@@ -1,4 +1,4 @@
-package se.sics.kompics.wan.master;
+package se.sics.kompics.wan.ui;
 
 import java.io.FileNotFoundException;
 import java.util.Arrays;
@@ -14,10 +14,18 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.MasterConfiguration;
+import se.sics.kompics.wan.master.InstallJobOnHosts;
+import se.sics.kompics.wan.master.MasterPort;
+import se.sics.kompics.wan.master.PrintConnectedDameons;
+import se.sics.kompics.wan.master.PrintDaemonsWithLoadedJob;
+import se.sics.kompics.wan.master.PrintLoadedJobs;
+import se.sics.kompics.wan.master.ShutdownDaemonRequest;
+import se.sics.kompics.wan.master.StartJobOnHosts;
+import se.sics.kompics.wan.master.StopJobOnHosts;
 import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
 
-public class UserInput extends ComponentDefinition {
+public class UserInputMaster extends ComponentDefinition {
 	private Negative<MasterPort> master = negative(MasterPort.class);
 	Positive<Timer> timer = positive(Timer.class);
 
@@ -25,7 +33,7 @@ public class UserInput extends ComponentDefinition {
 	
 	TreeSet<Address> hosts = null;
 
-	public UserInput() {
+	public UserInputMaster() {
 		subscribe(handleStart, control);
 		subscribe(handleUserInputTimeout, timer);
 		scanner = new Scanner(System.in);

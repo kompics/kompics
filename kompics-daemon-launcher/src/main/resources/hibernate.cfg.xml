@@ -4,27 +4,27 @@
      "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
 	<session-factory>
-<!-- 
+
 		<property name="connection.driver_class">org.hsqldb.jdbcDriver</property>
-		<property name="connection.url">jdbc:hsqldb:hsql://localhost</property>
+		<property name="connection.url">jdbc:hsqldb:mem:hibernate</property>
 		<property name="connection.username">sa</property>
 		<property name="connection.password"></property>
 		<property name="connection.pool_size">2</property>
 		<property name="dialect">org.hibernate.dialect.HSQLDialect</property>
-		<property name="hbm2ddl.update">auto</property>
 		<property name="show_sql">true</property>
- -->		
-	
+	    <property name="hbm2ddl.auto">create</property> 		
+<!-- 	
+production settings here...
+
     <property name="connection.url">jdbc:mysql://localhost/hibernate</property>
     <property name="connection.username">root</property>
     <property name="connection.password"></property>
     <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
     <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
-
     <property name="show_sql">true</property>
-
     <property name="format_sql">true</property>
-    <property name="hbm2ddl.auto">create</property>
+    <property name="hbm2ddl.update">auto</property>
+-->
 
     <property name="connection.pool_size">1</property>
     <property name="current_session_context_class">thread</property>

@@ -80,9 +80,9 @@ public class SshTest  {
 			public void handle(Start event) {
 
 				// TODO Auto-generated method stub
-				Credentials cred = new Credentials("", "", 
+				Credentials cred = new Credentials("sics_grid4all", "", 
 						"/home/jdowling/.ssh/id_rsa", "");
-				ExperimentHost host = new ExperimentHost("dight.sics.se");
+				ExperimentHost host = new ExperimentHost("planetlab3.ani.univie.ac.at");
 				
 				trigger(new SshConnectRequest(cred, host), sshComponent.getPositive(SshPort.class));
 
