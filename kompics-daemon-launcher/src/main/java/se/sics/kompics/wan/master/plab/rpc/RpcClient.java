@@ -32,7 +32,7 @@ public class RpcClient implements RpcFunctions {
 	protected RpcClient() {
 //		String portString = Main.getConfig(Constants.LOCAL_XML_RPC_PORT);
 //		String portString = Constants.LOCAL_XML_RPC_PORT;
-		int port = PlanetLabConfiguration.getLocalXmlRpcPort();
+		int port = PlanetLabConfiguration.getXmlRpcPort();
 //		if (portString != null) {
 //			port = Integer.parseInt(portString);
 //		} else {

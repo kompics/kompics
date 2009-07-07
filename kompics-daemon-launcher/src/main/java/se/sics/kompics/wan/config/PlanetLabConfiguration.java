@@ -15,7 +15,10 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	private static ApplicationContext ctx=null; 
 	public static final String PLANETLAB_APP_CONTEXT = "applicationContext-planetLabCache.xml";
 	
-	public static final String PROP_LOCAL_XML_RPC_PORT = "XmlRpcPort";
+	public static final String PROP_XMLRPC_PORT = "XmlRpcPort";
+	public static final String PROP_XMLRPC_TIMEOUT = "XmlRpcTimeout";
+	public static final String PROP_XMLRPC_HOMEPAGE = "XmlRpcHomepage";
+	public static final String PROP_XMLRPC_MAX_THREADS = "XmlRpcMaxThreads";
 	
 	public static final String PROP_HTTP_PROXY_HOST = "HttpProxyHost";
 	public static final String PROP_HTTP_PROXY_PORT = "HttpProxyPort";
@@ -33,10 +36,14 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	public static final String PROP_PL_PRIVATE_KEY_PASSWORD =  "PrivateKeyPassword";
 	
 	
-	public static final int DEFAULT_LOCAL_XML_RPC_PORT = 8088;
+	public static final int 	DEFAULT_XMLRPC_PORT = 8088;
+	public static final int		DEFAULT_XMLRPC_TIMEOUT = 15*1000;
+	public static final String DEFAULT_XMLRPC_HOMEPAGE = "XmlRpcHomepage";
+	public static final int 	DEFAULT_XMLRPC_MAX_THREADS = 4;
+
 	public static final String DEFAULT_PLC_API_ADDRESS = "https://www.planet-lab.org/PLCAPI/";
 	public static final String DEFAULT_HTTP_PROXY_HOST = "";
-	public static final int DEFAULT_HTTP_PROXY_PORT = -1;
+	public static final int 	DEFAULT_HTTP_PROXY_PORT = -1;
 	public static final String DEFAULT_HTTP_PROXY_USERNAME = "";
 	public static final String DEFAULT_HTTP_PROXY_PASSWORD = "";
 	public static final boolean DEFAULT_USE_GUI = true;
@@ -56,7 +63,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	/********* Helper fields ********************************/
 	/********************************************************/
 	
-	protected Option localXmlRpcPortOption;
+	protected Option xmlRpcPortOption;
 	protected Option plcApiOption;
 	protected Option httpProxyHostOption;
 	protected Option httpProxyPortOption;
@@ -95,9 +102,9 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	@Override
 	protected void parseAdditionalOptions(String[] args) throws IOException {
 		super.parseAdditionalOptions(args);
-		localXmlRpcPortOption = new Option("localXmlRpcPort", true, "Local XML RPC port");
-		localXmlRpcPortOption.setArgName("number");
-		options.addOption(localXmlRpcPortOption);
+		xmlRpcPortOption = new Option("localXmlRpcPort", true, "Local XML RPC port");
+		xmlRpcPortOption.setArgName("number");
+		options.addOption(xmlRpcPortOption);
 		
 		plcApiOption = new Option("plcApiAddress", true, "PLC API Address");
 		plcApiOption.setArgName("address");
@@ -157,10 +164,10 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	@Override
 	protected void processAdditionalOptions() throws IOException {
 		super.processAdditionalOptions();
-		if (line.hasOption(localXmlRpcPortOption.getOpt()))
+		if (line.hasOption(xmlRpcPortOption.getOpt()))
 		{
-			int scf = new Integer(line.getOptionValue(localXmlRpcPortOption.getOpt()));
-			compositeConfig.setProperty(PROP_LOCAL_XML_RPC_PORT, scf);
+			int scf = new Integer(line.getOptionValue(xmlRpcPortOption.getOpt()));
+			compositeConfig.setProperty(PROP_XMLRPC_PORT, scf);
 		}
 		
 		if (line.hasOption(plcApiOption.getOpt())) {
@@ -224,9 +231,21 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		
 	}
 
-	static public int getLocalXmlRpcPort()
+	static public int getXmlRpcPort()
 	{
-		return configuration.compositeConfig.getInt(PROP_LOCAL_XML_RPC_PORT, DEFAULT_LOCAL_XML_RPC_PORT);
+		return configuration.compositeConfig.getInt(PROP_XMLRPC_PORT, DEFAULT_XMLRPC_PORT);
+	}
+	static public int getXmlRpcTimeout()
+	{
+		return configuration.compositeConfig.getInt(PROP_XMLRPC_TIMEOUT, DEFAULT_XMLRPC_TIMEOUT);
+	}
+	static public String getXmlRpcHomepage()
+	{
+		return configuration.compositeConfig.getString(PROP_XMLRPC_HOMEPAGE, DEFAULT_XMLRPC_HOMEPAGE);
+	}
+	static public int getXmlRpcMaxThreads()
+	{
+		return configuration.compositeConfig.getInt(PROP_XMLRPC_MAX_THREADS, DEFAULT_XMLRPC_MAX_THREADS);
 	}
 
 	static public String getPlcApiAddress()

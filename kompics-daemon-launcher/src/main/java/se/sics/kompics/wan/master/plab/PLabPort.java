@@ -3,6 +3,8 @@ package se.sics.kompics.wan.master.plab;
 import se.sics.kompics.PortType;
 import se.sics.kompics.wan.master.plab.plc.events.GetAllHostsRequest;
 import se.sics.kompics.wan.master.plab.plc.events.GetAllHostsResponse;
+import se.sics.kompics.wan.master.plab.plc.events.InstallDaemonOnHostsRequest;
+import se.sics.kompics.wan.master.plab.plc.events.InstallDaemonOnHostsResponse;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesRequest;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesResponse;
 
@@ -19,8 +21,10 @@ public class PLabPort extends PortType {
 	{
 		negative(GetAllHostsRequest.class);
 		negative(QueryPLabSitesRequest.class);
+		negative(InstallDaemonOnHostsRequest.class);
 		
 		positive(GetAllHostsResponse.class);
 		positive(QueryPLabSitesResponse.class);
+		positive(InstallDaemonOnHostsResponse.class);
 	}
 }

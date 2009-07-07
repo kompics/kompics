@@ -76,7 +76,7 @@ public class RpcServer {
 			// ConnectionController>();
 
 			int port;
-			port = PlanetLabConfiguration.getLocalXmlRpcPort(); 
+			port = PlanetLabConfiguration.getXmlRpcPort(); 
 				//String portString = Main.getConfig(Constants.LOCAL_XML_RPC_PORT);
 //			if(portString != null){
 //				port = Integer.parseInt(portString);

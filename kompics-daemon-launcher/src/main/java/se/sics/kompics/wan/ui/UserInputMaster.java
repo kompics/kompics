@@ -26,6 +26,7 @@ import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
 
 public class UserInputMaster extends ComponentDefinition {
+	
 	private Negative<MasterPort> master = negative(MasterPort.class);
 	Positive<Timer> timer = positive(Timer.class);
 

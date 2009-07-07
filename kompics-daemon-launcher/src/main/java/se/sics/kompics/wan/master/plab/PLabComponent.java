@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
@@ -48,17 +47,17 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.Master;
 import se.sics.kompics.wan.master.MasterInit;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesRequest;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesResponse;
+import se.sics.kompics.wan.master.plab.plc.events.InstallDaemonOnHostsRequest;
 import se.sics.kompics.wan.master.plab.plc.events.PlanetLabInit;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesRequest;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesResponse;
 import se.sics.kompics.wan.master.ssh.ExperimentHost;
-import se.sics.kompics.wan.master.ssh.SshComponent;
+import se.sics.kompics.wan.master.ssh.SshPort;
 
 public class PLabComponent extends ComponentDefinition {
 
@@ -69,9 +68,8 @@ public class PLabComponent extends ComponentDefinition {
 	private Negative<Network> net = negative(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
 
-	private Component master;
-	
-//	private Component ssh;
+	// Need to copy Daemon-jar to planetlab hosts
+	private Negative<SshPort> sshPort = negative(SshPort.class);
 	
 	private static int DNS_RESOLVER_MAX_THREADS = 10;
 
@@ -87,12 +85,9 @@ public class PLabComponent extends ComponentDefinition {
 
 	public PLabComponent() {
 
-		master = create(Master.class);
-//		ssh = create(SshComponent.class);
-		
-		
 		subscribe(handleGetNodesForSliceRequest, pLabPort);
 		subscribe(handleQueryPLabSitesRequest, pLabPort);
+		subscribe(handleInstallDaemonOnHostsRequest, pLabPort);
 
 		subscribe(handlePlanetLabInit, control);
 	}
@@ -100,9 +95,9 @@ public class PLabComponent extends ComponentDefinition {
 	public Handler<PlanetLabInit> handlePlanetLabInit = new Handler<PlanetLabInit>() {
 		public void handle(PlanetLabInit event) {
 
-			MasterInit mInit = new MasterInit(event.getMaster(), 
-					event.getBootConfig(), event.getMonitorConfig());
-			trigger(mInit, master.getControl());
+//			MasterInit mInit = new MasterInit(event.getMaster(), 
+//					event.getBootConfig(), event.getMonitorConfig());
+//			trigger(mInit, master.getControl());
 			
 			
 			
@@ -166,6 +161,27 @@ public class PLabComponent extends ComponentDefinition {
 		}
 	};
 
+	
+	
+	private Handler<InstallDaemonOnHostsRequest> handleInstallDaemonOnHostsRequest = 
+		new Handler<InstallDaemonOnHostsRequest>() {
+		public void handle(InstallDaemonOnHostsRequest event) {
+
+			
+			List<PLabHost> listHosts = pLabService.getHostsFromDB();
+			
+			for (PLabHost host : listHosts) {
+				
+				// connect first, then uploadFile
+				
+//				trigger(new UploadFileRequest())
+				
+			}
+		}
+		
+	};
+	
+	
 	private Handler<GetNodesForSliceRequest> handleGetNodesForSliceRequest = new Handler<GetNodesForSliceRequest>() {
 		public void handle(GetNodesForSliceRequest event) {
 

@@ -7,10 +7,10 @@ import java.util.List;
 import se.sics.kompics.Request;
 import se.sics.kompics.wan.master.plab.plc.PlanetLabHost;
 
-public class GetHostsNotInSliceRequest extends Request {
+public class InstallDaemonOnHostsRequest extends Request {
 
 	private final List<PlanetLabHost> hosts;
-	public GetHostsNotInSliceRequest(List<PlanetLabHost> hosts) {
+	public InstallDaemonOnHostsRequest(List<PlanetLabHost> hosts) {
 		this.hosts = new ArrayList<PlanetLabHost>(hosts);
 	}
 	
