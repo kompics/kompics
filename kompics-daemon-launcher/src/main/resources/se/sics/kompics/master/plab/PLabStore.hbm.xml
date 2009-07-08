@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+     "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+     "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="se.sics.kompics.wan.master.plab">
+	<class name="PLabStore" table="PLabStore">
+
+		<id name="slice" type="string">
+			<generator class="native" />
+		</id>
+
+		<property name="username" type="string" column="hostname" />
+
+		<property name="hosts" type="se.sics.kompics.wan.master.plab.PLabHost" />
+
+		<list name="hosts" cascade="all">
+			<key column="parent_id" />
+			<index column="idx" />
+			<one-to-many class="se.sics.kompics.wan.master.plab.PLabHost" />
+		</list>
+
+		<list name="sites" cascade="all">
+			<key column="parent_id" />
+			<index column="idx" />
+			<one-to-many class="se.sics.kompics.wan.master.plab.PLabSite" />
+		</list>
+
+		<list name="sliceNodes" cascade="all">
+			<key column="parent_id" />
+			<index column="idx" />
+			<one-to-many class="java.lang.Integer" />
+		</list>
+
+	</class>
+</hibernate-mapping>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+     "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+     "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="se.sics.kompics.wan.master.plab">
+	<class name="PLabSite" table="PLabSite">
+
+		<id name="site_id" type="java.lang.Integer" column="site_id">
+			<generator class="native" />
+		</id>
+
+		<property name="name" type="java.lang.String"/>
+
+		<property name="abbreviated_name" />
+		
+		<property name="login_base" />		
+		
+		<property name="is_public" type="java.lang.Boolean" />
+		
+		<property name="url" />
+		
+		<property name="organization_id" />
+		
+	</class>
+</hibernate-mapping>

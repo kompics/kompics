@@ -30,6 +30,8 @@ production settings here...
     <property name="current_session_context_class">thread</property>
 		
 	<mapping resource="se/sics/kompics/master/plab/PLabHost.hbm.xml" />
+	<mapping resource="se/sics/kompics/master/plab/PLabSite.hbm.xml" />
+	<mapping resource="se/sics/kompics/master/plab/PLabStore.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>
      

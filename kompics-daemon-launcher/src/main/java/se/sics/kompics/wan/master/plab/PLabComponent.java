@@ -47,7 +47,6 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.MasterInit;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesRequest;
@@ -126,7 +125,7 @@ public class PLabComponent extends ComponentDefinition {
 			System.out.println("PLC site query done: " + time + "ms");
 
 			progress = 0.6;
-			int[] sliceNodes = getNodesForSlice();
+			List<Integer> sliceNodes = getNodesForSlice();
 			time = System.currentTimeMillis() - startTime;
 			System.out.println("PLC slice query done: " + time + "ms");
 
@@ -151,12 +150,16 @@ public class PLabComponent extends ComponentDefinition {
 
 //			PlanetLabStore diskStore = new PlanetLabStore(cred.getSlice(), cred
 //					.getUsernameMD5());
-//			diskStore.setHosts(hosts);
-//			diskStore.setSites(sites);
+			
+			PLabStore store = new PLabStore(cred.getSlice(), cred
+					.getUsernameMD5());
+			store.setHosts(hosts);
+			store.setSites(sites);
+			
 			System.out.println("hosts : " + hosts.size());
 			System.out.println("sites : " + sites.size());
-//			diskStore.setSliceNodes(sliceNodes);
-//			return diskStore;
+			store.setSliceNodes(sliceNodes);
+//			return store;
 
 		}
 	};
@@ -185,7 +188,7 @@ public class PLabComponent extends ComponentDefinition {
 	private Handler<GetNodesForSliceRequest> handleGetNodesForSliceRequest = new Handler<GetNodesForSliceRequest>() {
 		public void handle(GetNodesForSliceRequest event) {
 
-			int[] sliceNodes = getNodesForSlice();
+			List<Integer> sliceNodes = getNodesForSlice();
 
 			GetNodesForSliceResponse respEvent = new GetNodesForSliceResponse(
 					event, sliceNodes);
@@ -195,7 +198,7 @@ public class PLabComponent extends ComponentDefinition {
 		}
 	};
 
-	private int[] getNodesForSlice() {
+	private List<Integer> getNodesForSlice() {
 
 		List<Object> params = new ArrayList<Object>();
 		params.add(cred.getPLCMap());
@@ -210,16 +213,14 @@ public class PLabComponent extends ComponentDefinition {
 
 		Object response = executeRPC(cred, "GetSlices", params);
 
-		int[] sliceNodes = new int[0];
+		List<Integer> sliceNodes = new ArrayList<Integer>();
 		if (response instanceof Object[]) {
 			Object[] result = (Object[]) response;
 			if (result.length > 0) {
 				Map map = (Map) result[0];
 				Object[] nodes = (Object[]) map.get("node_ids");
-				sliceNodes = new int[nodes.length];
-				for (int i = 0; i < nodes.length; i++) {
-					sliceNodes[i] = (Integer) nodes[i];
-					// System.out.println(nodes[i]);
+				for (Object node :  nodes) {
+					sliceNodes.add((Integer) node);
 				}
 			}
 		}
@@ -240,7 +241,7 @@ public class PLabComponent extends ComponentDefinition {
 		List<String> fields = new ArrayList<String>();
 		fields.add(ExperimentHost.NODE_ID);
 		fields.add(ExperimentHost.HOSTNAME);
-		fields.add(ExperimentHost.BOOT_STATE);
+//		fields.add(ExperimentHost.BOOT_STATE);
 //		fields.add(ExperimentHost.IP);
 //		fields.add(ExperimentHost.BWLIMIT);
 		fields.add(PLabSite.SITE_ID);

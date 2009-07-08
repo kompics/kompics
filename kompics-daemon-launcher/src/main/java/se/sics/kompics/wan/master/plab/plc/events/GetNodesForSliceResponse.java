@@ -1,13 +1,15 @@
 package se.sics.kompics.wan.master.plab.plc.events;
 
+import java.util.List;
+
 import se.sics.kompics.Response;
 
 public class GetNodesForSliceResponse extends Response {
 
-	private final int[] nodeIds;
+	private final List<Integer> nodeIds;
 
 	public GetNodesForSliceResponse(GetNodesForSliceRequest request,
-			int[] nodeIds) {
+			List<Integer> nodeIds) {
 		super(request);
 		this.nodeIds =nodeIds;
 	}
@@ -16,7 +18,7 @@ public class GetNodesForSliceResponse extends Response {
 	/**
 	 * @return the nodeIds
 	 */
-	public int[] getNodeIds() {
+	public List<Integer> getNodeIds() {
 		return nodeIds;
 	}
 }
