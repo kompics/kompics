@@ -11,10 +11,11 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.master.plab.plc.PLControllerComponent;
 import se.sics.kompics.wan.master.plab.plc.PLControllerInit;
+import se.sics.kompics.wan.master.plab.rpc.ControllerPort;
 
 public class ConnectionControllerComponent extends ComponentDefinition {
 
-	Negative<ConnectionControllerPort> ccPort = negative(ConnectionControllerPort.class);
+	Negative<ControllerPort> ccPort = negative(ControllerPort.class);
 	
 	private Component plController;
 

@@ -11,7 +11,9 @@ public class PLabHost extends ExperimentHost {
 	private CoMonStat coMonStat;
 
 	private int id;
+	
 
+	
 	public PLabHost() {
 		super();
 	}
@@ -19,6 +21,10 @@ public class PLabHost extends ExperimentHost {
 	public PLabHost(Map<String, String> nodeInfo) {
 		super(nodeInfo);
 		
+	}
+
+	public PLabHost(ExperimentHost host) {
+		super(host);		
 	}
 
 	public PLabHost(String hostname) {
@@ -47,4 +53,5 @@ public class PLabHost extends ExperimentHost {
 	public void setCoMonStat(CoMonStat coMonStat) {
 		this.coMonStat = coMonStat;
 	}
+	
 }

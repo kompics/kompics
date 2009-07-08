@@ -3,6 +3,7 @@ package se.sics.kompics.wan.master.plab;
 import java.util.HashMap;
 import java.util.Map;
 
+import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.ssh.Credentials;
 
 
@@ -40,6 +41,13 @@ public class PlanetLabCredentials extends Credentials {
 		super(username, password, keyPath, keyFilePassword);
 		this.slice = slice;
 		this.role = role;
+	}
+	
+	public PlanetLabCredentials(String username, String password, String slice,
+			String keyPath, String keyFilePassword) {
+		super(username, password, keyPath, keyFilePassword);
+		this.slice = slice;
+		this.role = PlanetLabConfiguration.DEFAULT_PL_ROLE;
 	}
 
 	/**

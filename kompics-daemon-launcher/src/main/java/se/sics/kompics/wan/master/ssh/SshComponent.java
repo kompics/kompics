@@ -588,7 +588,7 @@ public class SshComponent extends ComponentDefinition {
 			int sessionId = connect(event.getCredentials(), event.getHostname(), new CommandSpec(
 					"#connect", SSH_CONNECT_TIMEOUT, commandIdCounter++, true));
 
-			trigger(new SshConnectResponse(event, sessionId), sshPort);
+			trigger(new SshConnectResponse(event, sessionId, event.getHostname()), sshPort);
 		}
 	};
 

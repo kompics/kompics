@@ -1,6 +1,7 @@
 package se.sics.kompics.wan.master.ssh.events;
 
 import se.sics.kompics.Response;
+import se.sics.kompics.wan.master.ssh.ExperimentHost;
 
 /**
  * The <code>ConnectSsh</code> class.
@@ -12,9 +13,13 @@ public class SshConnectResponse extends Response {
 
 	private final int sessionId;
 
-	public SshConnectResponse(SshConnectRequest request, int sessionId) {
+	private final ExperimentHost hostname;
+	
+	public SshConnectResponse(SshConnectRequest request, int sessionId,
+			ExperimentHost hostname) {
 		super(request);
 		this.sessionId = sessionId;
+		this.hostname = hostname;
 	}
 
 	/**
@@ -22,5 +27,9 @@ public class SshConnectResponse extends Response {
 	 */
 	public int getSessionId() {
 		return sessionId;
+	}
+	
+	public ExperimentHost getHostname() {
+		return hostname;
 	}
 }

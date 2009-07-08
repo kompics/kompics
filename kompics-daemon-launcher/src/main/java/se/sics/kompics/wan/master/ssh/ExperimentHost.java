@@ -46,6 +46,9 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 
 	protected int site;
 
+	protected int sessionId;
+
+	
 	public ExperimentHost() {
 
 	}
@@ -63,6 +66,30 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 	public ExperimentHost(String hostname) {
 		this.hostname = hostname;
 	}
+	
+	public ExperimentHost(int sessionId, int nodeId, String hostname, String bootState,
+			String ip, int site, String bwlimit, int cpuLoad) {
+		this.sessionId = sessionId;
+		this.node_id = nodeId; 
+		this.hostname = hostname;
+		this.boot_state = bootState;
+		this.ip = ip;
+		this.site = site;
+		this.bwlimit = bwlimit;
+		this.cpuLoad = cpuLoad;
+	}
+	
+	public ExperimentHost(ExperimentHost host) {
+		this.sessionId = host.getSessionId();
+		this.node_id = host.getNode_id(); 
+		this.hostname = host.getHostname();
+		this.boot_state = host.getBoot_state();
+		this.ip = host.getIp();
+		this.site = host.getSite();
+		this.bwlimit = host.getBwlimit();
+		this.cpuLoad = host.getCpuLoad();
+	}
+	
 
 	@Override
 	public int compareTo(ExperimentHost host) {
@@ -141,6 +168,14 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 		StringBuffer buf = new StringBuffer();
 		buf.append(hostname);
 		return buf.toString();
+	}
+
+	public int getSessionId() {
+		return sessionId;
+	}
+
+	public void setSessionId(int sessionId) {
+		this.sessionId = sessionId;
 	}
 
 }

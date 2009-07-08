@@ -12,8 +12,6 @@ import se.sics.kompics.wan.master.plab.plc.PlanetLabHost;
 
 public class CoMonManager implements Runnable {
 
-	// private hosts;
-
 	private int totalBytes = 0;
 
 	private volatile double progress = 0;

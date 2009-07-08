@@ -1,4 +1,4 @@
-package se.sics.kompics.wan.master.ssh;
+package se.sics.kompics.wan.master.plab.rpc;
 
 import se.sics.kompics.PortType;
 import se.sics.kompics.wan.master.plab.plc.events.GetAllHostsRequest;
@@ -26,7 +26,7 @@ import se.sics.kompics.wan.master.ssh.events.UploadFileResponse;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class ConnectionControllerPort extends PortType {
+public class ControllerPort extends PortType {
 
 	{
 		

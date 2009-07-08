@@ -22,6 +22,7 @@ package se.sics.kompics.wan.master.plab.rpc;
 import java.net.InetAddress;
 
 import se.sics.kompics.Init;
+import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 
 
 
@@ -34,53 +35,32 @@ public final class RpcInit extends Init {
 
 	private final InetAddress ip;
 	private final int port;
-	private final int requestTimeout;
-	private final int maxThreads;
+//	private final int requestTimeout;
+//	private final int maxThreads;
 	private final String homepage;
+	private final PlanetLabCredentials credentials;
+
 	
-	public RpcInit(InetAddress ip, int port, int requestTimeout,
-			int maxThreads, String homepage) {
+	public RpcInit(InetAddress ip, int port, String homepage, PlanetLabCredentials credentials) {
 		super();
 		this.ip = ip;
 		this.port = port;
-		this.requestTimeout = requestTimeout;
-		this.maxThreads = maxThreads;
 		this.homepage = homepage;
+		this.credentials = credentials;
 	}
-
-	/**
-	 * @return the ip
-	 */
 	public InetAddress getIp() {
 		return ip;
 	}
-
-	/**
-	 * @return the port
-	 */
 	public int getPort() {
 		return port;
 	}
-
-	/**
-	 * @return the requestTimeout
-	 */
-	public int getRequestTimeout() {
-		return requestTimeout;
-	}
-
-	/**
-	 * @return the maxThreads
-	 */
-	public int getMaxThreads() {
-		return maxThreads;
-	}
-
-	/**
-	 * @return the homepage
-	 */
 	public String getHomepage() {
 		return homepage;
 	}
+	public PlanetLabCredentials getCredentials() {
+		return credentials;
+	}
+
+	
 
 }
