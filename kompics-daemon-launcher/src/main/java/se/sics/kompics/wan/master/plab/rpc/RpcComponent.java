@@ -13,6 +13,7 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
+import se.sics.kompics.Start;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
@@ -32,6 +33,8 @@ public class RpcComponent extends ComponentDefinition {
 	// private Negative<Web> web = negative(Web.class);
 	private Component webServer;
 
+	private static long startTime;
+	
 	public RpcComponent() {
 
 		webServer = create(JettyWebServer.class);
@@ -40,6 +43,7 @@ public class RpcComponent extends ComponentDefinition {
 		subscribe(handleWebRequest, webServer.getNegative(Web.class));
 		
 		subscribe(handleRpcInit, control);
+		subscribe(handleStart, control);
 	}
 
 	private Handler<RpcInit> handleRpcInit = new Handler<RpcInit>() {
@@ -57,6 +61,26 @@ public class RpcComponent extends ComponentDefinition {
 		}
 	};
 
+
+	private Handler<Start> handleStart = new Handler<Start>() {
+		public void handle(Start event) {
+			startTime = System.currentTimeMillis();
+			
+			
+		}
+	};
+	
+	/**
+	 * XML-RPC has no support for 64 bit integers (unless extensions are used),
+	 * so a double is used.
+	 */
+	public static double getTime() {
+		long currentTime = System.currentTimeMillis();
+
+		double time = (currentTime - startTime) / 1000.0;
+		return time;
+	}
+	
 	private Handler<WebRequest> handleWebRequest = new Handler<WebRequest>() {
 		public void handle(WebRequest event) {
 
