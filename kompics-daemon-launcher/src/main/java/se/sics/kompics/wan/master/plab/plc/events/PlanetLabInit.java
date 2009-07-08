@@ -16,33 +16,14 @@ public class PlanetLabInit extends Init {
 
 	private PlanetLabCredentials cred;
 
-	private final BootstrapConfiguration bootConfig;
-	private final P2pMonitorConfiguration monitorConfig;
-	private final Address master;
+//	private final BootstrapConfiguration bootConfig;
+//	private final P2pMonitorConfiguration monitorConfig;
+//	private final Address master;
 
-	public PlanetLabInit(PlanetLabCredentials cred,
-			Address master, BootstrapConfiguration bootconfig, P2pMonitorConfiguration monitorConfig) {
+	public PlanetLabInit(PlanetLabCredentials cred) {
 		this.cred = cred;
-		this.master = master;
-		this.bootConfig = bootconfig;
-		this.monitorConfig = monitorConfig;
 	}
-	
 
-
-	public Address getMaster() {
-		return master;
-	}
-	
-	public BootstrapConfiguration getBootConfig() {
-		return bootConfig;
-	}
-	
-	public P2pMonitorConfiguration getMonitorConfig() {
-		return monitorConfig;
-	}
-	
-	
 	/**
 	 * @return the cred
 	 */

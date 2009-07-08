@@ -47,6 +47,7 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
+import se.sics.kompics.wan.master.plab.plc.events.GetBootStates;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesRequest;
@@ -55,8 +56,8 @@ import se.sics.kompics.wan.master.plab.plc.events.InstallDaemonOnHostsRequest;
 import se.sics.kompics.wan.master.plab.plc.events.PlanetLabInit;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesRequest;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesResponse;
+import se.sics.kompics.wan.master.plab.rpc.RpcFunctions;
 import se.sics.kompics.wan.master.ssh.ExperimentHost;
-import se.sics.kompics.wan.master.ssh.SshPort;
 
 public class PLabComponent extends ComponentDefinition {
 
@@ -68,7 +69,7 @@ public class PLabComponent extends ComponentDefinition {
 	private Positive<Timer> timer = positive(Timer.class);
 
 	// Need to copy Daemon-jar to planetlab hosts
-	private Negative<SshPort> sshPort = negative(SshPort.class);
+//	private Negative<SshPort> sshPort = negative(SshPort.class);
 	
 	private static int DNS_RESOLVER_MAX_THREADS = 10;
 
@@ -82,11 +83,15 @@ public class PLabComponent extends ComponentDefinition {
 
 	private PlanetLabCredentials cred;
 
+	private PLabStore store;
+	
 	public PLabComponent() {
 
 		subscribe(handleGetNodesForSliceRequest, pLabPort);
 		subscribe(handleQueryPLabSitesRequest, pLabPort);
 		subscribe(handleInstallDaemonOnHostsRequest, pLabPort);
+		
+		subscribe(handleGetBootStates, pLabPort);
 
 		subscribe(handlePlanetLabInit, control);
 	}
@@ -94,16 +99,11 @@ public class PLabComponent extends ComponentDefinition {
 	public Handler<PlanetLabInit> handlePlanetLabInit = new Handler<PlanetLabInit>() {
 		public void handle(PlanetLabInit event) {
 
-//			MasterInit mInit = new MasterInit(event.getMaster(), 
-//					event.getBootConfig(), event.getMonitorConfig());
-//			trigger(mInit, master.getControl());
-			
-			
+			cred = event.getCred();
 			
 			pLabService = (PLabService) PlanetLabConfiguration.getCtx()
 					.getBean("PLabService");
 
-			PlanetLabCredentials cred = event.getCred();
 			long startTime = System.currentTimeMillis();
 			System.out.println("sending PLC queries");
 			progress = 0.2;
@@ -147,11 +147,8 @@ public class PLabComponent extends ComponentDefinition {
 			// PlanetLabHost host = hosts[i];
 			// host.setSite(hostToSiteMapping.get(host.getNode_id()));
 			// }
-
-//			PlanetLabStore diskStore = new PlanetLabStore(cred.getSlice(), cred
-//					.getUsernameMD5());
 			
-			PLabStore store = new PLabStore(cred.getSlice(), cred
+			store = new PLabStore(cred.getSlice(), cred
 					.getUsernameMD5());
 			store.setHosts(hosts);
 			store.setSites(sites);
@@ -211,7 +208,7 @@ public class PLabComponent extends ComponentDefinition {
 		returnFields.add("node_ids");
 		params.add(returnFields);
 
-		Object response = executeRPC(cred, "GetSlices", params);
+		Object response = executeRPC("GetSlices", params);
 
 		List<Integer> sliceNodes = new ArrayList<Integer>();
 		if (response instanceof Object[]) {
@@ -253,7 +250,7 @@ public class PLabComponent extends ComponentDefinition {
 		params.add(fields);
 		
 		List<PLabHost> hosts = new ArrayList<PLabHost>();
-		Object response = executeRPC(cred, "GetNodes", params);
+		Object response = executeRPC("GetNodes", params);
 		if (response instanceof Object[]) {
 			Object[] result = (Object[]) response;
 			for (Object obj : result) {
@@ -267,7 +264,15 @@ public class PLabComponent extends ComponentDefinition {
 		}
 		return hosts;
 	}
+
 	
+	public Handler<GetBootStates> handleGetBootStates = new Handler<GetBootStates>() {
+		public void handle(GetBootStates event) {
+			
+			executeRPC("GetBootStates", new ArrayList<Object>());
+			
+		}
+	};
 	
 	private Handler<QueryPLabSitesRequest> handleQueryPLabSitesRequest = new Handler<QueryPLabSitesRequest>() {
 		public void handle(QueryPLabSitesRequest event) {
@@ -298,7 +303,7 @@ public class PLabComponent extends ComponentDefinition {
 
 		List<PLabSite> sites = new ArrayList<PLabSite>();
 
-		Object response = executeRPC(cred, "GetSites", rpcParams);
+		Object response = executeRPC("GetSites", rpcParams);
 		if (response instanceof Object[]) {
 			Object[] result = (Object[]) response;
 			for (Object res : result) {
@@ -310,8 +315,7 @@ public class PLabComponent extends ComponentDefinition {
 		return sites;
 	}
 	
-	private Object executeRPC(PlanetLabCredentials cred, String command,
-			List<Object> params) {
+	private Object executeRPC(String command, List<Object> params) {
 		Object res = new Object();
 		String url = PlanetLabConfiguration.getPlcApiAddress();
 
@@ -341,7 +345,7 @@ public class PLabComponent extends ComponentDefinition {
 					System.out.println("trying again");
 
 					this.ignoreCertificateErrors();
-					return this.executeRPC(cred, command, params);
+					return this.executeRPC(command, params);
 				} else {
 					System.err
 							.println("You need to add IgnoreCertificateErrors=true to the config file to have PLC XML-RPC support");

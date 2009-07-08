@@ -3,7 +3,9 @@ package se.sics.kompics.wan.master.plab.rpc;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
@@ -15,12 +17,16 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Start;
 import se.sics.kompics.wan.master.plab.PLabComponent;
+import se.sics.kompics.wan.master.plab.PLabHost;
 import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.master.plab.plc.PLControllerInit;
 import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.master.ssh.Credentials;
+import se.sics.kompics.wan.master.ssh.ExperimentHost;
 import se.sics.kompics.wan.master.ssh.SshComponent;
+import se.sics.kompics.wan.master.ssh.SshPort;
 import se.sics.kompics.wan.master.ssh.events.SshConnectRequest;
+import se.sics.kompics.wan.master.ssh.events.SshConnectResponse;
 
 public class Controller extends ComponentDefinition {
 
@@ -40,6 +46,11 @@ public class Controller extends ComponentDefinition {
 	
 	private Vector<String> commandHistory = new Vector<String>();
 	
+	private List<PLabHost> connectedHosts = new CopyOnWriteArrayList<PLabHost>();	
+
+	private List<PLabHost> availableHosts = new CopyOnWriteArrayList<PLabHost>();
+
+	
 	public Controller() {
 
 		pLabComponent = create(PLabComponent.class);
@@ -47,6 +58,7 @@ public class Controller extends ComponentDefinition {
 		
 		subscribe(handleGetRunningPlanetLabHosts, ccPort);
 		subscribe(handleSshConnectRequest, ccPort);
+		subscribe(handleSshConnectResponse, ccPort);
 		
 		subscribe(handleRpcInit, control);
 		subscribe(handleStart, control);
@@ -136,9 +148,22 @@ public class Controller extends ComponentDefinition {
 		new Handler<SshConnectRequest>() {
 		public void handle(SshConnectRequest event) {
 
+			trigger(event, sshComponent.getNegative(SshPort.class));
 		}
 	};
 	
+	public Handler<SshConnectResponse> handleSshConnectResponse = 
+		new Handler<SshConnectResponse>() {
+		public void handle(SshConnectResponse event) {
+			int sessionId = event.getSessionId();
+			
+			ExperimentHost host = event.getHostname();
+			host.setSessionId(sessionId);
+			PLabHost plHost = new PLabHost(host);
+			
+			connectedHosts.add(plHost);
+		}
+	};
 
 	private Object executeObjectCommand(XmlRpcClient client, String command,
 			Object[] params) {

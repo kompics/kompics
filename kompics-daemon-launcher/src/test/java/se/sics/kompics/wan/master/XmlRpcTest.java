@@ -82,6 +82,7 @@ public class XmlRpcTest {
 			Vector params = new Vector();
 			params.add(auth);
 
+			// GetNodes
 			Object[] res = (Object[]) client.execute("GetBootStates", params);
 			if (res.length == 0) {
 				System.err.println("Warning: No boot-states found!");

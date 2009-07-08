@@ -55,14 +55,13 @@ public class PlanetLabTextUI extends ComponentDefinition {
 	private Component plab;
 	private Component master;
 	private Component ssh;
-	private Component rpc;
+//	private Component rpc;
 //	private Component controller;
 	
 	
 	private PlanetLabCredentials cred;
 	
-	private List<PLabHost> connectedHosts = new CopyOnWriteArrayList<PLabHost>();
-	
+	private List<PLabHost> connectedHosts = new CopyOnWriteArrayList<PLabHost>();	
 	private List<PLabHost> availableHosts = new CopyOnWriteArrayList<PLabHost>();
 	
 	private static final Logger logger = LoggerFactory
@@ -77,7 +76,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		plab = create(PLabComponent.class);
 		master = create(Master.class);
 		ssh = create(SshComponent.class);
-		rpc = create(Controller.class);
+//		rpc = create(Controller.class);
 //		controller = create(ConnectionControllerComponent.class);
 		
 		// handle possible faults in the components
@@ -96,12 +95,11 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		PlanetLabCredentials cred = new PlanetLabCredentials(username,
 				password, slice, role, keyPath, keyFilePassword);
 
-		PlanetLabInit pInit = new PlanetLabInit(cred, PlanetLabConfiguration
-				.getMasterAddress(), PlanetLabConfiguration
-				.getBootConfiguration(), PlanetLabConfiguration
-				.getMonitorConfiguration());
-
-		trigger(pInit, plab.getControl());
+//		PlanetLabInit pInit = new PlanetLabInit(cred, PlanetLabConfiguration
+//				.getMasterAddress(), PlanetLabConfiguration
+//				.getBootConfiguration(), PlanetLabConfiguration
+//				.getMonitorConfiguration());
+//		trigger(pInit, plab.getControl());
 
 		MasterInit mInit = new MasterInit(PlanetLabConfiguration
 				.getMasterAddress(), PlanetLabConfiguration
@@ -120,10 +118,10 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		String homepage = PlanetLabConfiguration.getXmlRpcHomepage();
 		
 		getCredentials();
+
 		
-		RpcInit rpcInit = new RpcInit(ip, rpcPort, homepage, cred);
-		
-		trigger(rpcInit, rpc.getControl());
+//		RpcInit rpcInit = new RpcInit(ip, rpcPort, homepage, cred);
+//		trigger(rpcInit, rpc.getControl());
 		
 
 		logger.info("Master listening on: {}", MasterConfiguration
@@ -132,7 +130,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		connectToNetAndTimer(plab);
 		connectToNetAndTimer(ssh);
 		connectToNetAndTimer(master);
-		connectToNetAndTimer(rpc);
+//		connectToNetAndTimer(rpc);
 		
 		trigger(new Start(), control);
 	}
