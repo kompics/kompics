@@ -12,7 +12,10 @@ public class PLabHost extends ExperimentHost {
 
 	private int id;
 	
-
+	/**
+	 * Not serialized to disk.
+	 */
+	private transient int heartbeatTimeout = 0;  
 	
 	public PLabHost() {
 		super();
@@ -55,4 +58,15 @@ public class PLabHost extends ExperimentHost {
 		this.coMonStat = coMonStat;
 	}
 	
+	public int getHeartbeatTimeout() {
+		return heartbeatTimeout;
+	}
+	
+	public void incHearbeatTimeout() {
+		heartbeatTimeout++;
+	}
+	
+	public void zeroHearbeatTimeout() {
+		heartbeatTimeout = 0;
+	}
 }

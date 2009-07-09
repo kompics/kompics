@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,6 +23,8 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
+import se.sics.kompics.timer.ScheduleTimeout;
+import se.sics.kompics.timer.Timeout;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.wan.config.MasterConfiguration;
@@ -39,155 +43,215 @@ import se.sics.kompics.wan.master.plab.PLabPort;
 import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.master.plab.plc.events.GetBootStates;
 import se.sics.kompics.wan.master.plab.plc.events.PlanetLabInit;
-import se.sics.kompics.wan.master.plab.rpc.Controller;
-import se.sics.kompics.wan.master.plab.rpc.RpcInit;
 import se.sics.kompics.wan.master.ssh.ExperimentHost;
 import se.sics.kompics.wan.master.ssh.SshComponent;
 import se.sics.kompics.wan.master.ssh.SshPort;
 import se.sics.kompics.wan.master.ssh.events.SshConnectRequest;
 import se.sics.kompics.wan.master.ssh.events.SshConnectResponse;
+import se.sics.kompics.wan.master.ssh.events.SshHeartbeatRequest;
+import se.sics.kompics.wan.master.ssh.events.SshHeartbeatResponse;
 import se.sics.kompics.wan.master.ssh.events.UploadFileRequest;
 import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
 
 public class PlanetLabTextUI extends ComponentDefinition {
 
-	private Component time;
+	private Component timer;
 	private Component network;
 	private Component plab;
 	private Component master;
 	private Component ssh;
-//	private Component rpc;
-//	private Component controller;
-	
-	
-	private PlanetLabCredentials cred;
-	
-	private List<PLabHost> connectedHosts = new CopyOnWriteArrayList<PLabHost>();	
-	private List<PLabHost> availableHosts = new CopyOnWriteArrayList<PLabHost>();
-	
-	private static final Logger logger = LoggerFactory
-			.getLogger(PlanetLabTextUI.class);
+	// private Component rpc;
+	// private Component controller;
 
+	private PlanetLabCredentials cred;
+
+	private List<PLabHost> connectedHosts = new CopyOnWriteArrayList<PLabHost>();
+	private Map<Integer, Boolean> mapConnectedHosts = new ConcurrentHashMap<Integer, Boolean>();
 	
+	private List<PLabHost> availableHosts = new CopyOnWriteArrayList<PLabHost>();
+
+	private static final Logger logger = LoggerFactory.getLogger(PlanetLabTextUI.class);
+
+	private boolean cleanupStarted = false;
+
+	public static class CleanupConnections extends Timeout {
+
+		public CleanupConnections(ScheduleTimeout request) {
+			super(request);
+		}
+
+	}
+
 	public PlanetLabTextUI() {
 
 		// create components
-		time = create(JavaTimer.class);
+		timer = create(JavaTimer.class);
 		network = create(MinaNetwork.class);
 		plab = create(PLabComponent.class);
 		master = create(Master.class);
 		ssh = create(SshComponent.class);
-//		rpc = create(Controller.class);
-//		controller = create(ConnectionControllerComponent.class);
-		
-		// handle possible faults in the components
-		subscribe(handleFault, time.getControl());
-		subscribe(handleFault, network.getControl());
-		subscribe(handleFault, plab.getControl());
-
-//		String username = PlanetLabConfiguration.getUsername();
-//		String password = PlanetLabConfiguration.getPassword();
-//		String slice = PlanetLabConfiguration.getSlice();
-//		String role = PlanetLabConfiguration.getRole();
-//		String keyPath = PlanetLabConfiguration.getPrivateKeyFile();
-//		String keyFilePassword = PlanetLabConfiguration
-//				.getPrivateKeyFilePassword();
-//
-//		PlanetLabCredentials cred = new PlanetLabCredentials(username,
-//				password, slice, role, keyPath, keyFilePassword);
+		// rpc = create(Controller.class);
+		// controller = create(ConnectionControllerComponent.class);
 
 		getCredentials();
 
-//		PlanetLabInit pInit = new PlanetLabInit(cred, PlanetLabConfiguration
-//				.getMasterAddress(), PlanetLabConfiguration
-//				.getBootConfiguration(), PlanetLabConfiguration
-//				.getMonitorConfiguration());
-		
+		// PlanetLabInit pInit = new PlanetLabInit(cred, PlanetLabConfiguration
+		// .getMasterAddress(), PlanetLabConfiguration
+		// .getBootConfiguration(), PlanetLabConfiguration
+		// .getMonitorConfiguration());
+
 		PlanetLabInit pInit = new PlanetLabInit(cred);
 		trigger(pInit, plab.getControl());
 
-		MasterInit mInit = new MasterInit(PlanetLabConfiguration
-				.getMasterAddress(), PlanetLabConfiguration
-				.getBootConfiguration(), PlanetLabConfiguration
-				.getMonitorConfiguration());
+		MasterInit mInit = new MasterInit(PlanetLabConfiguration.getMasterAddress(),
+				PlanetLabConfiguration.getBootConfiguration(), PlanetLabConfiguration
+						.getMonitorConfiguration());
 
 		trigger(mInit, master.getControl());
 
-		trigger(new MinaNetworkInit(MasterConfiguration.getMasterAddress()),
-				network.getControl());
-		
+		trigger(new MinaNetworkInit(MasterConfiguration.getMasterAddress()), network.getControl());
+
 		InetAddress ip = PlanetLabConfiguration.getIp();
 		int rpcPort = PlanetLabConfiguration.getXmlRpcPort();
 		int requestTimeout = PlanetLabConfiguration.getXmlRpcTimeout();
 		int maxThreads = PlanetLabConfiguration.getXmlRpcMaxThreads();
 		String homepage = PlanetLabConfiguration.getXmlRpcHomepage();
-		
 
-		
-//		RpcInit rpcInit = new RpcInit(ip, rpcPort, homepage, cred);
-//		trigger(rpcInit, rpc.getControl());
-		
+		// RpcInit rpcInit = new RpcInit(ip, rpcPort, homepage, cred);
+		// trigger(rpcInit, rpc.getControl());
 
-		logger.info("Master listening on: {}", MasterConfiguration
-				.getMasterAddress().toString());
+		logger.info("Master listening on: {}", MasterConfiguration.getMasterAddress().toString());
 
 		connectToNetAndTimer(plab);
 		connectToNetAndTimer(master);
-//		connectToNetAndTimer(rpc);
-		connect(ssh.getNegative(Timer.class), time.getPositive(Timer.class));
+		// connectToNetAndTimer(rpc);
+		connect(ssh.getNegative(Timer.class), timer.getPositive(Timer.class));
+
+		// handle possible faults in the components
+		subscribe(handleFault, timer.getControl());
+		subscribe(handleFault, network.getControl());
+		subscribe(handleFault, plab.getControl());
+
+		subscribe(handleStart, control);
+
+		subscribe(handleSshConnectResponse, ssh.getPositive(SshPort.class));
+		subscribe(handleSshHeartbeatResponse, ssh.getPositive(SshPort.class));
 		
-		subscribe(handleStart,control);
+		subscribe(handleCleanupConnections, timer.getPositive(Timer.class));
 	}
 
-	private void connectToNetAndTimer(Component c)
-	{
-		connect(c.getNegative(Network.class), network
-				.getPositive(Network.class));
-		connect(c.getNegative(Timer.class), time.getPositive(Timer.class));
+	private void connectToNetAndTimer(Component c) {
+		connect(c.getNegative(Network.class), network.getPositive(Network.class));
+		connect(c.getNegative(Timer.class), timer.getPositive(Timer.class));
 	}
 
-	private void getBootstates()
-	{
+	private void getBootstates() {
 		trigger(new GetBootStates(), plab.getPositive(PLabPort.class));
-		
+
 	}
 
-	private void getCredentials()
-	{
+	private void getCredentials() {
 		Scanner scanner = new Scanner(System.in);
-		String username, password, slice, keyPath, keyFilePassword;
-		
-//		System.out.print("\tEnter planetlab username: ");
-//		username = scanner.next();
-		System.out.print("\tEnter planetlab password: ");
-		password = scanner.next();
-//		System.out.print("\tEnter name of slice: ");
-//		slice = scanner.next();
-//		System.out.print("\tEnter full path to private key for planet-lab: ");
-//		keyPath = scanner.next();
-//		System.out.print("\tEnter password for private key: ");
-//		keyFilePassword = scanner.next();
-//		cred = new PlanetLabCredentials(username, password, slice, keyPath, keyFilePassword);
-		cred = new PlanetLabCredentials("kost@sics.se", password, 
-					"sics_grid4all", "/home/jdowling/.ssh/id_rsa", "");
+
+		String username = PlanetLabConfiguration.getUsername();
+		if (username.compareTo("") == 0) {
+			System.out.print("\tEnter planetlab username: ");
+			username = scanner.next();
+		}
+
+		String password = PlanetLabConfiguration.getPassword();
+		if (password.compareTo("") == 0) {
+			System.out.print("\tEnter planetlab password: ");
+			password = scanner.next();
+		}
+
+		String slice = PlanetLabConfiguration.getSlice();
+		if (slice.compareTo("") == 0) {
+			System.out.print("\tEnter name of slice: ");
+			slice = scanner.next();
+		}
+		String role = PlanetLabConfiguration.getRole();
+		if (role.compareTo("") == 0) {
+			System.out.print("\tEnter the planetlab role (user, tech, admin): ");
+			role = scanner.next();
+		}
+
+		String keyPath = PlanetLabConfiguration.getPrivateKeyFile();
+		if (keyPath.compareTo("") == 0) {
+			System.out.print("\tEnter the full pathname for the private key file: ");
+			keyPath = scanner.next();
+		}
+
+		String keyFilePassword = PlanetLabConfiguration.getPrivateKeyFilePassword();
+		if (keyFilePassword.compareTo("") == 0) {
+			// System.out.print("\tEnter the password for the private key file: ");
+			// keyFilePassword = scanner.next();
+		}
+
+		cred = new PlanetLabCredentials("kost@sics.se", password, "sics_grid4all",
+				"/home/jdowling/.ssh/id_rsa", "");
 	}
-	
-	public Handler<SshConnectResponse> handleSshConnectResponse = 
-		new Handler<SshConnectResponse>() {
+
+	public Handler<SshConnectResponse> handleSshConnectResponse = new Handler<SshConnectResponse>() {
 		public void handle(SshConnectResponse event) {
 			int sessionId = event.getSessionId();
-			
+
 			ExperimentHost host = event.getHostname();
 			host.setSessionId(sessionId);
 			PLabHost plHost = new PLabHost(host);
-			
+
 			connectedHosts.add(plHost);
+
+			if (cleanupStarted == false) {
+				ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
+				st.setTimeoutEvent(new CleanupConnections(st));
+				trigger(st, timer.getPositive(Timer.class));
+
+			}
+		}
+	};
+
+	public Handler<CleanupConnections> handleCleanupConnections = new Handler<CleanupConnections>() {
+		public void handle(CleanupConnections event) 
+		{
+
+			// XXX remove connections that haven't sent a reply for N heartbeats			
+			for (PLabHost host : connectedHosts)
+			{
+				int sId = host.getSessionId();
+				Boolean recvdHB = mapConnectedHosts.get(sId);
+				if (recvdHB == null)
+				{
+					host.incHearbeatTimeout();
+				}
+				else {
+					if (recvdHB == true) {
+						host.zeroHearbeatTimeout();
+					}
+				}
+				if (host.getHeartbeatTimeout() > 3) {
+					connectedHosts.remove(host);
+				}
+				else {
+					// ping the remaining open ssh connections 
+					trigger(new SshHeartbeatRequest(sId), ssh.getPositive(SshPort.class));
+				}
+			}
+			mapConnectedHosts.clear();
+			
+			
 		}
 	};
 	
+	public Handler<SshHeartbeatResponse> handleSshHeartbeatResponse = new Handler<SshHeartbeatResponse>() {
+		public void handle(SshHeartbeatResponse event) 
+		{
+			mapConnectedHosts.put(event.getSessionId(), event.isStatus());
+		}
+	};
 	
-	
+
 	private class UserInput extends Thread {
 		private AtomicBoolean finished = new AtomicBoolean(false);
 		private final Scanner scanner;
@@ -222,31 +286,38 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			while (true) {
 				TreeSet<Address> hosts = MasterConfiguration.getHosts();
 				switch (selectPlanetlabOption()) {
-				case 0:	return;
-				case 1: getCredentials();
+				case 0:
+					return;
+				case 1:
+					getCredentials();
 					break;
-				case 4: connectToHosts(); break;
-				case 6: getBootstates(); break;
+				case 4:
+					connectToHosts();
+					break;
+				case 6:
+					getBootstates();
+					break;
 				default:
 					break;
 				}
 			}
 		}
-		
+
 		private void enterMaster() {
 			while (true) {
 				TreeSet<Address> hosts = MasterConfiguration.getHosts();
 				switch (selectMasterOption()) {
 				case 1:
-					 trigger(new PrintConnectedDameons(), master.getNegative(MasterPort.class));
+					trigger(new PrintConnectedDameons(), master.getNegative(MasterPort.class));
 					break;
 				case 2:
-					 trigger(new PrintDaemonsWithLoadedJob(getJob()), master.getNegative(MasterPort.class));
+					trigger(new PrintDaemonsWithLoadedJob(getJob()), master
+							.getNegative(MasterPort.class));
 					break;
 				case 3:
 					System.out.print("\tEnter daemon-id: ");
 					int daemonId = scanner.nextInt();
-					 trigger(new PrintLoadedJobs(daemonId), master.getNegative(MasterPort.class));
+					trigger(new PrintLoadedJobs(daemonId), master.getNegative(MasterPort.class));
 					break;
 				case 5: // XXX
 					hosts = getHosts();
@@ -262,8 +333,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 					String mainClass = scanner.next();
 					System.out.print("\tHide Maven output (y/n): ");
 					String hideMavenOutput = scanner.next();
-					boolean hideOutput = (hideMavenOutput
-							.compareToIgnoreCase("y") == 0) ? true : false;
+					boolean hideOutput = (hideMavenOutput.compareToIgnoreCase("y") == 0) ? true
+							: false;
 
 					// System.out.print("\tEnter any optional args (return for none): ");
 					// String allArgs = scanner.next();
@@ -279,20 +350,19 @@ public class PlanetLabTextUI extends ComponentDefinition {
 					break;
 				case 7:
 					// copy daemon jar to all hosts
-					
+
 					copyDaemonToHosts();
-					
+
 					break;
 				case 8:
-					// connect to all hosts 
-					
-					
+					// connect to all hosts
+
 					break;
 				case 9:
-					 trigger(new StartJobOnHosts(getJob(), getNumPeers()),
-							 master.getNegative(MasterPort.class));
+					trigger(new StartJobOnHosts(getJob(), getNumPeers()), master
+							.getNegative(MasterPort.class));
 					break;
-				case 10: 
+				case 10:
 					int sshAuthOpt = 0;
 					do {
 						sshAuthOpt = selectSshAuthMethod();
@@ -312,7 +382,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 					break;
 				case 11:
-					 trigger(new ShutdownDaemonRequest(), master.getNegative(MasterPort.class));
+					trigger(new ShutdownDaemonRequest(), master.getNegative(MasterPort.class));
 					break;
 				case 0:
 					return;
@@ -326,46 +396,36 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			}
 		}
 
-		
-		private void copyDaemonToHosts()
-		{
+		private void copyDaemonToHosts() {
 			validateListHosts();
-			
-			
-			for (PLabHost host : connectedHosts)
-			{
+
+			for (PLabHost host : connectedHosts) {
 				String daemonJarFilename = getDaemonJarFile();
 				File file = new File(daemonJarFilename);
 				int pos = daemonJarFilename.lastIndexOf('/');
 				int sessionId = host.getSessionId();
-				
-				UploadFileRequest uploadJar = 
-					new UploadFileRequest(sessionId, file,
-						"~/kompics/" + daemonJarFilename.substring(pos), 
-						true, 10*1000.0, true);
-				
+
+				UploadFileRequest uploadJar = new UploadFileRequest(sessionId, file, "~/kompics/"
+						+ daemonJarFilename.substring(pos), true, 10 * 1000.0, true);
+
 				trigger(uploadJar, ssh.getNegative(SshPort.class));
 			}
 		}
-		
-		private void connectToHosts()
-		{
+
+		private void connectToHosts() {
 			validateListHosts();
-			for (PLabHost host : connectedHosts)
-			{
+			for (PLabHost host : connectedHosts) {
 				SshConnectRequest req = new SshConnectRequest(cred, host);
 				trigger(req, ssh.getNegative(SshPort.class));
 			}
-			
+
 		}
-		
 
 		private boolean selectHostsFile() {
 			boolean succeed = true;
 			System.out.println();
-			System.out
-					.println("Enter the full pathname of the file containing a list"
-							+ "of comma-separated hosts in the format host[:port[:id]] ");
+			System.out.println("Enter the full pathname of the file containing a list"
+					+ "of comma-separated hosts in the format host[:port[:id]] ");
 			String filename = scanner.next();
 			try {
 				TreeSet<Address> hosts = HostsParser.parseHostsFile(filename);
@@ -373,29 +433,25 @@ public class PlanetLabTextUI extends ComponentDefinition {
 				System.out.println("File not found: " + e.getMessage());
 				return false;
 			} catch (HostsParserException e) {
-				System.out.println("Hosts file not formatted correctly: "
-						+ e.getMessage());
+				System.out.println("Hosts file not formatted correctly: " + e.getMessage());
 				return false;
 			}
 
 			return succeed;
 		}
 
-		private String getDaemonJarFile()
-		{
+		private String getDaemonJarFile() {
 			System.out.print("\tEnter full pathname for daemon jar file: ");
-			return scanner.next();			
+			return scanner.next();
 		}
-		
-		
+
 		private int getJob() {
 			System.out.print("\tEnter job id: ");
 			return scanner.nextInt();
 		}
 
 		private int getNumPeers() {
-			System.out
-					.print("\tEnter the number of peers to start at each host: ");
+			System.out.print("\tEnter the number of peers to start at each host: ");
 			return scanner.nextInt();
 		}
 
@@ -410,8 +466,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private int selectSshAuthMethod() {
 			System.out.println();
-			System.out
-					.println("Enter a number to select an option from below:");
+			System.out.println("Enter a number to select an option from below:");
 			System.out.println("\t1) username/password.");
 			System.out.println("\t2) public-key authentication.");
 			System.out.print("Enter your choice: ");
@@ -420,8 +475,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private int selectPlanetlabOption() {
 			System.out.println();
-			System.out
-					.println("Enter a number to select an option from below:");
+			System.out.println("Enter a number to select an option from below:");
 			System.out.println("\t1) change planet-lab credentials.");
 			System.out.println("\t2) add a host to a slice.");
 			System.out.println("\t3) list hosts in slice.");
@@ -438,8 +492,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private int selectMenuOption() {
 			System.out.println();
-			System.out
-					.println("Enter a number to select an option from below:");
+			System.out.println("Enter a number to select an option from below:");
 			System.out.println("\t1) enter master.");
 			System.out.println("\t2) enter planetlab.");
 			System.out.println("\t0) exit program");
@@ -449,22 +502,21 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private int selectMasterOption() {
 			System.out.println();
-			System.out
-					.println("Enter a number to select an option from below:");
+			System.out.println("Enter a number to select an option from below:");
 			System.out.println("\t0) back");
-//			System.out.println("\t1) list connected daemons.");
-//			System.out
-//					.println("\t2) specify a job, and list all daemons that have loaded it.");
-//			System.out
-//					.println("\t3) specify a daemon, and list all its loaded jobs.");
-//			System.out.println("\t4) load a job to all hosts.");
-//			System.out.println("\t5) load a job to selected hosts.");
-//			System.out.println("\t6) stop a job on all hosts.");
+			// System.out.println("\t1) list connected daemons.");
+			// System.out
+			// .println("\t2) specify a job, and list all daemons that have loaded it.");
+			// System.out
+			// .println("\t3) specify a daemon, and list all its loaded jobs.");
+			// System.out.println("\t4) load a job to all hosts.");
+			// System.out.println("\t5) load a job to selected hosts.");
+			// System.out.println("\t6) stop a job on all hosts.");
 			System.out.println("\t7) scp daemon jar file to hosts.");
 			System.out.println("\t8) connect to all hosts.");
 
-//			System.out
-//					.println("\t9) start a job on all hosts that have loaded the job.");
+			// System.out
+			// .println("\t9) start a job on all hosts that have loaded the job.");
 			System.out.println("\t11) shutdown all hosts.");
 			System.out.print("Enter your choice: ");
 			return scanner.nextInt();
@@ -473,18 +525,16 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		public void exit() {
 			this.finished.set(true);
 		}
-		
-		private void validateListHosts()
-		{
-			if (connectedHosts.size() == 0)
-			{
-				System.out.println("Warning: there are no hosts available to perform your operation with.");
+
+		private void validateListHosts() {
+			if (connectedHosts.size() == 0) {
+				System.out
+						.println("Warning: there are no hosts available to perform your operation with.");
 			}
 		}
-		
+
 	}
 
-	
 	Handler<Fault> handleFault = new Handler<Fault>() {
 		public void handle(Fault fault) {
 			fault.getFault().printStackTrace(System.err);

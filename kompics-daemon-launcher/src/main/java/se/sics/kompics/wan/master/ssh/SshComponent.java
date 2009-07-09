@@ -33,6 +33,8 @@ import se.sics.kompics.wan.master.ssh.events.HaltRequest;
 import se.sics.kompics.wan.master.ssh.events.HaltResponse;
 import se.sics.kompics.wan.master.ssh.events.SshConnectRequest;
 import se.sics.kompics.wan.master.ssh.events.SshConnectResponse;
+import se.sics.kompics.wan.master.ssh.events.SshHeartbeatRequest;
+import se.sics.kompics.wan.master.ssh.events.SshHeartbeatResponse;
 import se.sics.kompics.wan.master.ssh.events.UploadFileRequest;
 import se.sics.kompics.wan.master.ssh.events.UploadFileResponse;
 import ch.ethz.ssh2.Connection;
@@ -551,6 +553,32 @@ public class SshComponent extends ComponentDefinition {
 		}
 	};
 
+	public Handler<SshHeartbeatRequest> handleSshSshHeartbeatRequest = new Handler<SshHeartbeatRequest>() {
+		public void handle(SshHeartbeatRequest event) {
+			int sessionId = event.getSessionId();
+			SshConn conn = activeSshConnections.get(sessionId);
+			
+			boolean active = false;
+			Session tempSession = null;
+			try {
+				tempSession = conn.getConnection().openSession();
+				active = true;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			finally {
+				if (tempSession != null)
+				{
+					tempSession.close();
+				}
+			}
+
+			SshHeartbeatResponse resp = new SshHeartbeatResponse(event, sessionId, active);
+			trigger(resp, sshPort);
+		}
+	};
+	
+	
 	/**
 	 * Called by SshCommand thread.
 	 * 
