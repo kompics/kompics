@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+     "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+     "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="se.sics.kompics.wan.master.plab">
+	<class name="PLabHost" table="PLabHost">
+
+		<id name="id" type="int" column="id">
+			<generator class="native" />
+		</id>
+
+		<property name="hostname" type="string" column="hostname"/>
+
+		<property name="boot_state" type="string" column="boot_state"/>
+
+		<property name="ip"  type="string" column="ip"/>
+		
+		<property name="site" type="int"  column="site"/>
+
+		<property name="cpuLoad"  type="int" column="cpuLoad"/>		
+		
+		<property name="bwlimit" type="string" column="bwlimit"/>		
+
+<!-- 
+
+ -->
+	</class>
+</hibernate-mapping>

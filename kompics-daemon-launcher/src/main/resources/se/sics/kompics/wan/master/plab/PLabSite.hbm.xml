@@ -5,11 +5,11 @@
 <hibernate-mapping package="se.sics.kompics.wan.master.plab">
 	<class name="PLabSite" table="PLabSite">
 
-		<id name="site_id" type="java.lang.Integer" column="site_id">
+		<id name="site_id" type="int" column="site_id">
 			<generator class="native" />
 		</id>
 
-		<property name="name" type="java.lang.String"/>
+		<property name="name" type="string"/>
 
 		<property name="abbreviated_name" />
 		

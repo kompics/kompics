@@ -20,6 +20,27 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 	public static final String NODENETWORK_ID 	= "nodenetwork_id";
 	public static final String METHOD			= "method";
 	public static final String TYPE				= "type";
+	/**
+	 * @return the type
+	 */
+	public static String getType() {
+		return TYPE;
+	}
+
+	/**
+	 * @param bwlimit the bwlimit to set
+	 */
+	public void setBwlimit(String bwlimit) {
+		this.bwlimit = bwlimit;
+	}
+
+	/**
+	 * @param cpuLoad the cpuLoad to set
+	 */
+	public void setCpuLoad(int cpuLoad) {
+		this.cpuLoad = cpuLoad;
+	}
+
 	public static final String MAC 				= "mac";
 	public static final String GATEWAY			= "gateway";
 	public static final String NETWORK			= "network";

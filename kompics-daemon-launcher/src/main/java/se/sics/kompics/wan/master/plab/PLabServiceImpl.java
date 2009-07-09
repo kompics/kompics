@@ -52,4 +52,13 @@ public class PLabServiceImpl implements PLabService {
 
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.master.plab.PLabService#getPlanetLabStore()
+	 */
+	@Override
+	public PLabStore getPlanetLabStore() {
+		
+		return getPLabHostDao().loadPLabStore();
+	}
+
 }

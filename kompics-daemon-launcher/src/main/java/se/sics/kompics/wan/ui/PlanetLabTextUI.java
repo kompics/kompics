@@ -139,7 +139,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 	{
 		connect(c.getNegative(Network.class), network
 				.getPositive(Network.class));
-		connect(c.getNegative(Timer.class), time.getPositive(Timer.class));
+		connect(c.getPositive(Timer.class), time.getNegative(Timer.class));
 	}
 
 

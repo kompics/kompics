@@ -57,4 +57,21 @@ public class PLabHostDaoImpl  implements PLabHostDao {
 
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.master.plab.PLabHostDao#loadPLabStore()
+	 */
+	@Override
+	public PLabStore loadPLabStore() {
+		PLabStore store = (PLabStore) ht.find("from PLabStore");
+		return store;
+	}
+
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.master.plab.PLabHostDao#store(se.sics.kompics.wan.master.plab.PLabStore)
+	 */
+	@Override
+	public void store(PLabStore store) {
+		ht.save(store);
+	}
+
 }

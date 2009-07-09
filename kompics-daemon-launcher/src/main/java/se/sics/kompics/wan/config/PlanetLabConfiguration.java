@@ -46,7 +46,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	public static final int 	DEFAULT_HTTP_PROXY_PORT = -1;
 	public static final String DEFAULT_HTTP_PROXY_USERNAME = "";
 	public static final String DEFAULT_HTTP_PROXY_PASSWORD = "";
-	public static final boolean DEFAULT_USE_GUI = true;
+	public static final boolean DEFAULT_USE_GUI = false;
 	
 	public static final String DEFAULT_PL_USER = "kost@sics.se";
 	public static final String DEFAULT_PL_PASSWORD = "";

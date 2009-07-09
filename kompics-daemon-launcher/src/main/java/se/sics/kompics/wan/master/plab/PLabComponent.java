@@ -65,7 +65,7 @@ public class PLabComponent extends ComponentDefinition {
 
 	private final Logger logger = LoggerFactory.getLogger(PLabComponent.class);
 	
-	private Negative<Network> net = negative(Network.class);
+	private Positive<Network> net = positive(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
 
 	// Need to copy Daemon-jar to planetlab hosts
