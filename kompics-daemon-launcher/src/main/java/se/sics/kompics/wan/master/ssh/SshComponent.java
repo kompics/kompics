@@ -16,6 +16,7 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
+import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.scp.DownloadUploadPort;
 import se.sics.kompics.wan.master.scp.FileInfo;
@@ -58,6 +59,8 @@ public class SshComponent extends ComponentDefinition {
 	public static final String EXIT_CODE_IDENTIFIER = "=:=:=EXIT STATUS==";
 
 	private Negative<SshPort> sshPort = negative(SshPort.class);
+
+	private Positive<Timer> timer = positive(Timer.class);
 
 	private Positive<DownloadUploadPort> downloadUploadPort = positive(DownloadUploadPort.class);
 

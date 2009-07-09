@@ -128,18 +128,18 @@ public class PlanetLabTextUI extends ComponentDefinition {
 				.getMasterAddress().toString());
 
 		connectToNetAndTimer(plab);
-		connectToNetAndTimer(ssh);
 		connectToNetAndTimer(master);
 //		connectToNetAndTimer(rpc);
+		connect(ssh.getNegative(Timer.class), time.getPositive(Timer.class));
 		
-		trigger(new Start(), control);
+		subscribe(handleStart,control);
 	}
 
 	private void connectToNetAndTimer(Component c)
 	{
 		connect(c.getNegative(Network.class), network
 				.getPositive(Network.class));
-		connect(c.getPositive(Timer.class), time.getNegative(Timer.class));
+		connect(c.getNegative(Timer.class), time.getPositive(Timer.class));
 	}
 
 

@@ -121,6 +121,7 @@ public class Master extends ComponentDefinition {
 		subscribe(handleStopJobOnHosts, userInput.getPositive(MasterPort.class));
 		subscribe(handleShutdownDaemonRequest, userInput.getPositive(MasterPort.class));
 		
+		// connect our timer port to the child component's timer port
 		connect(timer, userInput.getNegative(Timer.class));
 	}
 

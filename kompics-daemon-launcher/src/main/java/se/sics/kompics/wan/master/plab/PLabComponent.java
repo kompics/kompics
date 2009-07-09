@@ -56,7 +56,6 @@ import se.sics.kompics.wan.master.plab.plc.events.InstallDaemonOnHostsRequest;
 import se.sics.kompics.wan.master.plab.plc.events.PlanetLabInit;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesRequest;
 import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesResponse;
-import se.sics.kompics.wan.master.plab.rpc.RpcFunctions;
 import se.sics.kompics.wan.master.ssh.ExperimentHost;
 
 public class PLabComponent extends ComponentDefinition {
