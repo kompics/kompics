@@ -13,7 +13,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
@@ -34,7 +33,6 @@ import se.sics.kompics.wan.daemon.JobStartRequestMsg;
 import se.sics.kompics.wan.daemon.JobStopRequestMsg;
 import se.sics.kompics.wan.daemon.JobsFoundMsg;
 import se.sics.kompics.wan.job.Job;
-import se.sics.kompics.wan.ui.UserInputMaster;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.WebResponse;
@@ -55,13 +53,12 @@ public class Master extends ComponentDefinition {
 		private static final long serialVersionUID = -1117143406424329L;
 	};
 
+	Negative<MasterPort> masterPort = negative(MasterPort.class);
 	
 	Positive<Network> net = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 	Negative<Web> web = negative(Web.class);
 	
-	private Component userInput;
-
 	private HashSet<UUID> outstandingTimeouts;
 		
 	/**
@@ -97,7 +94,6 @@ public class Master extends ComponentDefinition {
 		this.loadedHostJobs = new HashMap<Integer, TreeSet<Integer>>();
 		this.jobs = new HashMap<Integer,Job>();
 		this.cacheEpoch = 1L;
-		this.userInput = create(UserInputMaster.class);
 		
 		outstandingTimeouts = new HashSet<UUID>();
 
@@ -113,16 +109,14 @@ public class Master extends ComponentDefinition {
 
 		subscribe(handleCacheEvictDaemon, timer);
 
-		subscribe(handlePrintConnectedDameons, userInput.getPositive(MasterPort.class));
-		subscribe(handlePrintLoadedJobs, userInput.getPositive(MasterPort.class));
-		subscribe(handlePrintDaemonsWithLoadedJob, userInput.getPositive(MasterPort.class));
-		subscribe(handleInstallJobOnHosts, userInput.getPositive(MasterPort.class));
-		subscribe(handleStartJobOnHosts, userInput.getPositive(MasterPort.class));
-		subscribe(handleStopJobOnHosts, userInput.getPositive(MasterPort.class));
-		subscribe(handleShutdownDaemonRequest, userInput.getPositive(MasterPort.class));
+		subscribe(handlePrintConnectedDameons, masterPort);
+		subscribe(handlePrintLoadedJobs, masterPort);
+		subscribe(handlePrintDaemonsWithLoadedJob, masterPort);
+		subscribe(handleInstallJobOnHosts, masterPort);
+		subscribe(handleStartJobOnHosts, masterPort);
+		subscribe(handleStopJobOnHosts, masterPort);
+		subscribe(handleShutdownDaemonRequest, masterPort);
 		
-		// connect our timer port to the child component's timer port
-		connect(timer, userInput.getNegative(Timer.class));
 	}
 
 	private Handler<MasterInit> handleInit = new Handler<MasterInit>() {

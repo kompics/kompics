@@ -98,7 +98,7 @@ public class ScpTest  {
 			public void handle(Start event) {
 
 				// TODO Auto-generated method stub
-				Credentials cred = new Credentials("", "", 
+				Credentials cred = new Credentials("sics_grid4all", "", 
 						"/home/jdowling/.ssh/id_rsa", "");
 				ExperimentHost host = new ExperimentHost("dight.sics.se");
 				

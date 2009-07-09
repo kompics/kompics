@@ -19,17 +19,17 @@ public class Credentials {
 
 	protected final String password;
 
-	protected String passwordMD5;
+//	protected String passwordMD5;
 
 	protected final String username;
 
-	protected String usernameMD5;
+//	protected String usernameMD5;
 
 	protected final String keyPath;
 
 	protected final String keyFilePassword;
 
-	protected boolean ignoreCerificateErrors = false;
+	protected boolean ignoreCerificateErrors = true;
 
 	/**
 	 * Creates a new Config class from a Map containing the following fields:
@@ -60,7 +60,8 @@ public class Credentials {
 		this.ignoreCerificateErrors = this
 				.parseBooleanString((String) credentials
 						.get("IgnoreCertificateErrors"));
-		this.calcMD5();
+
+//		this.calcMD5();
 
 	}
 
@@ -78,10 +79,10 @@ public class Credentials {
 		return false;
 	}
 
-	 private void calcMD5() {
-		 this.usernameMD5 = calcSunMD5(this.username);
-		 this.passwordMD5 = calcSunMD5(this.username + this.password);
-	 }
+//	 private void calcMD5() {
+//		 this.usernameMD5 = calcSunMD5(this.username);
+//		 this.passwordMD5 = calcSunMD5(this.username + this.password);
+//	 }
 
 	 private String calcSunMD5(String str) {
 	 	return DigestUtils.md5Hex(str);
@@ -118,8 +119,8 @@ public class Credentials {
 		this.username = username;
 		this.keyPath = keyPath;
 		this.keyFilePassword = keyFilePassword;
-
-		this.calcMD5();
+		
+//		this.calcMD5();
 	}
 
 	/**
@@ -129,9 +130,9 @@ public class Credentials {
 	 * @return true if username and password matched
 	 */
 	public boolean authenticate(Credentials comp) {
-		if (this.authenticateMD5(comp)) {
-			return true;
-		}
+//		if (this.authenticateMD5(comp)) {
+//			return true;
+//		}
 
 		if (this.authenticateClearTest(comp)) {
 			return true;
@@ -153,18 +154,18 @@ public class Credentials {
 		return true;
 	}
 
-	public boolean authenticateMD5(Credentials comp) {
-		if (!usernameMD5.equals(comp.getUsername())) {
-			return false;
-		}
-
-		if (!passwordMD5.equals(comp.getPassword())) {
-			return false;
-		}
-
-		// System.out.println("Authenticated with md5");
-		return true;
-	}
+//	public boolean authenticateMD5(Credentials comp) {
+//		if (!usernameMD5.equals(comp.getUsername())) {
+//			return false;
+//		}
+//
+//		if (!passwordMD5.equals(comp.getPassword())) {
+//			return false;
+//		}
+//
+//		// System.out.println("Authenticated with md5");
+//		return true;
+//	}
 
 	public boolean equals(Credentials comp) {
 		if (!username.equals(comp.getUsername())) {
@@ -192,12 +193,10 @@ public class Credentials {
 
 	public Map<String, String> getAuthMap() {
 		HashMap<String, String> authMap = new HashMap<String, String>();
-		authMap.put("Username", usernameMD5);
-		authMap.put("AuthString", passwordMD5);
-		// authMap.put("Slice", slice);
-		// authMap.put("Role", role);
-		// authMap.put("PrivateKeyFile", keyPath);
-		// authMap.put("PrivateKeyPassword", keyFilePassword);
+		authMap.put("Username", username); // usernameMD5
+		authMap.put("AuthString", password); // passwordMD5
+		 authMap.put("PrivateKeyFile", keyPath);
+		 authMap.put("PrivateKeyPassword", keyFilePassword);
 		return authMap;
 	}
 
@@ -250,11 +249,12 @@ public class Credentials {
 		return buf.toString();
 	}
 
-	public String getPasswordMD5() {
-		return passwordMD5;
-	}
-
-	public String getUsernameMD5() {
-		return usernameMD5;
-	}
+//	public String getPasswordMD5() {
+//		return passwordMD5;
+//	}
+//
+//	public String getUsernameMD5() {
+//		return usernameMD5;
+//	}
+	
 }

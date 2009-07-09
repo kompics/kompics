@@ -375,11 +375,10 @@ public class PLCentralCache implements Runnable {
 							.println("Plc disk cache created with different slice");
 					return null;
 				}
-				if (!cred.getUsernameMD5().equals(store.getUsername())) {
-					System.err
-							.println("Plc disk cache created with different username");
-
-				}
+//				if (!cred.getUsernameMD5().equals(store.getUsername())) {
+//					System.err
+//							.println("Plc disk cache created with different username");
+//				}
 
 				if (storeAge < MAX_PLC_CACHE_AGE && hostNum > 0) {
 					System.out.println("Using plc disk cache, (age="
@@ -616,8 +615,11 @@ public class PLCentralCache implements Runnable {
 		// host.setSite(hostToSiteMapping.get(host.getNode_id()));
 		// }
 
+//		PlanetLabStore diskStore = new PlanetLabStore(cred.getSlice(), cred
+//				.getUsernameMD5());
 		PlanetLabStore diskStore = new PlanetLabStore(cred.getSlice(), cred
-				.getUsernameMD5());
+				.getUsername());
+
 		diskStore.setHosts(hosts);
 		diskStore.setSites(sites);
 		System.out.println("hosts : " + hosts.length);

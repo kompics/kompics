@@ -208,7 +208,7 @@ public class PLCentralCacheComponent extends ComponentDefinition {
 		// }
 
 		PlanetLabStore diskStore = new PlanetLabStore(cred.getSlice(), cred
-				.getUsernameMD5());
+				.getUsername()); // MD5
 		diskStore.setHosts(hosts);
 		diskStore.setSites(sites);
 		System.out.println("hosts : " + hosts.length);
@@ -385,10 +385,9 @@ public class PLCentralCacheComponent extends ComponentDefinition {
 							.println("Plc disk cache created with different slice");
 					return null;
 				}
-				if (!cred.getUsernameMD5().equals(store.getUsername())) {
+				if (!cred.getUsername().equals(store.getUsername())) { // MD5
 					System.err
 							.println("Plc disk cache created with different username");
-
 				}
 
 				if (storeAge < MAX_PLC_CACHE_AGE && hostNum > 0) {

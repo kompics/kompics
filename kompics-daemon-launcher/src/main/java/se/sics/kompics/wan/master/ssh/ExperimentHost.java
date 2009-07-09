@@ -74,14 +74,15 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 
 	}
 
-	public ExperimentHost(Map<String, String> nodeInfo) {
-		node_id = Integer.parseInt(nodeInfo.get(ExperimentHost.NODE_ID));
+	@SuppressWarnings("unchecked")
+	public ExperimentHost(Map nodeInfo) {
+		node_id = (Integer) nodeInfo.get(ExperimentHost.NODE_ID);
 		hostname = (String) nodeInfo.get(ExperimentHost.HOSTNAME);
 		boot_state = (String) nodeInfo.get(ExperimentHost.BOOT_STATE);
-		ip = nodeInfo.get(ExperimentHost.IP);
-		site = Integer.parseInt(nodeInfo.get(PLabSite.SITE_ID));
-		bwlimit = nodeInfo.get(ExperimentHost.BWLIMIT);
-		cpuLoad = Integer.parseInt(nodeInfo.get(ExperimentHost.CPU_LOAD));
+		ip = (String) nodeInfo.get(ExperimentHost.IP);
+		site = (Integer) nodeInfo.get(PLabSite.SITE_ID);
+		bwlimit = (String) nodeInfo.get(ExperimentHost.BWLIMIT);
+//		cpuLoad = (Integer) nodeInfo.get(ExperimentHost.CPU_LOAD);
 	}
 
 	public ExperimentHost(String hostname) {

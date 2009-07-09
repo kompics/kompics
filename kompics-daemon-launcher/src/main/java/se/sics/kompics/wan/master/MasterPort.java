@@ -13,12 +13,12 @@ import se.sics.kompics.PortType;
 public class MasterPort extends PortType {
 
 	{
-		positive(PrintConnectedDameons.class);
-		positive(PrintDaemonsWithLoadedJob.class);
-		positive(PrintLoadedJobs.class);
-		positive(InstallJobOnHosts.class);
-		positive(StartJobOnHosts.class);
-		positive(StopJobOnHosts.class);
-		positive(ShutdownDaemonRequest.class);
+		negative(PrintConnectedDameons.class);
+		negative(PrintDaemonsWithLoadedJob.class);
+		negative(PrintLoadedJobs.class);
+		negative(InstallJobOnHosts.class);
+		negative(StartJobOnHosts.class);
+		negative(StopJobOnHosts.class);
+		negative(ShutdownDaemonRequest.class);
 	}
 }

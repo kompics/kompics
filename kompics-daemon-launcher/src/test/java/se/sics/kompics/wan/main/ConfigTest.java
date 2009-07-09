@@ -13,6 +13,7 @@ import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.CyclonConfiguration;
 import se.sics.kompics.wan.config.DaemonConfiguration;
 import se.sics.kompics.wan.config.MasterConfiguration;
+import se.sics.kompics.wan.config.PlanetLabConfiguration;
 
 /**
  * Unit test for simple App.
@@ -62,6 +63,11 @@ public class ConfigTest extends TestCase {
 			DaemonConfiguration dc = (DaemonConfiguration) Configuration.init(args, DaemonConfiguration.class);
 			dc.getDaemonRetryPeriod();
 			dc.getDaemonRetryCount();
+
+			
+			PlanetLabConfiguration pc = (PlanetLabConfiguration) 
+					Configuration.init(args, PlanetLabConfiguration.class);
+			
 			
 			assertTrue(true);
 		} catch (ConfigurationException e) {

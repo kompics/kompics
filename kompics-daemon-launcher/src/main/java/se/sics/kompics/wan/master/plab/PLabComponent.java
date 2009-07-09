@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -148,7 +149,7 @@ public class PLabComponent extends ComponentDefinition {
 			// }
 			
 			store = new PLabStore(cred.getSlice(), cred
-					.getUsernameMD5());
+					.getUsername()); // MD5
 			store.setHosts(hosts);
 			store.setSites(sites);
 			
@@ -266,12 +267,16 @@ public class PLabComponent extends ComponentDefinition {
 
 	
 	public Handler<GetBootStates> handleGetBootStates = new Handler<GetBootStates>() {
+		@SuppressWarnings("unchecked")
 		public void handle(GetBootStates event) {
 			
-			executeRPC("GetBootStates", new ArrayList<Object>());
+			Vector params = new Vector();
+			params.add(cred.getAuthMap());
+			executeRPC("GetBootStates", params);
 			
 		}
 	};
+
 	
 	private Handler<QueryPLabSitesRequest> handleQueryPLabSitesRequest = new Handler<QueryPLabSitesRequest>() {
 		public void handle(QueryPLabSitesRequest event) {

@@ -18,7 +18,8 @@ public class PLabHost extends ExperimentHost {
 		super();
 	}
 
-	public PLabHost(Map<String, String> nodeInfo) {
+	@SuppressWarnings("unchecked")
+	public PLabHost(Map nodeInfo) {
 		super(nodeInfo);
 		
 	}

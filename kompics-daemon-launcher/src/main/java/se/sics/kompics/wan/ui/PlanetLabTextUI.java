@@ -35,7 +35,9 @@ import se.sics.kompics.wan.master.ShutdownDaemonRequest;
 import se.sics.kompics.wan.master.StartJobOnHosts;
 import se.sics.kompics.wan.master.plab.PLabComponent;
 import se.sics.kompics.wan.master.plab.PLabHost;
+import se.sics.kompics.wan.master.plab.PLabPort;
 import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.master.plab.plc.events.GetBootStates;
 import se.sics.kompics.wan.master.plab.plc.events.PlanetLabInit;
 import se.sics.kompics.wan.master.plab.rpc.Controller;
 import se.sics.kompics.wan.master.plab.rpc.RpcInit;
@@ -84,22 +86,26 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		subscribe(handleFault, network.getControl());
 		subscribe(handleFault, plab.getControl());
 
-		String username = PlanetLabConfiguration.getUsername();
-		String password = PlanetLabConfiguration.getPassword();
-		String slice = PlanetLabConfiguration.getSlice();
-		String role = PlanetLabConfiguration.getRole();
-		String keyPath = PlanetLabConfiguration.getPrivateKeyFile();
-		String keyFilePassword = PlanetLabConfiguration
-				.getPrivateKeyFilePassword();
+//		String username = PlanetLabConfiguration.getUsername();
+//		String password = PlanetLabConfiguration.getPassword();
+//		String slice = PlanetLabConfiguration.getSlice();
+//		String role = PlanetLabConfiguration.getRole();
+//		String keyPath = PlanetLabConfiguration.getPrivateKeyFile();
+//		String keyFilePassword = PlanetLabConfiguration
+//				.getPrivateKeyFilePassword();
+//
+//		PlanetLabCredentials cred = new PlanetLabCredentials(username,
+//				password, slice, role, keyPath, keyFilePassword);
 
-		PlanetLabCredentials cred = new PlanetLabCredentials(username,
-				password, slice, role, keyPath, keyFilePassword);
+		getCredentials();
 
 //		PlanetLabInit pInit = new PlanetLabInit(cred, PlanetLabConfiguration
 //				.getMasterAddress(), PlanetLabConfiguration
 //				.getBootConfiguration(), PlanetLabConfiguration
 //				.getMonitorConfiguration());
-//		trigger(pInit, plab.getControl());
+		
+		PlanetLabInit pInit = new PlanetLabInit(cred);
+		trigger(pInit, plab.getControl());
 
 		MasterInit mInit = new MasterInit(PlanetLabConfiguration
 				.getMasterAddress(), PlanetLabConfiguration
@@ -117,7 +123,6 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		int maxThreads = PlanetLabConfiguration.getXmlRpcMaxThreads();
 		String homepage = PlanetLabConfiguration.getXmlRpcHomepage();
 		
-		getCredentials();
 
 		
 //		RpcInit rpcInit = new RpcInit(ip, rpcPort, homepage, cred);
@@ -142,24 +147,30 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		connect(c.getNegative(Timer.class), time.getPositive(Timer.class));
 	}
 
+	private void getBootstates()
+	{
+		trigger(new GetBootStates(), plab.getPositive(PLabPort.class));
+		
+	}
 
 	private void getCredentials()
 	{
 		Scanner scanner = new Scanner(System.in);
 		String username, password, slice, keyPath, keyFilePassword;
 		
-		System.out.print("\tEnter planetlab username: ");
-		username = scanner.next();
+//		System.out.print("\tEnter planetlab username: ");
+//		username = scanner.next();
 		System.out.print("\tEnter planetlab password: ");
 		password = scanner.next();
-		System.out.print("\tEnter name of slice: ");
-		slice = scanner.next();
-		System.out.print("\tEnter full path to private key for planet-lab: ");
-		keyPath = scanner.next();
-		System.out.print("\tEnter password for private key: ");
-		keyFilePassword = scanner.next();
-		
-		cred = new PlanetLabCredentials(username, password, slice, keyPath, keyFilePassword);
+//		System.out.print("\tEnter name of slice: ");
+//		slice = scanner.next();
+//		System.out.print("\tEnter full path to private key for planet-lab: ");
+//		keyPath = scanner.next();
+//		System.out.print("\tEnter password for private key: ");
+//		keyFilePassword = scanner.next();
+//		cred = new PlanetLabCredentials(username, password, slice, keyPath, keyFilePassword);
+		cred = new PlanetLabCredentials("kost@sics.se", password, 
+					"sics_grid4all", "/home/jdowling/.ssh/id_rsa", "");
 	}
 	
 	public Handler<SshConnectResponse> handleSshConnectResponse = 
@@ -211,9 +222,11 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			while (true) {
 				TreeSet<Address> hosts = MasterConfiguration.getHosts();
 				switch (selectPlanetlabOption()) {
-				case 0: getCredentials();
-					return;
-				case 4: connectToHosts(); 
+				case 0:	return;
+				case 1: getCredentials();
+					break;
+				case 4: connectToHosts(); break;
+				case 6: getBootstates(); break;
 				default:
 					break;
 				}
@@ -345,7 +358,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			}
 			
 		}
-
+		
 
 		private boolean selectHostsFile() {
 			boolean succeed = true;
@@ -414,7 +427,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			System.out.println("\t3) list hosts in slice.");
 			System.out.println("\t4) list planetlab sites using CoMon.");
 			System.out.println("\t5) connect to a host.");
-			System.out.println("\t6) .");
+			System.out.println("\t6) GET BOOT STATES.");
 			System.out.println("\t7) scp (copy) daemon jar file to hosts.");
 			System.out.println("\t8) .");
 			System.out.println("\t9) .");
