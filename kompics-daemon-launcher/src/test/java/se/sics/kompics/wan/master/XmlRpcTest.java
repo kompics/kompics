@@ -5,7 +5,9 @@ import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
@@ -19,6 +21,9 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+
+import se.sics.kompics.wan.master.plab.PLabSite;
+import se.sics.kompics.wan.master.ssh.ExperimentHost;
 
 public class XmlRpcTest {
 
@@ -80,16 +85,27 @@ public class XmlRpcTest {
 			auth.put("Slice", "sics_grid4all");
 
 			Vector params = new Vector();
-			params.add(auth);
+			List<String> fields = new ArrayList<String>();
+			fields.add(ExperimentHost.NODE_ID);
+			fields.add(ExperimentHost.HOSTNAME);
+			fields.add(ExperimentHost.BOOT_STATE);
+			fields.add(PLabSite.SITE_ID);
 
-			// GetNodes
-			Object[] res = (Object[]) client.execute("GetBootStates", params);
+			
+			params.add(auth);
+			params.add(new HashMap());
+			params.add(fields);
+			
+			// GetBootStates
+			Object[] res = (Object[]) client.execute("GetNodes", params);
 			if (res.length == 0) {
 				System.err.println("Warning: No boot-states found!");
 			} else {
 				for (int i = 0; i < res.length; i++) {
-					String s = (String) res[i];
-					System.out.println(s);
+					HashMap m = (HashMap) res[i];
+					for (Object obj : m.keySet()) {
+						System.out.println("(" + obj.toString() + "," + m.get(obj).toString() + "), ");						
+					}
 				}
 			}
 

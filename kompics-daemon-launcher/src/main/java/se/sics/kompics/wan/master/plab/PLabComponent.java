@@ -238,7 +238,7 @@ public class PLabComponent extends ComponentDefinition {
 		List<String> fields = new ArrayList<String>();
 		fields.add(ExperimentHost.NODE_ID);
 		fields.add(ExperimentHost.HOSTNAME);
-//		fields.add(ExperimentHost.BOOT_STATE);
+		fields.add(ExperimentHost.BOOT_STATE);
 //		fields.add(ExperimentHost.IP);
 //		fields.add(ExperimentHost.BWLIMIT);
 		fields.add(PLabSite.SITE_ID);
