@@ -4,7 +4,7 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Start;
-import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.plab.PlanetLabCredentials;
 
 public class PLControllerComponent extends ComponentDefinition {
 

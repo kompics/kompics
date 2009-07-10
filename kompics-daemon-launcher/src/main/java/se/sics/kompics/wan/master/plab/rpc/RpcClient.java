@@ -10,7 +10,7 @@ import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.ssh.Credentials;
+import se.sics.kompics.wan.ssh.Credentials;
 
 public class RpcClient implements RpcFunctions {
 

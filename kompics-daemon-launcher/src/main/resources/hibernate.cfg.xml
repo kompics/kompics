@@ -29,9 +29,9 @@ production settings here...
     <property name="connection.pool_size">1</property>
     <property name="current_session_context_class">thread</property>
 
-	<mapping resource="se/sics/kompics/wan/master/plab/PLabHost.hbm.xml" />
+	<mapping resource="se/sics/kompics/wan/plab/PLabHost.hbm.xml" />
+	<mapping resource="se/sics/kompics/wan/plab/PLabSite.hbm.xml" />
 
-	<mapping resource="se/sics/kompics/wan/master/plab/PLabSite.hbm.xml" />
 	<!--
 	<mapping resource="se/sics/kompics/wan/master/plab/PLabStore.hbm.xml" />
 		

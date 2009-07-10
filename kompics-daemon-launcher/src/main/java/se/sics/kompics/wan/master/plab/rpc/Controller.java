@@ -16,17 +16,17 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Start;
-import se.sics.kompics.wan.master.plab.PLabComponent;
-import se.sics.kompics.wan.master.plab.PLabHost;
-import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.master.plab.plc.PLControllerInit;
-import se.sics.kompics.wan.master.plab.plc.events.GetNodesForSliceRequest;
-import se.sics.kompics.wan.master.ssh.Credentials;
-import se.sics.kompics.wan.master.ssh.ExperimentHost;
-import se.sics.kompics.wan.master.ssh.SshComponent;
-import se.sics.kompics.wan.master.ssh.SshPort;
-import se.sics.kompics.wan.master.ssh.events.SshConnectRequest;
-import se.sics.kompics.wan.master.ssh.events.SshConnectResponse;
+import se.sics.kompics.wan.plab.PLabComponent;
+import se.sics.kompics.wan.plab.PLabHost;
+import se.sics.kompics.wan.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
+import se.sics.kompics.wan.ssh.Credentials;
+import se.sics.kompics.wan.ssh.ExperimentHost;
+import se.sics.kompics.wan.ssh.SshComponent;
+import se.sics.kompics.wan.ssh.SshPort;
+import se.sics.kompics.wan.ssh.events.SshConnectRequest;
+import se.sics.kompics.wan.ssh.events.SshConnectResponse;
 
 public class Controller extends ComponentDefinition {
 

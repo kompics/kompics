@@ -52,7 +52,7 @@ import org.apache.xmlrpc.serializer.TypeSerializer;
 import org.xml.sax.SAXException;
 
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.plab.PlanetLabCredentials;
 
 public class PLCentralCache implements Runnable {
 
@@ -284,10 +284,10 @@ public class PLCentralCache implements Runnable {
 		// System.out.println("hosts : " + hosts.length);
 		for (PlanetLabHost host : hosts) {
 			// System.out.println(host.getHostname());
-			PlanetLabSite site = siteIdToSiteMapping.get(host.getSite());
-			hostIdToHostMapping.put(host.getNode_id(), host);
+			PlanetLabSite site = siteIdToSiteMapping.get(host.getSiteId());
+			hostIdToHostMapping.put(host.getNodeId(), host);
 			// check if the host is in the slice
-			if (sliceHosts.containsKey(host.getNode_id())) {
+			if (sliceHosts.containsKey(host.getNodeId())) {
 				// always add to host to site mapping
 				this.hostToSiteMapping.put(host, site);
 

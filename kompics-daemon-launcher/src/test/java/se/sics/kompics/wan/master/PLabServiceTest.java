@@ -10,8 +10,8 @@ import org.springframework.context.ApplicationContext;
 
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.PLabHost;
-import se.sics.kompics.wan.master.plab.PLabService;
+import se.sics.kompics.wan.plab.PLabHost;
+import se.sics.kompics.wan.plab.PLabService;
 
 
 /**
@@ -52,7 +52,7 @@ public class PLabServiceTest {
 		if (MOCKED) {
 			final PLabService pLabService = jmockCtx.mock(PLabService.class);
 			final List<PLabHost> listHosts = new ArrayList<PLabHost>();
-			PLabHost host = new PLabHost("lucan.sics.se");		
+			PLabHost host = new PLabHost("lucan.sics.se", 3);		
 			listHosts.add(host);
 	
 			jmockCtx.checking(new Expectations() {{

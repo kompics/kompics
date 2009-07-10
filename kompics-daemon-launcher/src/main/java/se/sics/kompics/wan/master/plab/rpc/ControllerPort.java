@@ -1,22 +1,22 @@
 package se.sics.kompics.wan.master.plab.rpc;
 
 import se.sics.kompics.PortType;
-import se.sics.kompics.wan.master.plab.plc.events.GetAllHostsRequest;
-import se.sics.kompics.wan.master.plab.plc.events.GetAllHostsResponse;
-import se.sics.kompics.wan.master.plab.plc.events.InstallDaemonOnHostsRequest;
-import se.sics.kompics.wan.master.plab.plc.events.InstallDaemonOnHostsResponse;
-import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesRequest;
-import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesResponse;
-import se.sics.kompics.wan.master.ssh.events.CommandRequest;
-import se.sics.kompics.wan.master.ssh.events.CommandResponse;
-import se.sics.kompics.wan.master.ssh.events.DownloadFileRequest;
-import se.sics.kompics.wan.master.ssh.events.DownloadFileResponse;
-import se.sics.kompics.wan.master.ssh.events.HaltRequest;
-import se.sics.kompics.wan.master.ssh.events.HaltResponse;
-import se.sics.kompics.wan.master.ssh.events.SshConnectRequest;
-import se.sics.kompics.wan.master.ssh.events.SshConnectResponse;
-import se.sics.kompics.wan.master.ssh.events.UploadFileRequest;
-import se.sics.kompics.wan.master.ssh.events.UploadFileResponse;
+import se.sics.kompics.wan.plab.events.GetAllHostsRequest;
+import se.sics.kompics.wan.plab.events.GetAllHostsResponse;
+import se.sics.kompics.wan.plab.events.InstallDaemonOnHostsRequest;
+import se.sics.kompics.wan.plab.events.InstallDaemonOnHostsResponse;
+import se.sics.kompics.wan.plab.events.QueryPLabSitesRequest;
+import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
+import se.sics.kompics.wan.ssh.events.CommandRequest;
+import se.sics.kompics.wan.ssh.events.CommandResponse;
+import se.sics.kompics.wan.ssh.events.DownloadFileRequest;
+import se.sics.kompics.wan.ssh.events.DownloadFileResponse;
+import se.sics.kompics.wan.ssh.events.HaltRequest;
+import se.sics.kompics.wan.ssh.events.HaltResponse;
+import se.sics.kompics.wan.ssh.events.SshConnectRequest;
+import se.sics.kompics.wan.ssh.events.SshConnectResponse;
+import se.sics.kompics.wan.ssh.events.UploadFileRequest;
+import se.sics.kompics.wan.ssh.events.UploadFileResponse;
 
 
 

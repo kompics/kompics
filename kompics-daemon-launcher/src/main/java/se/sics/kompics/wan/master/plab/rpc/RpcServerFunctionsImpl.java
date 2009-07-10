@@ -9,10 +9,10 @@ import java.util.Vector;
 
 import se.sics.kompics.wan.master.plab.plc.PlanetLabHost;
 import se.sics.kompics.wan.master.plab.plc.PlanetLabSite;
-import se.sics.kompics.wan.master.ssh.CommandSpec;
-import se.sics.kompics.wan.master.ssh.ConnectionController;
-import se.sics.kompics.wan.master.ssh.Credentials;
-import se.sics.kompics.wan.master.ssh.SshConnection;
+import se.sics.kompics.wan.ssh.CommandSpec;
+import se.sics.kompics.wan.ssh.ConnectionController;
+import se.sics.kompics.wan.ssh.Credentials;
+import se.sics.kompics.wan.ssh.SshConnection;
 
 
 public class RpcServerFunctionsImpl implements RpcFunctions {
@@ -398,7 +398,7 @@ public class RpcServerFunctionsImpl implements RpcFunctions {
 		PlanetLabHost[] hosts = controller.getHostsNotInSlice();
 		for (int i = 0; i < hosts.length; i++) {
 			if (hosts[i].getIp() != null) {
-				list.add(hosts[i].getNode_id());
+				list.add(hosts[i].getNodeId());
 			}
 		}
 		return list.toArray(new Object[list.size()]);
@@ -438,17 +438,17 @@ public class RpcServerFunctionsImpl implements RpcFunctions {
 			Map<String, String> map = new HashMap<String, String>();
 
 			map.put("hostname", plHost.getHostname());
-			map.put("node_id", "" + plHost.getNode_id());
+			map.put("node_id", "" + plHost.getNodeId());
 			map.put("site", controller.getPlanetLabSite(plHost)
 					.getAbbreviated_name());
-			if (plHost.getComMonStat() != null) {
-				map.put("load_average", ""
-						+ plHost.getComMonStat().getLoadAverage());
-				map.put("response_time", ""
-						+ plHost.getComMonStat().getResponseTime());
-				map.put("mem_free", "" + plHost.getComMonStat().getMemFree());
-				map.put("mem_total", "" + plHost.getComMonStat().getMemTotal());
-			}
+//			if (plHost.getComMonStat() != null) {
+//				map.put("load_average", ""
+//						+ plHost.getComMonStat().getLoadAverage());
+//				map.put("response_time", ""
+//						+ plHost.getComMonStat().getResponseTime());
+//				map.put("mem_free", "" + plHost.getComMonStat().getMemFree());
+//				map.put("mem_total", "" + plHost.getComMonStat().getMemTotal());
+//			}
 			result[i] = map;
 		}
 
@@ -467,7 +467,7 @@ public class RpcServerFunctionsImpl implements RpcFunctions {
 		PlanetLabHost[] hosts = controller.getAllHosts();
 		for (int i = 0; i < hosts.length; i++) {
 			if (hosts[i].getIp() != null) {
-				list.add(hosts[i].getNode_id());
+				list.add(hosts[i].getNodeId());
 				// System.out.println("adding:" + hosts[i].getHostname());
 			} else {
 				System.out.println("node_id=null: " + hosts[i].getHostname());
@@ -489,7 +489,7 @@ public class RpcServerFunctionsImpl implements RpcFunctions {
 		PlanetLabHost[] hosts = controller.getAvailableHosts();
 		for (int i = 0; i < hosts.length; i++) {
 			if (hosts[i].getIp() != null) {
-				list.add(hosts[i].getNode_id());
+				list.add(hosts[i].getNodeId());
 				// System.out.println("adding:" + hosts[i].getHostname());
 			} else {
 				System.out.println("node_id=null: " + hosts[i].getHostname());

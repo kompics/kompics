@@ -17,14 +17,14 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.PLabComponent;
-import se.sics.kompics.wan.master.plab.PLabHost;
-import se.sics.kompics.wan.master.plab.PLabPort;
-import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
-import se.sics.kompics.wan.master.plab.plc.events.GetAllHostsResponse;
-import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesResponse;
-import se.sics.kompics.wan.master.ssh.Credentials;
-import se.sics.kompics.wan.master.ssh.ExperimentHost;
+import se.sics.kompics.wan.plab.PLabComponent;
+import se.sics.kompics.wan.plab.PLabHost;
+import se.sics.kompics.wan.plab.PLabPort;
+import se.sics.kompics.wan.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.plab.events.GetAllHostsResponse;
+import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
+import se.sics.kompics.wan.ssh.Credentials;
+import se.sics.kompics.wan.ssh.ExperimentHost;
 
 public class PLabTest  {
 
@@ -77,7 +77,7 @@ public class PLabTest  {
 					new PlanetLabCredentials("", "", "",
 							"user",
 						"/home/jdowling/.ssh/id_rsa", "");
-				PLabHost host = new PLabHost("lqist.com");
+				PLabHost host = new PLabHost("lqist.com", 4);
 				
 //				trigger(new SshConnectRequest(cred, host), pLabComponent.getPositive(SshPort.class));
 

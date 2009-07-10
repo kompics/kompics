@@ -1,12 +1,12 @@
 package se.sics.kompics.wan.master.plab.plc;
 
 import se.sics.kompics.PortType;
-import se.sics.kompics.wan.master.plab.plc.events.GetAllHostsRequest;
-import se.sics.kompics.wan.master.plab.plc.events.GetAllHostsResponse;
-import se.sics.kompics.wan.master.plab.plc.events.InstallDaemonOnHostsRequest;
-import se.sics.kompics.wan.master.plab.plc.events.InstallDaemonOnHostsResponse;
-import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesRequest;
-import se.sics.kompics.wan.master.plab.plc.events.QueryPLabSitesResponse;
+import se.sics.kompics.wan.plab.events.GetAllHostsRequest;
+import se.sics.kompics.wan.plab.events.GetAllHostsResponse;
+import se.sics.kompics.wan.plab.events.InstallDaemonOnHostsRequest;
+import se.sics.kompics.wan.plab.events.InstallDaemonOnHostsResponse;
+import se.sics.kompics.wan.plab.events.QueryPLabSitesRequest;
+import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
 
 
 

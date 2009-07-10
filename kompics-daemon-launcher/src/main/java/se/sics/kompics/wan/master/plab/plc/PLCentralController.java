@@ -7,15 +7,15 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
-import se.sics.kompics.wan.master.plab.plc.comon.CoMonManager;
+import se.sics.kompics.wan.plab.CoMon;
+import se.sics.kompics.wan.plab.PlanetLabCredentials;
 
 
 public class PLCentralController {
 
 	private final PLCentralCache cache;
 
-	private CoMonManager manager;
+	private CoMon manager;
 
 	public PLCentralController(PlanetLabCredentials cred) {
 		this.cache = new PLCentralCache(cred);
@@ -168,7 +168,7 @@ public class PLCentralController {
 	private PlanetLabHost[] filterNodes(Set<PlanetLabHost> allHosts) {
 		Vector<PlanetLabHost> filtered = new Vector<PlanetLabHost>();
 		for (PlanetLabHost host : allHosts) {
-			if (host.getBoot_state().equals("boot")) {
+			if (host.getBootState().equals("boot")) {
 				// if (cache.getHostToSiteMapping().containsKey(host)) {
 				filtered.add(host);
 				// }
@@ -218,14 +218,14 @@ public class PLCentralController {
 	}
 
 	public PlanetLabSite getSite(PlanetLabHost host) {
-		return cache.getSite(host.getSite());
+		return cache.getSite(host.getSiteId());
 	}
 
 	public void setCoMonData(PlanetLabHost[] hosts) {
-		manager = new CoMonManager(hosts);
-		Thread t = new Thread(manager);
-		t.setName("ComonQuery");
-		t.start();
+//		manager = new CoMonManager(new ArrayList<PlanetLabHost>hosts);
+//		Thread t = new Thread(manager);
+//		t.setName("ComonQuery");
+//		t.start();
 	}
 
 	public double getCoMonProgress() {

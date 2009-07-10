@@ -20,7 +20,7 @@
 package se.sics.kompics.wan.master.plab.plc;
 
 import se.sics.kompics.Init;
-import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.plab.PlanetLabCredentials;
 
 /**
  * The <code>BootstrapServerInit</code> class.

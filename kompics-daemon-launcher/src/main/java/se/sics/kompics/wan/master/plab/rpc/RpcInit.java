@@ -22,7 +22,7 @@ package se.sics.kompics.wan.master.plab.rpc;
 import java.net.InetAddress;
 
 import se.sics.kompics.Init;
-import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.plab.PlanetLabCredentials;
 
 
 

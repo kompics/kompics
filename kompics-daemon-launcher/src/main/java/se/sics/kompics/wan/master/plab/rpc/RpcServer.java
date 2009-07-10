@@ -12,9 +12,9 @@ import org.apache.xmlrpc.server.XmlRpcServerConfigImpl;
 import org.apache.xmlrpc.webserver.WebServer;
 
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.master.plab.PlanetLabCredentials;
-import se.sics.kompics.wan.master.ssh.ConnectionController;
-import se.sics.kompics.wan.master.ssh.Credentials;
+import se.sics.kompics.wan.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.ssh.ConnectionController;
+import se.sics.kompics.wan.ssh.Credentials;
 
 
 
