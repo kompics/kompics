@@ -32,11 +32,11 @@ public class PLabServiceImpl implements PLabService {
 		this.pLabHostDao = pLabHostDao;
 	}
 
-	@Override
-	public List<PLabHost> getHostsFromDB() {
-
-		return getPLabHostDao().loadAllHosts();
-	}
+//	@Override
+//	public List<PLabHost> getHostsFromDB() {
+//
+//		return getPLabHostDao().loadAllHosts();
+//	}
 
 	/*
 	 * (non-Javadoc)
@@ -45,20 +45,26 @@ public class PLabServiceImpl implements PLabService {
 	 * se.sics.kompics.wan.master.plab.plc.PLabService#storeHostsToDB(java.util
 	 * .List)
 	 */
-	@Override
-	public void storeHostsToDB(List<PLabHost> hosts) {
-
-		getPLabHostDao().store(hosts);
-
-	}
+//	@Override
+//	public void storeHostsToDB(List<PLabHost> hosts) {
+//
+//		getPLabHostDao().store(hosts);
+//
+//	}
 
 	/* (non-Javadoc)
 	 * @see se.sics.kompics.wan.master.plab.PLabService#getPlanetLabStore()
 	 */
 	@Override
-	public PLabStore getPlanetLabStore() {
+	public PLabStore load() {
 		
-		return getPLabHostDao().loadPLabStore();
+		return getPLabHostDao().load();
+	}
+
+	@Override
+	public void save(PLabStore store) {
+		getPLabHostDao().save(store);
+		
 	}
 
 }

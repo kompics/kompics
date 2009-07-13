@@ -2,6 +2,13 @@ package se.sics.kompics.wan.plab;
 
 import java.util.Map;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity 
+@Table(name="plab_site")
 public class PLabSite implements Comparable<PLabSite> {
 
 	public static final String SITE_ID 				= "site_id";
@@ -55,6 +62,8 @@ public class PLabSite implements Comparable<PLabSite> {
 		this.name = name;
 	}
 
+	@Id
+//	@Column(name="site_id")
 	public Integer getSiteId() {
 		return siteId;
 	}

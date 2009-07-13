@@ -1,9 +1,6 @@
 package se.sics.kompics.wan.plab.events;
 
 import se.sics.kompics.Init;
-import se.sics.kompics.address.Address;
-import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
-import se.sics.kompics.p2p.monitor.P2pMonitorConfiguration;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
 
 /**
@@ -15,10 +12,6 @@ import se.sics.kompics.wan.plab.PlanetLabCredentials;
 public class PlanetLabInit extends Init {
 
 	private PlanetLabCredentials cred;
-
-//	private final BootstrapConfiguration bootConfig;
-//	private final P2pMonitorConfiguration monitorConfig;
-//	private final Address master;
 
 	public PlanetLabInit(PlanetLabCredentials cred) {
 		this.cred = cred;

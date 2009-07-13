@@ -2,14 +2,19 @@ package se.sics.kompics.wan.ssh;
 
 import java.util.Map;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.Transient;
+
 import se.sics.kompics.wan.plab.PLabHost;
 
+@Entity
+@Inheritance(strategy=InheritanceType.JOINED)
 public class ExperimentHost implements Comparable<ExperimentHost> {
 
-
-	protected String connectFailedPolicy = "";
-
-	protected int connectionId = -1;
 
 	protected String hostname;
 
@@ -17,7 +22,14 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 
 	protected int nodeId;
 
+	@Transient 
 	protected int sessionId;
+
+	@Transient 
+	protected String connectFailedPolicy = "";
+
+	@Transient 
+	protected int connectionId = -1;
 
 	
 	public ExperimentHost() {
@@ -68,14 +80,18 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 		return connectionId;
 	}
 
+	@Column(name="hostname", length=150, nullable=true)
 	public String getHostname() {
 		return hostname;
 	}
 
+	@Column(length=15)
 	public String getIp() {
 		return ip;
 	}
 
+	@Id
+	@Column(name="node_id")
 	public int getNodeId() {
 		return nodeId;
 	}

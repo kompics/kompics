@@ -1,7 +1,5 @@
 package se.sics.kompics.wan.plab;
 
-import java.util.List;
-
 import org.hibernate.SessionFactory;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
@@ -32,36 +30,36 @@ public class PLabHostDaoImpl  implements PLabHostDao {
 		ht = new HibernateTemplate(sessionFactory);
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<PLabHost> loadAllHosts() {
-		// Session session = sessionFactory.openSession();
-		// List<PLabHost> list = session.createQuery("From PLabHost").list();
-
-		List<PLabHost> list = (List<PLabHost>) ht.find("from PLabHost");
-		return list;
-
-	}
-
-	@Override
-	public void store(List<PLabHost> listHosts) {
-
-		// Session session = sessionFactory.openSession();
-		// session.getTransaction().begin();
-
-		for (PLabHost host : listHosts) {
-			// session.save(host);
-			ht.save(host);
-		}
-		// session.getTransaction().commit();
-
-	}
+//	@SuppressWarnings("unchecked")
+//	@Override
+//	public List<PLabHost> loadAllHosts() {
+//		// Session session = sessionFactory.openSession();
+//		// List<PLabHost> list = session.createQuery("From PLabHost").list();
+//
+//		List<PLabHost> list = (List<PLabHost>) ht.find("from PLabHost");
+//		return list;
+//
+//	}
+//
+//	@Override
+//	public void store(List<PLabHost> listHosts) {
+//
+//		// Session session = sessionFactory.openSession();
+//		// session.getTransaction().begin();
+//
+//		for (PLabHost host : listHosts) {
+//			// session.save(host);
+//			ht.save(host);
+//		}
+//		// session.getTransaction().commit();
+//
+//	}
 
 	/* (non-Javadoc)
 	 * @see se.sics.kompics.wan.master.plab.PLabHostDao#loadPLabStore()
 	 */
 	@Override
-	public PLabStore loadPLabStore() {
+	public PLabStore load() {
 		PLabStore store = (PLabStore) ht.find("from PLabStore");
 		return store;
 	}
@@ -70,7 +68,7 @@ public class PLabHostDaoImpl  implements PLabHostDao {
 	 * @see se.sics.kompics.wan.master.plab.PLabHostDao#store(se.sics.kompics.wan.master.plab.PLabStore)
 	 */
 	@Override
-	public void store(PLabStore store) {
+	public void save(PLabStore store) {
 		ht.save(store);
 	}
 

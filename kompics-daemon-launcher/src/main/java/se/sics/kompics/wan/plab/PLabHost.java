@@ -2,9 +2,16 @@ package se.sics.kompics.wan.plab;
 
 import java.util.Map;
 
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
 import se.sics.kompics.wan.ssh.ExperimentHost;
 
 
+
+@Entity
+@Table(name="plab_host")
 public class PLabHost extends ExperimentHost {
 
 	/**
@@ -17,13 +24,12 @@ public class PLabHost extends ExperimentHost {
 	
 	private CoMonStats coMonStat;
 
+	
 	protected String bootState;
 
 	protected int siteId;
 
-	/**
-	 * Not serialized to disk.
-	 */
+	
 	private transient int heartbeatTimeout = 0;  
 	
 	public PLabHost() {
@@ -53,6 +59,7 @@ public class PLabHost extends ExperimentHost {
 	}
 
 
+	@Transient
 	public CoMonStats getComMonStat() {
 		return coMonStat;
 	}
@@ -61,6 +68,7 @@ public class PLabHost extends ExperimentHost {
 		this.coMonStat = coMonStat;
 	}
 	
+	@Transient
 	public int getHeartbeatTimeout() {
 		return heartbeatTimeout;
 	}
@@ -73,6 +81,7 @@ public class PLabHost extends ExperimentHost {
 		heartbeatTimeout = 0;
 	}
 
+	@Transient
 	public String getBootState() {
 		return bootState;
 	}

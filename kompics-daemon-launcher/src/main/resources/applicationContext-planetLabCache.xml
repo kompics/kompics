@@ -5,52 +5,92 @@
     http://www.springframework.org/schema/util
     http://www.springframework.org/schema/util/spring-util-2.0.xsd">
 
-<!--
-	<bean id="PLabService" parent="txnProxyTemplate">
-		<property name="target">
-			<bean class="se.sics.kompics.master.plab.PLabServiceImpl" scope="prototype">
-				<property name="PLabHostDao" ref="PLabHostDao" />
-			</bean>
-		</property>
-	</bean>
- -->
- 
-	<bean id="PLabService" class="se.sics.kompics.wan.plab.PLabServiceImpl"
-		scope="prototype">
-		<property name="PLabHostDao" ref="PLabHostDao" />
-	</bean>
+	<!--
+		<bean id="PLabService" parent="txnProxyTemplate"> <property
+		name="target"> <bean
+		class="se.sics.kompics.master.plab.PLabServiceImpl" scope="prototype">
+		<property name="PLabHostDao" ref="PLabHostDao" /> </bean> </property>
+		</bean> <bean id="PLabService"
+		class="se.sics.kompics.wan.plab.PLabServiceImpl" scope="prototype">
+		<property name="PLabHostDao" ref="PLabHostDao" /> </bean> <bean
+		id="PLabHostDao" class="se.sics.kompics.wan.plab.PLabHostDaoImpl"
+		scope="prototype"> <property name="sessionFactory"
+		ref="sessionFactory" /> </bean>
+	-->
 
-	<bean id="PLabHostDao" class="se.sics.kompics.wan.plab.PLabHostDaoImpl"
-		scope="prototype">
-		<property name="sessionFactory" ref="sessionFactory" />
-	</bean>
 
-<!--
-	<bean id="transactionManager"
+
+	<!--
+		<bean id="transactionManager"
 		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
-		<property name="sessionFactory">
-			<ref bean="sessionFactory" />
+		<property name="sessionFactory"> <ref bean="sessionFactory" />
+		</property> </bean> <bean id="txnProxyTemplate" abstract="true"
+		class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+		<property name="transactionManager"> <ref bean="transactionManager" />
+		</property> <property name="transactionAttributes"> <props> <prop
+		key="*">PROPAGATION_REQUIRED</prop> </props> </property> </bean> <bean
+		id="sessionFactory"
+		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean"
+		scope="singleton"> <property name="configLocation"
+		value="classpath:hibernate.cfg.xml" /> </bean>
+	-->
+
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName">
+			<value>org.hsqldb.jdbcDriver</value>
+		</property>
+		<property name="url">
+			<value>jdbc:hsqldb:mem:hibernate</value>
+		</property>
+		<property name="username">
+			<value>sa</value>
+		</property>
+		<property name="password">
+			<value></value>
 		</property>
 	</bean>
-	
-	<bean id="txnProxyTemplate" abstract="true"
-		class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
-		<property name="transactionManager">
-			<ref bean="transactionManager" />
+
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+
+		<property name="dataSource">
+			<ref bean="dataSource" />
 		</property>
-		<property name="transactionAttributes">
+		<property name="hibernateProperties">
 			<props>
-				<prop key="*">PROPAGATION_REQUIRED</prop>
+
+				<prop key="connection.driver_class">org.hsqldb.jdbcDriver</prop>
+				<prop key="connection.url">jdbc:hsqldb:mem:hibernate</prop>
+				<prop key="connection.username">sa</prop>
+				<prop key="connection.password"></prop>
+				<prop key="connection.pool_size">2</prop>
+				<prop key="dialect">org.hibernate.dialect.HSQLDialect</prop>
+				<prop key="show_sql">true</prop>
+				<prop key="hbm2ddl.auto">create</prop>
+
+				<!--
+					<prop key="connection.url">jdbc:mysql://localhost/hibernate</prop>
+					<prop key="connection.username">root</prop> <prop
+					key="connection.password"></prop> <prop
+					key="connection.driver_class">com.mysql.jdbc.Driver</prop> <prop
+					key="dialect">org.hibernate.dialect.MySQLDialect</prop> <prop
+					key="show_sql">true</prop> <prop key="format_sql">true</prop> <prop
+					key="hbm2ddl.auto">create</prop> <prop
+					key="connection.pool_size">1</prop> <prop
+					key="current_session_context_class">thread</prop>
+				-->
 			</props>
 		</property>
-	</bean>
- -->
- 
-	<bean id="sessionFactory"
-		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean"
-		scope="singleton">
-		<property name="configLocation" value="classpath:hibernate.cfg.xml" />
-	</bean>
+		<property name="annotatedClasses">
+			<list>
+				<value>se.sics.kompics.wan.plab.PLabSite</value>
+				<value>se.sics.kompics.wan.plab.PLabHost</value>
+				<value>se.sics.kompics.wan.plab.PLabStore</value>
 
+			</list>
+		</property>
+	</bean>
 
 </beans>

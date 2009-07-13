@@ -14,12 +14,12 @@ import java.util.List;
 
 public class CoMon implements Runnable {
 
+	private static final String COMON_URL = "http://summer.cs.princeton.edu/status/tabulator.cgi?"
+			+ "table=table_nodeviewshort&format=formatcsv";
+
 	private int totalBytes = 0;
 
 	private volatile double progress = 0;
-
-	private static final String COMON_URL = "http://summer.cs.princeton.edu/status/tabulator.cgi?"
-			+ "table=table_nodeviewshort&format=formatcsv";
 
 	private HashMap<String, PLabHost> plHostMap;
 

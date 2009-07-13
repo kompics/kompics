@@ -22,9 +22,10 @@ import se.sics.kompics.wan.plab.PLabHost;
 import se.sics.kompics.wan.plab.PLabPort;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.plab.events.GetAllHostsResponse;
+import se.sics.kompics.wan.plab.events.PlanetLabInit;
 import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
-import se.sics.kompics.wan.ssh.Credentials;
-import se.sics.kompics.wan.ssh.ExperimentHost;
+import se.sics.kompics.wan.ssh.SshPort;
+import se.sics.kompics.wan.ssh.events.SshConnectRequest;
 
 public class PLabTest  {
 
@@ -56,16 +57,21 @@ public class PLabTest  {
 		private static PLabTest testObj = null;
 		
 		private final HashSet<UUID> outstandingTimeouts = new HashSet<UUID>();
-		
+
+		private PlanetLabCredentials cred = 
+			new PlanetLabCredentials("kost", "kostjap", "sics_grid4all",
+					"/home/jdowling/.ssh/id_rsa", "");
+
 		public TestPLabComponent() {
 
 			timer = create(JavaTimer.class);
 			pLabComponent = create(PLabComponent.class);
 			
+			
+			trigger(new PlanetLabInit(cred),pLabComponent.getPositive(SshPort.class));
+			
 			subscribe(handleGetAllHostsResponse, pLabComponent.getPositive(PLabPort.class));
 			subscribe(handleQueryPLabSitesResponse, pLabComponent.getPositive(PLabPort.class));
-			
-			
 			subscribe(handleStart, control);
 		}
 
@@ -73,13 +79,9 @@ public class PLabTest  {
 			public void handle(Start event) {
 
 				// TODO Auto-generated method stub
-				PlanetLabCredentials cred = 
-					new PlanetLabCredentials("", "", "",
-							"user",
-						"/home/jdowling/.ssh/id_rsa", "");
-				PLabHost host = new PLabHost("lqist.com", 4);
+				PLabHost host = new PLabHost("planetlab3.ani.univie.ac.at");
 				
-//				trigger(new SshConnectRequest(cred, host), pLabComponent.getPositive(SshPort.class));
+				trigger(new SshConnectRequest(cred, host), pLabComponent.getPositive(SshPort.class));
 
 				ScheduleTimeout st = new ScheduleTimeout(PLAB_CONNECT_TIMEOUT);
 				PLabConnectTimeout connectTimeout = new PLabConnectTimeout(st);

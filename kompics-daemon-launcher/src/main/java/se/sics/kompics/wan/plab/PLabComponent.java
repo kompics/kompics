@@ -1,5 +1,8 @@
 package se.sics.kompics.wan.plab;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -8,12 +11,14 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,7 +53,6 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.plab.events.GetBootStates;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.plab.events.GetNodesRequest;
@@ -57,24 +61,26 @@ import se.sics.kompics.wan.plab.events.InstallDaemonOnHostsRequest;
 import se.sics.kompics.wan.plab.events.PlanetLabInit;
 import se.sics.kompics.wan.plab.events.QueryPLabSitesRequest;
 import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
+import se.sics.kompics.wan.plab.events.UpdateCoMonStats;
+import se.sics.kompics.wan.plab.events.UpdateHostsAndSites;
 
 public class PLabComponent extends ComponentDefinition {
 
 	private Negative<PLabPort> pLabPort = negative(PLabPort.class);
 
 	private final Logger logger = LoggerFactory.getLogger(PLabComponent.class);
-	
+
 	private Positive<Network> net = positive(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
 
-	// Need to copy Daemon-jar to planetlab hosts
-//	private Negative<SshPort> sshPort = negative(SshPort.class);
-	
 	private static int DNS_RESOLVER_MAX_THREADS = 10;
+
+	private static final String COMON_URL = "http://summer.cs.princeton.edu/status/tabulator.cgi?"
+			+ "table=table_nodeviewshort&format=formatcsv";
 
 	public final static double MAX_PLC_CACHE_AGE = 24;
 
-	private double progress = 0.0;
+	// private double progress = 0.0;
 
 	private boolean retryingWithCertIgnore = false;
 
@@ -82,15 +88,22 @@ public class PLabComponent extends ComponentDefinition {
 
 	private PlanetLabCredentials cred;
 
-	private PLabStore store;
-	
+	// private PLabStore store;
+
+	private List<PLabSite> sites = null;
+
+//	private List<Integer> sliceNodes = null;
+
+	List<PLabHost> hosts = new CopyOnWriteArrayList<PLabHost>();
+
 	public PLabComponent() {
 
 		subscribe(handleGetNodesForSliceRequest, pLabPort);
 		subscribe(handleQueryPLabSitesRequest, pLabPort);
 		subscribe(handleInstallDaemonOnHostsRequest, pLabPort);
-		
-		subscribe(handleGetBootStates, pLabPort);
+
+		subscribe(handleUpdateCoMonStats, pLabPort);
+		subscribe(handleUpdateHostsAndSites, pLabPort);
 
 		subscribe(handlePlanetLabInit, control);
 	}
@@ -100,96 +113,134 @@ public class PLabComponent extends ComponentDefinition {
 
 			cred = event.getCred();
 			
-			pLabService = (PLabService) PlanetLabConfiguration.getCtx()
-					.getBean("PLabService");
+			pLabService = (PLabService) PlanetLabConfiguration.getCtx().getBean("PLabService");
 
 			long startTime = System.currentTimeMillis();
-			System.out.println("sending PLC queries");
-			progress = 0.2;
+			// System.out.println("sending PLC queries");
+			System.out.println("Loading hosts from filesystem");
+			// progress = 0.2;
 
-			// query for hosts
-			List<PLabHost> hosts = getNodes();
-			long time = System.currentTimeMillis() - startTime;
-			System.out.println("PLC host query done: " + time + "ms");
+			PLabStore store = pLabService.load();
 
-			// start the dns resolver
+			long time;
+			if (store != null) {
 
-			ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
-					DNS_RESOLVER_MAX_THREADS, hosts);
-			dnsLookups.performLookups();
+				List<PLabHost> listHosts = store.getHosts();
 
-			progress = 0.4;
-			List<PLabSite> sites = getSites();
-			time = System.currentTimeMillis() - startTime;
-			System.out.println("PLC site query done: " + time + "ms");
+				hosts.addAll(listHosts);
 
-			progress = 0.6;
-			List<Integer> sliceNodes = getNodesForSlice();
-			time = System.currentTimeMillis() - startTime;
-			System.out.println("PLC slice query done: " + time + "ms");
+				sites = store.getSites();
 
-			progress = 0.8;
-			// HashMap<Integer, Integer> hostToSiteMapping = this
-			// .queryPLCHostToSiteMapping();
-			// time = System.currentTimeMillis() - startTime;
-			System.out.println("PLC all queries done: " + time + "ms");
+//				sliceNodes = store.getSliceNodes();
 
-			System.out.println("waiting for hostnames to get resolved");
-
-			dnsLookups.join();
-
-			time = System.currentTimeMillis() - startTime;
-			System.out.println("dns queries done: " + time + "ms");
-
-			progress = 0.9;
-			// for (int i = 0; i < hosts.length; i++) {
-			// PlanetLabHost host = hosts[i];
-			// host.setSite(hostToSiteMapping.get(host.getNode_id()));
-			// }
-			
-			// XXX order hosts by number of active slices or response time or geography
-			
-			store = new PLabStore(cred.getSlice(), cred
-					.getUsername()); // MD5
-			store.setHosts(hosts);
-			store.setSites(sites);
-			
-			System.out.println("hosts : " + hosts.size());
-			System.out.println("sites : " + sites.size());
-			store.setSliceNodes(sliceNodes);
-//			return store;
+				time = System.currentTimeMillis() - startTime;
+				System.out.println("Loading hosts done: " + time + "ms");
+			} else {
+				
+				updateHostsAndSites();
+			}
 
 		}
 	};
 
+	private Handler<UpdateCoMonStats> handleUpdateCoMonStats = new Handler<UpdateCoMonStats>() {
+		public void handle(UpdateCoMonStats event) {
+
+			updateCoMonStats();
+		}
+	};
+
+	private void updateCoMonStats() {
+		PlCoMon plCoMon = new PlCoMon(hosts);
+		new Thread(plCoMon).start();
+	}
+
+	private Handler<UpdateHostsAndSites> handleUpdateHostsAndSites = new Handler<UpdateHostsAndSites>() {
+		public void handle(UpdateHostsAndSites event) {
+
+			updateHostsAndSites();
+		}
+	};
 	
+	private void updateHostsAndSites()
+	{
+		long startTime = System.currentTimeMillis();
+		// query for hosts
+		List<PLabHost> hosts = getNodes();
+		long time = System.currentTimeMillis() - startTime;
+		System.out.println("PLC host query done: " + time + "ms");
+
+		// start the dns resolver
+		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(DNS_RESOLVER_MAX_THREADS,
+				hosts);
+		dnsLookups.performLookups();
+
+		// progress = 0.4;
+		List<PLabSite> sites = getSites();
+		time = System.currentTimeMillis() - startTime;
+		System.out.println("PLC site query done: " + time + "ms");
+
+		// progress = 0.6;
+		List<Integer> sliceNodes = getNodesForSlice();
+		time = System.currentTimeMillis() - startTime;
+		System.out.println("PLC slice query done: " + time + "ms");
+
+		// progress = 0.8;
+//		HashMap<Integer, Integer> hostToSiteMapping = queryPLCHostToSiteMapping();
+//		time = System.currentTimeMillis() - startTime;
+//		System.out.println("PLC all queries done: " + time + "ms");
+
+		System.out.println("waiting for hostnames to get resolved");
+
+		dnsLookups.join();
+
+		time = System.currentTimeMillis() - startTime;
+		System.out.println("dns queries done: " + time + "ms");
+
+//		progress = 0.9;
+//		for (PLabHost host : hosts) {
+//			host.setSiteId(hostToSiteMapping.get(host.getNodeId()));
+//		}
+
+		// XXX order hosts by number of active slices or response time
+		// or
+		// geography
+
+		PLabStore downloadedStore = new PLabStore(cred.getSlice(), cred.getUsername()); // MD5
+		downloadedStore.setHosts(hosts);
+		downloadedStore.setSites(sites);
+
+		System.out.println("hosts : " + hosts.size());
+		System.out.println("sites : " + sites.size());
+//		downloadedStore.setSliceNodes(sliceNodes);
+		pLabService.save(downloadedStore);
+
+		hosts.addAll(hosts);
+		this.sites = sites;
+//		this.sliceNodes = sliceNodes;
+	}
 	
-	private Handler<InstallDaemonOnHostsRequest> handleInstallDaemonOnHostsRequest = 
-		new Handler<InstallDaemonOnHostsRequest>() {
+
+	private Handler<InstallDaemonOnHostsRequest> handleInstallDaemonOnHostsRequest = new Handler<InstallDaemonOnHostsRequest>() {
 		public void handle(InstallDaemonOnHostsRequest event) {
 
-			
-			List<PLabHost> listHosts = pLabService.getHostsFromDB();
-			
-			for (PLabHost host : listHosts) {
-				
+			for (PLabHost host : hosts) {
+
 				// connect first, then uploadFile
-				
-//				trigger(new UploadFileRequest())
-				
+
+				// trigger(new UploadFileRequest())
+
 			}
 		}
-		
+
 	};
-	
-	
+
 	private Handler<GetNodesForSliceRequest> handleGetNodesForSliceRequest = new Handler<GetNodesForSliceRequest>() {
 		public void handle(GetNodesForSliceRequest event) {
 
 			List<Integer> sliceNodes = getNodesForSlice();
 
-			GetNodesForSliceResponse respEvent = new GetNodesForSliceResponse(
-					event, sliceNodes);
+			GetNodesForSliceResponse respEvent = new GetNodesForSliceResponse(event, sliceNodes);
 
 			trigger(respEvent, pLabPort);
 
@@ -217,7 +268,7 @@ public class PLabComponent extends ComponentDefinition {
 			if (result.length > 0) {
 				Map map = (Map) result[0];
 				Object[] nodes = (Object[]) map.get("node_ids");
-				for (Object node :  nodes) {
+				for (Object node : nodes) {
 					sliceNodes.add((Integer) node);
 				}
 			}
@@ -233,15 +284,14 @@ public class PLabComponent extends ComponentDefinition {
 			trigger(respEvent, pLabPort);
 		}
 	};
-	
-	private List<PLabHost> getNodes()
-	{
+
+	private List<PLabHost> getNodes() {
 		List<String> fields = new ArrayList<String>();
 		fields.add(PLabHost.NODE_ID);
 		fields.add(PLabHost.HOSTNAME);
 		fields.add(PLabHost.BOOT_STATE);
-//		fields.add(ExperimentHost.IP);
-//		fields.add(ExperimentHost.BWLIMIT);
+		// fields.add(ExperimentHost.IP);
+		// fields.add(ExperimentHost.BWLIMIT);
 		fields.add(PLabSite.SITE_ID);
 
 		List<Object> params = new ArrayList<Object>();
@@ -249,7 +299,7 @@ public class PLabComponent extends ComponentDefinition {
 		// plc api change, an empty map will return all nodes
 		params.add(new HashMap());
 		params.add(fields);
-		
+
 		List<PLabHost> hosts = new ArrayList<PLabHost>();
 		Object response = executeRPC("GetNodes", params);
 		if (response instanceof Object[]) {
@@ -259,33 +309,30 @@ public class PLabComponent extends ComponentDefinition {
 				PLabHost host = new PLabHost(map);
 				hosts.add(host);
 			}
-		}
-		else {
+		} else {
 			logger.warn("Nothing returned by GetNodes");
 		}
 		return hosts;
 	}
 
-	
-	public Handler<GetBootStates> handleGetBootStates = new Handler<GetBootStates>() {
-		@SuppressWarnings("unchecked")
-		public void handle(GetBootStates event) {
-			
-			Vector params = new Vector();
-			params.add(cred.getAuthMap());
-			executeRPC("GetBootStates", params);
-			
-		}
-	};
+	// public Handler<UpdateCoMonStats> handleGetBootStates = new
+	// Handler<UpdateCoMonStats>() {
+	// @SuppressWarnings("unchecked")
+	// public void handle(UpdateCoMonStats event) {
+	//			
+	// Vector params = new Vector();
+	// params.add(cred.getAuthMap());
+	// executeRPC("GetBootStates", params);
+	//			
+	// }
+	// };
 
-	
 	private Handler<QueryPLabSitesRequest> handleQueryPLabSitesRequest = new Handler<QueryPLabSitesRequest>() {
 		public void handle(QueryPLabSitesRequest event) {
 
 			List<PLabSite> sites = getSites();
 
-			QueryPLabSitesResponse respEvent = new QueryPLabSitesResponse(
-					event, sites);
+			QueryPLabSitesResponse respEvent = new QueryPLabSitesResponse(event, sites);
 
 			trigger(respEvent, pLabPort);
 		}
@@ -318,7 +365,7 @@ public class PLabComponent extends ComponentDefinition {
 		}
 		return sites;
 	}
-	
+
 	private Object executeRPC(String command, List<Object> params) {
 		Object res = new Object();
 		String url = PlanetLabConfiguration.getPlcApiAddress();
@@ -337,14 +384,11 @@ public class PLabComponent extends ComponentDefinition {
 
 			res = (Object) client.execute(command, params);
 		} catch (XmlRpcException e) {
-			if (e.getMessage().contains(
-					"java.security.cert.CertPathValidatorException")) {
-				System.err
-						.println("There is a problem with the PlanetLab Central certificate: ");
+			if (e.getMessage().contains("java.security.cert.CertPathValidatorException")) {
+				System.err.println("There is a problem with the PlanetLab Central certificate: ");
 				System.err.println("Config says: IgnoreCertificateErrors="
 						+ cred.isIgnoreCerificateErrors());
-				if (cred.isIgnoreCerificateErrors()
-						&& retryingWithCertIgnore == false) {
+				if (cred.isIgnoreCerificateErrors() && retryingWithCertIgnore == false) {
 
 					System.out.println("trying again");
 
@@ -360,10 +404,8 @@ public class PLabComponent extends ComponentDefinition {
 				// e.printStackTrace();
 			}
 		} catch (MalformedURLException e) {
-			System.err.println("There was an error when trying to connect to: "
-					+ url);
-			System.err
-					.println("Did you specify it correctly in the config file?");
+			System.err.println("There was an error when trying to connect to: " + url);
+			System.err.println("Did you specify it correctly in the config file?");
 		}
 
 		return res;
@@ -377,13 +419,11 @@ public class PLabComponent extends ComponentDefinition {
 				return null;
 			}
 
-			public void checkClientTrusted(X509Certificate[] certs,
-					String authType) {
+			public void checkClientTrusted(X509Certificate[] certs, String authType) {
 				// Trust always
 			}
 
-			public void checkServerTrusted(X509Certificate[] certs,
-					String authType) {
+			public void checkServerTrusted(X509Certificate[] certs, String authType) {
 				// Trust always
 			}
 		} };
@@ -401,8 +441,7 @@ public class PLabComponent extends ComponentDefinition {
 			};
 
 			sc.init(null, trustAllCerts, new java.security.SecureRandom());
-			HttpsURLConnection
-					.setDefaultSSLSocketFactory(sc.getSocketFactory());
+			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 			HttpsURLConnection.setDefaultHostnameVerifier(hv);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -418,8 +457,8 @@ public class PLabComponent extends ComponentDefinition {
 			super(pController);
 		}
 
-		public TypeParser getParser(XmlRpcStreamConfig pConfig,
-				NamespaceContextImpl pContext, String pURI, String pLocalName) {
+		public TypeParser getParser(XmlRpcStreamConfig pConfig, NamespaceContextImpl pContext,
+				String pURI, String pLocalName) {
 
 			// the plc api is using nil, but not reporting that they are using
 			// extensions
@@ -433,13 +472,12 @@ public class PLabComponent extends ComponentDefinition {
 
 		}
 
-		public TypeSerializer getSerializer(XmlRpcStreamConfig pConfig,
-				Object pObject) throws SAXException {
+		public TypeSerializer getSerializer(XmlRpcStreamConfig pConfig, Object pObject)
+				throws SAXException {
 			return super.getSerializer(pConfig, pObject);
 		}
 	}
-	
-	
+
 	private class ParallelDNSLookup {
 		private final ExecutorService threadPool;
 
@@ -449,7 +487,7 @@ public class PLabComponent extends ComponentDefinition {
 
 		public ParallelDNSLookup(int numThreads, List<PLabHost> hosts) {
 			this.hosts = new ArrayList<PLabHost>(hosts);
-			
+
 			this.threadPool = Executors.newFixedThreadPool(numThreads);
 			this.tasks = new ConcurrentLinkedQueue<Future<String>>();
 		}
@@ -457,8 +495,7 @@ public class PLabComponent extends ComponentDefinition {
 		public void performLookups() {
 			int i = 0;
 			for (PLabHost host : hosts) {
-				Future<String> task = threadPool.submit(new ResolveIPHandler(
-						host, i++));
+				Future<String> task = threadPool.submit(new ResolveIPHandler(host, i++));
 				tasks.add(task);
 			}
 		}
@@ -511,5 +548,102 @@ public class PLabComponent extends ComponentDefinition {
 		}
 
 	}
-	
+
+	public class PlCoMon implements Runnable {
+
+		private static final String COMON_URL = "http://summer.cs.princeton.edu/status/tabulator.cgi?"
+				+ "table=table_nodeviewshort&format=formatcsv";
+
+		private int totalBytes = 0;
+
+		private volatile double progress = 0;
+
+		private HashMap<String, PLabHost> plHostMap;
+
+		public PlCoMon(List<PLabHost> hosts) {
+			plHostMap = new HashMap<String, PLabHost>();
+
+			for (PLabHost host : hosts) {
+				plHostMap.put(host.getHostname(), host);
+			}
+		}
+
+		public void run() {
+			// TODO Auto-generated method stub
+			totalBytes = 0;
+			progress = 0;
+			BufferedReader in = null;
+			try {
+				URL url = new URL(COMON_URL);
+
+				// HttpURLConnection connection = (HttpURLConnection) url
+				// .openConnection();
+
+				// ok, this IS an uggly hack :-)
+				totalBytes = 240717;// connection.getContentLength();
+
+				in = new BufferedReader(new InputStreamReader(url.openStream()));
+
+				String titleLine = in.readLine();
+				int downloadedBytes = titleLine.length();
+				if (titleLine != null
+						&& titleLine.split(",").length == CoMonStats.NUM_COMON_COLUMNS) {
+
+					String inputLine = in.readLine();
+					while ((inputLine = in.readLine()) != null) {
+						CoMonStats statEntry = new CoMonStats(inputLine);
+						String hostname = statEntry.getHostname();
+						if (plHostMap.containsKey(hostname)) {
+							PLabHost plHost = plHostMap.get(hostname);
+							plHost.setCoMonStat(statEntry);
+							System.out.println(plHost.getComMonStat().getHostname() + ": "
+									+ plHost.getComMonStat().getStat(CoMonStats.RESPTIME));
+						}
+
+						downloadedBytes += inputLine.length();
+
+						progress = ((double) downloadedBytes) / (double) totalBytes;
+						// System.out.println(progress);
+					}
+				} else if (titleLine.split(",").length != CoMonStats.NUM_COMON_COLUMNS) {
+					System.err
+							.println("New comon format, please upgrade your plman version (colnum="
+									+ titleLine.split(",").length + ")");
+				}
+
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						System.err.println("Problem closing connection to CoMonManager URL");
+					}
+				}
+			}
+			progress = 1.0;
+		}
+
+		public double getProgress() {
+			return progress;
+		}
+
+	}
+
+	/**
+	 * @param hosts
+	 * @param coMonStat
+	 *            One of the parameters in CoMonStats.STATS
+	 * @return
+	 */
+	public static List<PLabHost> orderBy(List<PLabHost> hosts, String coMonStat) {
+		Collections.sort(hosts, new CoMonStats.CoMonComparator(coMonStat));
+
+		return hosts;
+	}
 }

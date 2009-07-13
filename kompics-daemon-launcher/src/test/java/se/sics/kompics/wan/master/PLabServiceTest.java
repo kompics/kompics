@@ -12,6 +12,8 @@ import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.plab.PLabHost;
 import se.sics.kompics.wan.plab.PLabService;
+import se.sics.kompics.wan.plab.PLabSite;
+import se.sics.kompics.wan.plab.PLabStore;
 
 
 /**
@@ -54,19 +56,30 @@ public class PLabServiceTest {
 			final List<PLabHost> listHosts = new ArrayList<PLabHost>();
 			PLabHost host = new PLabHost("lucan.sics.se", 3);		
 			listHosts.add(host);
+			PLabSite site = new PLabSite();
+			List<PLabSite> listSites = new ArrayList<PLabSite>();
+			listSites.add(site);
+			
+			final PLabStore store = new PLabStore();
+			store.setHosts(listHosts);
+			store.setSites(listSites);
 	
 			jmockCtx.checking(new Expectations() {{
-			    oneOf (pLabService).getHostsFromDB();
+			    oneOf (pLabService).load();
 			}});
 			jmockCtx.checking(new Expectations() {{
-			    oneOf (pLabService).storeHostsToDB(listHosts);
+			    oneOf (pLabService).save(store);
 			}});
 		}
 		else {
 			PLabService service = (PLabService) springCtx.getBean("PLabService");
-			List<PLabHost> listHosts = service.getHostsFromDB();
-			assert(listHosts.size() == 0);
-			service.storeHostsToDB(listHosts);
+			if (service == null)
+			{
+				System.out.println("Service object was null");
+			}
+			PLabStore store = service.load();
+			assert(store.getHosts().size() == 0);
+			service.save(store);
 		}
 	}
 }

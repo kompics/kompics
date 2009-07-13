@@ -41,7 +41,7 @@ import se.sics.kompics.wan.plab.PLabComponent;
 import se.sics.kompics.wan.plab.PLabHost;
 import se.sics.kompics.wan.plab.PLabPort;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
-import se.sics.kompics.wan.plab.events.GetBootStates;
+import se.sics.kompics.wan.plab.events.UpdateCoMonStats;
 import se.sics.kompics.wan.plab.events.PlanetLabInit;
 import se.sics.kompics.wan.ssh.ExperimentHost;
 import se.sics.kompics.wan.ssh.SshComponent;
@@ -147,7 +147,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 	}
 
 	private void getBootstates() {
-		trigger(new GetBootStates(), plab.getPositive(PLabPort.class));
+		trigger(new UpdateCoMonStats(), plab.getPositive(PLabPort.class));
 
 	}
 

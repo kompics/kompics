@@ -11,9 +11,10 @@ import java.util.List;
  */
 public interface PLabService {
 
-	public List<PLabHost> getHostsFromDB();
+//	public List<PLabHost> getHostsFromDB();	
+//	public void storeHostsToDB(List<PLabHost> listHosts);
 	
-	public void storeHostsToDB(List<PLabHost> listHosts);
+	public PLabStore load();
 	
-	public PLabStore getPlanetLabStore();
+	public void save(PLabStore store);
 }
