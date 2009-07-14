@@ -84,7 +84,8 @@ public class PLabHostDaoImpl implements PLabHostDao {
 //		return store;
 //		sessionFactory.getCurrentSession().beginTransaction();
 
-		PLabStore store = (PLabStore) sessionFactory.getCurrentSession().load(PLabStore.class, slice);
+//		PLabStore store = (PLabStore) sessionFactory.getCurrentSession().load(PLabStore.class, slice);
+		PLabStore store = (PLabStore) sessionFactory.getCurrentSession().get(PLabStore.class, slice);
 
 		return store;
 //		Query query = sessionFactory.getCurrentSession().createQuery(

@@ -78,9 +78,20 @@ public class PLabServiceTest {
 			{
 				System.out.println("Service object was null");
 			}
-			PLabStore store = service.load("sics_grid4all");
-			assert(store.getHosts().size() == 0);
+
+			PLabStore store = new PLabStore("sics_grid4all", "kosta");
+			PLabHost host = new PLabHost("lqist.com");
+			List<PLabHost> hosts =  new ArrayList<PLabHost>();
+			hosts.add(host);
+			PLabSite site = new PLabSite();
+			List<PLabSite> sites =  new ArrayList<PLabSite>();
+			sites.add(site);
+			store.setHosts(hosts);
+			store.setSites(sites);
 			service.save(store);
+
+			store = service.load("sics_grid4all");
+			assert(store.getHosts().size() == 1);
 		}
 	}
 }

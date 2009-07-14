@@ -113,20 +113,21 @@
 		<property name="hibernateProperties">
 		
 			<props>
-				<prop key="connection.pool_size">2</prop>
-				<prop key="transaction.factory_class">org.hibernate.transaction.JDBCTransactionFactory
+				<prop key="hibernate.connection.pool_size">2</prop>
+				<prop key="hibernate.transaction.factory_class">org.hibernate.transaction.JDBCTransactionFactory
 				</prop>
-				<prop key="current_session_context_class">thread</prop>
-				<prop key="show_sql">true</prop>
-				<prop key="hbm2ddl.auto">create</prop>
-				<prop key="dialect">org.hibernate.dialect.HSQLDialect</prop>
-				<prop key="driverClassName">org.hsqldb.jdbcDriver</prop>
-				<prop key="url">jdbc:hsqldb:mem:hibernate</prop>
-				<prop key="username">sa</prop>
-				<prop key="password"></prop>
-				<prop key="max_fetch_depth">3</prop>
+				<prop key="hibernate.current_session_context_class">thread</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.hbm2ddl.auto">create</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop>
+				<prop key="hibernate.max_fetch_depth">3</prop>
 				<!--
-				<prop key="dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+
+				<prop key="hibernate.driverClassName">org.hsqldb.jdbcDriver</prop>
+				<prop key="hibernate.url">jdbc:hsqldb:mem:hibernate</prop>
+				<prop key="hibernate.username">sa</prop>
+				<prop key="hibernate.password"></prop>
 				-->
 			</props>
 		</property>
