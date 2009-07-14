@@ -11,14 +11,11 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.maven.execution.DefaultMavenExecutionRequest;
-import org.apache.maven.execution.MavenExecutionRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

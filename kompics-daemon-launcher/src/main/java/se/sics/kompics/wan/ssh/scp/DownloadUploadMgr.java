@@ -10,8 +10,6 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.wan.ssh.CommandSpec;
-import se.sics.kompics.wan.ssh.SshComponent;
-import se.sics.kompics.wan.ssh.SshComponent.SshConn;
 import se.sics.kompics.wan.ssh.scp.events.DownloadMD5Request;
 import se.sics.kompics.wan.ssh.scp.events.DownloadMD5Response;
 import se.sics.kompics.wan.ssh.scp.events.ScpGetFileRequest;
@@ -21,7 +19,6 @@ import se.sics.kompics.wan.ssh.scp.events.ScpPutFileResponse;
 import se.sics.kompics.wan.ssh.scp.events.UploadMD5Request;
 import se.sics.kompics.wan.ssh.scp.events.UploadMD5Response;
 import ch.ethz.ssh2.SCPClient;
-import ch.ethz.ssh2.Session;
 
 public class DownloadUploadMgr extends ComponentDefinition {
 

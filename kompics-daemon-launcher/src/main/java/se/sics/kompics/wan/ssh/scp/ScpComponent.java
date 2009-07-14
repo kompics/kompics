@@ -10,12 +10,10 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
-import se.sics.kompics.wan.ssh.scp.events.DownloadMD5Request;
 import se.sics.kompics.wan.ssh.scp.events.ScpGetFileRequest;
 import se.sics.kompics.wan.ssh.scp.events.ScpGetFileResponse;
 import se.sics.kompics.wan.ssh.scp.events.ScpPutFileRequest;
 import se.sics.kompics.wan.ssh.scp.events.ScpPutFileResponse;
-import se.sics.kompics.wan.ssh.scp.events.UploadMD5Request;
 import ch.ethz.ssh2.SCPClient;
 
 public class ScpComponent extends ComponentDefinition {

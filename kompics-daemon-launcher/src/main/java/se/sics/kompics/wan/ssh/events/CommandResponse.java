@@ -1,7 +1,6 @@
 package se.sics.kompics.wan.ssh.events;
 
 import se.sics.kompics.Response;
-import ch.ethz.ssh2.Session;
 
 /**
  * The <code>ConnectSsh</code> class.

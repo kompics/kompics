@@ -1,25 +1,25 @@
 package se.sics.kompics.wan.plab.events;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import se.sics.kompics.Response;
 import se.sics.kompics.wan.plab.PLabHost;
 
 public class GetNodesResponse extends Response {
 
-	private final List<PLabHost> hosts;
+	private final Set<PLabHost> hosts;
 
 	public GetNodesResponse(GetNodesRequest request,
-			List<PLabHost> hosts) {
+			Set<PLabHost> hosts) {
 		super(request);
-		this.hosts = new ArrayList<PLabHost>(hosts);
+		this.hosts = new HashSet<PLabHost>(hosts);
 	}
 	
 	/**
 	 * @return the hosts
 	 */
-	public List<PLabHost> getHosts() {
+	public Set<PLabHost> getHosts() {
 		return hosts;
 	}
 

@@ -20,9 +20,9 @@ public class PLabServiceImpl implements PLabService {
 	/**
 	 * @return the pLabHostDao
 	 */
-	public PLabHostDao getPLabHostDao() {
-		return pLabHostDao;
-	}
+//	public PLabHostDao getPLabHostDao() {
+//		return pLabHostDao;
+//	}
 
 	/**
 	 * @param pLabHostDao the pLabHostDao to set
@@ -57,12 +57,12 @@ public class PLabServiceImpl implements PLabService {
 	@Override
 	public PLabStore load(String slice) {
 		
-		return getPLabHostDao().load(slice);
+		return pLabHostDao.load(slice);
 	}
 
 	@Override
 	public void save(PLabStore store) {
-		getPLabHostDao().save(store);
+		pLabHostDao.save(store);
 		
 	}
 

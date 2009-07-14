@@ -14,8 +14,6 @@ import se.sics.kompics.Fault;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.Start;
-import se.sics.kompics.network.mina.MinaNetwork;
-import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.ui.PlanetLabTextUI;

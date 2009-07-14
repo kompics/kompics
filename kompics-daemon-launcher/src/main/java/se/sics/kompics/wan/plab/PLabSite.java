@@ -5,7 +5,6 @@ import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Table;
 
 @Entity 
 public class PLabSite implements Comparable<PLabSite> {
@@ -15,9 +14,9 @@ public class PLabSite implements Comparable<PLabSite> {
 	public static final String ABBREVIATED_NAME 	= "abbreviated_name";
 	public static final String LOGIN_BASE 			= "login_base";
 	
-	private String name;
+	private String name=null;
 
-	private Integer siteId;
+	private Integer siteId=0;
 
 	private String abbreviatedName;
 
@@ -35,6 +34,7 @@ public class PLabSite implements Comparable<PLabSite> {
 		loginBase = (String) map.get(PLabSite.LOGIN_BASE);
 	}
 
+	@Column(nullable=true)
 	public String getAbbreviatedName() {
 		return abbreviatedName;
 	}
@@ -43,7 +43,7 @@ public class PLabSite implements Comparable<PLabSite> {
 		this.abbreviatedName = abbreviated_name;
 	}
 
-
+	@Column(nullable=true)
 	public String getLoginBase() {
 		return loginBase;
 	}
@@ -52,7 +52,7 @@ public class PLabSite implements Comparable<PLabSite> {
 		this.loginBase = login_base;
 	}
 
-
+	@Column(nullable=true)
 	public String getName() {
 		return name;
 	}
@@ -62,7 +62,6 @@ public class PLabSite implements Comparable<PLabSite> {
 	}
 
 	@Id
-//	@Column(name="site_id")
 	public Integer getSiteId() {
 		return siteId;
 	}
@@ -73,7 +72,10 @@ public class PLabSite implements Comparable<PLabSite> {
 
 
 	public int hashCode(){
-		return name.hashCode();
+		int hash = 7;
+		hash = 31 * hash + siteId;
+		hash *= (name == null ? 1 : name.hashCode());
+		return hash;
 	}
 	
 	public int compareTo(PLabSite obj){

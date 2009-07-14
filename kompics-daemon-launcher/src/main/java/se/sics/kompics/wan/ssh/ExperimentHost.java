@@ -16,11 +16,11 @@ import se.sics.kompics.wan.plab.PLabHost;
 public class ExperimentHost implements Comparable<ExperimentHost> {
 
 
-	protected String hostname;
+	protected String hostname=null;
 
 	protected String ip=null;
 
-	protected int nodeId;
+	protected int nodeId=0;
 
 	@Transient 
 	protected int sessionId;
@@ -33,7 +33,7 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 
 	
 	public ExperimentHost() {
-
+		
 	}
 
 	/**
@@ -91,14 +91,17 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 	}
 
 	@Id
-	@Column(name="node_id")
+//	@Column(name="node_id")
 	public int getNodeId() {
 		return nodeId;
 	}
 
 
 	public int hashCode() {
-		return hostname.hashCode();
+			int hash = 7;
+			hash = 31 * hash + nodeId;
+			hash = hash * ((hostname == null) ? 1 : hostname.hashCode()); 
+			return hash;		
 	}
 
 	public void setConnectFailedPolicy(String connectFailedPolicy) {

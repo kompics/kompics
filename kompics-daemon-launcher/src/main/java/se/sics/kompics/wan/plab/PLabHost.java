@@ -3,7 +3,6 @@ package se.sics.kompics.wan.plab;
 import java.util.Map;
 
 import javax.persistence.Entity;
-import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import se.sics.kompics.wan.ssh.ExperimentHost;
@@ -112,4 +111,10 @@ public class PLabHost extends ExperimentHost {
 		return buf.toString();
 	}
 	
+	@Override
+	public int hashCode() {
+			int hash = 7;
+			hash = 31 * hash + super.hashCode();
+			return hash;
+	}
 }

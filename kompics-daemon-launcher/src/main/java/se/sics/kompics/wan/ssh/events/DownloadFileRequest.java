@@ -1,6 +1,5 @@
 package se.sics.kompics.wan.ssh.events;
 
-import se.sics.kompics.Request;
 
 /**
  * The <code>ConnectSsh</code> class.

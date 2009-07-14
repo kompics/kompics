@@ -1,24 +1,24 @@
 package se.sics.kompics.wan.plab.events;
 
-import java.util.List;
+import java.util.Set;
 
 import se.sics.kompics.Response;
 import se.sics.kompics.wan.plab.PLabSite;
 
 public class QueryPLabSitesResponse extends Response {
 
-	private final List<PLabSite> listSites;
+	private final Set<PLabSite> sites;
 
 	public QueryPLabSitesResponse(QueryPLabSitesRequest request,
-			List<PLabSite> listSites) {
+			Set<PLabSite> listSites) {
 		super(request);
-		this.listSites = listSites;
+		this.sites = listSites;
 	}
 
 	/**
 	 * @return the listSites
 	 */
-	public List<PLabSite> getListSites() {
-		return listSites;
+	public Set<PLabSite> getSites() {
+		return sites;
 	}
 }

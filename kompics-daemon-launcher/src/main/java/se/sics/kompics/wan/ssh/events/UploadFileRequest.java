@@ -2,8 +2,6 @@ package se.sics.kompics.wan.ssh.events;
 
 import java.io.File;
 
-import se.sics.kompics.Request;
-
 /**
  * The <code>ConnectSsh</code> class.
  * 

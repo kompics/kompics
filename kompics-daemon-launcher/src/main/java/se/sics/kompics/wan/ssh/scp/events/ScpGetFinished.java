@@ -1,7 +1,6 @@
 package se.sics.kompics.wan.ssh.scp.events;
 
 import se.sics.kompics.Event;
-import ch.ethz.ssh2.SCPClient;
 
 /**
  * The <code>ConnectSsh</code> class.

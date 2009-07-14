@@ -1,7 +1,9 @@
 package se.sics.kompics.wan.master;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.jmock.Expectations;
@@ -43,7 +45,6 @@ public class PLabServiceTest {
 		springCtx = PlanetLabConfiguration.getCtx();
 			
 		}
-
 	}
 	
 	@org.junit.Test 
@@ -53,16 +54,16 @@ public class PLabServiceTest {
 		
 		if (MOCKED) {
 			final PLabService pLabService = jmockCtx.mock(PLabService.class);
-			final List<PLabHost> listHosts = new ArrayList<PLabHost>();
+			final Set<PLabHost> hosts = new HashSet<PLabHost>();
 			PLabHost host = new PLabHost("lucan.sics.se", 3);		
-			listHosts.add(host);
+			hosts.add(host);
 			PLabSite site = new PLabSite();
-			List<PLabSite> listSites = new ArrayList<PLabSite>();
-			listSites.add(site);
+			Set<PLabSite> sites = new HashSet<PLabSite>();
+			sites.add(site);
 			
 			final PLabStore store = new PLabStore();
-			store.setHosts(listHosts);
-			store.setSites(listSites);
+			store.setHosts(hosts);
+			store.setSites(sites);
 			store.setSlice("sics_grid4all");
 	
 			jmockCtx.checking(new Expectations() {{
@@ -81,16 +82,18 @@ public class PLabServiceTest {
 
 			PLabStore store = new PLabStore("sics_grid4all", "kosta");
 			PLabHost host = new PLabHost("lqist.com");
-			List<PLabHost> hosts =  new ArrayList<PLabHost>();
+			Set<PLabHost> hosts =  new HashSet<PLabHost>();
 			hosts.add(host);
 			PLabSite site = new PLabSite();
-			List<PLabSite> sites =  new ArrayList<PLabSite>();
+			Set<PLabSite> sites =  new HashSet<PLabSite>();
 			sites.add(site);
 			store.setHosts(hosts);
 			store.setSites(sites);
 			service.save(store);
 
 			store = service.load("sics_grid4all");
+			Set<PLabHost> returnedHosts = store.getHosts();
+			System.out.println("returned num hosts: " + returnedHosts.size());
 			assert(store.getHosts().size() == 1);
 		}
 	}

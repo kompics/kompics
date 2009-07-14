@@ -1,13 +1,14 @@
 package se.sics.kompics.wan.plab;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
 
 @Entity
 public class PLabStore {
@@ -18,9 +19,9 @@ public class PLabStore {
 
 	private Date creationTime;
 
-	private List<PLabHost> hosts = null;
+	private Set<PLabHost> hosts = null;
 
-	private List<PLabSite> sites = null;
+	private Set<PLabSite> sites = null;
 
 //	private List<Integer> sliceNodes = null;
 
@@ -56,15 +57,20 @@ public class PLabStore {
 		this.username = username;
 	}
 
-	@OneToMany
-	@OrderBy("hostname")
-	public List<PLabHost> getHosts() {
+	// mappedBy = "PlabStore", 
+	 //(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+//	@IndexColumn(name="nodeId")
+//	@OrderBy("nodeId")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	public Set<PLabHost> getHosts() {
 		return hosts;
 	}
 
-	@OneToMany // (mappedBy = "PlabStore", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@OrderBy("siteId")
-	public List<PLabSite> getSites() {
+//	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//	@OrderBy("siteId")	
+//	@IndexColumn(name="siteId")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	public Set<PLabSite> getSites() {
 		return sites;
 	}
 
@@ -78,11 +84,11 @@ public class PLabStore {
 		this.creationTime = creationTime;
 	}
 
-	public void setHosts(List<PLabHost> hosts) {
+	public void setHosts(Set<PLabHost> hosts) {
 		this.hosts = hosts;
 	}
 
-	public void setSites(List<PLabSite> sites) {
+	public void setSites(Set<PLabSite> sites) {
 		this.sites = sites;
 	}
 

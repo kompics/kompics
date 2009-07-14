@@ -1,8 +1,5 @@
 package se.sics.kompics.wan.plab;
 
-import java.util.List;
-
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 

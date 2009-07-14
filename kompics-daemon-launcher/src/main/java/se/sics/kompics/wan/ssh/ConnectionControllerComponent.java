@@ -4,14 +4,10 @@ import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
-import se.sics.kompics.network.Network;
-import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.master.plab.plc.PLControllerComponent;
 import se.sics.kompics.wan.master.plab.plc.PLControllerInit;
 import se.sics.kompics.wan.master.plab.rpc.ControllerPort;
-import se.sics.kompics.wan.plab.PlanetLabCredentials;
 
 public class ConnectionControllerComponent extends ComponentDefinition {
 

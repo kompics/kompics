@@ -1,7 +1,6 @@
 package se.sics.kompics.wan.main;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,7 +34,6 @@ import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.daemon.DaemonAddress;
 import se.sics.kompics.wan.daemon.DaemonInit;
 import se.sics.kompics.wan.daemon.JobExitedMsg;
-import se.sics.kompics.wan.daemon.JobLoadRequestMsg;
 import se.sics.kompics.wan.daemon.JobLoadResponseMsg;
 import se.sics.kompics.wan.daemon.JobReadFromExecutingRequestMsg;
 import se.sics.kompics.wan.daemon.JobReadFromExecutingResponseMsg;

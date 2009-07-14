@@ -1,6 +1,5 @@
 package se.sics.kompics.wan.plab;
 
-import java.util.List;
 
 
 /**

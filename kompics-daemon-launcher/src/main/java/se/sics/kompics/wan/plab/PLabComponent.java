@@ -12,13 +12,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,6 +31,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.mina.util.ConcurrentHashSet;
 import org.apache.ws.commons.util.NamespaceContextImpl;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
@@ -90,11 +91,11 @@ public class PLabComponent extends ComponentDefinition {
 
 	// private PLabStore store;
 
-	private List<PLabSite> sites = null;
+	private Set<PLabSite> sites = null;
 
 //	private List<Integer> sliceNodes = null;
 
-	List<PLabHost> hosts = new CopyOnWriteArrayList<PLabHost>();
+	Set<PLabHost> hosts = new ConcurrentHashSet<PLabHost>();
 
 	public PLabComponent() {
 
@@ -125,7 +126,7 @@ public class PLabComponent extends ComponentDefinition {
 			long time;
 			if (store != null) {
 
-				List<PLabHost> listHosts = store.getHosts();
+				Set<PLabHost> listHosts = store.getHosts();
 
 				hosts.addAll(listHosts);
 
@@ -166,7 +167,7 @@ public class PLabComponent extends ComponentDefinition {
 	{
 		long startTime = System.currentTimeMillis();
 		// query for hosts
-		List<PLabHost> hosts = getNodes();
+		Set<PLabHost> hosts = getNodes();
 		long time = System.currentTimeMillis() - startTime;
 		System.out.println("PLC host query done: " + time + "ms");
 
@@ -176,7 +177,7 @@ public class PLabComponent extends ComponentDefinition {
 		dnsLookups.performLookups();
 
 		// progress = 0.4;
-		List<PLabSite> sites = getSites();
+		Set<PLabSite> sites = getSites();
 		time = System.currentTimeMillis() - startTime;
 		System.out.println("PLC site query done: " + time + "ms");
 
@@ -279,13 +280,13 @@ public class PLabComponent extends ComponentDefinition {
 	private Handler<GetNodesRequest> handleGetNodesRequest = new Handler<GetNodesRequest>() {
 		public void handle(GetNodesRequest event) {
 
-			List<PLabHost> hosts = getNodes();
+			Set<PLabHost> hosts = getNodes();
 			GetNodesResponse respEvent = new GetNodesResponse(event, hosts);
 			trigger(respEvent, pLabPort);
 		}
 	};
 
-	private List<PLabHost> getNodes() {
+	private Set<PLabHost> getNodes() {
 		List<String> fields = new ArrayList<String>();
 		fields.add(PLabHost.NODE_ID);
 		fields.add(PLabHost.HOSTNAME);
@@ -300,7 +301,7 @@ public class PLabComponent extends ComponentDefinition {
 		params.add(new HashMap());
 		params.add(fields);
 
-		List<PLabHost> hosts = new ArrayList<PLabHost>();
+		Set<PLabHost> hosts = new HashSet<PLabHost>();
 		Object response = executeRPC("GetNodes", params);
 		if (response instanceof Object[]) {
 			Object[] result = (Object[]) response;
@@ -330,7 +331,7 @@ public class PLabComponent extends ComponentDefinition {
 	private Handler<QueryPLabSitesRequest> handleQueryPLabSitesRequest = new Handler<QueryPLabSitesRequest>() {
 		public void handle(QueryPLabSitesRequest event) {
 
-			List<PLabSite> sites = getSites();
+			Set<PLabSite> sites = getSites();
 
 			QueryPLabSitesResponse respEvent = new QueryPLabSitesResponse(event, sites);
 
@@ -338,7 +339,7 @@ public class PLabComponent extends ComponentDefinition {
 		}
 	};
 
-	private List<PLabSite> getSites() {
+	private Set<PLabSite> getSites() {
 		List<Object> rpcParams = new ArrayList<Object>();
 		rpcParams.add(cred.getPLCMap());
 
@@ -352,7 +353,7 @@ public class PLabComponent extends ComponentDefinition {
 		returnValues.add(PLabSite.LOGIN_BASE);
 		rpcParams.add(returnValues);
 
-		List<PLabSite> sites = new ArrayList<PLabSite>();
+		Set<PLabSite> sites = new HashSet<PLabSite>();
 
 		Object response = executeRPC("GetSites", rpcParams);
 		if (response instanceof Object[]) {
@@ -481,12 +482,12 @@ public class PLabComponent extends ComponentDefinition {
 	private class ParallelDNSLookup {
 		private final ExecutorService threadPool;
 
-		private final List<PLabHost> hosts;
+		private final Set<PLabHost> hosts;
 
 		private final ConcurrentLinkedQueue<Future<String>> tasks;
 
-		public ParallelDNSLookup(int numThreads, List<PLabHost> hosts) {
-			this.hosts = new ArrayList<PLabHost>(hosts);
+		public ParallelDNSLookup(int numThreads, Set<PLabHost> hosts) {
+			this.hosts = new HashSet<PLabHost>(hosts);
 
 			this.threadPool = Executors.newFixedThreadPool(numThreads);
 			this.tasks = new ConcurrentLinkedQueue<Future<String>>();
@@ -560,7 +561,7 @@ public class PLabComponent extends ComponentDefinition {
 
 		private HashMap<String, PLabHost> plHostMap;
 
-		public PlCoMon(List<PLabHost> hosts) {
+		public PlCoMon(Set<PLabHost> hosts) {
 			plHostMap = new HashMap<String, PLabHost>();
 
 			for (PLabHost host : hosts) {

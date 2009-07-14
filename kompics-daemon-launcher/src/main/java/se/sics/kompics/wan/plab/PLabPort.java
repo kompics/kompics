@@ -3,13 +3,13 @@ package se.sics.kompics.wan.plab;
 import se.sics.kompics.PortType;
 import se.sics.kompics.wan.plab.events.GetAllHostsRequest;
 import se.sics.kompics.wan.plab.events.GetAllHostsResponse;
-import se.sics.kompics.wan.plab.events.UpdateCoMonStats;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.plab.events.InstallDaemonOnHostsRequest;
 import se.sics.kompics.wan.plab.events.InstallDaemonOnHostsResponse;
 import se.sics.kompics.wan.plab.events.QueryPLabSitesRequest;
 import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
+import se.sics.kompics.wan.plab.events.UpdateCoMonStats;
 
 
 

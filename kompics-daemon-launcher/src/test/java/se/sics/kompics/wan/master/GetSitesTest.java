@@ -7,7 +7,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
@@ -22,9 +21,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 
-import se.sics.kompics.wan.master.plab.plc.PlanetLabSite;
 import se.sics.kompics.wan.plab.PLabSite;
-import se.sics.kompics.wan.ssh.ExperimentHost;
 
 public class GetSitesTest {
 
