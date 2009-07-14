@@ -1,6 +1,7 @@
 package se.sics.kompics.wan.master;
 
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
@@ -22,8 +23,11 @@ import se.sics.kompics.wan.plab.PLabHost;
 import se.sics.kompics.wan.plab.PLabPort;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.plab.events.GetAllHostsResponse;
-import se.sics.kompics.wan.plab.events.PlanetLabInit;
+import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
+import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
+import se.sics.kompics.wan.plab.events.PLabInit;
 import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
+import se.sics.kompics.wan.ssh.SshComponent;
 import se.sics.kompics.wan.ssh.SshPort;
 import se.sics.kompics.wan.ssh.events.SshConnectRequest;
 
@@ -51,6 +55,8 @@ public class PLabTest  {
 	public static class TestPLabComponent extends ComponentDefinition {
 		
 		private Component pLabComponent;
+		
+		private Component sshComponent;
 
 		private Component timer;
 		
@@ -62,37 +68,59 @@ public class PLabTest  {
 			new PlanetLabCredentials("kost", "kostjap", "sics_grid4all",
 					"/home/jdowling/.ssh/id_rsa", "");
 
+		private Set<PLabHost> hosts = new HashSet<PLabHost>();
+		
 		public TestPLabComponent() {
 
 			timer = create(JavaTimer.class);
 			pLabComponent = create(PLabComponent.class);
+			sshComponent = create(SshComponent.class);
 			
-			
-			trigger(new PlanetLabInit(cred),pLabComponent.getPositive(SshPort.class));
+			trigger(new PLabInit(cred),pLabComponent.getControl());
 			
 			subscribe(handleGetAllHostsResponse, pLabComponent.getPositive(PLabPort.class));
 			subscribe(handleQueryPLabSitesResponse, pLabComponent.getPositive(PLabPort.class));
+			subscribe(handleGetNodesForSliceResponse, pLabComponent.getPositive(PLabPort.class));
+			
 			subscribe(handleStart, control);
 		}
 
 		public Handler<Start> handleStart = new Handler<Start>() {
 			public void handle(Start event) {
 
-				// TODO Auto-generated method stub
-				PLabHost host = new PLabHost("planetlab3.ani.univie.ac.at");
-				
-				trigger(new SshConnectRequest(cred, host), pLabComponent.getPositive(SshPort.class));
-
-				ScheduleTimeout st = new ScheduleTimeout(PLAB_CONNECT_TIMEOUT);
-				PLabConnectTimeout connectTimeout = new PLabConnectTimeout(st);
-				st.setTimeoutEvent(connectTimeout);
-
-				UUID timerId = connectTimeout.getTimeoutId();
-				outstandingTimeouts.add(timerId);
-				trigger(st, timer.getPositive(Timer.class));
+				GetNodesForSliceRequest req = new GetNodesForSliceRequest(cred);
+				trigger(req, pLabComponent.getPositive(PLabPort.class));
 
 			}
 		};
+		
+		public Handler<GetNodesForSliceResponse> handleGetNodesForSliceResponse 
+		= new Handler<GetNodesForSliceResponse>() {
+			public void handle(GetNodesForSliceResponse event) {
+				
+				hosts = event.getHosts();
+				
+				for (PLabHost h : hosts) {
+
+					trigger(new SshConnectRequest(cred, h), 
+							sshComponent.getPositive(SshPort.class));
+
+					ScheduleTimeout st = new ScheduleTimeout(PLAB_CONNECT_TIMEOUT);
+					PLabConnectTimeout connectTimeout = new PLabConnectTimeout(st);
+					st.setTimeoutEvent(connectTimeout);
+
+					UUID timerId = connectTimeout.getTimeoutId();
+					outstandingTimeouts.add(timerId);
+					trigger(st, timer.getPositive(Timer.class));				
+
+				}
+				
+//				PLabHost host = new PLabHost("planetlab3.ani.univie.ac.at");
+				
+				
+			}
+		};
+		
 		
 		public Handler<QueryPLabSitesResponse> handleQueryPLabSitesResponse = new Handler<QueryPLabSitesResponse>() {
 			public void handle(QueryPLabSitesResponse event) {

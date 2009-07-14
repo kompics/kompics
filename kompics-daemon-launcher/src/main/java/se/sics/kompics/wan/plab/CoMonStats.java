@@ -105,6 +105,12 @@ public class CoMonStats {
 	public CoMonStats() {
 
 	}
+	
+	public CoMonStats(CoMonStats that) {
+		this.hostname = new String(that.hostname);
+		mapStats.putAll(that.mapStats);
+	}
+	
 
 	public CoMonStats(String line) {
 		String[] row = line.split(",");

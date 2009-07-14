@@ -9,11 +9,11 @@ import se.sics.kompics.wan.plab.PlanetLabCredentials;
  * @author Jim Dowling <jdowling@sics.se>
  * @author Cosmin Arad <cosmin@sics.se>
  */
-public class PlanetLabInit extends Init {
+public class PLabInit extends Init {
 
 	private PlanetLabCredentials cred;
 
-	public PlanetLabInit(PlanetLabCredentials cred) {
+	public PLabInit(PlanetLabCredentials cred) {
 		this.cred = cred;
 	}
 

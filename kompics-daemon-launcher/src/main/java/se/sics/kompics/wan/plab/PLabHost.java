@@ -48,6 +48,12 @@ public class PLabHost extends ExperimentHost {
 		super(host);
 	}
 
+	public PLabHost(PLabHost host) {
+		super(host);
+		this.coMonStat = new CoMonStats(host.getComMonStat());
+	}
+
+	
 	public PLabHost(String hostname, int siteId) {
 		super(hostname);
 		this.siteId = siteId;

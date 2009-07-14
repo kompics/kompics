@@ -2,6 +2,8 @@ package se.sics.kompics.wan.plab;
 
 import java.util.Date;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -9,6 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 
 @Entity
 public class PLabStore {
@@ -62,6 +65,21 @@ public class PLabStore {
 	public Set<PLabHost> getHosts() {
 		return hosts;
 	}
+	
+	@Transient
+	public SortedSet<PLabHost> getRunningHostsForThisSlice()
+	{
+		SortedSet<PLabHost> setHosts = new TreeSet<PLabHost>();
+		for (PLabHost h : hosts) {
+			if (h.isRegisteredForSlice() == true) {
+					if (h.getBootState().compareTo("boot") == 0) {
+						setHosts.add(h);
+					}
+			}
+		}
+		return setHosts;
+	}
+	
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	public Set<PLabSite> getSites() {

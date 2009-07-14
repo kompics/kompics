@@ -41,7 +41,7 @@ import se.sics.kompics.wan.plab.PLabComponent;
 import se.sics.kompics.wan.plab.PLabHost;
 import se.sics.kompics.wan.plab.PLabPort;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
-import se.sics.kompics.wan.plab.events.PlanetLabInit;
+import se.sics.kompics.wan.plab.events.PLabInit;
 import se.sics.kompics.wan.plab.events.UpdateCoMonStats;
 import se.sics.kompics.wan.ssh.ExperimentHost;
 import se.sics.kompics.wan.ssh.SshComponent;
@@ -101,7 +101,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		// .getBootConfiguration(), PlanetLabConfiguration
 		// .getMonitorConfiguration());
 
-		PlanetLabInit pInit = new PlanetLabInit(cred);
+		PLabInit pInit = new PLabInit(cred);
 		trigger(pInit, plab.getControl());
 
 		MasterInit mInit = new MasterInit(PlanetLabConfiguration.getMasterAddress(),

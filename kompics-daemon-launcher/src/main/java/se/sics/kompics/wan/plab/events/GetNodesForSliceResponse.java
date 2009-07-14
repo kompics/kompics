@@ -1,24 +1,29 @@
 package se.sics.kompics.wan.plab.events;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import se.sics.kompics.Response;
+import se.sics.kompics.wan.plab.PLabHost;
 
 public class GetNodesForSliceResponse extends Response {
 
-	private final Set<Integer> nodeIds;
+	private final Set<PLabHost> hosts;
 
 	public GetNodesForSliceResponse(GetNodesForSliceRequest request,
-			Set<Integer> nodeIds) {
+			Set<PLabHost> hosts) {
 		super(request);
-		this.nodeIds =nodeIds;
+		this.hosts = new HashSet<PLabHost>();
+		for (PLabHost h : hosts) {
+			this.hosts.add(new PLabHost(h));
+		}
 	}
 
 
 	/**
 	 * @return the nodeIds
 	 */
-	public Set<Integer> getNodeIds() {
-		return nodeIds;
+	public Set<PLabHost> getHosts() {
+		return hosts;
 	}
 }
