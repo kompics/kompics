@@ -6,34 +6,73 @@
     http://www.springframework.org/schema/util/spring-util-2.0.xsd">
 
 	<!--
-		<bean id="PLabService" parent="txnProxyTemplate"> <property
-		name="target"> <bean
-		class="se.sics.kompics.master.plab.PLabServiceImpl" scope="prototype">
-		<property name="PLabHostDao" ref="PLabHostDao" /> </bean> </property>
-		</bean> <bean id="PLabService"
+
+		<bean id="PLabService"
 		class="se.sics.kompics.wan.plab.PLabServiceImpl" scope="prototype">
 		<property name="PLabHostDao" ref="PLabHostDao" /> </bean> <bean
-		id="PLabHostDao" class="se.sics.kompics.wan.plab.PLabHostDaoImpl"
-		scope="prototype"> <property name="sessionFactory"
-		ref="sessionFactory" /> </bean>
+		id="PLabService" parent="txnProxyTemplate"> <property name="target">
+		<bean class="se.sics.kompics.plab.PLabServiceImpl" scope="prototype">
+		<property name="PLabHostDao" ref="PLabHostDao" /> </bean> </property>
+		</bean>
 	-->
 
+	<bean id="PLabHostDao" class="se.sics.kompics.wan.plab.PLabHostDaoImpl"
+		scope="prototype">
+		<!-- <constructor-arg ref="sessionFactory" />  -->
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
 
+
+	<bean id="PLabServiceTarget" class="se.sics.kompics.wan.plab.PLabServiceImpl"
+		scope="prototype">
+		<property name="PLabHostDao" ref="PLabHostDao" />
+	</bean>
+
+
+	<bean
+		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+
+
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory" />
+		</property>
+	</bean>
+
+	<!--  abstract="true" -->
+	<bean id="PLabService"
+		class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+		<property name="transactionManager">
+			<ref bean="transactionManager" />
+		</property>
+		<property name="target">
+			<ref local="PLabServiceTarget" />
+		</property>
+
+		<property name="transactionAttributes">
+			<props>
+				<!--<prop key="*">PROPAGATION_REQUIRED</prop>  -->
+				<prop key="load*">
+					PROPAGATION_REQUIRED,readOnly,-OrderException
+      </prop>
+				<prop key="save*">
+					PROPAGATION_REQUIRED,-OrderException
+      </prop>
+
+			</props>
+		</property>
+	</bean>
 
 	<!--
-		<bean id="transactionManager"
-		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
-		<property name="sessionFactory"> <ref bean="sessionFactory" />
-		</property> </bean> <bean id="txnProxyTemplate" abstract="true"
-		class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
-		<property name="transactionManager"> <ref bean="transactionManager" />
-		</property> <property name="transactionAttributes"> <props> <prop
-		key="*">PROPAGATION_REQUIRED</prop> </props> </property> </bean> <bean
-		id="sessionFactory"
+
+		<bean id="sessionFactory"
 		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean"
 		scope="singleton"> <property name="configLocation"
 		value="classpath:hibernate.cfg.xml" /> </bean>
 	-->
+
+
 
 	<bean id="dataSource"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
@@ -49,7 +88,19 @@
 		<property name="password">
 			<value></value>
 		</property>
+		
 	</bean>
+
+	<!--
+		<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName"> <value>com.mysql.jdbc.Driver</value>
+		</property> <property name="url">
+		<value>jdbc:mysql://localhost/hibernate</value> </property> <property
+		name="username"> <value>root</value> </property> <property
+		name="password"> <value></value> </property> </bean>
+	-->
+
 
 
 	<bean id="sessionFactory"
@@ -58,28 +109,24 @@
 		<property name="dataSource">
 			<ref bean="dataSource" />
 		</property>
-		<property name="hibernateProperties">
-			<props>
 
-				<prop key="connection.driver_class">org.hsqldb.jdbcDriver</prop>
-				<prop key="connection.url">jdbc:hsqldb:mem:hibernate</prop>
-				<prop key="connection.username">sa</prop>
-				<prop key="connection.password"></prop>
+		<property name="hibernateProperties">
+		
+			<props>
 				<prop key="connection.pool_size">2</prop>
-				<prop key="dialect">org.hibernate.dialect.HSQLDialect</prop>
+				<prop key="transaction.factory_class">org.hibernate.transaction.JDBCTransactionFactory
+				</prop>
+				<prop key="current_session_context_class">thread</prop>
 				<prop key="show_sql">true</prop>
 				<prop key="hbm2ddl.auto">create</prop>
-
+				<prop key="dialect">org.hibernate.dialect.HSQLDialect</prop>
+				<prop key="driverClassName">org.hsqldb.jdbcDriver</prop>
+				<prop key="url">jdbc:hsqldb:mem:hibernate</prop>
+				<prop key="username">sa</prop>
+				<prop key="password"></prop>
+				<prop key="max_fetch_depth">3</prop>
 				<!--
-					<prop key="connection.url">jdbc:mysql://localhost/hibernate</prop>
-					<prop key="connection.username">root</prop> <prop
-					key="connection.password"></prop> <prop
-					key="connection.driver_class">com.mysql.jdbc.Driver</prop> <prop
-					key="dialect">org.hibernate.dialect.MySQLDialect</prop> <prop
-					key="show_sql">true</prop> <prop key="format_sql">true</prop> <prop
-					key="hbm2ddl.auto">create</prop> <prop
-					key="connection.pool_size">1</prop> <prop
-					key="current_session_context_class">thread</prop>
+				<prop key="dialect">org.hibernate.dialect.MySQLDialect</prop>
 				-->
 			</props>
 		</property>
@@ -88,9 +135,9 @@
 				<value>se.sics.kompics.wan.plab.PLabSite</value>
 				<value>se.sics.kompics.wan.plab.PLabHost</value>
 				<value>se.sics.kompics.wan.plab.PLabStore</value>
-
 			</list>
 		</property>
+
 	</bean>
 
 </beans>

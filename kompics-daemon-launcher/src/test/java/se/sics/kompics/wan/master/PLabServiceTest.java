@@ -42,8 +42,6 @@ public class PLabServiceTest {
 		}
 		springCtx = PlanetLabConfiguration.getCtx();
 			
-			
-//			springCtx = new ClassPathXmlApplicationContext(PlanetLabConfiguration.PLANETLAB_APP_CONTEXT);
 		}
 
 	}
@@ -51,6 +49,8 @@ public class PLabServiceTest {
 	@org.junit.Test 
 	public void testPLabService()
 	{
+//		HibernateUtil.setup("create table EVENTS ( uid int, name VARCHAR, start_Date date);");
+		
 		if (MOCKED) {
 			final PLabService pLabService = jmockCtx.mock(PLabService.class);
 			final List<PLabHost> listHosts = new ArrayList<PLabHost>();
@@ -63,9 +63,10 @@ public class PLabServiceTest {
 			final PLabStore store = new PLabStore();
 			store.setHosts(listHosts);
 			store.setSites(listSites);
+			store.setSlice("sics_grid4all");
 	
 			jmockCtx.checking(new Expectations() {{
-			    oneOf (pLabService).load();
+			    oneOf (pLabService).load("sics_grid4all");
 			}});
 			jmockCtx.checking(new Expectations() {{
 			    oneOf (pLabService).save(store);
@@ -77,7 +78,7 @@ public class PLabServiceTest {
 			{
 				System.out.println("Service object was null");
 			}
-			PLabStore store = service.load();
+			PLabStore store = service.load("sics_grid4all");
 			assert(store.getHosts().size() == 0);
 			service.save(store);
 		}

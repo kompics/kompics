@@ -8,7 +8,6 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity 
-@Table(name="plab_site")
 public class PLabSite implements Comparable<PLabSite> {
 
 	public static final String SITE_ID 				= "site_id";

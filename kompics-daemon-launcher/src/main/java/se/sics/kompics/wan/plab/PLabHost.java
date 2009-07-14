@@ -11,7 +11,6 @@ import se.sics.kompics.wan.ssh.ExperimentHost;
 
 
 @Entity
-@Table(name="plab_host")
 public class PLabHost extends ExperimentHost {
 
 	/**

@@ -120,7 +120,7 @@ public class PLabComponent extends ComponentDefinition {
 			System.out.println("Loading hosts from filesystem");
 			// progress = 0.2;
 
-			PLabStore store = pLabService.load();
+			PLabStore store = pLabService.load(cred.getSlice());
 
 			long time;
 			if (store != null) {

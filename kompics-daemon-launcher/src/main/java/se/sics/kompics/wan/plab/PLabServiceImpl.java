@@ -1,6 +1,5 @@
 package se.sics.kompics.wan.plab;
 
-import java.util.List;
 
 /**
  * The <code>PLabServiceImp</code> class.
@@ -56,9 +55,9 @@ public class PLabServiceImpl implements PLabService {
 	 * @see se.sics.kompics.wan.master.plab.PLabService#getPlanetLabStore()
 	 */
 	@Override
-	public PLabStore load() {
+	public PLabStore load(String slice) {
 		
-		return getPLabHostDao().load();
+		return getPLabHostDao().load(slice);
 	}
 
 	@Override

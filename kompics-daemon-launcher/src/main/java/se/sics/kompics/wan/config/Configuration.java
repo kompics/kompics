@@ -184,7 +184,8 @@ public abstract class Configuration {
 		} catch (InstantiationException e) {
 			throw new ConfigurationException(e.getMessage());
 		} catch (InvocationTargetException e) {
-			throw new ConfigurationException(e.getMessage());
+			Throwable t = e.getTargetException();
+			throw new ConfigurationException(t.getMessage());
 		} catch (IllegalArgumentException e) {
 			throw new ConfigurationException(e.getMessage());
 		} catch (IllegalAccessException e) {

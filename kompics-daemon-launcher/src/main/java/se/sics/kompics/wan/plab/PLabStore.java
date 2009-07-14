@@ -3,17 +3,13 @@ package se.sics.kompics.wan.plab;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
-import javax.persistence.Table;
 
 @Entity
-@Table(name = "plab_store")
 public class PLabStore {
 
 	private String slice;
@@ -66,7 +62,7 @@ public class PLabStore {
 		return hosts;
 	}
 
-	@OneToMany // (mappedBy = "plab_store", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany // (mappedBy = "PlabStore", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@OrderBy("siteId")
 	public List<PLabSite> getSites() {
 		return sites;
