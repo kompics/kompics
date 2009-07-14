@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,6 +59,8 @@ import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.plab.events.GetNodesRequest;
 import se.sics.kompics.wan.plab.events.GetNodesResponse;
+import se.sics.kompics.wan.plab.events.GetProgressRequest;
+import se.sics.kompics.wan.plab.events.GetProgressResponse;
 import se.sics.kompics.wan.plab.events.InstallDaemonOnHostsRequest;
 import se.sics.kompics.wan.plab.events.PlanetLabInit;
 import se.sics.kompics.wan.plab.events.QueryPLabSitesRequest;
@@ -74,8 +77,6 @@ public class PLabComponent extends ComponentDefinition {
 	private Positive<Network> net = positive(Network.class);
 	private Positive<Timer> timer = positive(Timer.class);
 
-	private static int DNS_RESOLVER_MAX_THREADS = 10;
-
 	private static final String COMON_URL = "http://summer.cs.princeton.edu/status/tabulator.cgi?"
 			+ "table=table_nodeviewshort&format=formatcsv";
 
@@ -89,13 +90,16 @@ public class PLabComponent extends ComponentDefinition {
 
 	private PlanetLabCredentials cred;
 
-	// private PLabStore store;
+	private PLabStore store;
 
-	private Set<PLabSite> sites = null;
+	private volatile double progress = 0.0;
+
+	
+//	private Set<PLabSite> sites = null;
 
 //	private List<Integer> sliceNodes = null;
 
-	Set<PLabHost> hosts = new ConcurrentHashSet<PLabHost>();
+	List<PLabHost> hosts = new CopyOnWriteArrayList<PLabHost>();
 
 	public PLabComponent() {
 
@@ -105,6 +109,7 @@ public class PLabComponent extends ComponentDefinition {
 
 		subscribe(handleUpdateCoMonStats, pLabPort);
 		subscribe(handleUpdateHostsAndSites, pLabPort);
+		subscribe(handleGetProgressRequest, pLabPort);
 
 		subscribe(handlePlanetLabInit, control);
 	}
@@ -121,16 +126,20 @@ public class PLabComponent extends ComponentDefinition {
 			System.out.println("Loading hosts from filesystem");
 			// progress = 0.2;
 
-			PLabStore store = pLabService.load(cred.getSlice());
+			store = pLabService.load(cred.getSlice());
 
+			updateHostsFromStore();
+			
 			long time;
 			if (store != null) {
 
+				updateCoMonStats();
+				
 				Set<PLabHost> listHosts = store.getHosts();
 
 				hosts.addAll(listHosts);
 
-				sites = store.getSites();
+//				sites = store.getSites();
 
 //				sliceNodes = store.getSliceNodes();
 
@@ -138,12 +147,27 @@ public class PLabComponent extends ComponentDefinition {
 				System.out.println("Loading hosts done: " + time + "ms");
 			} else {
 				
-				updateHostsAndSites();
+				cleanUpdateStore();
 			}
 
 		}
 	};
 
+	private void updateHostsFromStore()
+	{
+		hosts.addAll(store.getHosts());
+		List<PLabHost> hostsToRemove = new ArrayList<PLabHost>();
+		for (PLabHost h : hosts)
+		{
+			if (h.isRegisteredForSlice() == false)
+			{
+				hostsToRemove.add(h);
+			}
+		}
+		hosts.removeAll(hostsToRemove);
+		Collections.sort(hosts, new CoMonStatsComparator(CoMonStats.RESPTIME, CoMonStats.LIVESLICES));
+	}
+	
 	private Handler<UpdateCoMonStats> handleUpdateCoMonStats = new Handler<UpdateCoMonStats>() {
 		public void handle(UpdateCoMonStats event) {
 
@@ -152,27 +176,74 @@ public class PLabComponent extends ComponentDefinition {
 	};
 
 	private void updateCoMonStats() {
-		PlCoMon plCoMon = new PlCoMon(hosts);
-		new Thread(plCoMon).start();
+		PlCoMon plCoMon = new PlCoMon(store.getHosts());
+		Thread t = new Thread(plCoMon);
+		t.start();
 	}
 
-	private Handler<UpdateHostsAndSites> handleUpdateHostsAndSites = new Handler<UpdateHostsAndSites>() {
-		public void handle(UpdateHostsAndSites event) {
-
-			updateHostsAndSites();
+	
+	
+	private Handler<GetProgressRequest> handleGetProgressRequest = new Handler<GetProgressRequest>() {
+		public void handle(GetProgressRequest event) {
+			trigger(new GetProgressResponse(event, progress), pLabPort);
 		}
 	};
 	
-	private void updateHostsAndSites()
+	
+	private Handler<UpdateHostsAndSites> handleUpdateHostsAndSites = new Handler<UpdateHostsAndSites>() {
+		public void handle(UpdateHostsAndSites event) {
+
+			cleanUpdateStore();
+		}
+	};
+
+	private void updateStoreUsingCoMon()
+	{
+		Set<PLabHost> hosts = getNodes();
+		
+		Set<PLabHost> noIP = new HashSet<PLabHost>();
+		for (PLabHost h : hosts) {
+			if (h.getIp()==null) {
+				noIP.add(h);
+			}
+			if (h.isRegisteredForSlice() == false)
+			{
+				
+			}
+			
+		}
+		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS,
+				noIP);
+		dnsLookups.performLookups();
+		
+		Set<Integer> sliceNodes = getNodesForSlice();
+		updateSliceStatus(sliceNodes, hosts);
+		
+		dnsLookups.join();
+	}
+	
+	private void updateSliceStatus(Set<Integer> sliceNodes, Set<PLabHost> hosts)
+	{
+		for (int i : sliceNodes)
+		{
+			for (PLabHost h : hosts) {
+				if (h.getNodeId() == i) {
+					h.setRegisteredForSlice(true);
+				}
+			}
+		}
+	}
+	
+	
+	private void cleanUpdateStore()
 	{
 		long startTime = System.currentTimeMillis();
-		// query for hosts
 		Set<PLabHost> hosts = getNodes();
 		long time = System.currentTimeMillis() - startTime;
 		System.out.println("PLC host query done: " + time + "ms");
 
 		// start the dns resolver
-		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(DNS_RESOLVER_MAX_THREADS,
+		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS,
 				hosts);
 		dnsLookups.performLookups();
 
@@ -182,10 +253,12 @@ public class PLabComponent extends ComponentDefinition {
 		System.out.println("PLC site query done: " + time + "ms");
 
 		// progress = 0.6;
-		List<Integer> sliceNodes = getNodesForSlice();
+		Set<Integer> sliceNodes = getNodesForSlice();
 		time = System.currentTimeMillis() - startTime;
 		System.out.println("PLC slice query done: " + time + "ms");
 
+		updateSliceStatus(sliceNodes, hosts);
+		
 		// progress = 0.8;
 //		HashMap<Integer, Integer> hostToSiteMapping = queryPLCHostToSiteMapping();
 //		time = System.currentTimeMillis() - startTime;
@@ -198,7 +271,6 @@ public class PLabComponent extends ComponentDefinition {
 		time = System.currentTimeMillis() - startTime;
 		System.out.println("dns queries done: " + time + "ms");
 
-//		progress = 0.9;
 //		for (PLabHost host : hosts) {
 //			host.setSiteId(hostToSiteMapping.get(host.getNodeId()));
 //		}
@@ -207,18 +279,11 @@ public class PLabComponent extends ComponentDefinition {
 		// or
 		// geography
 
-		PLabStore downloadedStore = new PLabStore(cred.getSlice(), cred.getUsername()); // MD5
-		downloadedStore.setHosts(hosts);
-		downloadedStore.setSites(sites);
+		store = new PLabStore(cred.getSlice(), cred.getUsername()); // MD5
+		store .setHosts(hosts);
+		store .setSites(sites);
 
-		System.out.println("hosts : " + hosts.size());
-		System.out.println("sites : " + sites.size());
-//		downloadedStore.setSliceNodes(sliceNodes);
-		pLabService.save(downloadedStore);
-
-		hosts.addAll(hosts);
-		this.sites = sites;
-//		this.sliceNodes = sliceNodes;
+		pLabService.save(store);
 	}
 	
 
@@ -239,7 +304,7 @@ public class PLabComponent extends ComponentDefinition {
 	private Handler<GetNodesForSliceRequest> handleGetNodesForSliceRequest = new Handler<GetNodesForSliceRequest>() {
 		public void handle(GetNodesForSliceRequest event) {
 
-			List<Integer> sliceNodes = getNodesForSlice();
+			Set<Integer> sliceNodes = getNodesForSlice();
 
 			GetNodesForSliceResponse respEvent = new GetNodesForSliceResponse(event, sliceNodes);
 
@@ -248,7 +313,7 @@ public class PLabComponent extends ComponentDefinition {
 		}
 	};
 
-	private List<Integer> getNodesForSlice() {
+	private Set<Integer> getNodesForSlice() {
 
 		List<Object> params = new ArrayList<Object>();
 		params.add(cred.getPLCMap());
@@ -263,7 +328,7 @@ public class PLabComponent extends ComponentDefinition {
 
 		Object response = executeRPC("GetSlices", params);
 
-		List<Integer> sliceNodes = new ArrayList<Integer>();
+		Set<Integer> sliceNodes = new HashSet<Integer>();
 		if (response instanceof Object[]) {
 			Object[] result = (Object[]) response;
 			if (result.length > 0) {
@@ -557,8 +622,6 @@ public class PLabComponent extends ComponentDefinition {
 
 		private int totalBytes = 0;
 
-		private volatile double progress = 0;
-
 		private HashMap<String, PLabHost> plHostMap;
 
 		public PlCoMon(Set<PLabHost> hosts) {
@@ -628,6 +691,8 @@ public class PLabComponent extends ComponentDefinition {
 				}
 			}
 			progress = 1.0;
+			
+			pLabService.save(store);
 		}
 
 		public double getProgress() {

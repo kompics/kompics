@@ -74,15 +74,6 @@
 
 
 
-		<bean id="dataSource"
-		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-		<property name="driverClassName"> <value>com.mysql.jdbc.Driver</value>
-		</property> <property name="url">
-		<value>jdbc:mysql://localhost/hibernate</value> </property> <property
-		name="username"> <value>root</value> </property> <property
-		name="password"> <value></value> </property> </bean>
-
-	<!--
 	<bean id="dataSource"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 		<property name="driverClassName">
@@ -97,9 +88,16 @@
 		<property name="password">
 			<value></value>
 		</property>
-		
 	</bean>
 
+	<!--
+		<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName"> <value>com.mysql.jdbc.Driver</value>
+		</property> <property name="url">
+		<value>jdbc:mysql://localhost/hibernate</value> </property> <property
+		name="username"> <value>root</value> </property> <property
+		name="password"> <value></value> </property> </bean>
 	-->
 
 
@@ -112,7 +110,7 @@
 		</property>
 
 		<property name="hibernateProperties">
-		
+
 			<props>
 				<prop key="hibernate.connection.pool_size">2</prop>
 				<prop key="hibernate.transaction.factory_class">org.hibernate.transaction.JDBCTransactionFactory
@@ -121,14 +119,15 @@
 				<prop key="hibernate.show_sql">true</prop>
 				<prop key="hibernate.hbm2ddl.auto">create-drop</prop>
 				<prop key="hibernate.max_fetch_depth">3</prop>
-				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop>
 
 				<!--
-				<prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop>
-				<prop key="hibernate.driverClassName">org.hsqldb.jdbcDriver</prop>
-				<prop key="hibernate.url">jdbc:hsqldb:mem:hibernate</prop>
-				<prop key="hibernate.username">sa</prop>
-				<prop key="hibernate.password"></prop>
+					<prop
+					key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+					<prop key="hibernate.driverClassName">org.hsqldb.jdbcDriver</prop>
+					<prop key="hibernate.url">jdbc:hsqldb:mem:hibernate</prop> <prop
+					key="hibernate.username">sa</prop> <prop
+					key="hibernate.password"></prop>
 				-->
 			</props>
 		</property>

@@ -162,10 +162,17 @@ public class CoMonStats {
 	public String toString()
 	{
 		StringBuffer buf = new StringBuffer();
+		int linebreak=70;
+		int len=0;
 		for (String s : mapStats.keySet())
 		{
+			len += s.length();
 			buf.append("(" + s + ",");
 			buf.append(mapStats.get(s) + ") " );
+			if (len > linebreak) {
+//				buf.append("\n");
+				len = 0;
+			}
 		}
 		return buf.toString();
 	}

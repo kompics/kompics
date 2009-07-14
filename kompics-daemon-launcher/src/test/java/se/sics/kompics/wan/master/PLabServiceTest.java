@@ -1,8 +1,6 @@
 package se.sics.kompics.wan.master;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -85,6 +83,8 @@ public class PLabServiceTest {
 			Set<PLabHost> hosts =  new HashSet<PLabHost>();
 			hosts.add(host);
 			PLabSite site = new PLabSite();
+			site.setName("testSite");
+			site.setSiteId(5);
 			Set<PLabSite> sites =  new HashSet<PLabSite>();
 			sites.add(site);
 			store.setHosts(hosts);
@@ -92,9 +92,24 @@ public class PLabServiceTest {
 			service.save(store);
 
 			store = service.load("sics_grid4all");
-			Set<PLabHost> returnedHosts = store.getHosts();
-			System.out.println("returned num hosts: " + returnedHosts.size());
+			System.out.println("returned num hosts: " + store.getHosts().size());
+			System.out.println("returned num sites: " + store.getSites().size());
 			assert(store.getHosts().size() == 1);
+			assert(store.getSites().size() == 1);
+			
+			Set<PLabHost> retHosts = store.getHosts();
+			for (PLabHost h : retHosts) {
+				assert(h.getNodeId() == 0);
+				assert(h.getHostname().compareTo("lqist.com") == 0);
+				assert(h.isRegisteredForSlice()==false);
+			}
+			
+			
+			Set<PLabSite> retSites = store.getSites();
+			for (PLabSite s : retSites) {
+				assert(s.getSiteId() == 5);
+				assert(s.getName().compareTo("testSite") == 0);
+			}
 		}
 	}
 }

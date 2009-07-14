@@ -23,7 +23,6 @@ public class PLabStore {
 
 	private Set<PLabSite> sites = null;
 
-//	private List<Integer> sliceNodes = null;
 
 	public PLabStore() {
 		// for hibernate serialization
@@ -57,8 +56,6 @@ public class PLabStore {
 		this.username = username;
 	}
 
-	// mappedBy = "PlabStore", 
-	 //(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
 //	@IndexColumn(name="nodeId")
 //	@OrderBy("nodeId")
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -66,19 +63,10 @@ public class PLabStore {
 		return hosts;
 	}
 
-//	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-//	@OrderBy("siteId")	
-//	@IndexColumn(name="siteId")
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	public Set<PLabSite> getSites() {
 		return sites;
 	}
-
-
-//	@Transient
-//	public List<Integer> getSliceNodes() {
-//		return sliceNodes;
-//	}
 
 	public void setCreationTime(Date creationTime) {
 		this.creationTime = creationTime;
@@ -91,9 +79,5 @@ public class PLabStore {
 	public void setSites(Set<PLabSite> sites) {
 		this.sites = sites;
 	}
-
-//	public void setSliceNodes(List<Integer> sliceNodes) {
-//		this.sliceNodes = sliceNodes;
-//	}
 
 }

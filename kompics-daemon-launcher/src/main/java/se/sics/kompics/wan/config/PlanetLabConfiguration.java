@@ -14,7 +14,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 
 	private static ApplicationContext ctx=null; 
 	public static final String PLANETLAB_APP_CONTEXT = "applicationContext-planetLabCache.xml";
-	
+	public static final int DNS_RESOLVER_MAX_THREADS = 10;
 	public static final String DAEMON_JAR_FILE = "target/dameon.jar";
 	
 	public static final String PROP_XMLRPC_PORT = "XmlRpcPort";

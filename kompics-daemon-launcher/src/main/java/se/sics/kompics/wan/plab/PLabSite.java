@@ -66,8 +66,8 @@ public class PLabSite implements Comparable<PLabSite> {
 		return siteId;
 	}
 
-	public void setSiteId(Integer site_id) {
-		this.siteId = site_id;
+	public void setSiteId(Integer siteId) {
+		this.siteId = siteId;
 	}
 
 
