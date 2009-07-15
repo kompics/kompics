@@ -93,13 +93,13 @@ public class SshComponent extends ComponentDefinition {
 	public class SshConn implements ConnectionMonitor, Comparable<SshConn> {
 
 		private String status;
-		private final ExperimentHost hostname;
+		private final Host hostname;
 		private boolean isConnected;
 		private boolean wasConnected;
 		private final Credentials credentials;
 		private Connection connection;
 
-		public SshConn(ExperimentHost host, Credentials credentials, Connection connection) {
+		public SshConn(Host host, Credentials credentials, Connection connection) {
 			super();
 			this.status = "created";
 			this.hostname = host;
@@ -126,7 +126,7 @@ public class SshComponent extends ComponentDefinition {
 		/**
 		 * @return the plHost
 		 */
-		public ExperimentHost getExpHost() {
+		public Host getExpHost() {
 			return hostname;
 		}
 
@@ -616,10 +616,10 @@ public class SshComponent extends ComponentDefinition {
 	public Handler<SshConnectRequest> handleSshConnectRequest = new Handler<SshConnectRequest>() {
 		public void handle(SshConnectRequest event) {
 
-			int sessionId = connect(event.getCredentials(), event.getHostname(), new CommandSpec(
+			int sessionId = connect(event.getCredentials(), event.getHost(), new CommandSpec(
 					"#connect", SSH_CONNECT_TIMEOUT, commandIdCounter++, true));
 
-			trigger(new SshConnectResponse(event, sessionId, event.getHostname()), sshPort);
+			trigger(new SshConnectResponse(event, sessionId, event.getHost()), sshPort);
 		}
 	};
 
@@ -633,7 +633,7 @@ public class SshComponent extends ComponentDefinition {
 		return sessionIdCounter;
 	}
 
-	private int connect(Credentials credentials, ExperimentHost expHost, CommandSpec commandSpec) {
+	private int connect(Credentials credentials, Host expHost, CommandSpec commandSpec) {
 
 		Connection connection = new Connection(expHost.getHostname());
 

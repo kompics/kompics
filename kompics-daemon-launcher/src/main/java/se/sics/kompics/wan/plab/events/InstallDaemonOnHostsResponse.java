@@ -2,18 +2,18 @@ package se.sics.kompics.wan.plab.events;
 
 
 import se.sics.kompics.Response;
-import se.sics.kompics.wan.master.plab.plc.PlanetLabHost;
+import se.sics.kompics.wan.plab.PLabHost;
 
 public class InstallDaemonOnHostsResponse extends Response {
 
-	private final PlanetLabHost[] hosts;
+	private final PLabHost[] hosts;
 	
-	public InstallDaemonOnHostsResponse(GetHostsNotInSliceRequest request, PlanetLabHost[] hosts) {
+	public InstallDaemonOnHostsResponse(InstallDaemonOnHostsRequest request, PLabHost[] hosts) {
 		super(request);
 		this.hosts = hosts;
 	}
 	
-	public PlanetLabHost[] getHosts() {
+	public PLabHost[] getHosts() {
 		return hosts;
 	}
 }

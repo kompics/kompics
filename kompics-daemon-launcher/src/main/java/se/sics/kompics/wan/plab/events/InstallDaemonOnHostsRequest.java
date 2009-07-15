@@ -5,16 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.sics.kompics.Request;
-import se.sics.kompics.wan.master.plab.plc.PlanetLabHost;
+import se.sics.kompics.wan.plab.PLabHost;
 
 public class InstallDaemonOnHostsRequest extends Request {
 
-	private final List<PlanetLabHost> hosts;
-	public InstallDaemonOnHostsRequest(List<PlanetLabHost> hosts) {
-		this.hosts = new ArrayList<PlanetLabHost>(hosts);
+	private final List<PLabHost> hosts;
+	public InstallDaemonOnHostsRequest(List<PLabHost> hosts) {
+		this.hosts = new ArrayList<PLabHost>(hosts);
 	}
 	
-	public List<PlanetLabHost> getHosts() {
+	public List<PLabHost> getHosts() {
 		return hosts;
 	}
 }

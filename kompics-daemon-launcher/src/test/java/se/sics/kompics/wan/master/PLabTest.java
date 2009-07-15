@@ -22,7 +22,6 @@ import se.sics.kompics.wan.plab.PLabComponent;
 import se.sics.kompics.wan.plab.PLabHost;
 import se.sics.kompics.wan.plab.PLabPort;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
-import se.sics.kompics.wan.plab.events.GetAllHostsResponse;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.plab.events.PLabInit;
@@ -78,7 +77,6 @@ public class PLabTest  {
 			
 			trigger(new PLabInit(cred),pLabComponent.getControl());
 			
-			subscribe(handleGetAllHostsResponse, pLabComponent.getPositive(PLabPort.class));
 			subscribe(handleQueryPLabSitesResponse, pLabComponent.getPositive(PLabPort.class));
 			subscribe(handleGetNodesForSliceResponse, pLabComponent.getPositive(PLabPort.class));
 			
@@ -142,12 +140,7 @@ public class PLabTest  {
 		
 		
 		
-		public Handler<GetAllHostsResponse> handleGetAllHostsResponse = new Handler<GetAllHostsResponse>() {
-			public void handle(GetAllHostsResponse event) {
 
-			}
-		};
-		
 	};
 
 	

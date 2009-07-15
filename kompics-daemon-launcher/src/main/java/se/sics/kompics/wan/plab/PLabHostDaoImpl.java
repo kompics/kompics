@@ -1,5 +1,8 @@
 package se.sics.kompics.wan.plab;
 
+import java.util.List;
+
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 
@@ -83,7 +86,6 @@ public class PLabHostDaoImpl implements PLabHostDao {
 
 //		PLabStore store = (PLabStore) sessionFactory.getCurrentSession().load(PLabStore.class, slice);
 		PLabStore store = (PLabStore) sessionFactory.getCurrentSession().get(PLabStore.class, slice);
-
 		return store;
 //		Query query = sessionFactory.getCurrentSession().createQuery(
 //				"from PLabStore where slice=?").setParameter(0, slice);

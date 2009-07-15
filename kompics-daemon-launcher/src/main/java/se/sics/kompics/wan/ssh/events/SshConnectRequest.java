@@ -2,7 +2,7 @@ package se.sics.kompics.wan.ssh.events;
 
 import se.sics.kompics.Request;
 import se.sics.kompics.wan.ssh.Credentials;
-import se.sics.kompics.wan.ssh.ExperimentHost;
+import se.sics.kompics.wan.ssh.Host;
 
 /**
  * The <code>ConnectSsh</code> class.
@@ -13,11 +13,11 @@ import se.sics.kompics.wan.ssh.ExperimentHost;
 public class SshConnectRequest extends Request {
 
 	private final Credentials credentials;
-	private final ExperimentHost hostname;
+	private final Host host;
 	
-	public SshConnectRequest(Credentials credentials, ExperimentHost hostname) {
+	public SshConnectRequest(Credentials credentials, Host hostname) {
 		this.credentials = credentials;
-		this.hostname = hostname;
+		this.host = hostname;
 	}
 
 	/**
@@ -30,8 +30,8 @@ public class SshConnectRequest extends Request {
 	/**
 	 * @return the hostname
 	 */
-	public ExperimentHost getHostname() {
-		return hostname;
+	public Host getHost() {
+		return host;
 	}
 
 }

@@ -4,14 +4,15 @@ import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
-import se.sics.kompics.wan.ssh.ExperimentHost;
+import se.sics.kompics.wan.ssh.Host;
 
 @Entity
-public class PLabHost extends ExperimentHost {
+public class PLabHost implements Host {
 
 	/**
 	 * These are attributes that can be queried using the Planetlab API
@@ -21,12 +22,24 @@ public class PLabHost extends ExperimentHost {
 	public static final String BOOT_STATE = "boot_state";
 	public static final String SITE_ID = PLabSite.SITE_ID;
 
+	@Id
+	protected int nodeId=0;
+
+	@Transient
 	private CoMonStats coMonStat;
+	
+	protected String hostname=null;
+
+	protected String ip=null;
+
+	protected int sessionId;
 
 	protected String bootState;
 
 	protected int siteId;
 
+	protected String connectFailedPolicy = "";
+	
 	protected boolean registeredForSlice = false;
 
 	private transient int heartbeatTimeout = 0;
@@ -37,30 +50,35 @@ public class PLabHost extends ExperimentHost {
 
 	@SuppressWarnings("unchecked")
 	public PLabHost(Map nodeInfo) {
-		super(nodeInfo);
-
+		nodeId = (Integer) nodeInfo.get(PLabHost.NODE_ID);
+		hostname = (String) nodeInfo.get(PLabHost.HOSTNAME);
 		bootState = (String) nodeInfo.get(PLabHost.BOOT_STATE);
 		siteId = (Integer) nodeInfo.get(PLabHost.SITE_ID);
-
 	}
 
-	public PLabHost(ExperimentHost host) {
-		super(host);
+	public PLabHost(Host host) {
+		this.sessionId = host.getSessionId();
+		this.ip = host.getIp();
+		this.hostname = host.getHostname();
+		this.connectFailedPolicy = host.getConnectFailedPolicy();
 	}
 
 	public PLabHost(PLabHost host) {
-		super(host);
+		this((Host) host);
 		this.coMonStat = new CoMonStats(host.getComMonStat());
+		this.bootState = host.bootState;
+		this.siteId = host.siteId;
+		this.registeredForSlice = host.registeredForSlice;
 	}
 
 	
 	public PLabHost(String hostname, int siteId) {
-		super(hostname);
+		this(hostname);
 		this.siteId = siteId;
 	}
 
 	public PLabHost(String hostname) {
-		super(hostname);
+		this.hostname = hostname;
 	}
 
 	@Transient
@@ -94,6 +112,7 @@ public class PLabHost extends ExperimentHost {
 		this.bootState = bootState;
 	}
 
+	@Column
 	public int getSiteId() {
 		return siteId;
 	}
@@ -133,4 +152,56 @@ public class PLabHost extends ExperimentHost {
 		hash = 31 * hash + super.hashCode();
 		return hash;
 	}
+
+	@Column(name="hostname", length=150, nullable=true)
+	public String getHostname() {
+		return hostname;
+	}
+
+	public void setHostname(String hostname) {
+		this.hostname = hostname;
+	}
+
+	@Column(length=15)
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
+	public int getNodeId() {
+		return nodeId;
+	}
+
+	public void setNodeId(int nodeId) {
+		this.nodeId = nodeId;
+	}
+
+	@Transient
+	public int getSessionId() {
+		return sessionId;
+	}
+
+	public void setSessionId(int sessionId) {
+		this.sessionId = sessionId;
+	}
+
+	public String getConnectFailedPolicy() {
+		return connectFailedPolicy;
+	}
+
+	public void setConnectFailedPolicy(String connectFailedPolicy) {
+		this.connectFailedPolicy = connectFailedPolicy;
+	}
+
+	@Override
+	public int compareTo(Host host) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	
+	
 }

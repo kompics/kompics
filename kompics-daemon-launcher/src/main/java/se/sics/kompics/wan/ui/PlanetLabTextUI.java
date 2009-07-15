@@ -43,7 +43,7 @@ import se.sics.kompics.wan.plab.PLabPort;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
 import se.sics.kompics.wan.plab.events.PLabInit;
 import se.sics.kompics.wan.plab.events.UpdateCoMonStats;
-import se.sics.kompics.wan.ssh.ExperimentHost;
+import se.sics.kompics.wan.ssh.Host;
 import se.sics.kompics.wan.ssh.SshComponent;
 import se.sics.kompics.wan.ssh.SshPort;
 import se.sics.kompics.wan.ssh.events.SshConnectRequest;
@@ -197,7 +197,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		public void handle(SshConnectResponse event) {
 			int sessionId = event.getSessionId();
 
-			ExperimentHost host = event.getHostname();
+			Host host = event.getHostname();
 			host.setSessionId(sessionId);
 			PLabHost plHost = new PLabHost(host);
 

@@ -2,34 +2,20 @@ package se.sics.kompics.wan.ssh;
 
 import java.util.Map;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.Transient;
-
 import se.sics.kompics.wan.plab.PLabHost;
 
-@Entity
-@Inheritance(strategy=InheritanceType.JOINED)
-public class ExperimentHost implements Comparable<ExperimentHost> {
+//@Entity
+//@Inheritance(strategy=InheritanceType.JOINED)
+public class ExperimentHost implements Host {
 
 
 	protected String hostname=null;
 
 	protected String ip=null;
 
-	protected int nodeId=0;
+	protected int sessionId=0;
 
-	@Transient 
-	protected int sessionId;
-
-	@Transient 
 	protected String connectFailedPolicy = "";
-
-	@Transient 
-	protected int connectionId = -1;
 
 	
 	public ExperimentHost() {
@@ -43,7 +29,6 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 	 */
 	@SuppressWarnings("unchecked")
 	public ExperimentHost(Map nodeInfo) {
-		nodeId = (Integer) nodeInfo.get(PLabHost.NODE_ID);
 		hostname = (String) nodeInfo.get(PLabHost.HOSTNAME);
 	}
 
@@ -51,77 +36,80 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 		this.hostname = hostname;
 	}
 	
-	public ExperimentHost(int sessionId, int nodeId, String hostname, String bootState,
-			String ip, int site, String bwlimit, int cpuLoad) {
+	public ExperimentHost(int sessionId, String hostname, String ip) {
 		this.sessionId = sessionId;
-		this.nodeId = nodeId; 
 		this.hostname = hostname;
 		this.ip = ip;
 	}
 	
-	public ExperimentHost(ExperimentHost host) {
+	public ExperimentHost(Host host) {
 		this.sessionId = host.getSessionId();
-		this.nodeId = host.getNodeId(); 
 		this.hostname = host.getHostname();
 		this.ip = host.getIp();
 	}
 	
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#compareTo(se.sics.kompics.wan.ssh.ExperimentHost)
+	 */
 	@Override
-	public int compareTo(ExperimentHost host) {
+	public int compareTo(Host host) {
 		return this.getHostname().compareTo(host.getHostname());
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#getConnectFailedPolicy()
+	 */
 	public String getConnectFailedPolicy() {
 		return connectFailedPolicy;
 	}
 
-	public int getConnectionId() {
-		return connectionId;
-	}
-
-	@Column(name="hostname", length=150, nullable=true)
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#getHostname()
+	 */
+	
 	public String getHostname() {
 		return hostname;
 	}
 
-	@Column(length=15)
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#getIp()
+	 */
+	
 	public String getIp() {
 		return ip;
 	}
 
-	@Id
-//	@Column(name="node_id")
-	public int getNodeId() {
-		return nodeId;
-	}
-
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#getNodeId()
+	 */
 
 	public int hashCode() {
 			int hash = 7;
-			hash = 31 * hash + nodeId;
+			hash = 31 * hash + sessionId;
 			hash = hash * ((hostname == null) ? 1 : hostname.hashCode()); 
 			return hash;		
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#setConnectFailedPolicy(java.lang.String)
+	 */
 	public void setConnectFailedPolicy(String connectFailedPolicy) {
 		this.connectFailedPolicy = connectFailedPolicy;
 	}
 
-	public void setConnectionId(int hostId) {
-		this.connectionId = hostId;
-	}
-
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#setHostname(java.lang.String)
+	 */
 	public void setHostname(String hostname) {
 		this.hostname = hostname;
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#setIp(java.lang.String)
+	 */
 	public void setIp(String ip) {
 		this.ip = ip;
-	}
-
-	public void setNodeId(int node_id) {
-		this.nodeId = node_id;
 	}
 
 	public String toString() {
@@ -130,10 +118,16 @@ public class ExperimentHost implements Comparable<ExperimentHost> {
 		return buf.toString();
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#getSessionId()
+	 */
 	public int getSessionId() {
 		return sessionId;
 	}
 
+	/* (non-Javadoc)
+	 * @see se.sics.kompics.wan.ssh.Host#setSessionId(int)
+	 */
 	public void setSessionId(int sessionId) {
 		this.sessionId = sessionId;
 	}

@@ -19,6 +19,7 @@ import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.ssh.Credentials;
 import se.sics.kompics.wan.ssh.ExperimentHost;
+import se.sics.kompics.wan.ssh.Host;
 import se.sics.kompics.wan.ssh.SshComponent;
 import se.sics.kompics.wan.ssh.SshPort;
 import se.sics.kompics.wan.ssh.events.CommandRequest;
@@ -82,7 +83,7 @@ public class SshTest  {
 				// TODO Auto-generated method stub
 				Credentials cred = new Credentials("sics_grid4all", "", 
 						"/home/jdowling/.ssh/id_rsa", "");
-				ExperimentHost host = new ExperimentHost("planetlab3.ani.univie.ac.at");
+				Host host = new ExperimentHost("planetlab3.ani.univie.ac.at");
 				
 				trigger(new SshConnectRequest(cred, host), sshComponent.getPositive(SshPort.class));
 
