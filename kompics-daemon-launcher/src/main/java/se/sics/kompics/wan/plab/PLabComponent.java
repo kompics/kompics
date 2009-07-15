@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -71,12 +72,6 @@ public class PLabComponent extends ComponentDefinition {
 
 	private final Logger logger = LoggerFactory.getLogger(PLabComponent.class);
 
-//	private Positive<Network> net = positive(Network.class);
-//	private Positive<Timer> timer = positive(Timer.class);
-//
-//	private static final String COMON_URL = "http://summer.cs.princeton.edu/status/tabulator.cgi?"
-//			+ "table=table_nodeviewshort&format=formatcsv";
-
 	public final static double MAX_PLC_CACHE_AGE = 24;
 
 	private boolean retryingWithCertIgnore = false;
@@ -89,11 +84,28 @@ public class PLabComponent extends ComponentDefinition {
 
 	private volatile double progress = 0.0;
 
-	// private Set<PLabSite> sites = null;
-
 	SortedSet<PLabHost> readyHosts = new ConcurrentSkipListSet<PLabHost>();
 
+	String url = PlanetLabConfiguration.getPlcApiAddress();
+
+	XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+
+	XmlRpcClient client = new XmlRpcClient();
+
 	public PLabComponent() {
+
+		try {
+			config.setServerURL(new URL(url));
+		} catch (MalformedURLException e) {
+			System.err.println("There was an error when trying to connect to: " + url);
+			e.printStackTrace();
+			throw new IllegalArgumentException(e);
+		}
+		config.setEncoding("iso-8859-1");
+		config.setEnabledForExtensions(true);
+		client.setTypeFactory(new MyTypeFactory(client));
+
+		client.setConfig(config);
 
 		subscribe(handleGetNodesForSliceRequest, pLabPort);
 		subscribe(handleQueryPLabSitesRequest, pLabPort);
@@ -116,22 +128,23 @@ public class PLabComponent extends ComponentDefinition {
 			long startTime = System.currentTimeMillis();
 			System.out.println("Loading hosts from filesystem");
 
-			store = pLabService.load(cred.getSlice());
+			store = pLabService.load(cred.getSlice(), cred.getUsername());
 
 			long time;
 			if (store != null) {
 
 				recoveryUpdate();
 
-				updateIPAddrsForHosts();
+//				updatePLabHostAttrs();
 
 				remoteUpdateCoMonStats(false);
 
 				// sort hosts after response-time, then number of active slices
-//				Collections.sort(hosts, new CoMonStatsComparator(CoMonStats.RESPTIME,
-//						CoMonStats.LIVESLICES));
+				// Collections.sort(hosts, new
+				// CoMonStatsComparator(CoMonStats.RESPTIME,
+				// CoMonStats.LIVESLICES));
 
-				System.out.println("Running hosts for this slice are:");
+				System.out.println("Number of running hosts for this slice are: " + readyHosts.size());
 				for (PLabHost h : readyHosts) {
 					System.out.println(h.toString());
 				}
@@ -148,13 +161,14 @@ public class PLabComponent extends ComponentDefinition {
 
 	private void recoveryUpdate() {
 		this.readyHosts.addAll(store.getRunningHostsForThisSlice());
-//		Collections.sort(hosts,
-//				new CoMonStatsComparator(CoMonStats.RESPTIME, CoMonStats.LIVESLICES));
+		// Collections.sort(hosts,
+		// new CoMonStatsComparator(CoMonStats.RESPTIME,
+		// CoMonStats.LIVESLICES));
 
-		if (this.readyHosts.size() == 0) {
+		if (this.readyHosts.size() < 10) {
 			System.out
-					.println("No hosts found locally, contacting planetlab.org for a list of hosts");
-			Set<PLabHost> setHosts = getNodes();
+					.println("Under 10 hosts found locally, contacting planetlab.org for a list of hosts");
+			Set<PLabHost> setHosts = updateHosts(System.currentTimeMillis());
 			store.setHosts(setHosts);
 			pLabService.save(store);
 			this.readyHosts = store.getRunningHostsForThisSlice();
@@ -179,7 +193,6 @@ public class PLabComponent extends ComponentDefinition {
 			try {
 				t.join();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -198,7 +211,7 @@ public class PLabComponent extends ComponentDefinition {
 		}
 	};
 
-	private void updateIPAddrsForHosts() {
+	private void updatePLabHostAttrs() {
 		Set<PLabHost> noIP = new HashSet<PLabHost>();
 		for (PLabHost h : readyHosts) {
 			if (h.getIp() == null) {
@@ -210,6 +223,9 @@ public class PLabComponent extends ComponentDefinition {
 		dnsLookups.performLookups();
 
 		dnsLookups.join();
+
+		Set<Integer> sliceNodes = getNodesForSlice();
+		updateSliceStatus(sliceNodes, readyHosts);
 	}
 
 	private void updateSliceStatus(Set<Integer> sliceNodes, Set<PLabHost> hosts) {
@@ -224,48 +240,26 @@ public class PLabComponent extends ComponentDefinition {
 
 	private void cleanRemoteUpdate() {
 		long startTime = System.currentTimeMillis();
-		Set<PLabHost> hosts = getNodes();
-		long time = System.currentTimeMillis() - startTime;
-		System.out.println("PLC host query done: " + time + "ms");
-
-		// start the dns resolver
-		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
-				PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS, hosts);
-		dnsLookups.performLookups();
-
-
+		long time;
+		
 		Set<PLabSite> sites = getSites();
 		time = System.currentTimeMillis() - startTime;
 		System.out.println("PLC site query done: " + time + "ms");
 
-
-		Set<Integer> sliceNodes = getNodesForSlice();
-		time = System.currentTimeMillis() - startTime;
-		System.out.println("PLC slice query done: " + time + "ms");
-
-		updateSliceStatus(sliceNodes, hosts);
+		
+		Set<PLabHost> hosts = updateHosts(startTime);
 
 		// HashMap<Integer, Integer> hostToSiteMapping =
 		// queryPLCHostToSiteMapping();
 		// time = System.currentTimeMillis() - startTime;
 		// System.out.println("PLC all queries done: " + time + "ms");
 
-		System.out.println("waiting for hostnames to get resolved");
-
-		dnsLookups.join();
-
-		time = System.currentTimeMillis() - startTime;
-		System.out.println("dns queries done: " + time + "ms");
 
 		// for (PLabHost host : hosts) {
 		// host.setSiteId(hostToSiteMapping.get(host.getNodeId()));
 		// }
 
-		// XXX order hosts by number of active slices or response time
-		// or
-		// geography
-
-		store = new PLabStore(cred.getSlice(), cred.getUsername()); 
+		store = new PLabStore(cred.getSlice(), cred.getUsername());
 		store.setHosts(hosts);
 		store.setSites(sites);
 
@@ -273,6 +267,33 @@ public class PLabComponent extends ComponentDefinition {
 		this.readyHosts = store.getRunningHostsForThisSlice();
 	}
 
+	
+	private Set<PLabHost> updateHosts(long startTime)
+	{
+		long time = System.currentTimeMillis() - startTime;
+		Set<PLabHost> hosts = getNodes();
+		System.out.println("PLC host query done: " + time + "ms");
+
+		// start the dns resolver
+		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
+				PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS, hosts);
+		dnsLookups.performLookups();
+
+		Set<Integer> sliceNodes = getNodesForSlice();
+		time = System.currentTimeMillis() - startTime;
+		System.out.println("PLC slice query done: " + time + "ms");
+
+		updateSliceStatus(sliceNodes, hosts);
+		
+		System.out.println("waiting for hostnames to get resolved");
+		dnsLookups.join();
+
+		time = System.currentTimeMillis() - startTime;
+		System.out.println("dns queries done: " + time + "ms");
+
+		return hosts;
+	}
+	
 	private Handler<InstallDaemonOnHostsRequest> handleInstallDaemonOnHostsRequest = new Handler<InstallDaemonOnHostsRequest>() {
 		public void handle(InstallDaemonOnHostsRequest event) {
 
@@ -290,9 +311,7 @@ public class PLabComponent extends ComponentDefinition {
 	private Handler<GetNodesForSliceRequest> handleGetNodesForSliceRequest = new Handler<GetNodesForSliceRequest>() {
 		public void handle(GetNodesForSliceRequest event) {
 
-//			Set<Integer> sliceNodes = getNodesForSlice();
-			
-			
+			// Set<Integer> sliceNodes = getNodesForSlice();
 
 			GetNodesForSliceResponse respEvent = new GetNodesForSliceResponse(event, readyHosts);
 
@@ -304,13 +323,16 @@ public class PLabComponent extends ComponentDefinition {
 	private Set<Integer> getNodesForSlice() {
 
 		List<Object> params = new ArrayList<Object>();
-		params.add(cred.getPLCMap());
+		params.add(cred.getPlanetLabAuthMap());
 
 		HashMap<String, Object> filter = new HashMap<String, Object>();
 		filter.put("name", cred.getSlice());
 		params.add(filter);
 
-		ArrayList<String> returnFields = new ArrayList<String>();
+		Vector<Object> returnFields = new Vector<Object>();
+		// for (PLabHost host : store.getHosts()) {
+		// returnFields.add(Integer.toString(host.getNodeId()));
+		// }
 		returnFields.add("node_ids");
 		params.add(returnFields);
 
@@ -326,6 +348,7 @@ public class PLabComponent extends ComponentDefinition {
 					sliceNodes.add((Integer) node);
 				}
 			}
+
 		}
 		return sliceNodes;
 	}
@@ -347,7 +370,7 @@ public class PLabComponent extends ComponentDefinition {
 		fields.add(PLabSite.SITE_ID);
 
 		List<Object> params = new ArrayList<Object>();
-		params.add(cred.getPLCMap());
+		params.add(cred.getPlanetLabAuthMap());
 		// plc api change, an empty map will return all nodes
 		params.add(new HashMap());
 		params.add(fields);
@@ -392,7 +415,7 @@ public class PLabComponent extends ComponentDefinition {
 
 	private Set<PLabSite> getSites() {
 		List<Object> rpcParams = new ArrayList<Object>();
-		rpcParams.add(cred.getPLCMap());
+		rpcParams.add(cred.getPlanetLabAuthMap());
 
 		HashMap<String, Object> filter = new HashMap<String, Object>();
 		rpcParams.add(filter);
@@ -420,20 +443,7 @@ public class PLabComponent extends ComponentDefinition {
 
 	private Object executeRPC(String command, List<Object> params) {
 		Object res = new Object();
-		String url = PlanetLabConfiguration.getPlcApiAddress();
-
-		XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
 		try {
-			// System.out.println("using plc api at: " + url);
-			config.setServerURL(new URL(url));
-			config.setEncoding("iso-8859-1");
-			config.setEnabledForExtensions(true);
-
-			XmlRpcClient client = new XmlRpcClient();
-			client.setTypeFactory(new MyTypeFactory(client));
-
-			client.setConfig(config);
-
 			res = (Object) client.execute(command, params);
 		} catch (XmlRpcException e) {
 			if (e.getMessage().contains("java.security.cert.CertPathValidatorException")) {
@@ -455,9 +465,6 @@ public class PLabComponent extends ComponentDefinition {
 				System.err.println(e.getMessage());
 				// e.printStackTrace();
 			}
-		} catch (MalformedURLException e) {
-			System.err.println("There was an error when trying to connect to: " + url);
-			System.err.println("Did you specify it correctly in the config file?");
 		}
 
 		return res;
@@ -496,10 +503,8 @@ public class PLabComponent extends ComponentDefinition {
 			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 			HttpsURLConnection.setDefaultHostnameVerifier(hv);
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (KeyManagementException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -535,47 +540,45 @@ public class PLabComponent extends ComponentDefinition {
 
 		private final Set<PLabHost> setHosts;
 
-		private final ConcurrentLinkedQueue<Future<String>> tasks;
+		private final ConcurrentLinkedQueue<Future<PLabHost>> tasks;
 
 		public ParallelDNSLookup(int numThreads, Set<PLabHost> setHosts) {
 			this.setHosts = new HashSet<PLabHost>(setHosts);
 
 			this.threadPool = Executors.newFixedThreadPool(numThreads);
-			this.tasks = new ConcurrentLinkedQueue<Future<String>>();
+			this.tasks = new ConcurrentLinkedQueue<Future<PLabHost>>();
 		}
 
 		public void performLookups() {
 			int i = 0;
 			for (PLabHost host : setHosts) {
-				Future<String> task = threadPool.submit(new ResolveIPHandler(host, i++));
+				Future<PLabHost> task = threadPool.submit(new ResolveIPHandler(host, i++));
 				tasks.add(task);
 			}
 		}
 
 		public void join() {
-			Future<String> task;
+			Future<PLabHost> task;
 			try {
 				// for all tasks
 				while ((task = tasks.poll()) != null) {
 					// block until task is done
-					String result = (String) task.get();
-					if (!result.equals("")) {
-						System.err.println(result);
+					PLabHost result = (PLabHost) task.get();
+					if (result.getIp() != null) {
+						System.err.println(result.getIp());
 					}
 				}
 				threadPool.shutdown();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
 		}
 	}
 
-	private class ResolveIPHandler implements Callable<String> {
+	private class ResolveIPHandler implements Callable<PLabHost> {
 		private PLabHost host;
 
 		int num;
@@ -585,25 +588,20 @@ public class PLabComponent extends ComponentDefinition {
 			this.num = num;
 		}
 
-		public String call() {
+		public PLabHost call() {
 
 			try {
 				InetAddress addr = InetAddress.getByName(host.getHostname());
 				host.setIp(addr.getHostAddress());
-				// System.out.println(num + ":" + host.getIp());
-				return "";
-				// System.out.println(host.getHostname());
+				return host;
 			} catch (UnknownHostException e) {
 				host.setIp(null);
-				return ("unknown host: " + host.getHostname());
+				return host;
 			}
 		}
 
 	}
 
-	
-	
-	
 	public class CoMonUpdater implements Runnable {
 
 		private static final String COMON_URL = "http://summer.cs.princeton.edu/status/tabulator.cgi?"
@@ -618,14 +616,14 @@ public class PLabComponent extends ComponentDefinition {
 
 			for (PLabHost host : hosts) {
 				// store copy of PLabHost objects here. When we update them, we
-				// replace the orginal PLabHost objects in the 'hosts' field with the
+				// replace the orginal PLabHost objects in the 'hosts' field
+				// with the
 				// new version including CoMon data.
 				plHostMap.put(host.getHostname(), new PLabHost(host));
 			}
 		}
 
 		public void run() {
-			// TODO Auto-generated method stub
 			totalBytes = 0;
 			progress = 0;
 			BufferedReader in = null;
@@ -654,8 +652,10 @@ public class PLabComponent extends ComponentDefinition {
 							plHost.setCoMonStat(statEntry);
 							System.out.println(plHost.getComMonStat().getHostname() + ": "
 									+ plHost.getComMonStat().getStat(CoMonStats.RESPTIME));
-							// assuming hosts is a concurrent collection, and that
-							// we replace the existing PLabHost object with this new one.
+							// assuming hosts is a concurrent collection, and
+							// that
+							// we replace the existing PLabHost object with this
+							// new one.
 							readyHosts.add(plHost);
 						}
 
@@ -670,10 +670,8 @@ public class PLabComponent extends ComponentDefinition {
 				}
 
 			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} finally {
 				if (in != null) {

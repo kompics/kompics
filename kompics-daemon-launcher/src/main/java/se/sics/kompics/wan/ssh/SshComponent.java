@@ -696,7 +696,7 @@ public class SshComponent extends ComponentDefinition {
 			// .getCredentials().getKeyPath()), controller
 			// .getCredentials().getKeyFilePassword())) {
 
-			if (connection.authenticateWithPublicKey(credentials.getUsername(), new File(
+			if (connection.authenticateWithPublicKey(credentials.getSshLoginName(), new File(
 					credentials.getKeyPath()), credentials.getKeyFilePassword())) {
 
 				// ok, authentiaction succesfull, return the connection
@@ -706,8 +706,8 @@ public class SshComponent extends ComponentDefinition {
 
 				Session session = startShell(sshConnection);
 				sessionId = addSession(session, sshConnection);
-			} else if (connection.authenticateWithPassword(credentials.getUsername(), credentials
-					.getPassword())) {
+			} else if (connection.authenticateWithPassword(credentials.getSshLoginName(), credentials
+					.getSshPassword())) {
 				// ok, authentiaction succesfull, return the connection
 				commandSpec.receivedControlData("connect successful");
 				// isConnected = true;
@@ -761,7 +761,7 @@ public class SshComponent extends ComponentDefinition {
 					sshConnection.statusChange(e.getMessage(), LOG_DEVEL);
 					commandSpec.setExitCode(2, "auth error");
 				} else {
-					System.err.println("NEW EXCEPTION TYPE, handle...");
+					System.err.println("NEW EXCEPTION TYPE, handle..." + e.getMessage());
 
 					e.printStackTrace();
 				}

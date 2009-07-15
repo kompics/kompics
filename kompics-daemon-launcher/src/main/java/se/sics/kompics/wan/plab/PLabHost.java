@@ -65,7 +65,11 @@ public class PLabHost implements Host {
 
 	public PLabHost(PLabHost host) {
 		this((Host) host);
-		this.coMonStat = new CoMonStats(host.getComMonStat());
+		if (host.coMonStat == null) {
+			this.coMonStat = null;
+		} else {
+			this.coMonStat = new CoMonStats(host.getComMonStat());
+		}
 		this.bootState = host.bootState;
 		this.siteId = host.siteId;
 		this.registeredForSlice = host.registeredForSlice;
@@ -81,7 +85,6 @@ public class PLabHost implements Host {
 		this.hostname = hostname;
 	}
 
-	@Transient
 	public CoMonStats getComMonStat() {
 		return coMonStat;
 	}
@@ -149,7 +152,8 @@ public class PLabHost implements Host {
 	@Override
 	public int hashCode() {
 		int hash = 7;
-		hash = 31 * hash + super.hashCode();
+		hash = 31 * hash * ((hostname == null) ? 1 : hostname.hashCode()); 
+		hash += nodeId;
 		return hash;
 	}
 

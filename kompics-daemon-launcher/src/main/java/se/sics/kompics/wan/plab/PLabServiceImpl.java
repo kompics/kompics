@@ -55,9 +55,9 @@ public class PLabServiceImpl implements PLabService {
 	 * @see se.sics.kompics.wan.master.plab.PLabService#getPlanetLabStore()
 	 */
 	@Override
-	public PLabStore load(String slice) {
+	public PLabStore load(String slice, String username) {
 		
-		return pLabHostDao.load(slice);
+		return pLabHostDao.load(slice, username);
 	}
 
 	@Override

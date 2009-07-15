@@ -29,6 +29,7 @@ import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
 import se.sics.kompics.wan.ssh.SshComponent;
 import se.sics.kompics.wan.ssh.SshPort;
 import se.sics.kompics.wan.ssh.events.SshConnectRequest;
+import se.sics.kompics.wan.ssh.events.SshConnectResponse;
 
 public class PLabTest  {
 
@@ -64,10 +65,12 @@ public class PLabTest  {
 		private final HashSet<UUID> outstandingTimeouts = new HashSet<UUID>();
 
 		private PlanetLabCredentials cred = 
-			new PlanetLabCredentials("jdowling@sics.se", "mantel99", "sics_grid4all",
+			new PlanetLabCredentials("kost@sics.se", "kostjap", "sics_grid4all",
 					"/home/jdowling/.ssh/id_rsa", "");
 
 		private Set<PLabHost> hosts = new HashSet<PLabHost>();
+		
+		private int replies = 0;
 		
 		public TestPLabComponent() {
 
@@ -79,6 +82,8 @@ public class PLabTest  {
 			
 			subscribe(handleQueryPLabSitesResponse, pLabComponent.getPositive(PLabPort.class));
 			subscribe(handleGetNodesForSliceResponse, pLabComponent.getPositive(PLabPort.class));
+			
+			subscribe(handleSshConnectResponse, sshComponent.getPositive(SshPort.class));
 			
 			subscribe(handleStart, control);
 		}
@@ -103,6 +108,13 @@ public class PLabTest  {
 					trigger(new SshConnectRequest(cred, h), 
 							sshComponent.getPositive(SshPort.class));
 
+					try {
+						PlanetLabConfiguration.getNetworkIntensiveTicket();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					
 					ScheduleTimeout st = new ScheduleTimeout(PLAB_CONNECT_TIMEOUT);
 					PLabConnectTimeout connectTimeout = new PLabConnectTimeout(st);
 					st.setTimeoutEvent(connectTimeout);
@@ -111,10 +123,8 @@ public class PLabTest  {
 					outstandingTimeouts.add(timerId);
 					trigger(st, timer.getPositive(Timer.class));				
 
+					PlanetLabConfiguration.releaseNetworkIntensiveTicket();
 				}
-				
-//				PLabHost host = new PLabHost("planetlab3.ani.univie.ac.at");
-				
 				
 			}
 		};
@@ -138,7 +148,17 @@ public class PLabTest  {
 			}
 		};
 		
-		
+		public Handler<SshConnectResponse> handleSshConnectResponse = new Handler<SshConnectResponse>() {
+			public void handle(SshConnectResponse event) {
+				
+				System.out.println("Connected to: " + event.getHostname());
+				
+				replies++;
+				if (replies == hosts.size()) {
+					testObj.pass();
+				}
+			}			
+		};
 		
 
 	};

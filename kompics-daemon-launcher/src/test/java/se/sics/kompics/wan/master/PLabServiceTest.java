@@ -65,7 +65,7 @@ public class PLabServiceTest {
 			store.setSlice("sics_grid4all");
 	
 			jmockCtx.checking(new Expectations() {{
-			    oneOf (pLabService).load("sics_grid4all");
+			    oneOf (pLabService).load("sics_grid4all", "kost@sics.se");
 			}});
 			jmockCtx.checking(new Expectations() {{
 			    oneOf (pLabService).save(store);
@@ -91,7 +91,7 @@ public class PLabServiceTest {
 			store.setSites(sites);
 			service.save(store);
 
-			store = service.load("sics_grid4all");
+			store = service.load("sics_grid4all", "kost@sics.se");
 			System.out.println("returned num hosts: " + store.getHosts().size());
 			System.out.println("returned num sites: " + store.getSites().size());
 			assert(store.getHosts().size() == 1);

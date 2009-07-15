@@ -16,9 +16,11 @@ import javax.persistence.Transient;
 @Entity
 public class PLabStore {
 
-	private String slice;
+	private int id = 0;
+	
+	private String slice="";
 
-	private String username;
+	private String username="";
 
 	private Date creationTime;
 
@@ -35,13 +37,23 @@ public class PLabStore {
 		this.creationTime = new Date();
 		this.slice = slice;
 		this.username = username;
+		this.id = slice.hashCode() + username.hashCode();
+	}
+	
+	@Id
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public Date getCreationTime() {
 		return creationTime;
 	}
 
-	@Id
+
 	@Column(name="slice")
 	public String getSlice() {
 		return slice;
@@ -77,6 +89,7 @@ public class PLabStore {
 					}
 			}
 		}
+		System.out.println("Running hosts number: " + setHosts.size());
 		return setHosts;
 	}
 	

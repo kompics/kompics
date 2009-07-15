@@ -84,7 +84,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	
 	// creates the queue used to limit the number of concurrent network intensive
 	// threads. The queue is fair meaning that it operates in a FIFO manner
-	private static Semaphore networkIntensiveTicket = new Semaphore(5, true);
+	private static Semaphore networkIntensiveTicket = new Semaphore(10, true);
 
 	private static long startTime = System.currentTimeMillis();
 	

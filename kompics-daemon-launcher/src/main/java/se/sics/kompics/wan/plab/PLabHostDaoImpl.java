@@ -74,7 +74,7 @@ public class PLabHostDaoImpl implements PLabHostDao {
 	 * @see se.sics.kompics.wan.master.plab.PLabHostDao#loadPLabStore()
 	 */
 	@Override
-	public PLabStore load(String slice) {
+	public PLabStore load(String slice, String username) {
 //		Transaction tx = null;
 //		Session session = sessionFactory.getCurrentSession();
 //		tx = session.beginTransaction();
@@ -85,12 +85,19 @@ public class PLabHostDaoImpl implements PLabHostDao {
 //		sessionFactory.getCurrentSession().beginTransaction();
 
 //		PLabStore store = (PLabStore) sessionFactory.getCurrentSession().load(PLabStore.class, slice);
-		PLabStore store = (PLabStore) sessionFactory.getCurrentSession().get(PLabStore.class, slice);
-		return store;
-//		Query query = sessionFactory.getCurrentSession().createQuery(
-//				"from PLabStore where slice=?").setParameter(0, slice);
-//	    List<PLabStore> events =query.list();
-//	    return events.get(0);
+//		PLabStore store = (PLabStore) sessionFactory.getCurrentSession().get(PLabStore.class, slice);
+//		return store;
+		int id = slice.hashCode() + username.hashCode();
+		
+		Query query = sessionFactory.getCurrentSession().createQuery(
+				"from PLabStore where id=?").setParameter(0, id);
+	    List<PLabStore> events =query.list();
+	    if (events.size() > 0) {
+	    	return events.get(0);
+	    }
+	    else {
+	    	return null;
+	    }
 	}
 
 	/*
@@ -102,7 +109,7 @@ public class PLabHostDaoImpl implements PLabHostDao {
 	 */
 	@Override
 	public void save(PLabStore store) {
-		this.sessionFactory.getCurrentSession().save(store);
+		this.sessionFactory.getCurrentSession().saveOrUpdate(store);
 	}
 
 }

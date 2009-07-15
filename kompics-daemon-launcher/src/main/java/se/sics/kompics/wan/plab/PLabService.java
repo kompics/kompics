@@ -10,7 +10,7 @@ package se.sics.kompics.wan.plab;
  */
 public interface PLabService {
 
-	public PLabStore load(String slice);
+	public PLabStore load(String slice, String username);
 	
 	public void save(PLabStore store);
 	
