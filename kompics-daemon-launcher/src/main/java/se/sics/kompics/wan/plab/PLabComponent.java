@@ -147,17 +147,17 @@ public class PLabComponent extends ComponentDefinition {
 	};
 
 	private void recoveryUpdate() {
-		readyHosts.addAll(store.getRunningHostsForThisSlice());
+		this.readyHosts.addAll(store.getRunningHostsForThisSlice());
 //		Collections.sort(hosts,
 //				new CoMonStatsComparator(CoMonStats.RESPTIME, CoMonStats.LIVESLICES));
 
-		if (readyHosts.size() == 0) {
+		if (this.readyHosts.size() == 0) {
 			System.out
 					.println("No hosts found locally, contacting planetlab.org for a list of hosts");
 			Set<PLabHost> setHosts = getNodes();
 			store.setHosts(setHosts);
 			pLabService.save(store);
-			readyHosts = store.getRunningHostsForThisSlice();
+			this.readyHosts = store.getRunningHostsForThisSlice();
 		}
 
 	}
@@ -270,7 +270,7 @@ public class PLabComponent extends ComponentDefinition {
 		store.setSites(sites);
 
 		pLabService.save(store);
-		hosts = store.getRunningHostsForThisSlice();
+		this.readyHosts = store.getRunningHostsForThisSlice();
 	}
 
 	private Handler<InstallDaemonOnHostsRequest> handleInstallDaemonOnHostsRequest = new Handler<InstallDaemonOnHostsRequest>() {

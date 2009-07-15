@@ -65,7 +65,7 @@ public class PLabTest  {
 		private final HashSet<UUID> outstandingTimeouts = new HashSet<UUID>();
 
 		private PlanetLabCredentials cred = 
-			new PlanetLabCredentials("kost", "kostjap", "sics_grid4all",
+			new PlanetLabCredentials("jdowling@sics.se", "mantel99", "sics_grid4all",
 					"/home/jdowling/.ssh/id_rsa", "");
 
 		private Set<PLabHost> hosts = new HashSet<PLabHost>();
