@@ -12,7 +12,7 @@ public interface PLabService {
 
 	public PLabStore load(String slice, String username);
 	
-	public void save(PLabStore store);
+	public void saveOrUpdate(PLabStore store);
 	
 
 }

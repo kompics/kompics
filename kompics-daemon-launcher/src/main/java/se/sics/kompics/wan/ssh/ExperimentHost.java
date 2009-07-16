@@ -1,17 +1,16 @@
 package se.sics.kompics.wan.ssh;
 
+import java.net.InetAddress;
 import java.util.Map;
 
 import se.sics.kompics.wan.plab.PLabHost;
 
-//@Entity
-//@Inheritance(strategy=InheritanceType.JOINED)
 public class ExperimentHost implements Host {
 
 
 	protected String hostname=null;
 
-	protected String ip=null;
+	protected InetAddress ip=null;
 
 	protected int sessionId=0;
 
@@ -36,7 +35,7 @@ public class ExperimentHost implements Host {
 		this.hostname = hostname;
 	}
 	
-	public ExperimentHost(int sessionId, String hostname, String ip) {
+	public ExperimentHost(int sessionId, String hostname, InetAddress ip) {
 		this.sessionId = sessionId;
 		this.hostname = hostname;
 		this.ip = ip;
@@ -76,7 +75,7 @@ public class ExperimentHost implements Host {
 	 * @see se.sics.kompics.wan.ssh.Host#getIp()
 	 */
 	
-	public String getIp() {
+	public InetAddress getIp() {
 		return ip;
 	}
 
@@ -108,7 +107,7 @@ public class ExperimentHost implements Host {
 	/* (non-Javadoc)
 	 * @see se.sics.kompics.wan.ssh.Host#setIp(java.lang.String)
 	 */
-	public void setIp(String ip) {
+	public void setIp(InetAddress ip) {
 		this.ip = ip;
 	}
 
@@ -131,5 +130,6 @@ public class ExperimentHost implements Host {
 	public void setSessionId(int sessionId) {
 		this.sessionId = sessionId;
 	}
+
 
 }

@@ -1,5 +1,7 @@
 package se.sics.kompics.wan.ssh;
 
+import java.net.InetAddress;
+
 
 public interface Host extends Comparable<Host>{
 
@@ -7,7 +9,7 @@ public interface Host extends Comparable<Host>{
 
 	public abstract String getHostname();
 
-	public abstract String getIp();
+	public abstract InetAddress getIp();
 
 	public abstract String getConnectFailedPolicy();
 
@@ -15,7 +17,7 @@ public interface Host extends Comparable<Host>{
 
 	public abstract void setHostname(String hostname);
 
-	public abstract void setIp(String ip);
+	public abstract void setIp(InetAddress ip);
 
 	public abstract int getSessionId();
 

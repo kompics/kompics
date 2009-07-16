@@ -9,23 +9,32 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 @Entity
-public class PLabStore {
+	public class PLabStore {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int id = 0;
-	
+
+	@Column(name="slice")
 	private String slice="";
 
 	private String username="";
 
 	private Date creationTime;
 
+//	@IndexColumn(name="nodeId")
+//	@OrderBy("nodeId")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Set<PLabHost> hosts = null;
 
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Set<PLabSite> sites = null;
 
 
@@ -40,7 +49,6 @@ public class PLabStore {
 		this.id = slice.hashCode() + username.hashCode();
 	}
 	
-	@Id
 	public int getId() {
 		return id;
 	}
@@ -54,7 +62,6 @@ public class PLabStore {
 	}
 
 
-	@Column(name="slice")
 	public String getSlice() {
 		return slice;
 	}
@@ -71,9 +78,6 @@ public class PLabStore {
 		this.username = username;
 	}
 
-//	@IndexColumn(name="nodeId")
-//	@OrderBy("nodeId")
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	public Set<PLabHost> getHosts() {
 		return hosts;
 	}
@@ -94,7 +98,6 @@ public class PLabStore {
 	}
 	
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	public Set<PLabSite> getSites() {
 		return sites;
 	}

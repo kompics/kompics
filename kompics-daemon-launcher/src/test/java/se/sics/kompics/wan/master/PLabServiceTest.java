@@ -68,7 +68,7 @@ public class PLabServiceTest {
 			    oneOf (pLabService).load("sics_grid4all", "kost@sics.se");
 			}});
 			jmockCtx.checking(new Expectations() {{
-			    oneOf (pLabService).save(store);
+			    oneOf (pLabService).saveOrUpdate(store);
 			}});
 		}
 		else {
@@ -89,7 +89,7 @@ public class PLabServiceTest {
 			sites.add(site);
 			store.setHosts(hosts);
 			store.setSites(sites);
-			service.save(store);
+			service.saveOrUpdate(store);
 
 			store = service.load("sics_grid4all", "kost@sics.se");
 			System.out.println("returned num hosts: " + store.getHosts().size());

@@ -1,5 +1,6 @@
 package se.sics.kompics.wan.plab;
 
+import java.net.InetAddress;
 import java.util.Map;
 
 import javax.persistence.Column;
@@ -30,7 +31,7 @@ public class PLabHost implements Host {
 	
 	protected String hostname=null;
 
-	protected String ip=null;
+	protected InetAddress ip=null;
 
 	protected int sessionId;
 
@@ -166,12 +167,12 @@ public class PLabHost implements Host {
 		this.hostname = hostname;
 	}
 
-	@Column(length=15)
-	public String getIp() {
+//	@Column(length=15)
+	public InetAddress getIp() {
 		return ip;
 	}
 
-	public void setIp(String ip) {
+	public void setIp(InetAddress ip) {
 		this.ip = ip;
 	}
 

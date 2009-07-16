@@ -435,7 +435,7 @@ public class Maven extends ComponentDefinition {
 	}
 
 	/**
-	 * @param id
+	 * @param nodeId
 	 * @param job
 	 * @param scenario
 	 * @param assembly

@@ -61,8 +61,8 @@ public class PLabServiceImpl implements PLabService {
 	}
 
 	@Override
-	public void save(PLabStore store) {
-		pLabHostDao.save(store);
+	public void saveOrUpdate(PLabStore store) {
+		pLabHostDao.saveOrUpdate(store);
 		
 	}
 

@@ -33,6 +33,6 @@ public class PLabPort extends PortType {
 		positive(QueryPLabSitesResponse.class);
 		positive(InstallDaemonOnHostsResponse.class);
 		positive(GetNodesForSliceResponse.class);
-		negative(GetProgressResponse.class);
+		positive(GetProgressResponse.class);
 	}
 }

@@ -49,10 +49,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
+import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
+import se.sics.kompics.wan.plab.events.DnsResolverRequest;
+import se.sics.kompics.wan.plab.events.DnsResolverResponse;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.plab.events.GetNodesRequest;
@@ -69,6 +72,8 @@ import se.sics.kompics.wan.plab.events.UpdateHostsAndSites;
 public class PLabComponent extends ComponentDefinition {
 
 	private Negative<PLabPort> pLabPort = negative(PLabPort.class);
+	
+	private Component dns;
 
 	private final Logger logger = LoggerFactory.getLogger(PLabComponent.class);
 
@@ -94,6 +99,8 @@ public class PLabComponent extends ComponentDefinition {
 
 	public PLabComponent() {
 
+		dns  = create(DnsResolverComponent.class);
+		
 		try {
 			config.setServerURL(new URL(url));
 		} catch (MalformedURLException e) {
@@ -114,6 +121,8 @@ public class PLabComponent extends ComponentDefinition {
 		subscribe(handleUpdateCoMonStats, pLabPort);
 		subscribe(handleUpdateHostsAndSites, pLabPort);
 		subscribe(handleGetProgressRequest, pLabPort);
+		
+		subscribe(handleDnsResolverResponse, dns.getPositive(DnsResolverPort.class));
 
 		subscribe(handlePlanetLabInit, control);
 	}
@@ -170,7 +179,7 @@ public class PLabComponent extends ComponentDefinition {
 					.println("Under 10 hosts found locally, contacting planetlab.org for a list of hosts");
 			Set<PLabHost> setHosts = updateHosts(System.currentTimeMillis());
 			store.setHosts(setHosts);
-			pLabService.save(store);
+			pLabService.saveOrUpdate(store);
 			this.readyHosts = store.getRunningHostsForThisSlice();
 		}
 
@@ -198,6 +207,24 @@ public class PLabComponent extends ComponentDefinition {
 		}
 	}
 
+	private Handler<DnsResolverResponse> handleDnsResolverResponse = new Handler<DnsResolverResponse>() {
+		public void handle(DnsResolverResponse event) {
+			Map<Integer,InetAddress> mapIpAddrs = event.getIpAddrs();
+			for (Integer nodeId : mapIpAddrs.keySet()) 
+			{
+				InetAddress addr = mapIpAddrs.get(nodeId);
+				for (PLabHost host : readyHosts) {
+					if (host.getNodeId() == nodeId) {
+						host.setIp(addr);
+					}
+				}
+			}
+			
+			
+		}
+	};
+	
+	
 	private Handler<GetProgressRequest> handleGetProgressRequest = new Handler<GetProgressRequest>() {
 		public void handle(GetProgressRequest event) {
 			trigger(new GetProgressResponse(event, progress), pLabPort);
@@ -218,11 +245,10 @@ public class PLabComponent extends ComponentDefinition {
 				noIP.add(h);
 			}
 		}
-		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
-				PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS, noIP);
-		dnsLookups.performLookups();
-
-		dnsLookups.join();
+//		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
+//				PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS, noIP);
+//		dnsLookups.performLookups();
+//		dnsLookups.join();
 
 		Set<Integer> sliceNodes = getNodesForSlice();
 		updateSliceStatus(sliceNodes, readyHosts);
@@ -263,7 +289,7 @@ public class PLabComponent extends ComponentDefinition {
 		store.setHosts(hosts);
 		store.setSites(sites);
 
-		pLabService.save(store);
+		pLabService.saveOrUpdate(store);
 		this.readyHosts = store.getRunningHostsForThisSlice();
 	}
 
@@ -275,10 +301,17 @@ public class PLabComponent extends ComponentDefinition {
 		System.out.println("PLC host query done: " + time + "ms");
 
 		// start the dns resolver
-		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
-				PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS, hosts);
-		dnsLookups.performLookups();
+//		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
+//				PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS, hosts);
+//		dnsLookups.performLookups();
 
+		Map<Integer,String> hostAddrs = new HashMap<Integer,String>();
+		for (PLabHost h : hosts) {
+			hostAddrs.put(h.getNodeId(), h.getHostname());
+		}
+		DnsResolverRequest req = new DnsResolverRequest(hostAddrs);
+		trigger(req, dns.getPositive(DnsResolverPort.class));
+		
 		Set<Integer> sliceNodes = getNodesForSlice();
 		time = System.currentTimeMillis() - startTime;
 		System.out.println("PLC slice query done: " + time + "ms");
@@ -286,7 +319,7 @@ public class PLabComponent extends ComponentDefinition {
 		updateSliceStatus(sliceNodes, hosts);
 		
 		System.out.println("waiting for hostnames to get resolved");
-		dnsLookups.join();
+//		dnsLookups.join();
 
 		time = System.currentTimeMillis() - startTime;
 		System.out.println("dns queries done: " + time + "ms");
@@ -568,6 +601,8 @@ public class PLabComponent extends ComponentDefinition {
 						System.err.println(result.getIp());
 					}
 				}
+				store.setHosts(readyHosts);
+				pLabService.saveOrUpdate(store);
 				threadPool.shutdown();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -592,7 +627,7 @@ public class PLabComponent extends ComponentDefinition {
 
 			try {
 				InetAddress addr = InetAddress.getByName(host.getHostname());
-				host.setIp(addr.getHostAddress());
+				host.setIp(addr); // .getHostAddress()
 				return host;
 			} catch (UnknownHostException e) {
 				host.setIp(null);
@@ -684,7 +719,7 @@ public class PLabComponent extends ComponentDefinition {
 			}
 			progress = 1.0;
 
-			pLabService.save(store);
+			pLabService.saveOrUpdate(store);
 		}
 
 		public double getProgress() {

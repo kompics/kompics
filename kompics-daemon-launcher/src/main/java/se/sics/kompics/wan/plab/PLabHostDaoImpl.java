@@ -108,7 +108,7 @@ public class PLabHostDaoImpl implements PLabHostDao {
 	 * .master.plab.PLabStore)
 	 */
 	@Override
-	public void save(PLabStore store) {
+	public void saveOrUpdate(PLabStore store) {
 		this.sessionFactory.getCurrentSession().saveOrUpdate(store);
 	}
 
