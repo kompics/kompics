@@ -619,7 +619,8 @@ public class SshComponent extends ComponentDefinition {
 			int sessionId = connect(event.getCredentials(), event.getHost(), new CommandSpec(
 					"#connect", SSH_CONNECT_TIMEOUT, commandIdCounter++, true));
 
-			trigger(new SshConnectResponse(event, sessionId, event.getHost()), sshPort);
+			trigger(new SshConnectResponse(event, sessionId, event.getRequestId(), event.getHost()), 
+					sshPort);
 		}
 	};
 
@@ -635,7 +636,14 @@ public class SshComponent extends ComponentDefinition {
 
 	private int connect(Credentials credentials, Host expHost, CommandSpec commandSpec) {
 
-		Connection connection = new Connection(expHost.getHostname());
+		Connection connection;
+		if (expHost.getIp() == null) {
+			connection = new Connection(expHost.getHostname()); 
+								
+		}
+		else {
+			connection = new Connection(expHost.getIp().getHostAddress()); 
+		}
 
 		SshConn sshConnection = new SshConn(expHost, credentials, connection);
 

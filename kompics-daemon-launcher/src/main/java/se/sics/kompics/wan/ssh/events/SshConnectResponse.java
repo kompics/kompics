@@ -1,5 +1,7 @@
 package se.sics.kompics.wan.ssh.events;
 
+import java.util.UUID;
+
 import se.sics.kompics.Response;
 import se.sics.kompics.wan.ssh.Host;
 
@@ -15,10 +17,13 @@ public class SshConnectResponse extends Response {
 
 	private final Host hostname;
 	
-	public SshConnectResponse(SshConnectRequest request, int sessionId,
+	private final UUID requestId;
+	
+	public SshConnectResponse(SshConnectRequest request, int sessionId, UUID requestID,
 			Host hostname) {
 		super(request);
 		this.sessionId = sessionId;
+		this.requestId = requestID;
 		this.hostname = hostname;
 	}
 
@@ -31,5 +36,9 @@ public class SshConnectResponse extends Response {
 	
 	public Host getHostname() {
 		return hostname;
+	}
+	
+	public UUID getRequestId() {
+		return requestId;
 	}
 }

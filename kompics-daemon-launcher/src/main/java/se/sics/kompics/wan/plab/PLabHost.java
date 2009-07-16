@@ -157,6 +157,27 @@ public class PLabHost implements Host {
 		hash += nodeId;
 		return hash;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+
+		if (this == obj) {
+			return true;
+		}
+		
+		if (obj == null || ! (obj instanceof PLabHost)) {
+			return false;
+		}
+		PLabHost that = (PLabHost) obj;
+		if (this.getHostname().compareTo(that.getHostname()) != 0) {
+			return false;
+		}
+		if (this.getNodeId()!= that.getNodeId()) {
+			return false;
+		}
+		
+		return true;
+	}
 
 	@Column(name="hostname", length=150, nullable=true)
 	public String getHostname() {

@@ -1,5 +1,7 @@
 package se.sics.kompics.wan.ssh.events;
 
+import java.util.UUID;
+
 import se.sics.kompics.Request;
 import se.sics.kompics.wan.ssh.Credentials;
 import se.sics.kompics.wan.ssh.Host;
@@ -14,10 +16,12 @@ public class SshConnectRequest extends Request {
 
 	private final Credentials credentials;
 	private final Host host;
+	private final UUID requestId;
 	
-	public SshConnectRequest(Credentials credentials, Host hostname) {
+	public SshConnectRequest(Credentials credentials, UUID requestId, Host hostname) {
 		this.credentials = credentials;
 		this.host = hostname;
+		this.requestId = requestId;
 	}
 
 	/**
@@ -34,4 +38,8 @@ public class SshConnectRequest extends Request {
 		return host;
 	}
 
+	public UUID getRequestId() {
+		return requestId;
+	}
+	
 }

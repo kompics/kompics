@@ -3,14 +3,18 @@ package se.sics.kompics.wan.ui;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.mina.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,10 +27,12 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
+import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
+import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.MasterConfiguration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 import se.sics.kompics.wan.master.Master;
@@ -41,8 +47,10 @@ import se.sics.kompics.wan.plab.PLabComponent;
 import se.sics.kompics.wan.plab.PLabHost;
 import se.sics.kompics.wan.plab.PLabPort;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.plab.events.PLabInit;
 import se.sics.kompics.wan.plab.events.UpdateCoMonStats;
+import se.sics.kompics.wan.ssh.ExperimentHost;
 import se.sics.kompics.wan.ssh.Host;
 import se.sics.kompics.wan.ssh.SshComponent;
 import se.sics.kompics.wan.ssh.SshPort;
@@ -55,18 +63,17 @@ import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
 
 public class PlanetLabTextUI extends ComponentDefinition {
-
+	public static final int PLAB_CONNECT_TIMEOUT = 30 * 1000;
+	
 	private Component timer;
 	private Component network;
 	private Component plab;
 	private Component master;
 	private Component ssh;
-	// private Component rpc;
-	// private Component controller;
 
 	private PlanetLabCredentials cred;
 
-	private List<PLabHost> connectedHosts = new CopyOnWriteArrayList<PLabHost>();
+	private Set<PLabHost> connectedHosts = new ConcurrentHashSet<PLabHost>();
 	private Map<Integer, Boolean> mapConnectedHosts = new ConcurrentHashMap<Integer, Boolean>();
 	
 	private List<PLabHost> availableHosts = new CopyOnWriteArrayList<PLabHost>();
@@ -75,6 +82,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 	private boolean cleanupStarted = false;
 
+	private final HashSet<UUID> outstandingTimeouts = new HashSet<UUID>();
+	
 	public static class CleanupConnections extends Timeout {
 
 		public CleanupConnections(ScheduleTimeout request) {
@@ -82,6 +91,28 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		}
 
 	}
+	
+	public class SshConnectTimeout extends Timeout {
+
+		private final int numRetries;
+		
+		private final PLabHost host;
+		
+		public SshConnectTimeout(ScheduleTimeout request, PLabHost host, int numRetries) {
+			super(request);
+			this.host = host;
+			this.numRetries = numRetries;
+		}
+		
+		public PLabHost getHost() {
+			return host;
+		}
+		
+		public int getNumRetries() {
+			return numRetries;
+		}
+	}
+	
 
 	public PlanetLabTextUI() {
 
@@ -91,15 +122,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		plab = create(PLabComponent.class);
 		master = create(Master.class);
 		ssh = create(SshComponent.class);
-		// rpc = create(Controller.class);
-		// controller = create(ConnectionControllerComponent.class);
 
 		getCredentials();
-
-		// PlanetLabInit pInit = new PlanetLabInit(cred, PlanetLabConfiguration
-		// .getMasterAddress(), PlanetLabConfiguration
-		// .getBootConfiguration(), PlanetLabConfiguration
-		// .getMonitorConfiguration());
 
 		PLabInit pInit = new PLabInit(cred);
 		trigger(pInit, plab.getControl());
@@ -118,14 +142,10 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		int maxThreads = PlanetLabConfiguration.getXmlRpcMaxThreads();
 		String homepage = PlanetLabConfiguration.getXmlRpcHomepage();
 
-		// RpcInit rpcInit = new RpcInit(ip, rpcPort, homepage, cred);
-		// trigger(rpcInit, rpc.getControl());
-
 		logger.info("Master listening on: {}", MasterConfiguration.getMasterAddress().toString());
 
 		connectToNetAndTimer(plab);
 		connectToNetAndTimer(master);
-		// connectToNetAndTimer(rpc);
 		connect(ssh.getNegative(Timer.class), timer.getPositive(Timer.class));
 
 		// handle possible faults in the components
@@ -137,6 +157,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		subscribe(handleSshConnectResponse, ssh.getPositive(SshPort.class));
 		subscribe(handleSshHeartbeatResponse, ssh.getPositive(SshPort.class));
+		
+		subscribe(handleGetNodesForSliceResponse, plab.getPositive(PLabPort.class));
 		
 		subscribe(handleCleanupConnections, timer.getPositive(Timer.class));
 	}
@@ -193,8 +215,30 @@ public class PlanetLabTextUI extends ComponentDefinition {
 				"/home/jdowling/.ssh/id_rsa", "");
 	}
 
+	public Handler<GetNodesForSliceResponse> handleGetNodesForSliceResponse 
+	= new Handler<GetNodesForSliceResponse>() {
+		public void handle(GetNodesForSliceResponse event) {
+			
+			Set<PLabHost> hosts =event.getHosts(); 
+			connectedHosts.addAll(hosts);
+
+			logger.info("Added {} hosts from PlanetLabComponent", hosts.size());
+		}
+	};
+	
 	public Handler<SshConnectResponse> handleSshConnectResponse = new Handler<SshConnectResponse>() {
 		public void handle(SshConnectResponse event) {
+			
+			if (outstandingTimeouts.contains(event.getRequestId())) {
+				CancelTimeout ct = new CancelTimeout(event.getRequestId());
+				trigger(ct, timer.getPositive(Timer.class));
+				outstandingTimeouts.remove(event.getRequestId());
+			} else {
+				// request was retried. we ignore this first slow response.
+				// (to avoid double response;TODO add a local BOOTSTRAPPED flag
+				// per overlay)
+				return;
+			}
 			int sessionId = event.getSessionId();
 
 			Host host = event.getHostname();
@@ -207,7 +251,6 @@ public class PlanetLabTextUI extends ComponentDefinition {
 				ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
 				st.setTimeoutEvent(new CleanupConnections(st));
 				trigger(st, timer.getPositive(Timer.class));
-
 			}
 		}
 	};
@@ -251,6 +294,48 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		}
 	};
 	
+	public Handler<SshConnectTimeout> handleSshConnectTimeout = new Handler<SshConnectTimeout>() {
+		public void handle(SshConnectTimeout event) {
+			// XXX Check if the timer was cancelled
+			if (outstandingTimeouts.contains(event.getTimeoutId()) == false) {
+				return;
+			}
+			
+			connectToHost(event.getHost(), event.getNumRetries());
+		}
+	};
+	
+	
+
+	private void connectToHost(PLabHost host, int retriedNumber)
+	{
+		if (retriedNumber >= Configuration.DEFAULT_RETRY_COUNT) {
+			logger.warn("Exceed max number of retries for host: {}", host.getHostname());
+			return;
+		}
+		
+		
+		try {
+			PlanetLabConfiguration.getNetworkIntensiveTicket();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		
+		ScheduleTimeout st = new ScheduleTimeout(PLAB_CONNECT_TIMEOUT);
+		SshConnectTimeout connectTimeout = new SshConnectTimeout(st, host, retriedNumber+1);
+		st.setTimeoutEvent(connectTimeout);
+
+		UUID timerId = connectTimeout.getTimeoutId();
+		outstandingTimeouts.add(timerId);
+
+		trigger(new SshConnectRequest(cred, timerId, new ExperimentHost(host)), 
+				ssh.getPositive(SshPort.class));
+
+		trigger(st, timer.getPositive(Timer.class));				
+
+		PlanetLabConfiguration.releaseNetworkIntensiveTicket();
+	}
 
 	private class UserInput extends Thread {
 		private AtomicBoolean finished = new AtomicBoolean(false);
@@ -292,7 +377,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 					getCredentials();
 					break;
 				case 4:
-					connectToHosts();
+					connectToAllHosts();
 					break;
 				case 6:
 					getBootstates();
@@ -412,14 +497,16 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			}
 		}
 
-		private void connectToHosts() {
+		private void connectToAllHosts() {
 			validateListHosts();
-			for (PLabHost host : connectedHosts) {
-				SshConnectRequest req = new SshConnectRequest(cred, host);
-				trigger(req, ssh.getNegative(SshPort.class));
-			}
 
+			for (PLabHost h : connectedHosts) {
+
+				connectToHost(h, 0);
+			}
+			
 		}
+		
 
 		private boolean selectHostsFile() {
 			boolean succeed = true;
@@ -528,8 +615,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private void validateListHosts() {
 			if (connectedHosts.size() == 0) {
-				System.out
-						.println("Warning: there are no hosts available to perform your operation with.");
+				logger.warn("Warning: there are no hosts available to perform your operation with.");
 			}
 		}
 

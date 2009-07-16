@@ -26,6 +26,7 @@ import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.plab.events.PLabInit;
 import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
+import se.sics.kompics.wan.ssh.ExperimentHost;
 import se.sics.kompics.wan.ssh.SshComponent;
 import se.sics.kompics.wan.ssh.SshPort;
 import se.sics.kompics.wan.ssh.events.SshConnectRequest;
@@ -46,8 +47,15 @@ public class PLabTest  {
 	
 	public static class PLabConnectTimeout extends Timeout {
 
-		public PLabConnectTimeout(ScheduleTimeout request) {
+		private final int numRetries;
+		
+		public PLabConnectTimeout(ScheduleTimeout request, int numRetries) {
 			super(request);
+			this.numRetries = numRetries;
+		}
+		
+		public int getNumRetries() {
+			return numRetries;
 		}
 	}
 
@@ -105,7 +113,7 @@ public class PLabTest  {
 				
 				for (PLabHost h : hosts) {
 
-					trigger(new SshConnectRequest(cred, h), 
+					trigger(new SshConnectRequest(cred, UUID.fromString("0"), new ExperimentHost(h)), 
 							sshComponent.getPositive(SshPort.class));
 
 					try {
@@ -116,7 +124,7 @@ public class PLabTest  {
 
 					
 					ScheduleTimeout st = new ScheduleTimeout(PLAB_CONNECT_TIMEOUT);
-					PLabConnectTimeout connectTimeout = new PLabConnectTimeout(st);
+					PLabConnectTimeout connectTimeout = new PLabConnectTimeout(st, 0);
 					st.setTimeoutEvent(connectTimeout);
 
 					UUID timerId = connectTimeout.getTimeoutId();
@@ -175,7 +183,7 @@ public class PLabTest  {
 		setTestObj(this);
 		try {
 			Configuration.init(new String[]{}, PlanetLabConfiguration.class);
-			Kompics.createAndStart(PLabTest.TestPLabComponent.class, 1);
+			Kompics.createAndStart(PLabTest.TestPLabComponent.class, 2);
 		} catch (ConfigurationException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

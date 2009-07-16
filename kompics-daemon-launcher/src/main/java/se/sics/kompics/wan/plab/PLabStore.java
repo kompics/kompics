@@ -1,42 +1,40 @@
 package se.sics.kompics.wan.plab;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 @Entity
-	public class PLabStore {
+public class PLabStore {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Id()
+	// @GeneratedValue(strategy = GenerationType.AUTO)
 	private int id = 0;
 
-	@Column(name="slice")
-	private String slice="";
+	@Column(name = "slice")
+	private String slice = "";
 
-	private String username="";
+	@Column(name = "username")
+	private String username = "";
 
+	@Column(name = "creationTime")
 	private Date creationTime;
 
-//	@IndexColumn(name="nodeId")
-//	@OrderBy("nodeId")
+	// @IndexColumn(name="nodeId")
+	// @OrderBy("nodeId")
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Set<PLabHost> hosts = null;
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Set<PLabSite> sites = null;
-
 
 	public PLabStore() {
 		// for hibernate serialization
@@ -48,7 +46,7 @@ import javax.persistence.Transient;
 		this.username = username;
 		this.id = slice.hashCode() + username.hashCode();
 	}
-	
+
 	public int getId() {
 		return id;
 	}
@@ -60,7 +58,6 @@ import javax.persistence.Transient;
 	public Date getCreationTime() {
 		return creationTime;
 	}
-
 
 	public String getSlice() {
 		return slice;
@@ -81,22 +78,21 @@ import javax.persistence.Transient;
 	public Set<PLabHost> getHosts() {
 		return hosts;
 	}
-	
+
 	@Transient
-	public SortedSet<PLabHost> getRunningHostsForThisSlice()
-	{
-		SortedSet<PLabHost> setHosts = new TreeSet<PLabHost>();
+	public Set<PLabHost> getRunningHostsForThisSlice() {
+		Set<PLabHost> setHosts = new HashSet<PLabHost>();
 		for (PLabHost h : hosts) {
 			if (h.isRegisteredForSlice() == true) {
-					if (h.getBootState().compareTo("boot") == 0) {
-						setHosts.add(h);
-					}
+				if (h.getBootState().compareTo("boot") == 0) {
+					System.out.println("Adding host to ready hosts: " + h.getHostname());
+					setHosts.add(h);
+				}
 			}
 		}
-		System.out.println("Running hosts number: " + setHosts.size());
+		System.out.println("Ready hosts number: " + setHosts.size());
 		return setHosts;
 	}
-	
 
 	public Set<PLabSite> getSites() {
 		return sites;
@@ -112,6 +108,36 @@ import javax.persistence.Transient;
 
 	public void setSites(Set<PLabSite> sites) {
 		this.sites = sites;
+	}
+
+	@Override
+	public int hashCode() {
+		int hash = 31;
+		return hash * id;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null || ! (obj instanceof PLabStore)) {
+			return false;
+		}
+		
+		PLabStore that = (PLabStore) obj;
+		
+		if (this.id != that.id) {
+			return false;
+		}
+		if (this.slice.compareTo(that.slice)!= 0) {
+			return false;
+		}
+		if (this.username.compareTo(that.username)!= 0) {
+			return false;
+		}
+		
+		return true;
 	}
 
 }

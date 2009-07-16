@@ -75,22 +75,22 @@ public abstract class Configuration {
 	public static final int DEFAULT_PORT = 2323;
 	public static final int DEFAULT_ID = 0;
 
-	protected static final String DEFAULT_BOOTSTRAP_IP = "localhost";
-	protected static final int DEFAULT_BOOTSTRAP_PORT = 20002;
-	protected static final int DEFAULT_BOOTSTRAP_ID = Integer.MAX_VALUE;
+	public static final String DEFAULT_BOOTSTRAP_IP = "localhost";
+	public static final int DEFAULT_BOOTSTRAP_PORT = 20002;
+	public static final int DEFAULT_BOOTSTRAP_ID = Integer.MAX_VALUE;
 
-	protected static final String DEFAULT_MONITOR_IP = "localhost";
-	protected static final int DEFAULT_MONITOR_PORT = 20001;
-	protected static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
+	public static final String DEFAULT_MONITOR_IP = "localhost";
+	public static final int DEFAULT_MONITOR_PORT = 20001;
+	public static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
 
-	protected static final int DEFAULT_EVICT_AFTER = 300*1000;
-	protected static final int DEFAULT_REFRESH_PERIOD = 30*1000;
-	protected static final int DEFAULT_RETRY_PERIOD = 30*1000;
-	protected static final int DEFAULT_RETRY_COUNT = 3;
+	public static final int DEFAULT_EVICT_AFTER = 300*1000;
+	public static final int DEFAULT_REFRESH_PERIOD = 30*1000;
+	public static final int DEFAULT_RETRY_PERIOD = 30*1000;
+	public static final int DEFAULT_RETRY_COUNT = 3;
 
-	protected static final int DEFAULT_WEB_PORT = 8080;
-	protected static final int DEFAULT_WEB_REQUEST_TIMEOUT_MS = 30*1000;
-	protected static final int DEFAULT_WEB_THREADS = 2;
+	public static final int DEFAULT_WEB_PORT = 8080;
+	public static final int DEFAULT_WEB_REQUEST_TIMEOUT_MS = 30*1000;
+	public static final int DEFAULT_WEB_THREADS = 2;
 
 //	protected static final int DEFAULT_CONTROLLER_PORT = 9090;
 //	protected static final int DEFAULT_CONTROLLER_REQUEST_TIMEOUT_MS = 10000;

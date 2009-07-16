@@ -103,8 +103,6 @@ public class ScpTest  {
 				Credentials cred = new SshCredentials("sics_grid4all", "", 
 						"/home/jdowling/.ssh/id_rsa", "");
 				Host host = new ExperimentHost("dight.sics.se");
-				
-				trigger(new SshConnectRequest(cred, host), sshComponent.getPositive(SshPort.class));
 
 				ScheduleTimeout st = new ScheduleTimeout(SSH_CONNECT_TIMEOUT);
 				SshConnectTimeout connectTimeout = new SshConnectTimeout(st);
@@ -112,6 +110,10 @@ public class ScpTest  {
 
 				UUID timerId = connectTimeout.getTimeoutId();
 				outstandingTimeouts.add(timerId);
+
+				
+				trigger(new SshConnectRequest(cred, timerId, host), sshComponent.getPositive(SshPort.class));
+
 				trigger(st, timer.getPositive(Timer.class));
 
 			}

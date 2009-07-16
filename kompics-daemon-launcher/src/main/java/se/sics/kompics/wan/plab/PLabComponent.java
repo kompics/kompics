@@ -9,7 +9,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,10 +17,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +32,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.security.cert.X509Certificate;
 
 import org.apache.ws.commons.util.NamespaceContextImpl;
 import org.apache.xmlrpc.XmlRpcException;
@@ -89,13 +89,16 @@ public class PLabComponent extends ComponentDefinition {
 
 	private volatile double progress = 0.0;
 
-	SortedSet<PLabHost> readyHosts = new ConcurrentSkipListSet<PLabHost>();
+//	private SortedSet<PLabHost> readyHosts = new TreeSet<PLabHost>(); 
+		//new ConcurrentSkipListSet<PLabHost>();
+	private Set<PLabHost> readyHosts = new HashSet<PLabHost>();
+	
+	
+	private String url = PlanetLabConfiguration.getPlcApiAddress();
 
-	String url = PlanetLabConfiguration.getPlcApiAddress();
+	private XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
 
-	XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-
-	XmlRpcClient client = new XmlRpcClient();
+	private XmlRpcClient client = new XmlRpcClient();
 
 	public PLabComponent() {
 
@@ -144,7 +147,7 @@ public class PLabComponent extends ComponentDefinition {
 
 				recoveryUpdate();
 
-//				updatePLabHostAttrs();
+				updatePLabHostAttrs();
 
 				remoteUpdateCoMonStats(false);
 
@@ -174,13 +177,17 @@ public class PLabComponent extends ComponentDefinition {
 		// new CoMonStatsComparator(CoMonStats.RESPTIME,
 		// CoMonStats.LIVESLICES));
 
-		if (this.readyHosts.size() < 10) {
+		if (this.readyHosts.size() < 1) {
 			System.out
 					.println("Under 10 hosts found locally, contacting planetlab.org for a list of hosts");
 			Set<PLabHost> setHosts = updateHosts(System.currentTimeMillis());
 			store.setHosts(setHosts);
+			logger.info("Number of hosts to save is: {}", setHosts.size());
 			pLabService.saveOrUpdate(store);
-			this.readyHosts = store.getRunningHostsForThisSlice();
+			this.readyHosts = new TreeSet<PLabHost>();
+			this.
+				store.getRunningHostsForThisSlice();
+			logger.info("Number of hosts now ready is: {}", this.readyHosts.size());
 		}
 
 	}
@@ -213,13 +220,15 @@ public class PLabComponent extends ComponentDefinition {
 			for (Integer nodeId : mapIpAddrs.keySet()) 
 			{
 				InetAddress addr = mapIpAddrs.get(nodeId);
-				for (PLabHost host : readyHosts) {
+				for (PLabHost host : store.getHosts()) {
 					if (host.getNodeId() == nodeId) {
 						host.setIp(addr);
 					}
 				}
 			}
-			
+			readyHosts = store.getRunningHostsForThisSlice();
+			pLabService.saveOrUpdate(store);
+			System.out.println("Updated the store with resolved IP addresses.");
 			
 		}
 	};
@@ -245,13 +254,13 @@ public class PLabComponent extends ComponentDefinition {
 				noIP.add(h);
 			}
 		}
-//		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
-//				PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS, noIP);
-//		dnsLookups.performLookups();
-//		dnsLookups.join();
 
-		Set<Integer> sliceNodes = getNodesForSlice();
-		updateSliceStatus(sliceNodes, readyHosts);
+		Map<Integer,String> hostAddrs = new HashMap<Integer,String>();
+		for (PLabHost h : noIP) {
+			hostAddrs.put(h.getNodeId(), h.getHostname());
+		}
+		DnsResolverRequest req = new DnsResolverRequest(hostAddrs);
+		trigger(req, dns.getPositive(DnsResolverPort.class));
 	}
 
 	private void updateSliceStatus(Set<Integer> sliceNodes, Set<PLabHost> hosts) {
@@ -290,7 +299,8 @@ public class PLabComponent extends ComponentDefinition {
 		store.setSites(sites);
 
 		pLabService.saveOrUpdate(store);
-		this.readyHosts = store.getRunningHostsForThisSlice();
+		this.readyHosts.addAll(store.getRunningHostsForThisSlice());
+		// 	new CoMonStatsComparator(CoMonStats.RESPTIME)
 	}
 
 	
@@ -300,10 +310,6 @@ public class PLabComponent extends ComponentDefinition {
 		Set<PLabHost> hosts = getNodes();
 		System.out.println("PLC host query done: " + time + "ms");
 
-		// start the dns resolver
-//		ParallelDNSLookup dnsLookups = new ParallelDNSLookup(
-//				PlanetLabConfiguration.DNS_RESOLVER_MAX_THREADS, hosts);
-//		dnsLookups.performLookups();
 
 		Map<Integer,String> hostAddrs = new HashMap<Integer,String>();
 		for (PLabHost h : hosts) {
@@ -314,16 +320,11 @@ public class PLabComponent extends ComponentDefinition {
 		
 		Set<Integer> sliceNodes = getNodesForSlice();
 		time = System.currentTimeMillis() - startTime;
-		System.out.println("PLC slice query done: " + time + "ms");
+		System.out.println("PLC nodes for this slice=" + sliceNodes.size() + ", time taken: " + time + "ms");
 
 		updateSliceStatus(sliceNodes, hosts);
 		
-		System.out.println("waiting for hostnames to get resolved");
-//		dnsLookups.join();
-
-		time = System.currentTimeMillis() - startTime;
-		System.out.println("dns queries done: " + time + "ms");
-
+		System.out.println("resolving IP addresses for " + hosts.size() + " hosts in background...");
 		return hosts;
 	}
 	
@@ -568,74 +569,74 @@ public class PLabComponent extends ComponentDefinition {
 		}
 	}
 
-	private class ParallelDNSLookup {
-		private final ExecutorService threadPool;
-
-		private final Set<PLabHost> setHosts;
-
-		private final ConcurrentLinkedQueue<Future<PLabHost>> tasks;
-
-		public ParallelDNSLookup(int numThreads, Set<PLabHost> setHosts) {
-			this.setHosts = new HashSet<PLabHost>(setHosts);
-
-			this.threadPool = Executors.newFixedThreadPool(numThreads);
-			this.tasks = new ConcurrentLinkedQueue<Future<PLabHost>>();
-		}
-
-		public void performLookups() {
-			int i = 0;
-			for (PLabHost host : setHosts) {
-				Future<PLabHost> task = threadPool.submit(new ResolveIPHandler(host, i++));
-				tasks.add(task);
-			}
-		}
-
-		public void join() {
-			Future<PLabHost> task;
-			try {
-				// for all tasks
-				while ((task = tasks.poll()) != null) {
-					// block until task is done
-					PLabHost result = (PLabHost) task.get();
-					if (result.getIp() != null) {
-						System.err.println(result.getIp());
-					}
-				}
-				store.setHosts(readyHosts);
-				pLabService.saveOrUpdate(store);
-				threadPool.shutdown();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			}
-
-		}
-	}
-
-	private class ResolveIPHandler implements Callable<PLabHost> {
-		private PLabHost host;
-
-		int num;
-
-		public ResolveIPHandler(PLabHost host, int num) {
-			this.host = host;
-			this.num = num;
-		}
-
-		public PLabHost call() {
-
-			try {
-				InetAddress addr = InetAddress.getByName(host.getHostname());
-				host.setIp(addr); // .getHostAddress()
-				return host;
-			} catch (UnknownHostException e) {
-				host.setIp(null);
-				return host;
-			}
-		}
-
-	}
+//	private class ParallelDNSLookup {
+//		private final ExecutorService threadPool;
+//
+//		private final Set<PLabHost> setHosts;
+//
+//		private final ConcurrentLinkedQueue<Future<PLabHost>> tasks;
+//
+//		public ParallelDNSLookup(int numThreads, Set<PLabHost> setHosts) {
+//			this.setHosts = new HashSet<PLabHost>(setHosts);
+//
+//			this.threadPool = Executors.newFixedThreadPool(numThreads);
+//			this.tasks = new ConcurrentLinkedQueue<Future<PLabHost>>();
+//		}
+//
+//		public void performLookups() {
+//			int i = 0;
+//			for (PLabHost host : setHosts) {
+//				Future<PLabHost> task = threadPool.submit(new ResolveIPHandler(host, i++));
+//				tasks.add(task);
+//			}
+//		}
+//
+//		public void join() {
+//			Future<PLabHost> task;
+//			try {
+//				// for all tasks
+//				while ((task = tasks.poll()) != null) {
+//					// block until task is done
+//					PLabHost result = (PLabHost) task.get();
+//					if (result.getIp() != null) {
+//						System.err.println(result.getIp());
+//					}
+//				}
+//				store.setHosts(readyHosts);
+//				pLabService.saveOrUpdate(store);
+//				threadPool.shutdown();
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			} catch (ExecutionException e) {
+//				e.printStackTrace();
+//			}
+//
+//		}
+//	}
+//
+//	private class ResolveIPHandler implements Callable<PLabHost> {
+//		private PLabHost host;
+//
+//		int num;
+//
+//		public ResolveIPHandler(PLabHost host, int num) {
+//			this.host = host;
+//			this.num = num;
+//		}
+//
+//		public PLabHost call() {
+//
+//			try {
+//				InetAddress addr = InetAddress.getByName(host.getHostname());
+//				host.setIp(addr); // .getHostAddress()
+//				return host;
+//			} catch (UnknownHostException e) {
+//				host.setIp(null);
+//				return host;
+//			}
+//		}
+//
+//	}
 
 	public class CoMonUpdater implements Runnable {
 
@@ -646,7 +647,7 @@ public class PLabComponent extends ComponentDefinition {
 
 		private HashMap<String, PLabHost> plHostMap;
 
-		public CoMonUpdater(SortedSet<PLabHost> hosts) {
+		public CoMonUpdater(Set<PLabHost> hosts) {
 			plHostMap = new HashMap<String, PLabHost>();
 
 			for (PLabHost host : hosts) {
@@ -717,9 +718,8 @@ public class PLabComponent extends ComponentDefinition {
 					}
 				}
 			}
-			progress = 1.0;
+//			progress = 1.0;
 
-			pLabService.saveOrUpdate(store);
 		}
 
 		public double getProgress() {

@@ -86,14 +86,16 @@ public class SshTest  {
 						"/home/jdowling/.ssh/id_rsa", "");
 				Host host = new ExperimentHost("planetlab3.ani.univie.ac.at");
 				
-				trigger(new SshConnectRequest(cred, host), sshComponent.getPositive(SshPort.class));
-
 				ScheduleTimeout st = new ScheduleTimeout(SSH_CONNECT_TIMEOUT);
 				SshConnectTimeout connectTimeout = new SshConnectTimeout(st);
 				st.setTimeoutEvent(connectTimeout);
 
 				UUID timerId = connectTimeout.getTimeoutId();
 				outstandingTimeouts.add(timerId);
+				
+				trigger(new SshConnectRequest(cred, timerId, host),  
+						sshComponent.getPositive(SshPort.class));
+
 				trigger(st, timer.getPositive(Timer.class));
 
 			}
