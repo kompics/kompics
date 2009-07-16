@@ -78,6 +78,10 @@ public class PLabStore {
 	public Set<PLabHost> getHosts() {
 		return hosts;
 	}
+	
+	public void addHosts(Set<PLabHost> hosts) {
+		this.hosts.addAll(hosts);
+	}
 
 	@Transient
 	public Set<PLabHost> getRunningHostsForThisSlice() {

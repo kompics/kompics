@@ -6,9 +6,9 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,15 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Vector;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -32,7 +25,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.security.cert.X509Certificate;
 
 import org.apache.ws.commons.util.NamespaceContextImpl;
 import org.apache.xmlrpc.XmlRpcException;
@@ -54,6 +46,8 @@ import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
+import se.sics.kompics.wan.plab.events.AddHostsToSliceRequest;
+import se.sics.kompics.wan.plab.events.AddHostsToSliceResponse;
 import se.sics.kompics.wan.plab.events.DnsResolverRequest;
 import se.sics.kompics.wan.plab.events.DnsResolverResponse;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
@@ -124,6 +118,7 @@ public class PLabComponent extends ComponentDefinition {
 		subscribe(handleUpdateCoMonStats, pLabPort);
 		subscribe(handleUpdateHostsAndSites, pLabPort);
 		subscribe(handleGetProgressRequest, pLabPort);
+		subscribe(handleAddHostsToSliceRequest, pLabPort);
 		
 		subscribe(handleDnsResolverResponse, dns.getPositive(DnsResolverPort.class));
 
@@ -232,6 +227,47 @@ public class PLabComponent extends ComponentDefinition {
 			
 		}
 	};
+	
+	
+	
+	private Handler<AddHostsToSliceRequest> handleAddHostsToSliceRequest = new Handler<AddHostsToSliceRequest>() {
+		public void handle(AddHostsToSliceRequest event) {
+
+			boolean res = addHostsToSlice(event.getHosts());
+			trigger(new AddHostsToSliceResponse(event, res), pLabPort);
+		}
+	};
+	
+	private boolean addHostsToSlice(Set<String> hosts)
+	{
+		
+		boolean success = false;
+		
+		Vector<String> nodesToAdd = new Vector<String>();
+
+		for (String host : hosts) {
+			nodesToAdd.add(host);
+			for (PLabHost h : store.getHosts()) {
+				if (h.getHostname().compareToIgnoreCase(host) == 0) {
+					h.setRegisteredForSlice(true);
+				}
+			}
+		}
+		Vector<Object> params = new Vector<Object>();
+
+		params.add(cred.getAuthMap());
+		params.add(cred.getSlice());
+		params.add(nodesToAdd);
+		Object res = this.executeRPC("SliceNodesAdd", params);
+		success = (Boolean) res;
+		
+		System.out.println(success + " : added " + nodesToAdd.size() + " new hosts to the slice");
+
+		pLabService.saveOrUpdate(store);
+		readyHosts = store.getRunningHostsForThisSlice();
+
+		return success;
+	}
 	
 	
 	private Handler<GetProgressRequest> handleGetProgressRequest = new Handler<GetProgressRequest>() {

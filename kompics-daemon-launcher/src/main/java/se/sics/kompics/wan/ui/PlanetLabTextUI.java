@@ -3,6 +3,7 @@ package se.sics.kompics.wan.ui;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,8 @@ import se.sics.kompics.wan.plab.PLabComponent;
 import se.sics.kompics.wan.plab.PLabHost;
 import se.sics.kompics.wan.plab.PLabPort;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
+import se.sics.kompics.wan.plab.events.AddHostsToSliceRequest;
+import se.sics.kompics.wan.plab.events.AddHostsToSliceResponse;
 import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
 import se.sics.kompics.wan.plab.events.PLabInit;
 import se.sics.kompics.wan.plab.events.UpdateCoMonStats;
@@ -159,6 +162,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		subscribe(handleSshHeartbeatResponse, ssh.getPositive(SshPort.class));
 		
 		subscribe(handleGetNodesForSliceResponse, plab.getPositive(PLabPort.class));
+		subscribe(handleAddHostsToSliceResponse, plab.getPositive(PLabPort.class));
 		
 		subscribe(handleCleanupConnections, timer.getPositive(Timer.class));
 	}
@@ -294,6 +298,16 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		}
 	};
 	
+	public Handler<AddHostsToSliceResponse> handleAddHostsToSliceResponse = 
+		new Handler<AddHostsToSliceResponse>() {
+		public void handle(AddHostsToSliceResponse event) 
+		{
+			System.out.println("Result of adding hosts to slice was: " + event.getHostStatus());
+		}
+	};
+	
+	
+	
 	public Handler<SshConnectTimeout> handleSshConnectTimeout = new Handler<SshConnectTimeout>() {
 		public void handle(SshConnectTimeout event) {
 			// XXX Check if the timer was cancelled
@@ -378,6 +392,9 @@ public class PlanetLabTextUI extends ComponentDefinition {
 					break;
 				case 4:
 					connectToAllHosts();
+					break;
+				case 5:
+					addHostsToSlice();
 					break;
 				case 6:
 					getBootstates();
@@ -507,6 +524,34 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			
 		}
 		
+		private void addHostsToSlice()
+		{
+			System.out.println();
+			System.out.println("Enter the name of the hosts to add to the slice.");
+			System.out.println("Enter 'x' to finish entering hosts");
+			String entered = scanner.next();
+			Set<String> hosts = new HashSet<String>();
+			while (entered.compareToIgnoreCase("x") != 0) {
+				boolean found = false;
+				for (PLabHost h : availableHosts) {
+					if (h.getHostname().compareToIgnoreCase(entered) == 0) {
+						found = true;
+					}
+				}
+				if (found == true) {
+					hosts.add(entered);
+				}
+				else {
+					System.out.println("You haven't downloaded this host. Invalid hostname.");
+				}
+				entered = scanner.next();
+			}
+			
+			AddHostsToSliceRequest req = new AddHostsToSliceRequest(hosts);
+			trigger(req, plab.getPositive(PLabPort.class));
+			
+		}
+		
 
 		private boolean selectHostsFile() {
 			boolean succeed = true;
@@ -567,7 +612,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			System.out.println("\t2) add a host to a slice.");
 			System.out.println("\t3) list hosts in slice.");
 			System.out.println("\t4) list planetlab sites using CoMon.");
-			System.out.println("\t5) connect to a host.");
+			System.out.println("\t5) add hosts to a slice.");
 			System.out.println("\t6) GET BOOT STATES.");
 			System.out.println("\t7) scp (copy) daemon jar file to hosts.");
 			System.out.println("\t8) .");
