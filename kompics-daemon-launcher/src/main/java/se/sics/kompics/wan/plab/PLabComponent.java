@@ -259,6 +259,7 @@ public class PLabComponent extends ComponentDefinition {
 		params.add(cred.getSlice());
 		params.add(nodesToAdd);
 		Object res = this.executeRPC("SliceNodesAdd", params);
+//		Object res = this.executeRPC("SliceNodesList", params);		
 //		Object res = this.executeRPC("UpdateSlice", params);
 		success = (Boolean) res;
 		
