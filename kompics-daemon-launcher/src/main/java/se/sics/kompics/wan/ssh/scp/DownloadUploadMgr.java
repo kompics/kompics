@@ -217,6 +217,7 @@ public class DownloadUploadMgr extends ComponentDefinition {
 				commandOutstandingFiles.put(commandId, filesOutstanding);
 			}
 
+			
 			// checkRemoteFile(session, commandResults, file);
 
 			// checkFile(event.)

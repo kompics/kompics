@@ -1068,6 +1068,7 @@ public class SshComponent extends ComponentDefinition {
 		}
 	};
 
+	
 	private String[] parseParameters(String parameters) {
 		String[] split = new String[0];
 		if (parameters.contains("\"") && parameters.contains("'")) {

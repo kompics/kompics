@@ -2,7 +2,6 @@ package se.sics.kompics.wan.ui;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -13,7 +12,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.mina.util.ConcurrentHashSet;
@@ -69,8 +67,11 @@ import se.sics.kompics.wan.ssh.events.SshConnectResponse;
 import se.sics.kompics.wan.ssh.events.SshHeartbeatRequest;
 import se.sics.kompics.wan.ssh.events.SshHeartbeatResponse;
 import se.sics.kompics.wan.ssh.events.UploadFileRequest;
+import se.sics.kompics.wan.ssh.events.UploadFileResponse;
+import se.sics.kompics.wan.ssh.scp.DownloadUploadMgr;
 import se.sics.kompics.wan.ssh.scp.DownloadUploadPort;
 import se.sics.kompics.wan.ssh.scp.ScpComponent;
+import se.sics.kompics.wan.ssh.scp.ScpPort;
 import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
 
@@ -82,6 +83,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 	private Component plab;
 	private Component master;
 	private Component ssh;
+	private Component downUp;
 	private Component scp;
 
 	private PlanetLabCredentials cred;
@@ -137,6 +139,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		master = create(Master.class);
 		ssh = create(SshComponent.class);
 		scp = create(ScpComponent.class);
+		downUp = create(DownloadUploadMgr.class);
+		
 		
 		getCredentials();
 
@@ -152,7 +156,9 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		connectToNetAndTimer(master);
 		connect(ssh.getNegative(Timer.class), timer.getPositive(Timer.class));
 
-		connect(ssh.getNegative(DownloadUploadPort.class), scp.getPositive(DownloadUploadPort.class));
+		// Connect Ssh -> DownloadUploadMgr -> Scp
+		connect(ssh.getNegative(DownloadUploadPort.class), downUp.getPositive(DownloadUploadPort.class));
+		connect(downUp.getNegative(ScpPort.class), scp.getPositive(ScpPort.class));
 		
 		// handle possible faults in the components
 		subscribe(handleFault, timer.getControl());
@@ -163,6 +169,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		subscribe(handleSshConnectResponse, ssh.getPositive(SshPort.class));
 		subscribe(handleSshHeartbeatResponse, ssh.getPositive(SshPort.class));
+		subscribe(handleUploadFileResponse, ssh.getPositive(SshPort.class));
 
 		subscribe(handleGetNodesInSliceResponse, plab.getPositive(PLabPort.class));
 		subscribe(handleGetNodesNotInSliceResponse, plab.getPositive(PLabPort.class));
@@ -356,6 +363,17 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		}
 	};
 
+	public Handler<UploadFileResponse> handleUploadFileResponse = new Handler<UploadFileResponse>() {
+		public void handle(UploadFileResponse event) {
+			
+			System.out.println("Received upload response : " + event.getFile().getAbsolutePath());
+			
+			ui.proceed();
+			
+		}
+	};
+	
+	
 	public Handler<RankHostsUsingCoMonResponse> handleRankHostsUsingCoMonResponse = new Handler<RankHostsUsingCoMonResponse>() {
 		public void handle(RankHostsUsingCoMonResponse event) {
 
@@ -704,8 +722,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 					int sessionId = plHost.getSessionId();
 
 					// kompics/
-					UploadFileRequest uploadJar = new UploadFileRequest(sessionId, file, "~/"
-							+ daemonJarFilename.substring(pos), true, 10 * 1000.0, true);
+					UploadFileRequest uploadJar = new UploadFileRequest(sessionId, file, "~/", true, 10 * 1000.0, true);
 
 					trigger(uploadJar, ssh.getPositive(SshPort.class));					
 				}
