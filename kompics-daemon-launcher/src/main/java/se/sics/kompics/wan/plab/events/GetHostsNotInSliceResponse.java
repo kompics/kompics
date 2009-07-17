@@ -6,21 +6,24 @@ import java.util.Set;
 import se.sics.kompics.Response;
 import se.sics.kompics.wan.plab.PLabHost;
 
-public class GetNodesResponse extends Response {
+public class GetHostsNotInSliceResponse extends Response {
 
 	private final Set<PLabHost> hosts;
 
-	public GetNodesResponse(GetNodesRequest request,
+	public GetHostsNotInSliceResponse(GetHostsNotInSliceRequest request,
 			Set<PLabHost> hosts) {
 		super(request);
-		this.hosts = new HashSet<PLabHost>(hosts);
+		this.hosts = new HashSet<PLabHost>();
+		for (PLabHost h : hosts) {
+			this.hosts.add(new PLabHost(h));
+		}
 	}
-	
+
+
 	/**
-	 * @return the hosts
+	 * @return the nodeIds
 	 */
 	public Set<PLabHost> getHosts() {
 		return hosts;
 	}
-
 }

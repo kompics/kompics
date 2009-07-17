@@ -40,7 +40,6 @@ public class SshTest  {
 
 	private static final int EVENT_COUNT = 1;
 	
-	
 	public static void setTestObj(SshTest testObj) {
 		TestSshComponent.testObj = testObj;
 	}
@@ -55,8 +54,6 @@ public class SshTest  {
 
 	public static class TestSshComponent extends ComponentDefinition {
 		
-//		private Positive<SshPort> sshPort;
-
 		private Component sshComponent;
 
 		private Component timer;

@@ -24,10 +24,11 @@ import se.sics.kompics.wan.plab.PLabStore;
  */
 public class PLabServiceTest {
 
-	private final static boolean MOCKED = false;
+	public final static boolean MOCKED = false;
 	
-	private static ApplicationContext springCtx; 
 	Mockery jmockCtx = new Mockery();
+
+	private static ApplicationContext springCtx; 
 
 
 	@SuppressWarnings("unchecked")

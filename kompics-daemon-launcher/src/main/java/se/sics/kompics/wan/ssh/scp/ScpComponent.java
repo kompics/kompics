@@ -147,7 +147,7 @@ public class ScpComponent extends ComponentDefinition {
 	public ScpComponent() {
 		subscribe(handleScpGetFileRequest, scpPort);
 		subscribe(handleScpPutFileRequest, scpPort);
-
+		
 	}
 
 

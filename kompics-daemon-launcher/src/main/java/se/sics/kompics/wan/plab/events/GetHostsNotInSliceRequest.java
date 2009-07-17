@@ -4,12 +4,15 @@ package se.sics.kompics.wan.plab.events;
 import se.sics.kompics.Request;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
 
-public class GetNodesRequest extends Request {
+public class GetHostsNotInSliceRequest extends Request {
 	
 	private final PlanetLabCredentials cred;
 	
-	public GetNodesRequest(PlanetLabCredentials cred) {
+	private final boolean running;
+	
+	public GetHostsNotInSliceRequest(PlanetLabCredentials cred, boolean running) {
 		this.cred = cred;
+		this.running = running;
 	}
 	
 	/**
@@ -17,5 +20,9 @@ public class GetNodesRequest extends Request {
 	 */
 	public PlanetLabCredentials getCred() {
 		return cred;
+	}
+	
+	public boolean isRunning() {
+		return running;
 	}
 }

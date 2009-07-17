@@ -22,8 +22,8 @@ import se.sics.kompics.wan.plab.PLabComponent;
 import se.sics.kompics.wan.plab.PLabHost;
 import se.sics.kompics.wan.plab.PLabPort;
 import se.sics.kompics.wan.plab.PlanetLabCredentials;
-import se.sics.kompics.wan.plab.events.GetNodesForSliceRequest;
-import se.sics.kompics.wan.plab.events.GetNodesForSliceResponse;
+import se.sics.kompics.wan.plab.events.GetHostsInSliceRequest;
+import se.sics.kompics.wan.plab.events.GetHostsInSliceResponse;
 import se.sics.kompics.wan.plab.events.PLabInit;
 import se.sics.kompics.wan.plab.events.QueryPLabSitesResponse;
 import se.sics.kompics.wan.ssh.ExperimentHost;
@@ -99,21 +99,21 @@ public class PLabTest  {
 		public Handler<Start> handleStart = new Handler<Start>() {
 			public void handle(Start event) {
 
-				GetNodesForSliceRequest req = new GetNodesForSliceRequest(cred);
+				GetHostsInSliceRequest req = new GetHostsInSliceRequest(cred, true);
 				trigger(req, pLabComponent.getPositive(PLabPort.class));
 
 			}
 		};
 		
-		public Handler<GetNodesForSliceResponse> handleGetNodesForSliceResponse 
-		= new Handler<GetNodesForSliceResponse>() {
-			public void handle(GetNodesForSliceResponse event) {
+		public Handler<GetHostsInSliceResponse> handleGetNodesForSliceResponse 
+		= new Handler<GetHostsInSliceResponse>() {
+			public void handle(GetHostsInSliceResponse event) {
 				
 				hosts = event.getHosts();
 				
 				for (PLabHost h : hosts) {
 
-					trigger(new SshConnectRequest(cred, UUID.fromString("0"), new ExperimentHost(h)), 
+					trigger(new SshConnectRequest(cred, UUID.randomUUID(), new ExperimentHost(h)), 
 							sshComponent.getPositive(SshPort.class));
 
 					try {
