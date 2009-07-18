@@ -28,6 +28,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	public static final String PROP_HTTP_PROXY_PASSWORD = "HttpProxyPassword";
 	public static final String PROP_PLC_API_ADDRESS = "PlcApiAddress";
 	public static final String PROP_USE_GUI = "gui";
+	public static final String PROP_NUM_ACTIVE_TRANSFERS = "ConcurrentFileTransfers";
 	
 	public static final String PROP_PL_USER = "Username";
 	public static final String PROP_PL_PASSWORD = "AuthString";
@@ -49,6 +50,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	public static final String DEFAULT_HTTP_PROXY_USERNAME = "";
 	public static final String DEFAULT_HTTP_PROXY_PASSWORD = "";
 	public static final boolean DEFAULT_USE_GUI = false;
+	public static final int 	DEFAULT_NUM_ACTIVE_TRANSFERS = 5;
 	
 	public static final int 	DEFAULT_MAX_RETRIES = 2;
 	
@@ -74,6 +76,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	protected Option httpProxyUsernameOption;
 	protected Option httpProxyPasswordOption;
 	protected Option guiOption;
+	protected Option numActiveTransfersOption;
 	protected Option plUserOption;
 	protected Option plPasswordOption;
 	protected Option plAuthMethodOption;
@@ -86,7 +89,7 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	
 	// creates the queue used to limit the number of concurrent network intensive
 	// threads. The queue is fair meaning that it operates in a FIFO manner
-	private static Semaphore networkIntensiveTicket = new Semaphore(10, true);
+	private static Semaphore networkIntensiveTicket=null;
 
 	private static long startTime = System.currentTimeMillis();
 	
@@ -134,6 +137,12 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		guiOption.setArgName("gui");
 		options.addOption(guiOption);
 		
+		
+		numActiveTransfersOption = new Option("activeTransfers", true, "number of simultaneous file transfers allowed (higher values risk identifying your host as spamming/DoS-attack).");
+		numActiveTransfersOption.setArgName("number");
+		options.addOption(numActiveTransfersOption);
+		
+		
 		plUserOption = new Option("user", true, "planetlab user account (e.g., username@yourinstitution.domain)");
 		plUserOption.setArgName("user");
 		options.addOption(plUserOption);
@@ -143,24 +152,24 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		plPasswordOption.setArgName("password");
 		options.addOption(plPasswordOption);
 
-		plAuthMethodOption = new Option("authMethod", true, "planetlab authentication method.");
-		plAuthMethodOption.setArgName("authMethod");
+		plAuthMethodOption = new Option("authMethod", true, "planetlab authentication method (password|session|gpg|anonymous)");
+		plAuthMethodOption.setArgName("value");
 		options.addOption(plAuthMethodOption);
 
 		plSliceOption = new Option("slice", true, "Planetlab slice name.");
-		plSliceOption.setArgName("slice");
+		plSliceOption.setArgName("name");
 		options.addOption(plSliceOption);
 
-		plRoleOption = new Option("role", true, "Planetlab user role (from options: user, tech, pi)");
-		plRoleOption.setArgName("role");
+		plRoleOption = new Option("role", true, "Planetlab user role: user|tech|pi");
+		plRoleOption.setArgName("name");
 		options.addOption(plRoleOption);
 
 		plPrivateKeyFileOption = new Option("keyfile", true, "Private ssh key registered with Planetlab user account.");
-		plPrivateKeyFileOption.setArgName("keyfile");
+		plPrivateKeyFileOption.setArgName("filename");
 		options.addOption(plPrivateKeyFileOption);
 
-		plPrivateKeyPasswordOption = new Option("keypasswd", true, "Password (if one) for private ssh key registered with Planetlab user account.");
-		plPrivateKeyPasswordOption.setArgName("keypasswd");
+		plPrivateKeyPasswordOption = new Option("keypass", true, "Password (if one) for private ssh key registered with Planetlab user account.");
+		plPrivateKeyPasswordOption.setArgName("string");
 		options.addOption(plPrivateKeyPasswordOption);
 
 	}
@@ -202,6 +211,11 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 		if (line.hasOption(guiOption.getOpt())) {
 			String pass = new String(line.getOptionValue(guiOption.getOpt()));
 			compositeConfig.setProperty(PROP_USE_GUI, pass);
+		}
+		
+		if (line.hasOption(numActiveTransfersOption.getOpt())) {
+			Integer num = new Integer(line.getOptionValue(numActiveTransfersOption.getOpt()));
+			compositeConfig.setProperty(PROP_NUM_ACTIVE_TRANSFERS, num);
 		}
 		
 		if (line.hasOption(plUserOption.getOpt())) {
@@ -280,6 +294,11 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	{
 		return configuration.compositeConfig.getBoolean(PROP_USE_GUI, DEFAULT_USE_GUI);
 	}
+	
+	static public int getNumberConcurrentFileTransfers()
+	{
+		return configuration.compositeConfig.getInt(PROP_NUM_ACTIVE_TRANSFERS, DEFAULT_NUM_ACTIVE_TRANSFERS);
+	}
 
 	
 	static public String getUsername()
@@ -328,11 +347,17 @@ public class PlanetLabConfiguration extends MasterConfiguration {
 	}
 	
 	public static int getNetworkIntensiveTicket() throws InterruptedException {
+		if (networkIntensiveTicket == null) {
+			networkIntensiveTicket = new Semaphore(getNumberConcurrentFileTransfers(), true);
+		}
 		networkIntensiveTicket.acquire();
 		return networkIntensiveTicket.availablePermits();
 	}
 	
 	public static int releaseNetworkIntensiveTicket() {
+		if (networkIntensiveTicket == null) {
+			throw new IllegalStateException("You must call getNetworkIntensiveTicket() before calling releaseNetworkIntensiveTicket.");
+		}
 		networkIntensiveTicket.release();
 		return networkIntensiveTicket.availablePermits();
 	}

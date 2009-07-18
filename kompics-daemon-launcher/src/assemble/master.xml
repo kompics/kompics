@@ -1,0 +1,29 @@
+<assembly>
+	<id>master</id>
+	<formats>
+		<format>jar</format>
+	</formats>
+	<componentDescriptors>
+		<componentDescriptor>src/assemble/component.xml</componentDescriptor>
+	</componentDescriptors>
+
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>/lib</outputDirectory>
+
+			<excludes>
+				<!-- <exclude>groupId:artifactId</exclude>  -->
+				<exclude>xalan:xalan</exclude>
+			</excludes>
+		</dependencySet>
+	</dependencySets>
+
+  <fileSets>
+    <fileSet>
+      <excludes>
+      <exclude></exclude>
+      </excludes>
+    </fileSet>
+  </fileSets>
+
+</assembly>
