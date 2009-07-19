@@ -6,7 +6,6 @@ import java.util.List;
 
 import se.sics.kompics.Request;
 import se.sics.kompics.wan.config.Configuration;
-import se.sics.kompics.wan.daemon.Daemon;
 import se.sics.kompics.wan.util.PomUtils;
 
 public abstract class Job extends Request implements Serializable {
@@ -101,22 +100,22 @@ public abstract class Job extends Request implements Serializable {
 	{
 		String groupPath = PomUtils.groupIdToPath(groupId);
 		String sepStr = PomUtils.sepStr();
-    	String pomFileName = Daemon.KOMPICS_HOME + sepStr + groupPath + sepStr +
-		artifactId + sepStr + version + sepStr + Daemon.POM_FILENAME;
+    	String pomFileName = Configuration.KOMPICS_HOME + sepStr + groupPath + sepStr +
+		artifactId + sepStr + version + sepStr + Configuration.POM_FILENAME;
     	return pomFileName;
 	}
 
 	public String getPomDirname()
 	{
 		String pomFilename = getPomFilename();
-		int idx = pomFilename.lastIndexOf(Daemon.POM_FILENAME, 0);
+		int idx = pomFilename.lastIndexOf(Configuration.POM_FILENAME, 0);
 		return pomFilename.substring(0, idx);
 	}
 
 	public String getDummyJarWithDependenciesName()
 	{
 		String sepStr = PomUtils.sepStr();
-		String jarFileName = Daemon.KOMPICS_HOME + sepStr 
+		String jarFileName = Configuration.KOMPICS_HOME + sepStr 
 		+ PomUtils.groupIdToPath(groupId) + sepStr +
 		getArtifactId() + sepStr + getVersion() + sepStr 
 		+ "target" + sepStr + "dummy-0.1-jar-with-dependencies.jar";
@@ -131,7 +130,7 @@ public abstract class Job extends Request implements Serializable {
 	public String getJarFromRepoFilename()
 	{
 		String sepStr = PomUtils.sepStr();
-		String jarFileName = Daemon.MAVEN_REPO_LOCAL + sepStr 
+		String jarFileName = Configuration.MAVEN_REPO_LOCAL + sepStr 
 		+ PomUtils.groupIdToPath(groupId) + sepStr +
 		getArtifactId() + sepStr + getVersion() + sepStr 
 		+ getArtifactId() + "-" + getVersion() + ".jar";

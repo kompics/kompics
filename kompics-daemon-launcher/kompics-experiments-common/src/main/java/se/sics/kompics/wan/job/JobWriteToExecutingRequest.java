@@ -1,7 +1,7 @@
 package se.sics.kompics.wan.job;
 
 import se.sics.kompics.Request;
-import se.sics.kompics.wan.daemon.JobWriteToExecutingRequestMsg;
+import se.sics.kompics.wan.masterdaemon.JobWriteToExecutingRequestMsg;
 
 /**
  * 

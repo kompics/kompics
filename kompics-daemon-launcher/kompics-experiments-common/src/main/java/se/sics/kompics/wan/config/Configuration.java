@@ -1,5 +1,6 @@
 package se.sics.kompics.wan.config;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -44,6 +45,11 @@ public abstract class Configuration {
 	public static final String MONITOR_CONFIG_FILE = "config/monitor.properties";
 	public static final String EXPERIMENT_CONFIG_FILE = "config/experiment.properties";
 
+	public static final String POM_FILENAME = "pom.xml";
+	public static final String KOMPICS_HOME;
+	public static final String MAVEN_REPO_LOCAL;
+	public static final String SCENARIO_FILENAME = "scenario";
+	
 	public static final String PROP_IP = "ip";
 	public static final String PROP_PORT = "port";
 	public static final String PROP_ID = "id";
@@ -67,7 +73,43 @@ public abstract class Configuration {
 	public static final String PROP_EXPERIMENT_NUM_PEERS = "peers.number";
 	public static final String PROP_EXPERIMENT_REPO_ID = "repo.id";
 	public static final String PROP_EXPERIMENT_REPO_URL = "repo.url";
-	public static final String PROP_EXPERIMENT_NUM_WORKERS = "number.workers";	
+	public static final String PROP_EXPERIMENT_NUM_WORKERS = "number.workers";
+	
+	
+	static {
+		String kHome = System.getProperty("kompics.home");
+		String userHome = System.getProperty("user.home");
+		if (userHome != null && kHome == null) {
+			System.setProperty("kompics.home", new File(userHome + "/.kompics/").getAbsolutePath());
+		} else if (userHome == null && kHome == null) {
+			throw new IllegalStateException(
+					"kompics.home and user.home environment variables not set.");
+		}
+		KOMPICS_HOME = System.getProperty("kompics.home");
+
+		if (new File(Configuration.KOMPICS_HOME).exists() == false) {
+			if (new File(Configuration.KOMPICS_HOME).mkdirs() == false) {
+				logger.warn("Could not create directory: "
+						+ Configuration.KOMPICS_HOME);
+			}
+		}
+
+		String mavenHome = System.getProperty("maven.repo.local");
+		if (mavenHome == null) {
+			System.setProperty("maven.repo.local", new File(userHome + "/.m2/repository").getAbsolutePath());
+		}
+		MAVEN_REPO_LOCAL = System.getProperty("maven.repo.local");
+
+		if (new File(Configuration.MAVEN_REPO_LOCAL).exists() == false) {
+			if ((new File(Configuration.MAVEN_REPO_LOCAL).mkdirs()) == false) {
+				logger.warn("Couldn't set directory for Maven Local Repository: "
+						+ Configuration.MAVEN_REPO_LOCAL + "\nCheck file permissions for this directory.");
+			}
+		}
+
+	}
+	
+	
 	/*
 	 * Non-publicly accessible
 	 */

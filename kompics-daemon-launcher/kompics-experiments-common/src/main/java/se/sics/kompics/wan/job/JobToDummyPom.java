@@ -27,7 +27,7 @@ import org.w3c.dom.Text;
 import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.SAXException;
 
-import se.sics.kompics.wan.daemon.Daemon;
+import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.util.PomUtils;
 
 
@@ -115,17 +115,17 @@ public class JobToDummyPom extends Job implements Serializable {
 			// Prepare the DOM document for writing
 			Source source = new DOMSource(xmlDoc);
 
-			if (new File(Daemon.KOMPICS_HOME, filePath).exists() == false) {
+			if (new File(Configuration.KOMPICS_HOME, filePath).exists() == false) {
 
-				if ((new File(Daemon.KOMPICS_HOME, filePath).mkdirs()) == false) {
+				if ((new File(Configuration.KOMPICS_HOME, filePath).mkdirs()) == false) {
 					throw new DummyPomConstructionException(
-							"Couldn't create directories for pom.xml file : " + Daemon.KOMPICS_HOME
+							"Couldn't create directories for pom.xml file : " + Configuration.KOMPICS_HOME
 									+ sepStr + filePath
 									+ "\nCheck file permissions for this directory.");
 				}
 			}
-			String fileName = filePath + sepStr + Daemon.POM_FILENAME;
-			File file = new File(Daemon.KOMPICS_HOME, fileName);
+			String fileName = filePath + sepStr + Configuration.POM_FILENAME;
+			File file = new File(Configuration.KOMPICS_HOME, fileName);
 
 			file.createNewFile();
 
@@ -144,7 +144,7 @@ public class JobToDummyPom extends Job implements Serializable {
 			throw new DummyPomConstructionException(e.getMessage());
 		} catch (IOException e) { // file couldn't be created.
 			throw new DummyPomConstructionException(
-					"Couldn't create pom.xml file : " + Daemon.KOMPICS_HOME
+					"Couldn't create pom.xml file : " + Configuration.KOMPICS_HOME
 							+ sepStr + filePath
 							+ "\nCheck file permissions for this directory.");				
 		}
