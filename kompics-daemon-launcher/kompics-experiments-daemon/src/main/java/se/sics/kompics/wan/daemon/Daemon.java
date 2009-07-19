@@ -27,10 +27,15 @@ import se.sics.kompics.wan.daemon.indexer.IndexerInit;
 import se.sics.kompics.wan.daemon.indexer.JobsFound;
 import se.sics.kompics.wan.daemon.indexer.ListJobsLoadedResponse;
 import se.sics.kompics.wan.daemon.masterclient.MasterClient;
+import se.sics.kompics.wan.daemon.masterclient.MasterClientConfig;
 import se.sics.kompics.wan.daemon.masterclient.MasterClientInit;
 import se.sics.kompics.wan.daemon.masterclient.MasterClientPort;
 import se.sics.kompics.wan.daemon.maven.Maven;
 import se.sics.kompics.wan.daemon.maven.MavenPort;
+import se.sics.kompics.wan.daemonmaster.ConnectMasterRequest;
+import se.sics.kompics.wan.daemonmaster.ConnectMasterResponse;
+import se.sics.kompics.wan.daemonmaster.DisconnectMasterRequest;
+import se.sics.kompics.wan.daemonmaster.ShutdownDaemonRequestMsg;
 import se.sics.kompics.wan.job.DummyPomConstructionException;
 import se.sics.kompics.wan.job.Job;
 import se.sics.kompics.wan.job.JobExited;
@@ -45,11 +50,7 @@ import se.sics.kompics.wan.job.JobStartResponse;
 import se.sics.kompics.wan.job.JobStopRequest;
 import se.sics.kompics.wan.job.JobStopResponse;
 import se.sics.kompics.wan.job.JobWriteToExecutingRequest;
-import se.sics.kompics.wan.master.ConnectMasterRequest;
-import se.sics.kompics.wan.master.ConnectMasterResponse;
-import se.sics.kompics.wan.master.DisconnectMasterRequest;
-import se.sics.kompics.wan.master.MasterClientConfig;
-import se.sics.kompics.wan.master.ShutdownDaemonRequestMsg;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 
 public class Daemon extends ComponentDefinition {
 

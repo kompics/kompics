@@ -5,6 +5,7 @@ import java.util.Set;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.wan.job.Job;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 
 public class JobsFoundMsg extends DaemonResponseMessage {
 

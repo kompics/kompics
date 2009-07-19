@@ -4,6 +4,7 @@ import java.util.List;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.wan.job.Job;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 import se.sics.kompics.wan.util.PomUtils;
 
 /**

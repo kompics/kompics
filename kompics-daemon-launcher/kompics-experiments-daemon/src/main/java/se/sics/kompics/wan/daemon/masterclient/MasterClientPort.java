@@ -1,10 +1,10 @@
 package se.sics.kompics.wan.daemon.masterclient;
 
 import se.sics.kompics.PortType;
-import se.sics.kompics.wan.master.ConnectMasterRequest;
-import se.sics.kompics.wan.master.ConnectMasterResponse;
-import se.sics.kompics.wan.master.DisconnectMasterRequest;
-import se.sics.kompics.wan.master.ShutdownDaemonRequest;
+import se.sics.kompics.wan.daemonmaster.ConnectMasterRequest;
+import se.sics.kompics.wan.daemonmaster.ConnectMasterResponse;
+import se.sics.kompics.wan.daemonmaster.DisconnectMasterRequest;
+import se.sics.kompics.wan.daemonmaster.ShutdownDaemonRequest;
 
 public class MasterClientPort extends PortType {
 		{

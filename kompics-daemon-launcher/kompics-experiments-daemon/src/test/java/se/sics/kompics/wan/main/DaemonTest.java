@@ -31,7 +31,6 @@ import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.DaemonConfiguration;
 import se.sics.kompics.wan.config.MasterAddressConfiguration;
 import se.sics.kompics.wan.daemon.Daemon;
-import se.sics.kompics.wan.daemon.DaemonAddress;
 import se.sics.kompics.wan.daemon.DaemonInit;
 import se.sics.kompics.wan.daemon.JobExitedMsg;
 import se.sics.kompics.wan.daemon.JobLoadResponseMsg;
@@ -50,6 +49,7 @@ import se.sics.kompics.wan.job.JobRemoveRequest;
 import se.sics.kompics.wan.job.JobRemoveResponse;
 import se.sics.kompics.wan.job.JobStartResponse;
 import se.sics.kompics.wan.job.JobStopResponse;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 
 /**
  * Unit test for simple App.

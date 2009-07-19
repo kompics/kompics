@@ -1,8 +1,7 @@
 package se.sics.kompics.wan.daemon.masterclient;
 
 import se.sics.kompics.Init;
-import se.sics.kompics.wan.daemon.DaemonAddress;
-import se.sics.kompics.wan.master.MasterClientConfig;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 
 
 /**

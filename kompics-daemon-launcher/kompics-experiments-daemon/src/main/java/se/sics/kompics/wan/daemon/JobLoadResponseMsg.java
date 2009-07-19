@@ -2,6 +2,7 @@ package se.sics.kompics.wan.daemon;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.wan.job.JobLoadResponse;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 
 public class JobLoadResponseMsg extends DaemonResponseMessage {
 

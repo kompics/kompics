@@ -12,20 +12,20 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
+import se.sics.kompics.p2p.bootstrap.client.ClientRefreshPeer;
 import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
-import se.sics.kompics.wan.daemon.DaemonAddress;
-import se.sics.kompics.wan.master.ClientRefreshPeer;
-import se.sics.kompics.wan.master.ClientRetryRequest;
-import se.sics.kompics.wan.master.ConnectMasterRequest;
-import se.sics.kompics.wan.master.ConnectMasterRequestMsg;
-import se.sics.kompics.wan.master.ConnectMasterResponse;
-import se.sics.kompics.wan.master.ConnectMasterResponseMsg;
-import se.sics.kompics.wan.master.DisconnectMasterRequest;
-import se.sics.kompics.wan.master.DisconnectMasterRequestMsg;
-import se.sics.kompics.wan.master.KeepAliveDaemonMsg;
+import se.sics.kompics.wan.daemonmaster.ClientRetryRequest;
+import se.sics.kompics.wan.daemonmaster.ConnectMasterRequest;
+import se.sics.kompics.wan.daemonmaster.ConnectMasterRequestMsg;
+import se.sics.kompics.wan.daemonmaster.ConnectMasterResponse;
+import se.sics.kompics.wan.daemonmaster.ConnectMasterResponseMsg;
+import se.sics.kompics.wan.daemonmaster.DisconnectMasterRequest;
+import se.sics.kompics.wan.daemonmaster.DisconnectMasterRequestMsg;
+import se.sics.kompics.wan.daemonmaster.KeepAliveDaemonMsg;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 
 public class MasterClient extends ComponentDefinition {
 
