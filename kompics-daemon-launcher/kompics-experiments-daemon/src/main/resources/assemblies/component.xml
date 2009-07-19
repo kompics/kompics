@@ -1,0 +1,16 @@
+<component>
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>/lib</outputDirectory>
+			<!--
+				<includes> <include>application:logging</include>
+				<include>application:core</include>
+				<include>application:utils</include> </includes>
+			-->
+			<excludes>
+				<exclude>org.apache.xmlrpc:xmlrpc-server</exclude>
+				<exclude>org.apache.xmlrpc:xmlrpc-client</exclude>
+			</excludes>
+		</dependencySet>
+	</dependencySets>
+</component>

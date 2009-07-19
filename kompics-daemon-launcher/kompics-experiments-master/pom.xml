@@ -4,9 +4,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
 	<version>0.0.1-SNAPSHOT</version>
-	<artifactId>kompics-daemon-launcher</artifactId>
+	<artifactId>kompics-experiments-master</artifactId>
 	<packaging>jar</packaging>
-	<name>kompics-daemon-launcher</name>
+	<name>kompics-experiments-master</name>
 
 	<properties>
 		<!--

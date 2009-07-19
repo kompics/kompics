@@ -1,0 +1,30 @@
+<assembly>
+	<id>daemon</id>
+	<formats>
+		<format>jar</format>
+	</formats>
+	<componentDescriptors>
+		<componentDescriptor>src/assemble/component.xml</componentDescriptor>
+	</componentDescriptors>
+
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>/lib</outputDirectory>
+
+			<excludes>
+				<exclude>org.apache.xmlrpc:xmlrpc-server</exclude>
+				<exclude>org.apache.xmlrpc:xmlrpc-client</exclude>
+				<exclude>org.hibernate:hibernate</exclude>
+				<exclude>org.hibernate:hibernate-annotations</exclude>
+				<exclude>hsqldb:hsqldb</exclude>
+				<exclude>mysql:mysql-connector-java</exclude>
+				<exclude>javax.persistence:persistence-api</exclude>
+				<exclude>javax.transaction:jta</exclude>
+				<exclude>org.springframework:spring</exclude>
+				<exclude>org.springframework:spring-context</exclude>
+				<exclude>ch.ethz.ganymed:ganymed-ssh2</exclude>
+			</excludes>
+		</dependencySet>
+	</dependencySets>
+
+</assembly>

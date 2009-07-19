@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-experiments</artifactId>
 	<packaging>pom</packaging>
-	<version>0.4.2.2-SNAPSHOT</version>
+	<version>0.0.1-SNAPSHOT</version>
 
 	<parent>
 		<groupId>se.sics.kompics</groupId>
@@ -21,7 +21,7 @@
 
 
 	<modules>
-		<module>kompics-experiments-daemon</module>
+		<module>kompics-experiments-daemon</module>		 
 		<module>kompics-experiments-master</module>
 		<module>kompics-experiments-logger</module>
 		<module>kompics-experiments-common</module>
