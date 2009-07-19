@@ -11,7 +11,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import se.sics.kompics.wan.config.ChordConfiguration;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.CyclonConfiguration;
-import se.sics.kompics.wan.config.DaemonConfiguration;
 import se.sics.kompics.wan.config.MasterConfiguration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
 
@@ -60,9 +59,9 @@ public class ConfigTest extends TestCase {
 			cc.getPeer0Address();
 			cc.getPort();
 
-			DaemonConfiguration dc = (DaemonConfiguration) Configuration.init(args, DaemonConfiguration.class);
-			dc.getDaemonRetryPeriod();
-			dc.getDaemonRetryCount();
+//			DaemonConfiguration dc = (DaemonConfiguration) Configuration.init(args, DaemonConfiguration.class);
+//			dc.getDaemonRetryPeriod();
+//			dc.getDaemonRetryCount();
 
 			
 			PlanetLabConfiguration pc = (PlanetLabConfiguration) 

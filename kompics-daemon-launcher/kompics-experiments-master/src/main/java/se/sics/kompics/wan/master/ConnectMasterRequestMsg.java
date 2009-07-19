@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
-import se.sics.kompics.wan.daemon.DaemonAddress;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 
 
 public final class ConnectMasterRequestMsg extends Message {

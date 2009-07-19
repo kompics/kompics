@@ -2,7 +2,7 @@ package se.sics.kompics.wan.master;
 
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;
-import se.sics.kompics.wan.daemon.DaemonAddress;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 
 public final class CacheEvictDaemon extends Timeout {
 

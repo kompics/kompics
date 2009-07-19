@@ -1,8 +1,8 @@
 package se.sics.kompics.wan.master;
 
 import se.sics.kompics.address.Address;
-import se.sics.kompics.wan.daemon.DaemonAddress;
-import se.sics.kompics.wan.daemon.DaemonRequestMessage;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
+import se.sics.kompics.wan.masterdaemon.DaemonRequestMessage;
 
 public final class ShutdownDaemonRequestMsg extends DaemonRequestMessage {
 

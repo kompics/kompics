@@ -2,7 +2,7 @@ package se.sics.kompics.wan.master;
 
 import java.util.UUID;
 
-import se.sics.kompics.wan.daemon.DaemonAddress;
+import se.sics.kompics.wan.masterdaemon.DaemonAddress;
 
 
 public final class DaemonEntry implements Comparable<DaemonEntry> {

@@ -7,7 +7,12 @@
 	<artifactId>kompics-experiments-master</artifactId>
 	<packaging>jar</packaging>
 	<name>kompics-experiments-master</name>
-
+	<parent>
+		<groupId>se.sics.kompics</groupId>
+		<artifactId>kompics-experiments</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	
 	<properties>
 		<!--
 			To change your version of Kompics, edit the kompics.version value
@@ -18,6 +23,18 @@
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-experiments-common</artifactId>
+			<version>${version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-experiments-logger</artifactId>
+			<version>${version}</version>
+			<scope>compile</scope>
+		</dependency>
 
 		<!--
 			<dependency> <groupId>org.xerial</groupId>
