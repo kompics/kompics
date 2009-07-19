@@ -235,10 +235,13 @@
 							</mainClass>
 						</manifest>
 					</archive>
+					<!-- 
+					This seems to just put all jars in a /lib directory!
 					<descriptors>
-						<descriptor>src/assemble/daemon.xml</descriptor>
-						<descriptor>src/assemble/master.xml</descriptor>
+						<descriptor>src/main/resourcse/assemblies/daemon.xml</descriptor>
+						<descriptor>src/main/resourcse/assemblies/master.xml</descriptor>
 					</descriptors>
+					 -->
 				</configuration>
 			</plugin>
 			<plugin>
