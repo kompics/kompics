@@ -123,31 +123,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-embedder</artifactId>
-			<version>3.0-alpha-2</version>
-			<scope>compile</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.maven.mercury</groupId>
-					<artifactId>mercury-plexus</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.maven</groupId>
-					<artifactId>maven-reporting-api</artifactId>
-				</exclusion>
-			</exclusions>
-
-		</dependency>
-
-		<!--
-			<dependency> <groupId>se.sics.kompics</groupId>
-			<artifactId>kompics-distributed-system-launcher </artifactId>
-			<version>${kompics.version}</version> <scope>compile</scope>
-			</dependency>
-		-->
-
-		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-component-mina-network
 			</artifactId>
