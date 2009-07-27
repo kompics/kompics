@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
@@ -12,19 +13,17 @@
 	</parent>
 	
 	<name>Kompics Experiments</name>
-	<description>
-	Kompics experiments is a set of services to deploy and run Kompics programs
+	<description>Kompics experiments is a set of services to deploy and run Kompics programs
 	over a set of distributed hosts in a LAN testbed or a Wide Area Network testbed. 
-	There is specific support for planetlab.
-	</description>
+	There is specific support for planetlab.</description>
 	<inceptionYear>2009</inceptionYear>
 
 
 	<modules>
 		<module>kompics-experiments-daemon</module>		 
-		<module>kompics-experiments-master</module>
 		<module>kompics-experiments-logger</module>
 		<module>kompics-experiments-common</module>
 		<module>kompics-experiments-slave</module>
+		<module>kompics-experiments-master</module>
 	</modules>
 </project>
