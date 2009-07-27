@@ -47,10 +47,15 @@ public class SocketServer {
 	File dir;
 
 	public static void main(String argv[]) {
-		if (argv.length == 3)
+		if (argv.length == 3) {
 			init(argv[0], argv[1], argv[2]);
-		else
+		}
+		else if (argv.length == 2) {
+			init(argv[0], "", argv[1]);
+		}
+		else {
 			usage("Wrong number of arguments.");
+		}
 
 		try {
 			cat.info("Listening on port " + port);
@@ -79,7 +84,7 @@ public class SocketServer {
 		System.err.println(msg);
 		System.err.println("Usage: java " + SocketServer.class.getName()
 				+ " port configFile directory");
-		System.exit(1);
+		System.exit(0);
 	}
 
 	static void init(String portStr, String configFile, String dirStr) {

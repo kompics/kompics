@@ -8,7 +8,7 @@ public class TestSocketServer {
 	static Logger logger = Logger.getLogger(TestSocketServer.class);
 	
 	public TestSocketServer() {
-		// TODO Auto-generated constructor stub
+		
 	}
 	
 	@org.junit.Test
