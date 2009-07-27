@@ -1,4 +1,4 @@
-package se.sics.kompics.wan.main;
+package se.sics.kompics.wan;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -13,7 +13,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.Priority;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.net.SocketNode;
-import org.apache.log4j.net.SocketServer;
 import org.apache.log4j.spi.LoggerRepository;
 import org.apache.log4j.spi.RootLogger;
 
@@ -33,13 +32,13 @@ import org.apache.log4j.spi.RootLogger;
  * limitations under the License.
  */
 
-public class SocketServerMain {
+public class SocketServer {
 
 	static String GENERIC = "generic";
 	static String CONFIG_FILE_EXT = ".lcf";
 
 	static Logger cat = Logger.getLogger(SocketServer.class);
-	static SocketServerMain server;
+	static SocketServer server;
 	static int port;
 
 	// key=inetAddress, value=hierarchy
@@ -97,10 +96,10 @@ public class SocketServerMain {
 		if (!dir.isDirectory()) {
 			usage("[" + dirStr + "] is not a directory.");
 		}
-		server = new SocketServerMain(dir);
+		server = new SocketServer(dir);
 	}
 
-	public SocketServerMain(File directory) {
+	public SocketServer(File directory) {
 		this.dir = directory;
 		hierarchyMap = new Hashtable(11);
 	}
