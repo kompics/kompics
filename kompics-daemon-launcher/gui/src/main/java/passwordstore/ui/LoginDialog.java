@@ -13,15 +13,16 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 class LoginDialog extends JDialog implements ActionListener,
 		PropertyChangeListener {
 	private String enteredSliceName = null;
-	private String enteredPassword = null;
+	private char[] enteredPassword = null;
 	
 	private JTextField sliceNameField;
-	private JTextField passwordField;
+	private JPasswordField passwordField;
 	
 	private JLabel sliceName;
 	private JLabel password;
@@ -50,10 +51,10 @@ class LoginDialog extends JDialog implements ActionListener,
 		password = new JLabel("password");
 
 		sliceNameField = new JTextField(30);
-		passwordField = new JTextField(30);
+		passwordField = new JPasswordField(30);
 
 		// Create an array of the text and components to be displayed.
-		String msgString1 = "Planetlab Details";
+		String msgString1 = "Please login to Planetlab";
 		Object[] array = { msgString1, sliceName, sliceNameField, password, passwordField};
 
 		// Create an array specifying the number of dialog buttons
@@ -122,7 +123,7 @@ class LoginDialog extends JDialog implements ActionListener,
 
 			if (btnString1.equals(value)) {
 				enteredSliceName = sliceNameField.getText();
-				enteredPassword = passwordField.getText();
+				enteredPassword = passwordField.getPassword();
 				
 //					// we're done; clear and dismiss the dialog
 //					clearAndHide();
@@ -130,8 +131,8 @@ class LoginDialog extends JDialog implements ActionListener,
 					sliceNameField.selectAll();
 					passwordField.selectAll();
 					JOptionPane.showMessageDialog(LoginDialog.this,
-							"Sorry, \"" + enteredSliceName + "\" "
-									+ "couldn't be logged in.\n",
+							"enteredSliceName" + ":" + new String(enteredPassword)
+									+ " couldn't be logged in.\n",
 							"Try again", JOptionPane.ERROR_MESSAGE);
 					enteredSliceName = null;
 					enteredPassword = null;
