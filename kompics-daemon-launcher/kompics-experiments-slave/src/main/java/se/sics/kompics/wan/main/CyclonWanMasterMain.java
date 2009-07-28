@@ -35,7 +35,6 @@ import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.CyclonConfiguration;
-import se.sics.kompics.wan.master.Master;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.jetty.JettyWebServer;
@@ -103,7 +102,7 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 	public CyclonWanMasterMain() throws UnknownHostException, InterruptedException {
 		// Master.setSimulationPortType(CyclonSimulatorPort.class);
 		// create
-		Component master = create(Master.class);
+//		Component master = create(Master.class);
 		Component jettyWebServer = create(JettyWebServer.class);
 		Component bootstrapServer = create(BootstrapServer.class);
 		Component monitorServer = create(CyclonMonitorServer.class);
@@ -167,28 +166,28 @@ public final class CyclonWanMasterMain extends ComponentDefinition {
 		}
 
 		// connect
-		connect(bootstrapServer.getNegative(Network.class), master.getPositive(Network.class),
-				new MessageDestinationFilter(bootConfiguration.getBootstrapServerAddress()));
-		connect(bootstrapServer.getNegative(Timer.class), master.getPositive(Timer.class));
-		connect(bootstrapServer.getPositive(Web.class), jettyWebServer.getNegative(Web.class),
-				new WebRequestDestinationFilter(bootConfiguration.getBootstrapServerAddress()
-						.getId()));
-
-		connect(monitorServer.getNegative(Network.class), master.getPositive(Network.class),
-				new MessageDestinationFilter(monitorConfiguration.getMonitorServerAddress()));
-		connect(monitorServer.getNegative(Timer.class), master.getPositive(Timer.class));
-		connect(monitorServer.getPositive(Web.class), jettyWebServer.getNegative(Web.class),
-				new WebRequestDestinationFilter(monitorConfiguration.getMonitorServerAddress()
-						.getId()));
-
-		connect(cyclonSimulator.getNegative(Network.class), master.getPositive(Network.class));
-		connect(cyclonSimulator.getNegative(Timer.class), master.getPositive(Timer.class));
-		connect(cyclonSimulator.getPositive(Web.class), jettyWebServer.getNegative(Web.class));
-		connect(cyclonSimulator.getNegative(CyclonSimulatorPort.class), master
-				.getPositive(CyclonSimulatorPort.class));
-
-		connect(master.getNegative(EventuallyPerfectFailureDetector.class), fd
-				.getPositive(EventuallyPerfectFailureDetector.class));
+//		connect(bootstrapServer.getNegative(Network.class), master.getPositive(Network.class),
+//				new MessageDestinationFilter(bootConfiguration.getBootstrapServerAddress()));
+//		connect(bootstrapServer.getNegative(Timer.class), master.getPositive(Timer.class));
+//		connect(bootstrapServer.getPositive(Web.class), jettyWebServer.getNegative(Web.class),
+//				new WebRequestDestinationFilter(bootConfiguration.getBootstrapServerAddress()
+//						.getId()));
+//
+//		connect(monitorServer.getNegative(Network.class), master.getPositive(Network.class),
+//				new MessageDestinationFilter(monitorConfiguration.getMonitorServerAddress()));
+//		connect(monitorServer.getNegative(Timer.class), master.getPositive(Timer.class));
+//		connect(monitorServer.getPositive(Web.class), jettyWebServer.getNegative(Web.class),
+//				new WebRequestDestinationFilter(monitorConfiguration.getMonitorServerAddress()
+//						.getId()));
+//
+//		connect(cyclonSimulator.getNegative(Network.class), master.getPositive(Network.class));
+//		connect(cyclonSimulator.getNegative(Timer.class), master.getPositive(Timer.class));
+//		connect(cyclonSimulator.getPositive(Web.class), jettyWebServer.getNegative(Web.class));
+//		connect(cyclonSimulator.getNegative(CyclonSimulatorPort.class), master
+//				.getPositive(CyclonSimulatorPort.class));
+//
+//		connect(master.getNegative(EventuallyPerfectFailureDetector.class), fd
+//				.getPositive(EventuallyPerfectFailureDetector.class));
 	}
 
 }
