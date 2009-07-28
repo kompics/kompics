@@ -1,0 +1,11 @@
+<archetype>
+	<id>kompics-port-archetype</id>
+	<sources>
+		<source>src/main/java/Port.java</source>
+		<source>src/main/java/EventIn.java</source>
+		<source>src/main/java/EventOut.java</source>
+	</sources>
+	<resources></resources>
+	<testSources></testSources>
+	<testResources></testResources>
+</archetype>

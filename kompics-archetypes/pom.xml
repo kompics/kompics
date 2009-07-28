@@ -3,21 +3,22 @@
 	<parent>
 		<groupId>se.sics.kompics</groupId>
 		<artifactId>kompics-parent-pom</artifactId>
-		<version>0.4.1</version>
+		<version>0.4.2.1</version>
 	</parent>
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-archetypes</artifactId>
 	<packaging>pom</packaging>  
-	<version>0.4.2-SNAPSHOT</version>
+	<version>0.4.2.2-SNAPSHOT</version>
 	<name>Parent for Kompics archetypes (archetypes are templates for creating projects).</name>
 	<modules>
 		<module>kompics-archetype-basic</module>	
 		<module>kompics-archetype-p2p</module>
 		<module>kompics-archetype-dl</module>
+		<module>kompics-port-archetype</module>
 	</modules>
 	
 	<properties>
-			<kompics.version>0.4.2-SNAPSHOT</kompics.version>
+			<kompics.version>0.4.2.1</kompics.version>
 	</properties>
 
 	<dependencies>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archetype-descriptor name="kompics-port-archetype">
+	<requiredProperties>
+		<requiredProperty key="kompicsVersion">
+			<defaultValue>${version}</defaultValue>
+		</requiredProperty>
+	</requiredProperties>
+
+	<fileSets>
+		<fileSet filtered="true" packaged="true">
+			<directory>src/main/java</directory>
+			<includes>
+				<include>**/*.java</include>
+			</includes>
+		</fileSet>
+		<fileSet filtered="true" packaged="true">
+			<directory>src/test/java</directory>
+			<includes>
+				<include>**/*.java</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+</archetype-descriptor>
