@@ -5,9 +5,11 @@
 package passwordstore.model;
 
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.URI;
 
 import passwordstore.beansx.BeanBase;
+import se.sics.kompics.wan.ssh.Host;
 
 /**
  * HostEntry represents an account on a particular system. Each
@@ -17,14 +19,16 @@ import passwordstore.beansx.BeanBase;
  *
  * @version $Revision$
  */
-public class HostEntry extends BeanBase implements Serializable {
+public class NodeEntry extends BeanBase implements Host, Serializable {
     
 	private static final long serialVersionUID = -6341540793343799943L;
 	
     public static enum DaemonStatus {INSTALLED_NOT_RUNNING, INSTALLED_RUNNING, NOT_INSTALLED};
 	
 	private String host;
-    private String user;
+	private InetAddress ip;
+	
+	private String user;
     private String password;
     
     private String keyFile;
@@ -32,6 +36,8 @@ public class HostEntry extends BeanBase implements Serializable {
     
     private boolean connected;
      
+    private int sessionId;
+    
     private DaemonStatus  daemonStatus;
     
     private String notes;
@@ -109,8 +115,8 @@ public class HostEntry extends BeanBase implements Serializable {
         return imagePath;
     }
     
-    public HostEntry clone() {
-        HostEntry entry = new HostEntry();
+    public NodeEntry clone() {
+        NodeEntry entry = new NodeEntry();
         entry.host = host;
         entry.user = user;
         entry.password = password;
@@ -158,6 +164,64 @@ public class HostEntry extends BeanBase implements Serializable {
     	DaemonStatus oldStatus = this.daemonStatus;
 		this.daemonStatus = daemonStatus;
 		firePropertyChange("daemonStatus", oldStatus, this.daemonStatus);
+		
+	}
+
+	@Override
+	public int compareTo(Host host) {
+		return this.getHostname().compareTo(host.getHostname());
+	}
+
+	@Override
+	public String getConnectFailedPolicy() {
+		return null;
+	}
+
+	@Override
+	public String getHostname() {
+		return getHost();
+	}
+
+	@Override
+	public InetAddress getIp() {
+//		InetAddress addr=null;
+//		try {
+//			addr = InetAddress.getByName(host);
+//		} catch (UnknownHostException e) {
+//			e.printStackTrace();
+//		}
+//		return addr;
+		return ip;
+	}
+
+	@Override
+	public int getSessionId() {
+		return sessionId;
+	}
+
+	@Override
+	public void setConnectFailedPolicy(String connectFailedPolicy) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setHostname(String hostname) {
+		setHost(hostname);
+	}
+
+	@Override
+	public void setIp(InetAddress ip) {
+		InetAddress oldIp = this.ip;
+		this.ip = ip;
+		firePropertyChange("ip", oldIp, this.ip);
+	}
+
+	@Override
+	public void setSessionId(int sessionId) {
+		int oldSessionId = this.sessionId;
+		this.sessionId = sessionId;
+		firePropertyChange("sessionId", oldSessionId, this.sessionId);
 		
 	}
 }

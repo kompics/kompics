@@ -34,6 +34,7 @@ import javax.swing.Action;
 import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -42,6 +43,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -58,6 +60,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.ProgressBarUI;
 import javax.swing.text.Document;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -160,6 +163,10 @@ public class Controller {
     private boolean changingFilterText;
 
     private boolean inSandbox;
+
+    
+    private JProgressBar progressBar;
+    
     
     static {
         DataFlavor flavor = null;
@@ -539,6 +546,15 @@ public class Controller {
 //        }
     }
     
+    private void createProgressBar(JFrame frame, int lengthOfTask) {
+    	
+    	progressBar = new JProgressBar(0, lengthOfTask);
+    	progressBar.setValue(0);
+    	progressBar.setStringPainted(true);
+
+    }
+    
+    
     // Creates and populates the menu for the app
     private void createMenu(JFrame frame) {
         // NOTE: notice that many of the actions in here are null, they
@@ -655,12 +671,23 @@ public class Controller {
     }
     
     private void createUI(JFrame frame) {
-        JTabbedPane tp = new JTabbedPane();
+        progressBar = new javax.swing.JProgressBar();
+//        progressBar.setName("progressBar");
+//        progressBar.setVisible(true);
+//        addComponent(progressBar, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE).
+
+        LoginDialog loginDialog = new LoginDialog(frame, "Planetlab login");
+        loginDialog.pack();
+        loginDialog.setVisible(true);
+        
+    	
+    	JTabbedPane tp = new JTabbedPane();
         JScrollPane entrySP = new JScrollPane(entryList);
         entrySP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         // PENDING: localize
         tp.addTab(Application.getResourceAsString("tab.details"), createDetailsPanel());
         tp.addTab(Application.getResourceAsString("tab.notes"), null);
+        tp.addTab(Application.getResourceAsString("tab.status"), createStatusPanel());
         tp.addChangeListener(new TabbedPaneChangeHandler(tp));
 
         JLabel filterLabel = new JLabel(Application.getResourceAsString(
@@ -678,6 +705,7 @@ public class Controller {
           addComponent(entrySP, 100, 400, Integer.MAX_VALUE).
           addComponent(tp);
         frameLayout.setHorizontalGroup(hGroup);
+
         
         GroupLayout.SequentialGroup vGroup = frameLayout.createSequentialGroup();
         vGroup.
@@ -687,6 +715,10 @@ public class Controller {
           addComponent(entrySP, 100, 200, Integer.MAX_VALUE).
           addComponent(tp, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE);
         frameLayout.setVerticalGroup(vGroup);
+        
+        
+
+        
     }
     
     private Component createNotesPanel() {
@@ -759,6 +791,55 @@ public class Controller {
               addComponent(visualizer)));
         return panel;
     }
+    
+    private Component createStatusPanel() {
+        JPanel buttonWrapper = new JPanel(new BorderLayout());
+        buttonWrapper.setOpaque(false);
+        JButton connect = new JButton("Connect");
+        buttonWrapper.add(connect);
+//        buttonWrapper.setBorder(new DropShadowBorder(Color.BLACK, 0, 5, .5f, 12, false, true, true, true));
+        // PENDING: localize
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        JLabel hostLabel = new JLabel(Application.getResourceAsString("label.host"));
+        JLabel accountLabel = new JLabel(Application.getResourceAsString("label.account"));
+        JLabel passwordLabel = new JLabel(Application.getResourceAsString("label.password"));
+        GroupLayout layout = new GroupLayout(panel);
+        layout.setAutoCreateContainerGaps(true);
+        layout.setAutoCreateGaps(true);
+        panel.setLayout(layout);
+        GroupLayout.SequentialGroup hg = layout.createSequentialGroup();
+        layout.setHorizontalGroup(hg);
+        hg.
+          addComponent(buttonWrapper, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE).
+          addGroup(layout.createParallelGroup().
+            addComponent(hostLabel).
+            addComponent(accountLabel).
+            addComponent(passwordLabel)).
+          addGroup(layout.createParallelGroup().
+            addComponent(hostTF).
+            addComponent(userTF).
+            addComponent(passwordTF).
+            addComponent(visualizer));
+        
+        GroupLayout.ParallelGroup vg = layout.createParallelGroup();
+        layout.setVerticalGroup(vg);
+        vg.
+          addComponent(buttonWrapper, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE).
+          addGroup(layout.createSequentialGroup().
+            addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).
+              addComponent(hostLabel).
+              addComponent(hostTF)).
+            addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).
+              addComponent(accountLabel).
+              addComponent(userTF)).
+            addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).
+              addComponent(passwordLabel).
+              addComponent(passwordTF).
+              addComponent(visualizer)));
+        return panel;
+    }
+    
     
     private void createEntryList() {
         // Model set later on.
