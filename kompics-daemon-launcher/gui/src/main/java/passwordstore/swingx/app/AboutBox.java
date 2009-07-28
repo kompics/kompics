@@ -49,7 +49,7 @@ public final class AboutBox {
             imageLoc = null;
         }
         if (imageLoc == null) {
-            imageLoc = "resources/aboutBox-background.jpg";
+            imageLoc = "aboutBox-background.jpg";
         }
         backgroundLabel.setIcon(new javax.swing.ImageIcon(
                 getClass().getResource(imageLoc)));
