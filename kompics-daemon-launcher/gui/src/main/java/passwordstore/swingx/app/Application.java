@@ -277,12 +277,12 @@ public abstract class Application implements Thread.UncaughtExceptionHandler {
     /**
      * Returns the key for loading the resources for the Application.
      * This implementation returns 
-     * <code>getClass().getName().resources.Resources</code>.
+     * <code>getClass().getName().Resources</code>.
      *
      * @return the name used to locate the Applications ResourceBundle
      */
     protected String getResourceBundleName() {
-        return getClass().getPackage().getName() + ".resources.Resources";
+        return getClass().getPackage().getName() + ".Resources";
     }
 
     /**

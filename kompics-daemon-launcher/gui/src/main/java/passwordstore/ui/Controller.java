@@ -522,14 +522,14 @@ public class Controller {
     private void createModel() {
         model = new HostModel();
         model.load(getClass().getResourceAsStream(
-                "/passwordstore/ui/resources/default/default.xml"));
+                "/passwordstore/ui/default/default.xml"));
         for (HostEntry entry : model.getHostEntries()) {
             URI imageURI = entry.getImagePath();
             if ("default".equals(imageURI.getScheme())) {
                 String path = imageURI.getPath();
                 try {
                     URL url = getClass().getResource(
-                            "/passwordstore/ui/resources/default" + path);
+                            "/passwordstore/ui/default" + path);
                     entry.setImagePath(url.toURI());
                 } catch (URISyntaxException ex) {
                 }

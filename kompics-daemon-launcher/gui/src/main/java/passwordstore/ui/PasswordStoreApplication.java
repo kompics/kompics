@@ -51,7 +51,7 @@ public class PasswordStoreApplication extends Application {
     protected void init() {
         frame = new JFrame(getResourceBundle().getString("frame.title"));
         frame.setIconImage(new ImageIcon(
-                getClass().getResource("resources/Lock128x128.png")).getImage());
+                getClass().getResource("Lock128x128.png")).getImage());
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -75,7 +75,7 @@ public class PasswordStoreApplication extends Application {
             System.setProperty("apple.laf.useScreenMenuBar", "true");
             System.setProperty("com.apple.mrj.application.apple.menu.about.name",
                     ResourceBundle.getBundle(PasswordStoreApplication.class.getPackage().getName() +
-                    ".resources.Resources").getString("frame.title"));
+                    ".Resources").getString("frame.title"));
         } catch (SecurityException e) {
         }
         new PasswordStoreApplication().start();
