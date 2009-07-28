@@ -1,6 +1,5 @@
 package se.sics.kompics.wan.master;
 
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,6 +32,7 @@ import se.sics.kompics.wan.masterdaemon.JobLoadResponseMsg;
 import se.sics.kompics.wan.masterdaemon.JobStartRequestMsg;
 import se.sics.kompics.wan.masterdaemon.JobStopRequestMsg;
 import se.sics.kompics.wan.masterdaemon.JobsFoundMsg;
+import se.sics.kompics.wan.ssh.Host;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.WebResponse;
@@ -54,13 +54,13 @@ public class Master extends ComponentDefinition {
 	};
 
 	Negative<MasterPort> masterPort = negative(MasterPort.class);
-	
+
 	Positive<Network> net = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 	Negative<Web> web = negative(Web.class);
-	
+
 	private HashSet<UUID> outstandingTimeouts;
-		
+
 	/**
 	 * (DaemonAddress, Cache-entry-for-daemon)
 	 */
@@ -74,13 +74,13 @@ public class Master extends ComponentDefinition {
 	/**
 	 * (ip-addr(hostname), <jobIds>)
 	 */
-	private HashMap<Integer, TreeSet<Integer>> loadedHostJobs; 
-	
+	private HashMap<Integer, TreeSet<Integer>> loadedHostJobs;
+
 	/**
 	 * (jobId, Job)
 	 */
 	private HashMap<Integer, Job> jobs;
-	
+
 	private long evictAfter;
 	private Address self;
 	private String webAddress;
@@ -92,9 +92,9 @@ public class Master extends ComponentDefinition {
 	public Master() {
 		this.registeredDaemons = new ArrayList<DaemonEntry>();
 		this.loadedHostJobs = new HashMap<Integer, TreeSet<Integer>>();
-		this.jobs = new HashMap<Integer,Job>();
+		this.jobs = new HashMap<Integer, Job>();
 		this.cacheEpoch = 1L;
-		
+
 		outstandingTimeouts = new HashSet<UUID>();
 
 		subscribe(handleInit, control);
@@ -116,22 +116,22 @@ public class Master extends ComponentDefinition {
 		subscribe(handleStartJobOnHosts, masterPort);
 		subscribe(handleStopJobOnHosts, masterPort);
 		subscribe(handleShutdownDaemonRequest, masterPort);
-		
+
 	}
 
 	private Handler<MasterInit> handleInit = new Handler<MasterInit>() {
 		public void handle(MasterInit event) {
 
 			self = event.getMaster();
-			
+
 			bootConfig = event.getBootConfig();
 			monitorConfig = event.getMonitorConfig();
 
 			evictAfter = event.getBootConfig().getCacheEvictAfter();
 
 			webPort = event.getBootConfig().getClientWebPort();
-			webAddress = "http://" + self.getIp().getHostAddress() + ":" + webPort + "/"
-					+ self.getId() + "/";
+			webAddress = "http://" + self.getIp().getHostAddress() + ":"
+					+ webPort + "/" + self.getId() + "/";
 
 			logger.debug("Started");
 			dumpCacheToLog();
@@ -143,10 +143,9 @@ public class Master extends ComponentDefinition {
 		}
 	};
 
-
 	private Handler<PrintConnectedDameons> handlePrintConnectedDameons = new Handler<PrintConnectedDameons>() {
 		public void handle(PrintConnectedDameons event) {
-				dumpCacheToLog();
+			dumpCacheToLog();
 		}
 	};
 
@@ -154,258 +153,249 @@ public class Master extends ComponentDefinition {
 		public void handle(PrintLoadedJobs event) {
 
 			int daemonId = event.getDaemonId();
-			
-			if (loadedHostJobs.size() == 0)
-			{
+
+			if (loadedHostJobs.size() == 0) {
 				logger.info("No loaded jobs for daemon {}", daemonId);
-			}
-			else
-			{
+			} else {
 				logger.info("======== Start loaded jobs ========");
-				
+
 				TreeSet<Integer> jobIds = loadedHostJobs.get(daemonId);
-				for (Integer i : jobIds)
-				{
-					logger.info("Job {} at {} (" + getDaemonIpFromId(daemonId)+")", 
-							i.toString(), daemonId 
-							);
+				for (Integer i : jobIds) {
+					logger.info("Job {} at {} (" + getDaemonIpFromId(daemonId)
+							+ ")", i.toString(), daemonId);
 				}
 				logger.info("======== End loaded jobs ========");
 			}
 		}
 	};
 
-	
-	private List<DaemonAddress> getDaemonsWithLoadedJob(int jobId)
-	{
+	private List<DaemonAddress> getDaemonsWithLoadedJob(int jobId) {
 		List<DaemonAddress> daemonsFound = new ArrayList<DaemonAddress>();
-		for (DaemonEntry d: registeredDaemons)
-		{
-			TreeSet<Integer> loadedJobsAtD = loadedHostJobs.get(d.getDaemonAddress().getDaemonId());
+		for (DaemonEntry d : registeredDaemons) {
+			TreeSet<Integer> loadedJobsAtD = loadedHostJobs.get(d
+					.getDaemonAddress().getDaemonId());
 			if (loadedJobsAtD != null) {
-				if (loadedJobsAtD.contains(jobId))
-				{
+				if (loadedJobsAtD.contains(jobId)) {
 					daemonsFound.add(d.getDaemonAddress());
 				}
 			}
 		}
 		return daemonsFound;
 	}
-	
+
 	private Handler<PrintDaemonsWithLoadedJob> handlePrintDaemonsWithLoadedJob = new Handler<PrintDaemonsWithLoadedJob>() {
 		public void handle(PrintDaemonsWithLoadedJob event) {
 			int jobId = event.getJobId();
-			
+
 			List<DaemonAddress> daemonsFound = getDaemonsWithLoadedJob(jobId);
 
-			if (daemonsFound.size() == 0)
-			{
+			if (daemonsFound.size() == 0) {
 				logger.info("No daemons found that have loaded job " + jobId);
-			}
-			else {
+			} else {
 
-				logger.info("======== {} daemons Found with loaded job {} ========", daemonsFound.size(), jobId);
+				logger
+						.info(
+								"======== {} daemons Found with loaded job {} ========",
+								daemonsFound.size(), jobId);
 
-				for (DaemonAddress d : daemonsFound)
-				{
+				for (DaemonAddress d : daemonsFound) {
 					logger.info(d.toString());
 				}
-				logger.info("======== End daemons Found with loaded job {} ========", jobId);
+				logger
+						.info(
+								"======== End daemons Found with loaded job {} ========",
+								jobId);
 			}
 		}
 	};
-	
+
 	private Handler<ShutdownDaemonRequest> handleShutdownDaemonRequest = new Handler<ShutdownDaemonRequest>() {
 		public void handle(ShutdownDaemonRequest event) {
 
-			
-			for (DaemonEntry dest : registeredDaemons)
-			{
-				trigger(new ShutdownDaemonRequestMsg(self, dest.getDaemonAddress()), net);
-			}	
+			for (DaemonEntry dest : registeredDaemons) {
+				trigger(new ShutdownDaemonRequestMsg(self, dest
+						.getDaemonAddress()), net);
+			}
 		}
 	};
 
-	
 	private Handler<StartJobOnHosts> handleStartJobOnHosts = new Handler<StartJobOnHosts>() {
 		public void handle(StartJobOnHosts event) {
 			int jobId = event.getJobId();
 			List<DaemonAddress> daemonsFound = getDaemonsWithLoadedJob(jobId);
-			
-			logger.info("Starting job. Num daemons found {} ", daemonsFound.size());
-			for (DaemonAddress dest : daemonsFound)
-			{
+
+			logger.info("Starting job. Num daemons found {} ", daemonsFound
+					.size());
+			for (DaemonAddress dest : daemonsFound) {
 				logger.info("Starting job {} at {}", jobId, dest);
-				trigger(new JobStartRequestMsg(jobId, event.getNumPeersPerHost(), 
-						scenario, self, dest), net);
+				trigger(new JobStartRequestMsg(jobId, event
+						.getNumPeersPerHost(), scenario, self, dest), net);
 			}
 		}
 	};
-	
+
 	private Handler<StopJobOnHosts> handleStopJobOnHosts = new Handler<StopJobOnHosts>() {
 		public void handle(StopJobOnHosts event) {
 			int jobId = event.getJobId();
 			List<DaemonAddress> daemonsFound = getDaemonsWithLoadedJob(jobId);
-			
-			logger.info("Stopping job. Num daemons found {} ", daemonsFound.size());
-			for (DaemonAddress dest : daemonsFound)
-			{
+
+			logger.info("Stopping job. Num daemons found {} ", daemonsFound
+					.size());
+			for (DaemonAddress dest : daemonsFound) {
 				logger.info("Stopping job {} at {}", jobId, dest);
 				trigger(new JobStopRequestMsg(jobId, self, dest), net);
 			}
 		}
 	};
-	
+
 	private Handler<InstallJobOnHosts> handleInstallJobOnHosts = new Handler<InstallJobOnHosts>() {
 		public void handle(InstallJobOnHosts event) {
-//			if (event.getHosts().size() == 0)
-//			{
-//				logger.warn("No hosts selected to install job on!");
-//				return;
-//			}
-			
+			if (event.getHosts().size() == 0) {
+				logger.warn("No hosts selected to install job on!");
+				return;
+			}
+
 			jobs.put(event.getId(), event);
 			
-			for (DaemonEntry dest : registeredDaemons)
-			{
-				JobLoadRequestMsg job = new JobLoadRequestMsg(event, event.isHideMavenOutput(), 
-						self, dest.getDaemonAddress());
-				trigger(job, net);
-				logger.info("Installing job {} on {}", job.getArtifactId(), dest);
+			for (Host h : event.getHosts()) {
+
+				for (DaemonEntry dest : registeredDaemons) {
+					// XXX this assumes they have the same hostname - may not
+					// always work
+					if (dest.getHostname().compareTo(h.getHostname()) == 0) {
+						JobLoadRequestMsg job = new JobLoadRequestMsg(event,
+								event.isHideMavenOutput(), self, dest
+										.getDaemonAddress());
+						trigger(job, net);
+						logger.info("Installing job {} on {}", job
+								.getArtifactId(), dest);
+					}
+				}
+
 			}
+
 		}
 	};
-	
+
 	private Handler<JobsFoundMsg> handleJobsFoundMsg = new Handler<JobsFoundMsg>() {
 		public void handle(JobsFoundMsg event) {
-			
+
 			Set<Job> jobSet = event.getSetJobs();
-			
-			logger.info("Job(s) found on daemon {} :", event.getSetJobs().size(), event.getDaemonId());
-			for (Job job : jobSet)
-			{
+
+			logger.info("Job(s) found on daemon {} :", event.getSetJobs()
+					.size(), event.getDaemonId());
+			for (Job job : jobSet) {
 				logger.info("{}", job.getId());
 			}
-			
-			DaemonAddress src = new DaemonAddress(event.getDaemonId(), event.getSource());
+
+			DaemonAddress src = new DaemonAddress(event.getDaemonId(), event
+					.getSource());
 			addJobs(src, jobSet);
 		}
 	};
 
-	private void addJobs(DaemonAddress addr, Set<Job> jobSet)
-	{
-		for (Job job : jobSet)
-		{
+	private void addJobs(DaemonAddress addr, Set<Job> jobSet) {
+		for (Job job : jobSet) {
 			addJob(addr, job);
 		}
 	}
 
-	private TreeSet<Integer> getJobsForDaemon(DaemonAddress addr)
-	{
+	private TreeSet<Integer> getJobsForDaemon(DaemonAddress addr) {
 		TreeSet<Integer> jobIds = loadedHostJobs.get(addr);
-		if (jobIds == null)
-		{
+		if (jobIds == null) {
 			jobIds = new TreeSet<Integer>();
 		}
 		return jobIds;
 	}
-	
-	private DaemonAddress getDaemonAddressFromId(int id)
-	{
-		for (DaemonEntry d : registeredDaemons)
-		{
-			if (d.getDaemonAddress().getDaemonId() == id)
-			{
+
+	private DaemonAddress getDaemonAddressFromId(int id) {
+		for (DaemonEntry d : registeredDaemons) {
+			if (d.getDaemonAddress().getDaemonId() == id) {
 				return d.getDaemonAddress();
 			}
 		}
 		return null;
 	}
 
-	private String getDaemonHostnameFromId(int id)
-	{
+	private String getDaemonHostnameFromId(int id) {
 		DaemonAddress d = getDaemonAddressFromId(id);
-		if (d != null)
-		{
+		if (d != null) {
 			return d.getPeerAddress().getIp().getHostName();
 		}
 		return ("Hostname lookup failed");
 	}
-	
-	private String getDaemonIpFromId(int id)
-	{
+
+	private String getDaemonIpFromId(int id) {
 		DaemonAddress d = getDaemonAddressFromId(id);
-		if (d != null)
-		{
+		if (d != null) {
 			return d.getPeerAddress().getIp().getHostAddress();
 		}
 		return ("Hostname lookup failed");
 	}
-	
-	private void addJob(DaemonAddress addr, Job job)
-	{
+
+	private void addJob(DaemonAddress addr, Job job) {
 		jobs.put(job.getId(), job);
 		TreeSet<Integer> jobIds = getJobsForDaemon(addr);
 		jobIds.add(job.getId());
 		loadedHostJobs.put(addr.getDaemonId(), jobIds);
 	}
-	
+
 	private Handler<JobLoadResponseMsg> handleJobLoadResponseMsg = new Handler<JobLoadResponseMsg>() {
 		public void handle(JobLoadResponseMsg event) {
 
-			logger.info("JobLoadResponse received for {} was {}", 
-					event.getJobId(), event.getStatus());
-			
+			logger.info("JobLoadResponse received for {} was {}", event
+					.getJobId(), event.getStatus());
+
 			// event.getSource().getIp().getCanonicalHostName();
-			TreeSet<Integer> jobsAtDaemon = loadedHostJobs.get(event.getDaemonId());
-			if (jobsAtDaemon == null)
-			{
+			TreeSet<Integer> jobsAtDaemon = loadedHostJobs.get(event
+					.getDaemonId());
+			if (jobsAtDaemon == null) {
 				jobsAtDaemon = new TreeSet<Integer>();
 			}
 			jobsAtDaemon.add(event.getJobId());
 			loadedHostJobs.put(event.getDaemonId(), jobsAtDaemon);
 		}
 	};
-	
-	
-	
-	
+
 	private Handler<DisconnectMasterRequestMsg> handleDisconnectMasterRequestMsg = new Handler<DisconnectMasterRequestMsg>() {
 		public void handle(DisconnectMasterRequestMsg event) {
 			logger.info("Daemon disconnecting: {}", event.getDaemon());
 			removePeerFromCache(event.getDaemon(), cacheEpoch);
 		}
 	};
-	
+
 	private Handler<KeepAliveDaemonMsg> handleKeepAliveDaemonMsg = new Handler<KeepAliveDaemonMsg>() {
 		public void handle(KeepAliveDaemonMsg event) {
 			addDaemonToCache(event.getPeerAddress());
-			logger.debug("Refreshed connection to daemon {}", event.getPeerAddress().getDaemonId());
+			logger.debug("Refreshed connection to daemon {}", event
+					.getPeerAddress().getDaemonId());
 		}
 	};
 
 	/**
-	 * Daemons send ConnectMasterRequestMsg events to the Master. They retry if they
-	 * don't receive a responseMsg before a timeout expires. Retry is safe, as it 
-	 * just updates the daemon's timestamp in the cache.
-	 * After registration, the daemon sends KeepAliveDaemonMsg events that don't
-	 * require a response msg. 
+	 * Daemons send ConnectMasterRequestMsg events to the Master. They retry if
+	 * they don't receive a responseMsg before a timeout expires. Retry is safe,
+	 * as it just updates the daemon's timestamp in the cache. After
+	 * registration, the daemon sends KeepAliveDaemonMsg events that don't
+	 * require a response msg.
 	 */
 	private Handler<ConnectMasterRequestMsg> handleConnectMasterRequestMsg = new Handler<ConnectMasterRequestMsg>() {
 		public void handle(ConnectMasterRequestMsg event) {
 
 			logger.debug("Received msg from {}", event.getSource());
-			
-			DaemonAddress daemonAddress = new DaemonAddress(event.getDaemonId(), event.getSource());
+
+			DaemonAddress daemonAddress = new DaemonAddress(
+					event.getDaemonId(), event.getSource());
 
 			addDaemonToCache(daemonAddress);
 
-			ConnectMasterResponseMsg response = new ConnectMasterResponseMsg(true, event
-					.getRequestId(), self, event.getSource());
+			ConnectMasterResponseMsg response = new ConnectMasterResponseMsg(
+					true, event.getRequestId(), self, event.getSource());
 			trigger(response, net);
 			logger.info("Request-id: {}", event.getRequestId());
-			
-			logger.debug("Responded with connectMasterResponseMsg from {}", event.getSource());
+
+			logger.debug("Responded with connectMasterResponseMsg from {}",
+					event.getSource());
 
 			dumpCacheToLog();
 		}
@@ -428,24 +418,21 @@ public class Master extends ComponentDefinition {
 		public void handle(WebRequest event) {
 			logger.debug("Handling WebRequest");
 
-			WebResponse response = new WebResponse(dumpCacheToHtml(), event, 1, 1);
+			WebResponse response = new WebResponse(dumpCacheToHtml(), event, 1,
+					1);
 			trigger(response, web);
 		}
 	};
 
-
-	private DaemonEntry findDaemonEntry(DaemonAddress address)
-	{
-		for (DaemonEntry de : registeredDaemons)
-		{
-			if (de.getDaemonAddress().compareTo(address) == 0)
-			{
+	private DaemonEntry findDaemonEntry(DaemonAddress address) {
+		for (DaemonEntry de : registeredDaemons) {
+			if (de.getDaemonAddress().compareTo(address) == 0) {
 				return de;
 			}
 		}
 		return null;
 	}
-	
+
 	private final void addDaemonToCache(DaemonAddress address) {
 		if (address != null) {
 			long now = System.currentTimeMillis();
@@ -453,13 +440,16 @@ public class Master extends ComponentDefinition {
 			DaemonEntry entry = findDaemonEntry(address);
 			if (entry == null) {
 				// add a new entry
-				// XXX look-up groupId for this host in table, and add to constructor
+				// XXX look-up groupId for this host in table, and add to
+				// constructor
 				entry = new DaemonEntry(address, now, now);
 				registeredDaemons.add(entry);
 
 				// set a new eviction timeout
 				ScheduleTimeout st = new ScheduleTimeout(evictAfter);
-				st.setTimeoutEvent(new CacheEvictDaemon(st, address, cacheEpoch));
+				st
+						.setTimeoutEvent(new CacheEvictDaemon(st, address,
+								cacheEpoch));
 
 				UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
 				entry.setEvictionTimerId(evictionTimerId);
@@ -479,7 +469,9 @@ public class Master extends ComponentDefinition {
 				}
 				// set a new eviction timeout
 				ScheduleTimeout st = new ScheduleTimeout(evictAfter);
-				st.setTimeoutEvent(new CacheEvictDaemon(st, address, cacheEpoch));
+				st
+						.setTimeoutEvent(new CacheEvictDaemon(st, address,
+								cacheEpoch));
 
 				UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
 				entry.setEvictionTimerId(evictionTimerId);
@@ -500,8 +492,7 @@ public class Master extends ComponentDefinition {
 	}
 
 	private void dumpCacheToLog() {
-		if (registeredDaemons.size() == 0)
-		{
+		if (registeredDaemons.size() == 0) {
 			return;
 		}
 		logger.info("Age=====Freshness====Daemonaddress====ID===");
@@ -512,7 +503,7 @@ public class Master extends ComponentDefinition {
 			logger.info("{}\t{}\t  {} : id={}", new Object[] {
 					durationToString(now - daemonEntry.getAddedAt()),
 					durationToString(now - daemonEntry.getRefreshedAt()),
-					daemonEntry.getHostname(), 
+					daemonEntry.getHostname(),
 					daemonEntry.getDaemonAddress().getDaemonId() });
 		}
 
@@ -532,10 +523,13 @@ public class Master extends ComponentDefinition {
 		sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
 		sb.append("Kompics P2P Bootstrap Cache </h2>");
 		sb.append("<table width=\"600\" border=\"0\" align=\"center\"><tr>");
-		sb.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
+		sb
+				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
 		sb.append("<th class=\"style2\" width=\"80\" scope=\"col\">Age</th>");
-		sb.append("<th class=\"style2\" width=\"120\" scope=\"col\">Freshness</th>");
-		sb.append("<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
+		sb
+				.append("<th class=\"style2\" width=\"120\" scope=\"col\">Freshness</th>");
+		sb
+				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
 		long now = System.currentTimeMillis();
 
 		Collections.sort(registeredDaemons, new DaemonAgeComparator());
@@ -552,8 +546,9 @@ public class Master extends ComponentDefinition {
 			sb.append(durationToString(now - DaemonEntry.getRefreshedAt()));
 			sb.append("</div></td><td><div align=\"center\">");
 			String webAddress = "http://"
-					+ DaemonEntry.getDaemonAddress().getPeerAddress().getIp().getHostAddress()
-					+ ":" + webPort + "/" + DaemonEntry.getDaemonAddress().getPeerAddress().getId()
+					+ DaemonEntry.getDaemonAddress().getPeerAddress().getIp()
+							.getHostAddress() + ":" + webPort + "/"
+					+ DaemonEntry.getDaemonAddress().getPeerAddress().getId()
 					+ "/";
 			sb.append("<a href=\"").append(webAddress).append("\">");
 			sb.append(DaemonEntry.toString()).append("</a>");
@@ -585,12 +580,12 @@ public class Master extends ComponentDefinition {
 		} else {
 			registeredDaemons = new ArrayList<DaemonEntry>();
 			cacheEpoch = 1L;
-			outstandingTimeouts= new HashSet<UUID>();
+			outstandingTimeouts = new HashSet<UUID>();
 		}
 		logger.debug("Cleared daemon cache.");
 		dumpCacheToLog();
 	}
-	
+
 	private String durationToString(long duration) {
 		StringBuilder sb = new StringBuilder();
 

@@ -25,5 +25,6 @@
 		<module>kompics-experiments-common</module>
 		<module>kompics-experiments-slave</module>
 		<module>kompics-experiments-master</module>
+ <module>gui</module>  
 	</modules>
 </project>

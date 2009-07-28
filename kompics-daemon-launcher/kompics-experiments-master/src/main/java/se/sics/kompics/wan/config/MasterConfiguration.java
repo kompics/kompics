@@ -5,8 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.TreeSet;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.configuration.ConfigurationException;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.simulator.SimulationScenario;
 import se.sics.kompics.simulator.SimulationScenarioLoadException;
+import se.sics.kompics.wan.ssh.Host;
 import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
 
@@ -32,7 +34,7 @@ public class MasterConfiguration extends MasterAddressConfiguration {
 	/**
 	 * Ordered set (no duplicates)
 	 */
-	protected static TreeSet<Address> hosts=null;
+	protected static Set<Host> hosts=null;
 	
 	protected Address masterMonitorAddress=null;
 	/********************************************************/
@@ -105,7 +107,7 @@ public class MasterConfiguration extends MasterAddressConfiguration {
 		return masterMonitorAddress;
 	}
 	
-	public static TreeSet<Address> getHosts() {
+	public static Set<Host> getHosts() {
 		masterServerInitialized();
 		return hosts;
 	}
@@ -123,15 +125,15 @@ public class MasterConfiguration extends MasterAddressConfiguration {
 	 * @throws HostsParserException
 	 * @throws FileNotFoundException
 	 */
-	public static TreeSet<Address> getHosts(int first, int last){
+	public static Set<Host> getHosts(int first, int last){
 		masterServerInitialized();
-		TreeSet<Address> h = getHosts();
-		TreeSet<Address> subsetHosts = new TreeSet<Address>();
-		Iterator<Address> iter = h.iterator();
+		Set<Host> h = getHosts();
+		Set<Host> subsetHosts = new HashSet<Host>();
+		Iterator<Host> iter = h.iterator();
 		int count = 0;
 		while (iter.hasNext() && (count <= last))
 		{
-			Address a = iter.next();
+			Host a = iter.next();
 			if (count >= first)
 			{
 				subsetHosts.add(a);

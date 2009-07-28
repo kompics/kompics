@@ -90,10 +90,10 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 	private Set<PLabHost> connectedHosts = new ConcurrentHashSet<PLabHost>();
 	private Map<Integer, Boolean> mapConnectedHosts = new ConcurrentHashMap<Integer, Boolean>();
+	private Set<Host> availableHosts = new HashSet<Host>();
 
-	private Set<PLabHost> availableHosts = new HashSet<PLabHost>();
-
-	private static final Logger logger = LoggerFactory.getLogger(PlanetLabTextUI.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(PlanetLabTextUI.class);
 
 	private boolean cleanupStarted = false;
 
@@ -115,7 +115,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private final String host;
 
-		public SshConnectTimeout(ScheduleTimeout request, String host, int numRetries) {
+		public SshConnectTimeout(ScheduleTimeout request, String host,
+				int numRetries) {
 			super(request);
 			this.host = host;
 			this.numRetries = numRetries;
@@ -140,8 +141,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		ssh = create(SshComponent.class);
 		scp = create(ScpComponent.class);
 		downUp = create(DownloadUploadMgr.class);
-		
-		
+
 		getCredentials();
 
 		// InetAddress ip = PlanetLabConfiguration.getIp();
@@ -150,16 +150,19 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		// int maxThreads = PlanetLabConfiguration.getXmlRpcMaxThreads();
 		// String homepage = PlanetLabConfiguration.getXmlRpcHomepage();
 
-		logger.info("Master listening on: {}", MasterConfiguration.getMasterAddress().toString());
+		logger.info("Master listening on: {}", MasterConfiguration
+				.getMasterAddress().toString());
 
 		// connectToNetAndTimer(plab);
 		connectToNetAndTimer(master);
 		connect(ssh.getNegative(Timer.class), timer.getPositive(Timer.class));
 
 		// Connect Ssh -> DownloadUploadMgr -> Scp
-		connect(ssh.getNegative(DownloadUploadPort.class), downUp.getPositive(DownloadUploadPort.class));
-		connect(downUp.getNegative(ScpPort.class), scp.getPositive(ScpPort.class));
-		
+		connect(ssh.getNegative(DownloadUploadPort.class), downUp
+				.getPositive(DownloadUploadPort.class));
+		connect(downUp.getNegative(ScpPort.class), scp
+				.getPositive(ScpPort.class));
+
 		// handle possible faults in the components
 		subscribe(handleFault, timer.getControl());
 		subscribe(handleFault, network.getControl());
@@ -171,28 +174,37 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		subscribe(handleSshHeartbeatResponse, ssh.getPositive(SshPort.class));
 		subscribe(handleUploadFileResponse, ssh.getPositive(SshPort.class));
 
-		subscribe(handleGetNodesInSliceResponse, plab.getPositive(PLabPort.class));
-		subscribe(handleGetNodesNotInSliceResponse, plab.getPositive(PLabPort.class));
-		subscribe(handleAddHostsToSliceResponse, plab.getPositive(PLabPort.class));
-		subscribe(handleRankHostsUsingCoMonResponse, plab.getPositive(PLabPort.class));
+		subscribe(handleGetNodesInSliceResponse, plab
+				.getPositive(PLabPort.class));
+		subscribe(handleGetNodesNotInSliceResponse, plab
+				.getPositive(PLabPort.class));
+		subscribe(handleAddHostsToSliceResponse, plab
+				.getPositive(PLabPort.class));
+		subscribe(handleRankHostsUsingCoMonResponse, plab
+				.getPositive(PLabPort.class));
 
 		subscribe(handleCleanupConnections, timer.getPositive(Timer.class));
 
 		PLabInit pInit = new PLabInit(cred);
 		trigger(pInit, plab.getControl());
 
-		MasterInit mInit = new MasterInit(PlanetLabConfiguration.getMasterAddress(),
-				PlanetLabConfiguration.getBootConfiguration(), PlanetLabConfiguration
-						.getMonitorConfiguration());
+		MasterInit mInit = new MasterInit(PlanetLabConfiguration
+				.getMasterAddress(), PlanetLabConfiguration
+				.getBootConfiguration(), PlanetLabConfiguration
+				.getMonitorConfiguration());
 
 		trigger(mInit, master.getControl());
 
-		trigger(new MinaNetworkInit(MasterConfiguration.getMasterAddress()), network.getControl());
+		trigger(new MinaNetworkInit(MasterConfiguration.getMasterAddress()),
+				network.getControl());
 
+		availableHosts = PlanetLabConfiguration.getHosts();
+		
 	}
 
 	private void connectToNetAndTimer(Component c) {
-		connect(c.getNegative(Network.class), network.getPositive(Network.class));
+		connect(c.getNegative(Network.class), network
+				.getPositive(Network.class));
 		connect(c.getNegative(Timer.class), timer.getPositive(Timer.class));
 	}
 
@@ -222,24 +234,27 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		}
 		String role = PlanetLabConfiguration.getRole();
 		if (role.compareTo("") == 0) {
-			System.out.print("\tEnter the planetlab role (user, tech, admin): ");
+			System.out
+					.print("\tEnter the planetlab role (user, tech, admin): ");
 			role = scanner.next();
 		}
 
 		String keyPath = PlanetLabConfiguration.getPrivateKeyFile();
 		if (keyPath.compareTo("") == 0) {
-			System.out.print("\tEnter the full pathname for the private key file: ");
+			System.out
+					.print("\tEnter the full pathname for the private key file: ");
 			keyPath = scanner.next();
 		}
 
-		String keyFilePassword = PlanetLabConfiguration.getPrivateKeyFilePassword();
+		String keyFilePassword = PlanetLabConfiguration
+				.getPrivateKeyFilePassword();
 		if (keyFilePassword.compareTo("") == 0) {
 			// System.out.print("\tEnter the password for the private key file: ");
 			// keyFilePassword = scanner.next();
 		}
 
-		cred = new PlanetLabCredentials("kost@sics.se", password, "sics_grid4all",
-				"/home/jdowling/.ssh/id_rsa", "");
+		cred = new PlanetLabCredentials("kost@sics.se", password,
+				"sics_grid4all", "/home/jdowling/.ssh/id_rsa", "");
 	}
 
 	public Handler<GetHostsInSliceResponse> handleGetNodesInSliceResponse = new Handler<GetHostsInSliceResponse>() {
@@ -253,7 +268,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			}
 			System.out.println();
 
-			logger.info("Number of hosts registered for this slice: {}", availableHosts.size());
+			logger.info("Number of hosts registered for this slice: {}",
+					availableHosts.size());
 
 			ui.proceed();
 
@@ -270,7 +286,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			}
 			System.out.println();
 
-			logger.info("Number of hosts not registered for this slice: {}", hosts.size());
+			logger.info("Number of hosts not registered for this slice: {}",
+					hosts.size());
 
 			ui.proceed();
 
@@ -299,17 +316,16 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 			connectedHosts.add(plHost);
 
-			System.out.println("Ssh connection established to " + host.getHostname() 
-					+ "(" + host.getSessionId() + ")");
-			
+			System.out.println("Ssh connection established to "
+					+ host.getHostname() + "(" + host.getSessionId() + ")");
+
 			// XXX uncomment this
-//			if (cleanupStarted == false) {
-//				ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-//				st.setTimeoutEvent(new CleanupConnections(st));
-//				trigger(st, timer.getPositive(Timer.class));
-//			}
-			
-			
+			// if (cleanupStarted == false) {
+			// ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
+			// st.setTimeoutEvent(new CleanupConnections(st));
+			// trigger(st, timer.getPositive(Timer.class));
+			// }
+
 		}
 	};
 
@@ -331,7 +347,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 					connectedHosts.remove(host);
 				} else {
 					// ping the remaining open ssh connections
-					trigger(new SshHeartbeatRequest(sId), ssh.getPositive(SshPort.class));
+					trigger(new SshHeartbeatRequest(sId), ssh
+							.getPositive(SshPort.class));
 				}
 			}
 			mapConnectedHosts.clear();
@@ -347,7 +364,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 	public Handler<AddHostsToSliceResponse> handleAddHostsToSliceResponse = new Handler<AddHostsToSliceResponse>() {
 		public void handle(AddHostsToSliceResponse event) {
-			System.out.println("Result of adding hosts to slice was: " + event.getHostStatus());
+			System.out.println("Result of adding hosts to slice was: "
+					+ event.getHostStatus());
 			ui.proceed();
 		}
 	};
@@ -365,20 +383,20 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 	public Handler<UploadFileResponse> handleUploadFileResponse = new Handler<UploadFileResponse>() {
 		public void handle(UploadFileResponse event) {
-			
-			System.out.println("Received upload response : " + event.getFile().getAbsolutePath());
-			
+
+			System.out.println("Received upload response : "
+					+ event.getFile().getAbsolutePath());
+
 			ui.proceed();
-			
+
 		}
 	};
-	
-	
+
 	public Handler<RankHostsUsingCoMonResponse> handleRankHostsUsingCoMonResponse = new Handler<RankHostsUsingCoMonResponse>() {
 		public void handle(RankHostsUsingCoMonResponse event) {
 
-			System.out.println("Here is the list of Hosts ranked after " + event.getRanking()
-					+ " :");
+			System.out.println("Here is the list of Hosts ranked after "
+					+ event.getRanking() + " :");
 			for (PLabHost h : event.getHosts()) {
 				System.out.print("[" + h.getHostname());
 
@@ -412,14 +430,15 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		}
 
 		ScheduleTimeout st = new ScheduleTimeout(PLAB_CONNECT_TIMEOUT);
-		SshConnectTimeout connectTimeout = new SshConnectTimeout(st, host, retriedNumber + 1);
+		SshConnectTimeout connectTimeout = new SshConnectTimeout(st, host,
+				retriedNumber + 1);
 		st.setTimeoutEvent(connectTimeout);
 
 		UUID timerId = connectTimeout.getTimeoutId();
 		outstandingTimeouts.add(timerId);
 
-		trigger(new SshConnectRequest(cred, timerId, new ExperimentHost(host)), ssh
-				.getPositive(SshPort.class));
+		trigger(new SshConnectRequest(cred, timerId, new ExperimentHost(host)),
+				ssh.getPositive(SshPort.class));
 
 		trigger(st, timer.getPositive(Timer.class));
 
@@ -445,7 +464,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		@Override
 		public void run() {
 
-			trigger(new GetHostsInSliceRequest(cred, false), plab.getPositive(PLabPort.class));
+			trigger(new GetHostsInSliceRequest(cred, false), plab
+					.getPositive(PLabPort.class));
 
 			synchronized (this) {
 				while (proceed.get() == false) {
@@ -515,7 +535,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 						break;
 					}
 				} catch (java.util.InputMismatchException e) {
-					System.out.println("Invalid choice. You must enter a valid number.");
+					System.out
+							.println("Invalid choice. You must enter a valid number.");
 					proceed.set(true);
 				}
 
@@ -535,10 +556,11 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private void enterMaster() {
 			while (true) {
-				TreeSet<Address> hosts = MasterConfiguration.getHosts();
+				Set<Host> hosts = MasterConfiguration.getHosts();
 				switch (selectMasterOption()) {
 				case 1:
-					trigger(new PrintConnectedDameons(), master.getNegative(MasterPort.class));
+					trigger(new PrintConnectedDameons(), master
+							.getNegative(MasterPort.class));
 					break;
 				case 2:
 					trigger(new PrintDaemonsWithLoadedJob(getJob()), master
@@ -547,7 +569,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 				case 3:
 					System.out.print("\tEnter daemon-id: ");
 					int daemonId = scanner.nextInt();
-					trigger(new PrintLoadedJobs(daemonId), master.getNegative(MasterPort.class));
+					trigger(new PrintLoadedJobs(daemonId), master
+							.getNegative(MasterPort.class));
 					break;
 				case 5: // XXX
 					hosts = getHosts();
@@ -563,8 +586,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 					String mainClass = scanner.next();
 					System.out.print("\tHide Maven output (y/n): ");
 					String hideMavenOutput = scanner.next();
-					boolean hideOutput = (hideMavenOutput.compareToIgnoreCase("y") == 0) ? true
-							: false;
+					boolean hideOutput = (hideMavenOutput
+							.compareToIgnoreCase("y") == 0) ? true : false;
 
 					// System.out.print("\tEnter any optional args (return for none): ");
 					// String allArgs = scanner.next();
@@ -589,8 +612,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 					break;
 				case 9:
-					trigger(new StartJobOnHosts(getJob(), getNumPeers()), master
-							.getNegative(MasterPort.class));
+					trigger(new StartJobOnHosts(getJob(), getNumPeers()),
+							master.getNegative(MasterPort.class));
 					break;
 				case 10:
 					int sshAuthOpt = 0;
@@ -612,7 +635,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 					break;
 				case 11:
-					trigger(new ShutdownDaemonRequest(), master.getNegative(MasterPort.class));
+					trigger(new ShutdownDaemonRequest(), master
+							.getNegative(MasterPort.class));
 					break;
 				case 0:
 					return;
@@ -633,10 +657,12 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			while (!success) {
 				System.out.println(question);
 				String ans = scanner.next();
-				if (ans.compareToIgnoreCase("y") == 0 || ans.compareToIgnoreCase("yes") == 0) {
+				if (ans.compareToIgnoreCase("y") == 0
+						|| ans.compareToIgnoreCase("yes") == 0) {
 					forceDownload = true;
 					success = true;
-				} else if (ans.compareToIgnoreCase("n") == 0 || ans.compareToIgnoreCase("no") == 0) {
+				} else if (ans.compareToIgnoreCase("n") == 0
+						|| ans.compareToIgnoreCase("no") == 0) {
 					forceDownload = false;
 					success = true;
 				} else {
@@ -671,7 +697,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			System.out.println("Here is the list of stats to choose from: ");
 			List<String> stats = new ArrayList<String>();
 
-			System.out.println("Enter 'x' to finish entering stats. Enter a stat now:");
+			System.out
+					.println("Enter 'x' to finish entering stats. Enter a stat now:");
 			String entered = scanner.next();
 
 			List<String> validStats = Arrays.asList(CoMonStats.STATS);
@@ -687,20 +714,22 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			}
 
 			trigger(new RankHostsUsingCoMonRequest(cred, forceDownload, stats
-					.toArray(new String[(stats.size())])), plab.getPositive(PLabPort.class));
+					.toArray(new String[(stats.size())])), plab
+					.getPositive(PLabPort.class));
 
 		}
 
 		private void copyDaemonToHosts() {
 			validateListHosts();
 
-			System.out.println("There are " + connectedHosts.size() + " connected hosts:");
+			System.out.println("There are " + connectedHosts.size()
+					+ " connected hosts:");
 			System.out.println();
 			for (PLabHost h : connectedHosts) {
 				System.out.print(h.getHostname() + " ");
 			}
 			System.out.println("Enter name from above connected hosts:");
-			
+
 			Set<String> hosts = enterValidHosts();
 
 			String daemonJarFilename = getDaemonJarFile();
@@ -708,23 +737,24 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			int pos = daemonJarFilename.lastIndexOf('/');
 
 			for (String host : hosts) {
-				PLabHost plHost = null; 
+				PLabHost plHost = null;
 				for (PLabHost h : connectedHosts) {
 					if (h.getHostname().compareToIgnoreCase(host) == 0) {
 						plHost = h;
 					}
 				}
 				if (plHost == null) {
-					System.out.println("Host not connected. Connect first : " + host);
+					System.out.println("Host not connected. Connect first : "
+							+ host);
 					continue;
-				}
-				else {
+				} else {
 					int sessionId = plHost.getSessionId();
 
 					// kompics/
-					UploadFileRequest uploadJar = new UploadFileRequest(sessionId, file, "~/", true, 10 * 1000.0, true);
+					UploadFileRequest uploadJar = new UploadFileRequest(
+							sessionId, file, "~/", true, 10 * 1000.0, true);
 
-					trigger(uploadJar, ssh.getPositive(SshPort.class));					
+					trigger(uploadJar, ssh.getPositive(SshPort.class));
 				}
 			}
 		}
@@ -736,19 +766,18 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			}
 			Set<String> hosts = enterValidHosts();
 
-			 for (String h : hosts)
-			 {
-				 connectToHost(h, 0);
-			 }
-			 
-			 // Hack to wait for responses...
-			 try {
-				Thread.currentThread().sleep(5*1000);
+			for (String h : hosts) {
+				connectToHost(h, 0);
+			}
+
+			// Hack to wait for responses...
+			try {
+				Thread.currentThread().sleep(5 * 1000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			 proceed();
+			proceed();
 		}
 
 		private Set<String> enterValidHosts() {
@@ -759,7 +788,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 			Set<String> hosts = new HashSet<String>();
 			while (entered.compareToIgnoreCase("x") != 0) {
 				boolean found = false;
-				for (PLabHost h : availableHosts) {
+				for (Host h : availableHosts) {
 					if (h.getHostname().compareToIgnoreCase(entered) == 0) {
 						found = true;
 					}
@@ -767,7 +796,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 				if (found == true) {
 					hosts.add(entered);
 				} else {
-					System.out.println("This host is not available in your slice. Invalid hostname.");
+					System.out
+							.println("This host is not available in your slice. Invalid hostname.");
 				}
 				entered = scanner.next();
 			}
@@ -784,16 +814,18 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		private boolean selectHostsFile() {
 			boolean succeed = true;
 			System.out.println();
-			System.out.println("Enter the full pathname of the file containing a list"
-					+ "of comma-separated hosts in the format host[:port[:id]] ");
+			System.out
+					.println("Enter the full pathname of the file containing a list"
+							+ "of comma-separated hosts in the format host[:port[:id]] ");
 			String filename = scanner.next();
 			try {
-				TreeSet<Address> hosts = HostsParser.parseHostsFile(filename);
+				Set<Host> hosts = HostsParser.parseHostsFile(filename);
 			} catch (FileNotFoundException e) {
 				System.out.println("File not found: " + e.getMessage());
 				return false;
 			} catch (HostsParserException e) {
-				System.out.println("Hosts file not formatted correctly: " + e.getMessage());
+				System.out.println("Hosts file not formatted correctly: "
+						+ e.getMessage());
 				return false;
 			}
 
@@ -811,11 +843,12 @@ public class PlanetLabTextUI extends ComponentDefinition {
 		}
 
 		private int getNumPeers() {
-			System.out.print("\tEnter the number of peers to start at each host: ");
+			System.out
+					.print("\tEnter the number of peers to start at each host: ");
 			return scanner.nextInt();
 		}
 
-		private TreeSet<Address> getHosts() {
+		private Set<Host> getHosts() {
 			int first, last;
 			System.out.println("Enter the start of the range of hosts to use:");
 			first = scanner.nextInt();
@@ -826,7 +859,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private int selectSshAuthMethod() {
 			System.out.println();
-			System.out.println("Enter a number to select an option from below:");
+			System.out
+					.println("Enter a number to select an option from below:");
 			System.out.println("\t1) username/password.");
 			System.out.println("\t2) public-key authentication.");
 			System.out.print("Enter your choice: ");
@@ -835,10 +869,12 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private int selectPlanetlabOption() {
 			System.out.println();
-			System.out.println("Enter a number to select an option from below:");
+			System.out
+					.println("Enter a number to select an option from below:");
 			System.out.println("\t1) change planet-lab credentials.");
 			System.out.println("\t2) list hosts registered for this slice.");
-			System.out.println("\t3) list hosts not registered for this slice.");
+			System.out
+					.println("\t3) list hosts not registered for this slice.");
 			System.out.println("\t4) add hosts to a slice.");
 			System.out.println("\t5) rank hosts using CoMon statistics.");
 			System.out.println("\t6) Connect using SSH to hosts.");
@@ -853,7 +889,8 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private int selectMenuOption() {
 			System.out.println();
-			System.out.println("Enter a number to select an option from below:");
+			System.out
+					.println("Enter a number to select an option from below:");
 			System.out.println("\t1) enter master.");
 			System.out.println("\t2) enter planetlab.");
 			System.out.println("\t0) exit program");
@@ -863,21 +900,21 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private int selectMasterOption() {
 			System.out.println();
-			System.out.println("Enter a number to select an option from below:");
+			System.out
+					.println("Enter a number to select an option from below:");
 			System.out.println("\t0) back");
-			// System.out.println("\t1) list connected daemons.");
-			// System.out
-			// .println("\t2) specify a job, and list all daemons that have loaded it.");
-			// System.out
-			// .println("\t3) specify a daemon, and list all its loaded jobs.");
-			// System.out.println("\t4) load a job to all hosts.");
-			// System.out.println("\t5) load a job to selected hosts.");
-			// System.out.println("\t6) stop a job on all hosts.");
-			System.out.println("\t7) scp daemon jar file to hosts.");
+			System.out.println("\t1) list connected daemons.");
+			System.out
+					.println("\t2) specify a job, and list all daemons that have loaded it.");
+			System.out
+					.println("\t3) specify a daemon, and list all its loaded jobs.");
+			System.out.println("\t4) load a job to all hosts.");
+			System.out.println("\t5) load a job to selected hosts.");
+			System.out.println("\t6) stop a job on all hosts.");
+			System.out.println("\t7) copy daemon jar file to hosts.");
 			System.out.println("\t8) connect to all hosts.");
-
-			// System.out
-			// .println("\t9) start a job on all hosts that have loaded the job.");
+			 System.out
+			 .println("\t9) start a job on all hosts that have loaded the job.");
 			System.out.println("\t11) shutdown all hosts.");
 			System.out.print("Enter your choice: ");
 			return scanner.nextInt();
@@ -889,8 +926,7 @@ public class PlanetLabTextUI extends ComponentDefinition {
 
 		private boolean validateListHosts() {
 			if (availableHosts.size() == 0) {
-				logger
-						.warn("Warning: there are no available hosts.");
+				logger.warn("Warning: there are no available hosts.");
 				return false;
 			}
 			return true;

@@ -8,7 +8,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.TreeSet;
+import java.util.Set;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -86,7 +86,7 @@ public class ParsersTest extends TestCase {
 			bw.flush();
 			bw.close();
 
-			TreeSet<Address> addrs = HostsParser.parseHostsFile(filename);
+			Set<Address> addrs = HostsParser.parseAddresses(filename);
 
 			int i = 0;
 

@@ -3,6 +3,7 @@ package se.sics.kompics.wan.ui;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeSet;
 
 import se.sics.kompics.ComponentDefinition;
@@ -22,6 +23,7 @@ import se.sics.kompics.wan.master.PrintLoadedJobs;
 import se.sics.kompics.wan.master.ShutdownDaemonRequest;
 import se.sics.kompics.wan.master.StartJobOnHosts;
 import se.sics.kompics.wan.master.StopJobOnHosts;
+import se.sics.kompics.wan.ssh.Host;
 import se.sics.kompics.wan.util.HostsParser;
 import se.sics.kompics.wan.util.HostsParserException;
 
@@ -64,7 +66,7 @@ public class UserInputTextUI extends ComponentDefinition {
 	}
 
 	private void getInput() {
-		TreeSet<Address> hosts = MasterConfiguration.getHosts();
+		Set<Host> hosts = MasterConfiguration.getHosts();
 		switch (selectOption()) {
 		case 1:
 			trigger(new PrintConnectedDameons(), master);
@@ -157,7 +159,7 @@ public class UserInputTextUI extends ComponentDefinition {
 				"of comma-separated hosts in the format host[:port[:id]] ");
 		String filename =  scanner.next();
 		try {
-			TreeSet<Address> hosts = HostsParser.parseHostsFile(filename);
+			Set<Host> hosts = HostsParser.parseHostsFile(filename);
 		} catch (FileNotFoundException e) {
 			System.out.println("File not found: " + e.getMessage());
 			return false;
@@ -169,7 +171,7 @@ public class UserInputTextUI extends ComponentDefinition {
 		return succeed;
 	}
 
-	private TreeSet<Address> getHosts() {
+	private Set<Host> getHosts() {
 		int first, last;
 		System.out.println("Enter the start of the range of hosts to use:");
 		first = scanner.nextInt();
