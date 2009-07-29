@@ -4,16 +4,20 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.SwingWorker;
 
 import org.apache.mina.util.ConcurrentHashSet;
 import org.slf4j.Logger;
@@ -23,8 +27,9 @@ import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Fault;
 import se.sics.kompics.Handler;
+import se.sics.kompics.Request;
+import se.sics.kompics.Response;
 import se.sics.kompics.Start;
-import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
@@ -79,6 +84,7 @@ import se.sics.kompics.wan.util.HostsParserException;
 public class PlanetLabGUI extends ComponentDefinition {
 	public static final int PLAB_CONNECT_TIMEOUT = 30 * 1000;
 
+	
 	private Component timer;
 	private Component network;
 	private Component plab;
@@ -102,6 +108,9 @@ public class PlanetLabGUI extends ComponentDefinition {
 
 	private UserInput ui = null;
 
+	private Map<SwingResponse,KSwingWorker> swingRequests = 
+		new ConcurrentHashMap<SwingResponse,KSwingWorker>();
+	
 	public static class CleanupConnections extends Timeout {
 
 		public CleanupConnections(ScheduleTimeout request) {
@@ -109,7 +118,7 @@ public class PlanetLabGUI extends ComponentDefinition {
 		}
 
 	}
-
+	
 	public class SshConnectTimeout extends Timeout {
 
 		private final int numRetries;
@@ -416,6 +425,10 @@ public class PlanetLabGUI extends ComponentDefinition {
 			}
 			System.out.println();
 			ui.proceed();
+			
+//			XXX
+//			KSwingWorker req = swingRequests.get()
+			// 
 		}
 	};
 
@@ -951,19 +964,43 @@ public class PlanetLabGUI extends ComponentDefinition {
 			}
 			
 			
-	        try {
-	            // Register various properties for OS X
-	            System.setProperty("apple.laf.useScreenMenuBar", "true");
-	            System.setProperty("com.apple.mrj.application.apple.menu.about.name",
-	                    ResourceBundle.getBundle(PasswordStoreApplication.class.getPackage().getName() +
-	                    ".Resources").getString("frame.title"));
-	        } catch (SecurityException e) {
-	        }
-	        new PasswordStoreApplication().start();
-
-			
-
 		}
 	};
 
+	
+	public void sendRequestResponse(SwingRequest request)
+	{
+
+		String res;
+		
+		final ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(
+	            5);
+
+		int poolSize=4;
+		int maxPoolSize=10;
+		int keepAliveTime=1000*20;
+	    ThreadPoolExecutor threadPool = new ThreadPoolExecutor(poolSize, maxPoolSize,
+                keepAliveTime, TimeUnit.SECONDS, queue);
+
+		
+		
+		KSwingWorker swingWorker = new KSwingWorker(cred, request);
+		SwingResponse response=null;
+		swingRequests.put(response, swingWorker);
+		
+//		 swingWorker.execute();
+		threadPool.execute(swingWorker);
+		
+		
+	}
+	
+	public void receiveResponse(SwingResponse response)
+	{
+		if (javax.swing.SwingUtilities.isEventDispatchThread() == false)
+		{
+			throw new IllegalThreadStateException("Should be called only from Swing's Event Dispatch Thread");
+		}
+		
+		// XXX callback Swing components here using property change events
+	}
 }
