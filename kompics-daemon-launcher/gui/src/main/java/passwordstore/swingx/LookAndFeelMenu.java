@@ -31,7 +31,7 @@ public class LookAndFeelMenu extends JMenu {
     private boolean loadedLAFs;
 
     static {
-        Utilities.registerDefaults("strings");
+        Utilities.registerDefaults("passwordstore.swingx.strings");
 //        UIManager.getDefaults().addResourceBundle(
 //                "passwordstore.swingx.resources.strings");
     }

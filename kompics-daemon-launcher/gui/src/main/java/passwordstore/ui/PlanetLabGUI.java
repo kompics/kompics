@@ -833,16 +833,16 @@ public class PlanetLabGUI extends ComponentDefinition {
 					.println("Enter the full pathname of the file containing a list"
 							+ "of comma-separated hosts in the format host[:port[:id]] ");
 			String filename = scanner.next();
-			try {
-				Set<Host> hosts = HostsParser.parseHostsFile(filename);
-			} catch (FileNotFoundException e) {
-				System.out.println("File not found: " + e.getMessage());
-				return false;
-			} catch (HostsParserException e) {
-				System.out.println("Hosts file not formatted correctly: "
-						+ e.getMessage());
-				return false;
-			}
+//			try {
+//				Set<Host> hosts = HostsParser.parseHostsFile(filename);
+//			} catch (FileNotFoundException e) {
+//				System.out.println("File not found: " + e.getMessage());
+//				return false;
+//			} catch (HostsParserException e) {
+//				System.out.println("Hosts file not formatted correctly: "
+//						+ e.getMessage());
+//				return false;
+//			}
 
 			return succeed;
 		}

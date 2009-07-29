@@ -1,4 +1,4 @@
-package passwordstore.main;
+package se.sics.kompics.master.main;
 
 
 import org.apache.commons.configuration.ConfigurationException;

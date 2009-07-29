@@ -14,9 +14,9 @@ import javax.swing.UIManager;
 
 import org.apache.commons.configuration.ConfigurationException;
 
-import passwordstore.main.Main;
 import passwordstore.swingx.app.Application;
 import se.sics.kompics.Kompics;
+import se.sics.kompics.master.main.Main;
 import se.sics.kompics.wan.config.Configuration;
 import se.sics.kompics.wan.config.MasterConfiguration;
 import se.sics.kompics.wan.config.PlanetLabConfiguration;
