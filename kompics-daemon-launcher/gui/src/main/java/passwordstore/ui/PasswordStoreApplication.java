@@ -12,7 +12,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 
+import org.apache.commons.configuration.ConfigurationException;
+
+import passwordstore.main.Main;
 import passwordstore.swingx.app.Application;
+import se.sics.kompics.Kompics;
+import se.sics.kompics.wan.config.Configuration;
+import se.sics.kompics.wan.config.MasterConfiguration;
+import se.sics.kompics.wan.config.PlanetLabConfiguration;
 
 /**
  * PasswordStore's Application subclass. Does very little other than start up
@@ -70,6 +77,7 @@ public class PasswordStoreApplication extends Application {
     
     
     public static void main(String[] args) {
+    	
         try {
             // Register various properties for OS X
             System.setProperty("apple.laf.useScreenMenuBar", "true");
@@ -79,5 +87,6 @@ public class PasswordStoreApplication extends Application {
         } catch (SecurityException e) {
         }
         new PasswordStoreApplication().start();
+        
     }
 }

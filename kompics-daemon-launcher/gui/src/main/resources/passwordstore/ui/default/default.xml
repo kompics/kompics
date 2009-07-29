@@ -2,7 +2,7 @@
 <java version="1.6.0-internal" class="java.beans.XMLDecoder"> 
  <object class="java.util.ArrayList"> 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>Biocca Games</string> 
     </void> 
@@ -30,7 +30,7 @@
   </void> 
 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>zabble</string> 
     </void> 
@@ -58,7 +58,7 @@
   </void> 
 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>Sun Developer</string> 
     </void> 
@@ -86,7 +86,7 @@
   </void> 
 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>Heirloom Seeds</string> 
     </void> 
@@ -114,7 +114,7 @@
   </void> 
 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>Pacific Zoo Shop</string> 
     </void> 
@@ -142,7 +142,7 @@
   </void> 
 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>Alpine Bank</string> 
     </void> 
@@ -170,7 +170,7 @@
   </void> 
 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>Case Pharmacy</string> 
     </void> 
@@ -198,7 +198,7 @@
   </void> 
 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>Parsec Shipping</string> 
     </void> 
@@ -226,7 +226,7 @@
   </void> 
 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>Auction Antiques</string> 
     </void> 
@@ -254,7 +254,7 @@
   </void> 
 
   <void method="add"> 
-   <object class="passwordstore.model.HostEntry"> 
+   <object class="passwordstore.model.NodeEntry"> 
     <void property="host"> 
      <string>All Weather</string> 
     </void> 

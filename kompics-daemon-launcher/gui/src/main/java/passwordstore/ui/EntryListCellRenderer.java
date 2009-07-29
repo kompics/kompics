@@ -21,7 +21,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
-import passwordstore.model.HostEntry;
+import passwordstore.model.NodeEntry;
 import passwordstore.swingx.ImageCache;
 
 /**
@@ -82,7 +82,7 @@ final class EntryListCellRenderer extends JPanel implements ListCellRenderer {
     
     public Component getListCellRendererComponent(JList list, Object value,
             int index, boolean isSelected, boolean cellHasFocus) {
-        HostEntry entry = (HostEntry)value;
+    	NodeEntry entry = (NodeEntry)value;
         String host = entry.getHost();
         String user = entry.getUser();
         if (host == null) {
@@ -115,7 +115,7 @@ final class EntryListCellRenderer extends JPanel implements ListCellRenderer {
         }
     }
 
-    private Icon getImageIcon(HostEntry entry, int size) {
+    private Icon getImageIcon(NodeEntry entry, int size) {
         if (entry.getImagePath() != null) {
             Image image = ImageCache.getInstance().getImage(
                     this, entry.getImagePath(), size, size);

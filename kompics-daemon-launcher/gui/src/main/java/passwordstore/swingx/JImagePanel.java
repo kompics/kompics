@@ -62,7 +62,7 @@ public class JImagePanel extends JPanel {
     private Image dragImage;
 
     static {
-        Utilities.registerDefaults("strings");
+        Utilities.registerDefaults("passwordstore.swingx.strings");
 //        UIManager.getDefaults().addResourceBundle("passwordstore.swingx.resources.strings");
     }
     

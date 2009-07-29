@@ -17,6 +17,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JTextField;
 
 import passwordstore.model.HostEntry;
+import passwordstore.model.NodeEntry;
 import passwordstore.swingx.Utilities;
 import passwordstore.swingx.binding.ListController;
 
@@ -30,7 +31,7 @@ final class PasswordGeneratingAction extends AbstractAction {
     private final boolean generateLower;
     private final boolean generateDigits;
     private final boolean generateOther;
-    private final ListController<HostEntry> controller;
+    private final ListController<NodeEntry> controller;
     private final JTextField tf;
     
     public static final String generatePassword(int length, boolean upper,
@@ -95,7 +96,7 @@ final class PasswordGeneratingAction extends AbstractAction {
         }
     }
 
-    public PasswordGeneratingAction(ListController<HostEntry> controller,
+    public PasswordGeneratingAction(ListController<NodeEntry> controller,
             JTextField tf, boolean generateUpper, boolean generateLower,
             boolean generateDigits, boolean generateOther) {
         this.tf = tf;
@@ -109,7 +110,7 @@ final class PasswordGeneratingAction extends AbstractAction {
     }
 
     public void actionPerformed(ActionEvent e) {
-        HostEntry entry = controller.getSelectedEntry();
+    	NodeEntry entry = controller.getSelectedEntry();
         String password = generatePassword(8, generateUpper, generateLower,
                 generateDigits, generateOther);
         entry.setPassword(password);

@@ -10,6 +10,7 @@ import java.util.Date;
 import javax.swing.JTable;
 
 import passwordstore.model.HostEntry;
+import passwordstore.model.NodeEntry;
 import passwordstore.swingx.app.Application;
 import passwordstore.swingx.binding.AbstractJTableListControllerAdapter;
 import passwordstore.swingx.binding.ListController;
@@ -19,8 +20,8 @@ import passwordstore.swingx.binding.ListController;
  *
  * @author sky
  */
-final class PasswordTableListControllerAdapter extends AbstractJTableListControllerAdapter<HostEntry> {
-    PasswordTableListControllerAdapter(ListController<HostEntry> controller,
+final class PasswordTableListControllerAdapter extends AbstractJTableListControllerAdapter<NodeEntry> {
+    PasswordTableListControllerAdapter(ListController<NodeEntry> controller,
             JTable table) {
         super(controller, table);
     }
@@ -34,7 +35,7 @@ final class PasswordTableListControllerAdapter extends AbstractJTableListControl
     }
     
     protected Object getValueAt(int rowIndex, int columnIndex) {
-        HostEntry entry = entries.get(rowIndex);
+    	NodeEntry entry = entries.get(rowIndex);
         switch(columnIndex) {
             case 0:
                 return entries.get(rowIndex).getHost();

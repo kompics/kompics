@@ -60,7 +60,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.plaf.ProgressBarUI;
 import javax.swing.text.Document;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -71,8 +70,8 @@ import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoableEdit;
 
 import passwordstore.dndx.DefaultTransferable;
-import passwordstore.model.HostEntry;
-import passwordstore.model.HostModel;
+import passwordstore.model.NodeEntry;
+import passwordstore.model.NodeModel;
 import passwordstore.swingx.CutCopyPasteHelper;
 import passwordstore.swingx.DynamicAction;
 import passwordstore.swingx.JImagePanel;
@@ -101,14 +100,14 @@ public class Controller {
     private static final DataFlavor PASSWORD_ENTRY_DATA_FLAVOR;
 
     // Model for the app.
-    private HostModel model;
+    private NodeModel model;
     
-    private ListController<HostEntry> listController;
+    private ListController<NodeEntry> listController;
     
     // JList used to show the entries.
     private JList entryList;
     
-    private JListListControllerAdapter<HostEntry> entryListAdapter;
+    private JListListControllerAdapter<NodeEntry> entryListAdapter;
     
     private JTable entryTable;
     
@@ -126,15 +125,15 @@ public class Controller {
     // JTextArea for notes
     private JTextPane notesTP;
     
-    // PropertyChangeListener attached to each HostEntry
+    // PropertyChangeListener attached to each NodeEntry
     private PropertyChangeListener selectedEntryChangeListener;
     
     // The selected entry
-    private HostEntry selectedEntry;
+    private NodeEntry selectedEntry;
     
     // Set to true while changing the text of the userTF or invoking
     // setHost. This is used to avoid updating the text field or
-    // selected HostEntry when the text or seleted HostEntry
+    // selected NodeEntry when the text or seleted NodeEntry
     // has changed.
     private boolean changingHost;
     
@@ -284,10 +283,10 @@ public class Controller {
         return true;
     }
     
-    // Adds a new HostEntry
+    // Adds a new NodeEntry
     public void addAccount() {
         // Create the new entry, adding some default values.
-        HostEntry entry = new HostEntry();
+        NodeEntry entry = new NodeEntry();
         ResourceBundle resources = Application.getInstance().getResourceBundle();
         entry.setHost(resources.getString("newEntry.host"));
         entry.setUser(resources.getString("newEntry.user"));
@@ -306,7 +305,7 @@ public class Controller {
     }
 
     // Invoked when the selection in the list has changed
-    private void selectionChanged(List<HostEntry> oldSelection) {
+    private void selectionChanged(List<NodeEntry> oldSelection) {
         undoManager.addEdit(new SelectionChangeUndo(oldSelection));
         if (selectedEntry != null) {
             if (editedNotes) {
@@ -318,7 +317,7 @@ public class Controller {
             selectedEntry.removePropertyChangeListener(
                     selectedEntryChangeListener);
         }
-        List<HostEntry> selection = listController.getSelection();
+        List<NodeEntry> selection = listController.getSelection();
         
         // We're about to change the host/user/password textfields. Set a
         // boolean indicating we should ignore any change events originating
@@ -364,7 +363,7 @@ public class Controller {
     }
     
     private void updateCutCopyPasteForEntryView() {
-        List<HostEntry> selection = listController.getSelection();
+        List<NodeEntry> selection = listController.getSelection();
         JComponent view = (entryTable == null) ? entryList : entryTable;
         CutCopyPasteHelper.setCopyEnabled(view, selection.size() > 0);
         CutCopyPasteHelper.setCutEnabled(view, selection.size() > 0);
@@ -372,7 +371,7 @@ public class Controller {
     
     // Adds an item at the specified index.
     // Notice that we do this here as List does not provide notification.
-    private void add(List<HostEntry> entries, int index) {
+    private void add(List<NodeEntry> entries, int index) {
         // Add the entries to the model
         undoManager.addEdit(new MutateUndo(index, entries.size(), false));
         listController.getEntries().addAll(index, entries);
@@ -390,7 +389,7 @@ public class Controller {
     private void remove(int index, int count) {
         undoManager.addEdit(new MutateUndo(index, count, true));
         // Remove the PasswordEntries from the model.
-        List<HostEntry> entries = listController.getEntries();
+        List<NodeEntry> entries = listController.getEntries();
         for (int i = 0; i < count; i++) {
             entries.remove(index);
         }
@@ -404,7 +403,7 @@ public class Controller {
     // Case 1 can be identified by one of the changingXXX fields. If it's true,
     // we know the edit originated from us and there is no need to reset the 
     // text in the textfield.
-    private void entryChanged(HostEntry passwordEntry,
+    private void entryChanged(NodeEntry passwordEntry,
             String propertyChanged, Object lastValue) {
         assert (selectedEntry == passwordEntry);
         boolean addEdit = false;
@@ -520,10 +519,10 @@ public class Controller {
     
     // Tries to load the model. If that fails a new model is returned
     private void createModel() {
-        model = new HostModel();
+        model = new NodeModel();
         model.load(getClass().getResourceAsStream(
                 "/passwordstore/ui/default/default.xml"));
-        for (HostEntry entry : model.getHostEntries()) {
+        for (NodeEntry entry : model.getHostEntries()) {
             URI imageURI = entry.getImagePath();
             if ("default".equals(imageURI.getScheme())) {
                 String path = imageURI.getPath();
@@ -845,9 +844,9 @@ public class Controller {
         // Model set later on.
         entryList = new JList();
         entryList.setCellRenderer(new EntryListCellRenderer());
-        entryListAdapter = new JListListControllerAdapter<HostEntry>(
+        entryListAdapter = new JListListControllerAdapter<NodeEntry>(
                 listController, entryList);
-        entryList.setPrototypeCellValue(new HostEntry());
+        entryList.setPrototypeCellValue(new NodeEntry());
         entryList.setTransferHandler(new ListTableTransferHandler());
         CutCopyPasteHelper.registerCutCopyPasteBindings(entryList);
         CutCopyPasteHelper.setPasteEnabled(entryList, true);
@@ -918,11 +917,11 @@ public class Controller {
         gen.addUndoableEditListener(undoManager);
     }
 
-    HostModel getModel() {
+    NodeModel getModel() {
         return model;
     }
 
-    private Image getImage(HostEntry selectedEntry) {
+    private Image getImage(NodeEntry selectedEntry) {
         if (selectedEntry.getImagePath() != null) {
             try {
                 return new ImageIcon(selectedEntry.getImagePath().toURL()).getImage();
@@ -978,7 +977,7 @@ public class Controller {
     // made to it.
     private class SelectedEntryPropertyChangeHandler implements PropertyChangeListener {
         public void propertyChange(PropertyChangeEvent e) {
-            entryChanged((HostEntry)e.getSource(), e.getPropertyName(),
+            entryChanged((NodeEntry)e.getSource(), e.getPropertyName(),
                     e.getOldValue());
         }
     }
@@ -989,7 +988,7 @@ public class Controller {
             PropertyChangeListener {
         public void propertyChange(PropertyChangeEvent evt) {
             if (evt.getPropertyName() == "selection") {
-                selectionChanged((List<HostEntry>)evt.getOldValue());
+                selectionChanged((List<NodeEntry>)evt.getOldValue());
             }
         }
     }
@@ -1019,8 +1018,8 @@ public class Controller {
     
     
     private final static class EntryListController extends
-            ListController<HostEntry> {
-        protected boolean includeEntry(HostEntry entry, String filter) {
+            ListController<NodeEntry> {
+        protected boolean includeEntry(NodeEntry entry, String filter) {
             String host = entry.getHost();
             if (host != null && host.toLowerCase().contains(filter)) {
                 return true;
@@ -1090,10 +1089,10 @@ public class Controller {
                     index++;
                 }
                 index = Math.min(index, listController.getEntries().size());
-                List<HostEntry> copy = new ArrayList<HostEntry>(
+                List<NodeEntry> copy = new ArrayList<NodeEntry>(
                         entries.size());
                 for (Object entry : entries) {
-                    copy.add(((HostEntry)entry).clone());
+                    copy.add(((NodeEntry)entry).clone());
                 }
                 add(copy, index);
                 return true;
@@ -1106,23 +1105,23 @@ public class Controller {
         public void exportToClipboard(JComponent comp, Clipboard clip,
                 int action) throws IllegalStateException {
             action = getSourceActions(comp) & action;
-            List<HostEntry> selection = listController.getSelection();
-            List<HostEntry> copy = new ArrayList<HostEntry>(
+            List<NodeEntry> selection = listController.getSelection();
+            List<NodeEntry> copy = new ArrayList<NodeEntry>(
                     selection.size());
-            for (HostEntry entry : selection) {
+            for (NodeEntry entry : selection) {
                 copy.add(entry.clone());
             }
             Transferable trans = new DefaultTransferable(
                     PASSWORD_ENTRY_DATA_FLAVOR, copy);
             clip.setContents(trans, null);
             if (action == MOVE) {
-                List<HostEntry> entries = listController.getEntries();
-                List<HostEntry> selectionCopy = new ArrayList<HostEntry>(
+                List<NodeEntry> entries = listController.getEntries();
+                List<NodeEntry> selectionCopy = new ArrayList<NodeEntry>(
                         listController.getSelection());
                 listController.setSelection(null);
                 ExtendedCompoundEdit moveUndo = new ExtendedCompoundEdit(undoManager);
                 undoManager.addEdit(moveUndo);
-                for (HostEntry entry : selection) {
+                for (NodeEntry entry : selection) {
                     int index = entries.indexOf(entry);
                     remove(index, 1);
                 }
@@ -1194,9 +1193,9 @@ public class Controller {
     
     
     private final class SelectionChangeUndo extends AbstractUndoableEdit {
-        private List<HostEntry> lastSelection;
+        private List<NodeEntry> lastSelection;
         
-        SelectionChangeUndo(List<HostEntry> lastSelection) {
+        SelectionChangeUndo(List<NodeEntry> lastSelection) {
             this.lastSelection = lastSelection;
         }
         
@@ -1211,7 +1210,7 @@ public class Controller {
         }
 
         private void swapSelection() {
-            List<HostEntry> selection = listController.getSelection();
+            List<NodeEntry> selection = listController.getSelection();
             listController.setSelection(lastSelection);
             lastSelection = selection;
         }
@@ -1276,7 +1275,7 @@ public class Controller {
     
 
     private final class MutateUndo extends AbstractUndoableEdit {
-        private List<HostEntry> elements;
+        private List<NodeEntry> elements;
         private int index;
         private int count;
         
@@ -1313,7 +1312,7 @@ public class Controller {
         }
         
         private void fetchSubList() {
-            elements = new ArrayList<HostEntry>(
+            elements = new ArrayList<NodeEntry>(
                     listController.getEntries().subList(index,
                     index + count));
         }

@@ -27,10 +27,10 @@ import se.sics.kompics.wan.ssh.Host;
  * @version $Revision$
  */
 public class NodeModel {
-    private List<Host> hostEntries;
+    private List<NodeEntry> hostEntries;
     
     public NodeModel() {
-        hostEntries = new ArrayList<Host>(1);
+        hostEntries = new ArrayList<NodeEntry>(1);
         hostEntries = CollectionsX.observableList(hostEntries);
     }
     
@@ -78,7 +78,7 @@ public class NodeModel {
         encoder = null;
     }
     
-    public List<Host> getHostEntries() {
+    public List<NodeEntry> getHostEntries() {
         return hostEntries;
     }
     
