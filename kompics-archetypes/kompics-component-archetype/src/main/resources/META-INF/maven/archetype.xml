@@ -1,0 +1,12 @@
+<archetype>
+	<id>kompics-component-archetype</id>
+	<sources>
+		<source>src/main/java/Component.java</source>
+		<source>src/main/java/ComponentInit.java</source>
+		<source>src/main/java/ComponentMessage.java</source>
+		<source>src/main/java/ComponentTimeout.java</source>
+	</sources>
+	<resources></resources>
+	<testSources></testSources>
+	<testResources></testResources>
+</archetype>

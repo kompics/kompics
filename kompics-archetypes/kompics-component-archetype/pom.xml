@@ -9,9 +9,9 @@
 	</parent>
 
 	<groupId>se.sics.kompics.archetypes</groupId>
-	<artifactId>kompics-port-archetype</artifactId>
+	<artifactId>kompics-component-archetype</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
-	<name>Kompics Port Archetype</name>
+	<name>Kompics Component Archetype</name>
 	<packaging>maven-archetype</packaging>
 	<url>http://kompics.sics.se</url>
 
