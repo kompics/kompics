@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-chord-simulator</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>ChordSimulator Kompics Component</name>
+	<description>ChordSimulator Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

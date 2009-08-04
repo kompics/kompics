@@ -10,6 +10,8 @@
 	<artifactId>kompicscomponent-chord-execution-main</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>ChordExecutionMain Kompics Component</name>
+	<description>ChordExecutionMain Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

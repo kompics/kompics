@@ -14,6 +14,7 @@
 	<name>Kompics P2P Experiments</name>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<description>Kompics P2P Experiments</description>
+
 	<modules>
 		<module>network-model</module>
 		<module>chord</module>

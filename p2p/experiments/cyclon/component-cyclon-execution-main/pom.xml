@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-cyclon-execution-main</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>CyclonExecutionMain Kompics Component</name>
+	<description>CyclonExecutionMain Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

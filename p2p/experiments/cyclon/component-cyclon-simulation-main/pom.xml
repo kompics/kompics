@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-cyclon-simulation-main</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>CyclonSimulationMain Kompics Component</name>
+	<description>CyclonSimulationMain Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>
