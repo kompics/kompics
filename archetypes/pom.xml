@@ -8,7 +8,7 @@
 		<version>0.4.2.2-SNAPSHOT</version>
 	</parent>
 
-	<groupId>se.sics.kompics</groupId>
+	<groupId>se.sics.kompics.archetypes</groupId>
 	<artifactId>kompics-archetypes</artifactId>
 	<packaging>pom</packaging>
 	<version>0.4.2.2-SNAPSHOT</version>
@@ -25,7 +25,7 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>${kompics.version}</version>
+			<version>${version}</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>

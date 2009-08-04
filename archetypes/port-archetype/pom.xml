@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>se.sics.kompics</groupId>
+		<groupId>se.sics.kompics.archetypes</groupId>
 		<artifactId>kompics-archetypes</artifactId>
 		<version>0.4.2.2-SNAPSHOT</version>
 	</parent>

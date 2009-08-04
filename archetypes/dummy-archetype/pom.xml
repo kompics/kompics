@@ -1,12 +1,18 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>se.sics.kompics</groupId>
-    <artifactId>kompics-archetypes</artifactId>
-	<version>0.4.2-SNAPSHOT</version>
-  </parent>
-  <artifactId>kompics-archetype-dl</artifactId>
-  <name>Kompics Daemon Launcher Archetype</name>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>se.sics.kompics.archetypes</groupId>
+		<artifactId>kompics-archetypes</artifactId>
+		<version>0.4.2.2-SNAPSHOT</version>
+	</parent>
+
+	<groupId>se.sics.kompics.archetypes</groupId>
+	<artifactId>kompics-dummy-archetype</artifactId>
+	<name>Kompics Dummy Archetype</name>
+	<packaging>maven-archetype</packaging>
+	<url>http://kompics.sics.se</url>
 
 	<build>
 		<resources>
@@ -23,7 +29,7 @@
 				<directory>${basedir}/src/main/resources/</directory>
 				<excludes>
 					<exclude>**/*.java</exclude>
-					<exclude>META-INF/maven/archetype-metadata.xml</exclude>					
+					<exclude>META-INF/maven/archetype-metadata.xml</exclude>
 				</excludes>
 			</resource>
 		</resources>
@@ -35,29 +41,29 @@
 		</plugins>
 	</build>
 
-    <repositories>
-        <repository>
-            <id>sics-release</id>
-            <name>SICS Release Repository</name>
-            <url>http://kompics.sics.se/maven/repository</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>sics-snapshot</id>
-            <name>SICS Snapshot Repository</name>
-            <url>http://kompics.sics.se/maven/snapshotrepository</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories> 	
+	<repositories>
+		<repository>
+			<id>sics-release</id>
+			<name>SICS Release Repository</name>
+			<url>http://kompics.sics.se/maven/repository</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>sics-snapshot</id>
+			<name>SICS Snapshot Repository</name>
+			<url>http://kompics.sics.se/maven/snapshotrepository</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 </project>
 

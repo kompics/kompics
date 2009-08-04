@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archetype-catalog>
-	  <archetypes>
-	    <archetype>
-		    <groupId>se.sics.kompics</groupId>
-		    <artifactId>kompics-archetype-basic</artifactId>
-		    <version>0.4.1</version>
-		    <repository>http://kompics.sics.se/maven/repository</repository>
-		    <description>Kompics archetype for creating a basic Kompics application</description>
-	    </archetype>
-	    <archetype>
-		    <groupId>se.sics.kompics</groupId>
-		    <artifactId>kompics-archetype-net</artifactId>
-		    <version>0.4.1</version>
-		    <repository>http://kompics.sics.se/maven/repository</repository>
-		    <description>Kompics archetype for creating a Kompics application with Apache Mina support</description>
-	    </archetype>
-	    <archetype>
-		    <groupId>se.sics.kompics</groupId>
-		    <artifactId>kompics-archetype-p2p</artifactId>
-		    <version>0.4.1</version>
-		    <repository>http://kompics.sics.se/maven/repository</repository>
-		    <description>Kompics archetype for creating a Kompics application with P2P framework support</description>
-	    </archetype>
-	  </archetypes>
+	<archetypes>
+		<archetype>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-system-main-archetype</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+			<repository>http://kompics.sics.se/maven/repository</repository>
+			<description>Kompics archetype for creating a main component for a
+				Kompics system.</description>
+		</archetype>
+		<archetype>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-port-archetype</artifactId>
+			<version>0.4.1</version>
+			<repository>http://kompics.sics.se/maven/repository</repository>
+			<description>Archetype for creating a Kompics port.</description>
+		</archetype>
+		<archetype>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-component-archetype</artifactId>
+			<version>0.4.1</version>
+			<repository>http://kompics.sics.se/maven/repository</repository>
+			<description>Archetype for creating a Kompics component.
+			</description>
+		</archetype>
+	</archetypes>
 </archetype-catalog>
