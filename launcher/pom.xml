@@ -7,11 +7,11 @@
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics</groupId>
-	<artifactId>kompics-launcher</artifactId>
+	<artifactId>kompics-launchers</artifactId>
 	<packaging>pom</packaging>
-	<name>Lunchers for Kompics systems and demonstators</name>
+	<name>Lunchers for Kompics systems and demos</name>
 	<version>0.4.2.2-SNAPSHOT</version>
-	<description>Lunchers for Kompics systems and demonstators</description>
+	<description>Launchers for Kompics systems and demos</description>
 
 	<modules>
 		<module>local-process-launcher</module>

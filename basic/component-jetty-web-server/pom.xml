@@ -7,7 +7,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics</groupId>
   <artifactId>kompics-component-jetty-web-server</artifactId>
-  <name>Kompics Jetty Web Server component</name>
+  <name>JettyWebServer Kompics Component</name>
   <version>0.4.2.2-SNAPSHOT</version>
-  <description>Kompics Jetty Web Server component</description>
+  <description>JettyWebServer Kompics Component</description>
 </project>

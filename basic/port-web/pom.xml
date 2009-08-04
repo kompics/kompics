@@ -7,7 +7,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics</groupId>
   <artifactId>kompics-port-web</artifactId>
-  <name>Kompics Web port</name>
+  <name>Kompics Web PortType</name>
   <version>0.4.2.2-SNAPSHOT</version>
-  <description>Kompics Web port</description>
+  <description>Kompics Web PortType</description>
 </project>
