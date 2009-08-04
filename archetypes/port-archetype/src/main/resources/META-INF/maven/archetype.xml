@@ -1,5 +1,5 @@
 <archetype>
-	<id>kompics-port-archetype</id>
+	<id>kompics-archetype-port</id>
 	<sources>
 		<source>src/main/java/Port.java</source>
 		<source>src/main/java/EventIn.java</source>

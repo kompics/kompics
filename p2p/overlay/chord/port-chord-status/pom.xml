@@ -7,7 +7,7 @@
         <version>0.4.2.2-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
-	<artifactId>port-chord-status</artifactId>
+	<artifactId>kompics-port-chord-status</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 

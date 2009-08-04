@@ -9,7 +9,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
-	<artifactId>kompics-chord</artifactId>
+	<artifactId>kompics-chord-overlay</artifactId>
 	<packaging>pom</packaging>
 	<name>Chord</name>
 	<version>0.4.2.2-SNAPSHOT</version>

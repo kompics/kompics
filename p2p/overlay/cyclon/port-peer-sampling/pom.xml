@@ -7,7 +7,7 @@
         <version>0.4.2.2-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
-	<artifactId>port-peer-sampling</artifactId>
+	<artifactId>kompics-port-peer-sampling</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 

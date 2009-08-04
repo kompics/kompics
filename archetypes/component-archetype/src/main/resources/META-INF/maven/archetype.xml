@@ -1,5 +1,5 @@
 <archetype>
-	<id>kompics-component-archetype</id>
+	<id>kompics-archetype-component</id>
 	<sources>
 		<source>src/main/java/Component.java</source>
 		<source>src/main/java/ComponentInit.java</source>

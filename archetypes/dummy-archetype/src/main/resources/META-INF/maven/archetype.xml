@@ -1,5 +1,5 @@
 <archetype>
-  <id>kompics-archetype-net</id>
+  <id>kompics-archetype-dummy</id>
   <sources>
     <source>src/main/java/main/Root.java</source>
   </sources>

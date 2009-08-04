@@ -7,7 +7,7 @@
         <version>0.4.2.2-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
-	<artifactId>component-chord-iterative-router</artifactId>
+	<artifactId>kompics-component-chord-iterative-router</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
