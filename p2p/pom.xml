@@ -23,5 +23,36 @@
 		<module>component-bootstrap-client</module>
 		<module>component-bootstrap-server</module>
 		<module>component-failure-detector</module>
+		<module>overlay</module>
+		<module>dht</module>
+		<module>cdn</module>
+		<module>systems</module>
+		<module>experiments</module>
+		<module>experiment-scenario-dsl</module>
 	</modules>
+
+    <repositories>
+        <repository>
+            <id>sics-release</id>
+            <name>SICS Release Repository</name>
+            <url>http://kompics.sics.se/maven/repository</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>sics-snapshot</id>
+            <name>SICS Snapshot Repository</name>
+            <url>http://kompics.sics.se/maven/snapshotrepository</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>
