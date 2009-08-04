@@ -6,7 +6,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics</groupId>
-  <artifactId>simulation</artifactId>
+  <artifactId>kompics-simulation</artifactId>
   <name>Kompics simulation support</name>
   <version>0.4.2.2-SNAPSHOT</version>
   <description>Support classes and a Kompics scheduler to execute Kompics systems in simulation.</description>

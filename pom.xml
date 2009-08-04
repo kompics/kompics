@@ -31,13 +31,8 @@ by putting together protocols programmed as event-driven components.
 		<module>basic</module>
 		<module>archetypes</module>
 		<module>p2p</module>
-		<module>kompics-address</module>
-		<module>kompics-port-network</module>
-		<module>kompics-port-timer</module>
-		<module>kompics-component-mina-network</module>
-		<module>kompics-component-java-timer</module>
-		<module>kompics-distributed-system-launcher</module>
 		<module>simulation</module>
+		<module>launcher</module>
 		<module>examples</module>
 	</modules>
 

@@ -15,6 +15,16 @@
 	<version>0.4.2.2-SNAPSHOT</version>
 	<description>Basic components for timers, network communication, and web server</description>
 
+	<modules>
+		<module>address</module>
+		<module>port-timer</module>
+		<module>port-network</module>
+		<module>port-web</module>
+		<module>component-java-timer</module>
+		<module>component-mina-network</module>
+		<module>component-jetty-web-server</module>
+	</modules>
+
 	<repositories>
 		<repository>
 			<id>sics-release</id>

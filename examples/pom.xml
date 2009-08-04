@@ -6,7 +6,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics</groupId>
-  <artifactId>examples</artifactId>
+  <artifactId>kompics-examples</artifactId>
   <packaging>pom</packaging>
   <name>Kompics examples and demos</name>
   <version>0.4.2.2-SNAPSHOT</version>
