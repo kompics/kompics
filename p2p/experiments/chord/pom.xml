@@ -2,25 +2,18 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
-		<artifactId>kompics-p2p</artifactId>
-		<groupId>se.sics.kompics.p2p</groupId>
+		<artifactId>kompics-p2p-experiments</artifactId>
+		<groupId>se.sics.kompics.p2p.experiments</groupId>
 		<version>0.4.2.2-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>se.sics.kompics.p2p.experiments</groupId>
-	<artifactId>kompics-p2p-experiments</artifactId>
+	<groupId>se.sics.kompics.p2p.experiments.chord</groupId>
+	<artifactId>kompics-chord-experiments</artifactId>
 	<packaging>pom</packaging>
-	<name>Kompics P2P Experiments</name>
+	<name>Kompics Chord Experiments</name>
 	<version>0.4.2.2-SNAPSHOT</version>
-	<description>Kompics P2P Experiments</description>
-	<modules>
-		<module>network-model</module>
-		<module>chord</module>
-		<module>cyclon</module>
-		<module>component-p2p-simulator</module>
-		<module>component-p2p-orchestrator</module>
-	</modules>
+	<description>Kompics Chord Experiments</description>
 
 	<repositories>
 		<repository>

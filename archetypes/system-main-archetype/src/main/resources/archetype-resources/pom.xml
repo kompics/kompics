@@ -21,7 +21,7 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>se.sics.kompics</groupId>
+			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-component-java-timer</artifactId>
 			<version>${kompics.version}</version>
 			<scope>compile</scope>
