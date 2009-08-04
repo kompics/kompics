@@ -27,7 +27,10 @@ by putting together protocols programmed as event-driven components.
 	</licenses>
 
 	<modules>
-		<module>kompics-core</module>
+		<module>core</module>
+		<module>basic</module>
+		<module>archetypes</module>
+		<module>p2p</module>
 		<module>kompics-address</module>
 		<module>kompics-port-network</module>
 		<module>kompics-port-timer</module>
