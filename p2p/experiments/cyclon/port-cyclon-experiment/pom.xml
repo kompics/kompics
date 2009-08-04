@@ -7,7 +7,7 @@
         <version>0.4.2.2-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.experiments.cyclon</groupId>
-	<artifactId>port-cyclon-experiment</artifactId>
+	<artifactId>kompics-port-cyclon-experiment</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 

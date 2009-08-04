@@ -7,7 +7,7 @@
         <version>0.4.2.2-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.experiments.chord</groupId>
-	<artifactId>component-chord-simulator</artifactId>
+	<artifactId>kompics-component-chord-simulator</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
