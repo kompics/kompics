@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
 		<artifactId>kompics-overlay-networks</artifactId>
@@ -14,6 +14,15 @@
 	<name>Chord</name>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<description>Kompics implementation of Chord</description>
+	<modules>
+		<module>port-chord-overlay</module>
+		<module>port-chord-ring</module>
+		<module>port-chord-router</module>
+    <module>port-chord-status</module>
+    <module>component-chord-ring</module>
+    <module>component-chord-iterative-router</module>
+    <module>component-chord-overlay</module>
+  </modules>
 
 	<repositories>
 		<repository>

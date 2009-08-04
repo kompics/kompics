@@ -7,7 +7,7 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>se.sics.kompics.p2p.experiment-scenario</groupId>
+  <groupId>se.sics.kompics.p2p</groupId>
   <artifactId>kompics-experiment-scenario-dsl</artifactId>
   <name>Kompics P2P Experiment Scenario Domain-Specific Language</name>
   <version>0.4.2.2-SNAPSHOT</version>

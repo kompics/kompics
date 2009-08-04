@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
 		<artifactId>kompics-overlay-networks</artifactId>
@@ -39,4 +39,9 @@
 			</snapshots>
 		</repository>
 	</repositories>
+  <modules>
+    <module>port-peer-sampling</module>
+    <module>port-cyclon-status</module>
+    <module>component-cyclon-overlay</module>
+  </modules>
 </project>
