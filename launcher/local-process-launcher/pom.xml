@@ -3,14 +3,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>se.sics.kompics</groupId>
-		<artifactId>kompics-launcher</artifactId>
+		<groupId>se.sics.kompics.launcher</groupId>
+		<artifactId>kompics-launchers</artifactId>
 		<version>0.4.2.2-SNAPSHOT</version>
 	</parent>
 
-	<groupId>se.sics.kompics</groupId>
+	<groupId>se.sics.kompics.launcher</groupId>
 	<artifactId>kompics-local-process-launcher</artifactId>
-	<name>Kompics Distributed System Launcher</name>
+	<name>Kompics Local Process Launcher</name>
 	<packaging>jar</packaging>
 	<version>0.4.2.2-SNAPSHOT</version>
 
@@ -22,7 +22,7 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>se.sics.kompics</groupId>
+			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-address</artifactId>
 			<version>0.4.2.2-SNAPSHOT</version>
 			<scope>compile</scope>

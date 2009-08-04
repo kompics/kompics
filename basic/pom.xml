@@ -8,7 +8,7 @@
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>se.sics.kompics</groupId>
+	<groupId>se.sics.kompics.basic</groupId>
 	<artifactId>kompics-basic-components</artifactId>
 	<packaging>pom</packaging>
 	<name>Kompics basic components and ports</name>

@@ -1,12 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	
 	<parent>
 		<artifactId>kompics-parent-pom</artifactId>
 		<groupId>se.sics.kompics</groupId>
 		<version>0.4.2.2-SNAPSHOT</version>
 	</parent>
+	
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>se.sics.kompics</groupId>
+	<groupId>se.sics.kompics.launcher</groupId>
 	<artifactId>kompics-launchers</artifactId>
 	<packaging>pom</packaging>
 	<name>Lunchers for Kompics systems and demos</name>
