@@ -12,6 +12,13 @@
   <name>Kompics P2P Experiment Examples</name>
   <version>0.4.2.2-SNAPSHOT</version>
   <description>Kompics P2P Experiment Examples</description>
+  <modules>
+  	<module>chord-simulation</module>
+  	<module>cyclon-simulation</module>
+  	<module>bittorrent-simulation</module>
+  	<module>chord-local-execution</module>
+  	<module>cyclon-local-execution</module>
+  </modules>
 
 	<repositories>
 		<repository>
