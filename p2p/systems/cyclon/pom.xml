@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
 		<artifactId>kompics-p2p-systems</artifactId>
@@ -37,4 +37,13 @@
 			</snapshots>
 		</repository>
 	</repositories>
+  <modules>
+    <module>port-cyclon-peer</module>
+    <module>component-cyclon-peer</module>
+    <module>component-cyclon-main</module>
+    <module>component-cyclon-web-application</module>
+    <module>component-cyclon-monitor-client</module>
+    <module>component-cyclon-monitor-server</module>
+    <module>component-cyclon-monitor-server-main</module>
+  </modules>
 </project>

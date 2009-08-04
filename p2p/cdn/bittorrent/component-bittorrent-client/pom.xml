@@ -7,7 +7,7 @@
         <version>0.4.2.2-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.cdn.bittorrent</groupId>
-	<artifactId>component-bittorrent-client</artifactId>
+	<artifactId>kompics-component-bittorrent-client</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 

@@ -14,6 +14,15 @@
 	<name>Kompics Chord System</name>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<description>Kompics Chord System</description>
+	<modules>
+		<module>port-chord-peer</module>
+		<module>component-chord-peer</module>
+		<module>component-chord-main</module>
+		<module>component-chord-web-application</module>
+		<module>component-chord-monitor-client</module>
+		<module>component-chord-monitor-server</module>
+		<module>component-chord-monitor-server-main</module>
+	</modules>
 
 	<repositories>
 		<repository>
