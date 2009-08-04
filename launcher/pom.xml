@@ -17,6 +17,7 @@
 
 	<modules>
 		<module>local-process-launcher</module>
+		<module>web-start</module>
 	</modules>
 
     <repositories>

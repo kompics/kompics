@@ -14,6 +14,12 @@
 	<name>Kompics Overlay Networks</name>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<description>Kompics Overlay Networks</description>
+	<modules>
+		<module>chord</module>
+		<module>cyclon</module>
+		<module>overlay-address</module>
+		<module>overlay-key</module>
+	</modules>
 
     <repositories>
         <repository>
