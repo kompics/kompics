@@ -37,6 +37,8 @@ by putting together protocols programmed as event-driven components.
 		<module>kompics-component-mina-network</module>
 		<module>kompics-component-java-timer</module>
 		<module>kompics-distributed-system-launcher</module>
+		<module>simulation</module>
+		<module>examples</module>
 	</modules>
 
 	<dependencies>
