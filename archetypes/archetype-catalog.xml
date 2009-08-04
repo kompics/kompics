@@ -3,7 +3,7 @@
 	<archetypes>
 		<archetype>
 			<groupId>se.sics.kompics.archetypes</groupId>
-			<artifactId>kompics-system-main-archetype</artifactId>
+			<artifactId>kompics-archetype-system-main</artifactId>
 			<version>${version}</version>
 			<repository>http://kompics.sics.se/maven/repository</repository>
 			<description>Kompics archetype for creating a main component for a
@@ -11,14 +11,14 @@
 		</archetype>
 		<archetype>
 			<groupId>se.sics.kompics.archetypes</groupId>
-			<artifactId>kompics-port-archetype</artifactId>
+			<artifactId>kompics-archetype-port</artifactId>
 			<version>${version}</version>
 			<repository>http://kompics.sics.se/maven/repository</repository>
 			<description>Archetype for creating a Kompics port.</description>
 		</archetype>
 		<archetype>
 			<groupId>se.sics.kompics.archetypes</groupId>
-			<artifactId>kompics-component-archetype</artifactId>
+			<artifactId>kompics-archetype-component</artifactId>
 			<version>${version}</version>
 			<repository>http://kompics.sics.se/maven/repository</repository>
 			<description>Archetype for creating a Kompics component.

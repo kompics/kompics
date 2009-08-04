@@ -1,55 +1,56 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
-    <parent>
-        <groupId>se.sics.kompics</groupId>
-        <artifactId>kompics-parent-pom</artifactId>
-        <version>0.4.2.2-SNAPSHOT</version>
-    </parent>
+
+	<parent>
+		<groupId>se.sics.kompics</groupId>
+		<artifactId>kompics-launcher</artifactId>
+		<version>0.4.2.2-SNAPSHOT</version>
+	</parent>
 
 	<groupId>se.sics.kompics</groupId>
-	<artifactId>kompics-distributed-system-launcher</artifactId>
+	<artifactId>kompics-local-process-launcher</artifactId>
 	<name>Kompics Distributed System Launcher</name>
 	<packaging>jar</packaging>
 	<version>0.4.2.2-SNAPSHOT</version>
 
-    <dependencies>
-        <dependency>
-            <groupId>se.sics.kompics</groupId>
-            <artifactId>kompics-core</artifactId>
-            <version>0.4.2.2-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>se.sics.kompics</groupId>
-            <artifactId>kompics-address</artifactId>
-            <version>0.4.2.2-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-core</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-address</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
 
-    <repositories>
-        <repository>
-            <id>sics-release</id>
-            <name>SICS Release Repository</name>
-            <url>http://kompics.sics.se/maven/repository</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>sics-snapshot</id>
-            <name>SICS Snapshot Repository</name>
-            <url>http://kompics.sics.se/maven/snapshotrepository</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
+	<repositories>
+		<repository>
+			<id>sics-release</id>
+			<name>SICS Release Repository</name>
+			<url>http://kompics.sics.se/maven/repository</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>sics-snapshot</id>
+			<name>SICS Snapshot Repository</name>
+			<url>http://kompics.sics.se/maven/snapshotrepository</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 </project>
