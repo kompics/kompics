@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-chord-peer</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>ChordPeer Kompics Component</name>
+	<description>ChordPeer Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

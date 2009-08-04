@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-chord-iterative-router</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>ChordIterativeRouter Kompics Component</name>
+	<description>ChordIterativeRouter Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

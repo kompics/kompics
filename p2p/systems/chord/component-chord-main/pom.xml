@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-chord-main</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>ChordMain Kompics Component</name>
+	<description>ChordMain Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

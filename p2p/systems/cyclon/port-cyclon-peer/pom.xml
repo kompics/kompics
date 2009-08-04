@@ -13,6 +13,8 @@
 	<artifactId>kompics-port-cyclon-peer</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>CyclonPeer Kompics PortType</name>
+	<description>CyclonPeer Kompics PortType</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

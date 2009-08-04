@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-p2p-orchestrator</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>P2pOrchestrator Kompics Component</name>
+	<description>P2pOrchestrator Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

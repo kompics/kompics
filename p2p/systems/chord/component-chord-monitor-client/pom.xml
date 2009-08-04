@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-chord-monitor-client</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>ChordMonitorClient Kompics Component</name>
+	<description>ChordMonitorClient Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

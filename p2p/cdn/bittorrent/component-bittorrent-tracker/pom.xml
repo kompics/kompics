@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-bittorrent-tracker</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>BitTorrentTracker Kompics Component</name>
+	<description>BitTorrentTracker Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

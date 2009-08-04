@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-p2p-simulator</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>P2pSimulator Kompics Component</name>
+	<description>P2pSimulator Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>

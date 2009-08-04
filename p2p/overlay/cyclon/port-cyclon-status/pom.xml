@@ -10,6 +10,8 @@
 	<artifactId>kompics-port-cyclon-status</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>CyclonStatus Kompics PortType</name>
+	<description>CyclonStatus Kompics PortType</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>
