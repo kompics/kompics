@@ -9,9 +9,9 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics.p2p.experiment-scenario</groupId>
   <artifactId>kompics-experiment-scenario-dsl</artifactId>
-  <name>Kompics P2P Experiment Scenatio Domain-Specific Language</name>
+  <name>Kompics P2P Experiment Scenario Domain-Specific Language</name>
   <version>0.4.2.2-SNAPSHOT</version>
-  <description>Kompics P2P Experiment Scenatio Domain-Specific Language</description>
+  <description>Kompics P2P Experiment Scenario Domain-Specific Language</description>
 
 	<repositories>
 		<repository>

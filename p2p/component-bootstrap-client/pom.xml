@@ -10,6 +10,8 @@
 	<artifactId>kompics-component-bootstrap-client</artifactId>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<name>BootstrapClient Kompics Component</name>
+	<description>BootstrapClient Kompics Component</description>
 
 	<properties>
 		<kompics.version>0.4.2.2-SNAPSHOT</kompics.version>
