@@ -235,16 +235,16 @@ by putting together protocols programmed as event-driven components.
 		<repository>
 			<id>sics-release-repository</id>
 			<name>SICS Repository</name>
-			<url>scpexe://korsakov.sics.se/home/maven2/repository</url>
+			<url>scpexe://kompics.sics.se/home/maven2/repository</url>
 		</repository>
 		<snapshotRepository>
 			<id>sics-snapshot-repository</id>
 			<name>SICS Snapshot Repository</name>
-			<url>scpexe://korsakov.sics.se/home/maven2/snapshotrepository</url>
+			<url>scpexe://kompics.sics.se/home/maven2/snapshotrepository</url>
 		</snapshotRepository>
 		<site>
 			<id>kompics-site</id>
-			<url>scpexe://korsakov.sics.se/var/www/kompics/report/trunk</url>
+			<url>scpexe://kompics.sics.se/var/www/kompics/report/trunk</url>
 		</site>
 		<downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
 	</distributionManagement>
