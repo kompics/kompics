@@ -1,9 +1,10 @@
 /**
- * This file is part of the ID2210 course assignments kit.
+ * This file is part of the Kompics P2P Framework.
  * 
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * This program is free software; you can redistribute it and/or
+ * Kompics is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
@@ -25,6 +26,7 @@ import se.sics.kompics.Request;
  * The <code>WebRequest</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
+ * @version $Id: WebRequest.java 750 2009-04-02 09:55:01Z Cosmin $
  */
 public final class WebRequest extends Request {
 
