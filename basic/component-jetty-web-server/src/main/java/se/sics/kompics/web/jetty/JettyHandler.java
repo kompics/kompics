@@ -35,7 +35,7 @@ import org.mortbay.jetty.handler.AbstractHandler;
  * The <code>JettyHandler</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: JettyHandler.java 750 2009-04-02 09:55:01Z Cosmin $
+ * @version $Id$
  */
 final class JettyHandler extends AbstractHandler {
 

@@ -45,7 +45,7 @@ import se.sics.kompics.web.WebResponse;
  * The <code>JettyWebServer</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: JettyWebServer.java 750 2009-04-02 09:55:01Z Cosmin $
+ * @version $Id$
  */
 public final class JettyWebServer extends ComponentDefinition {
 

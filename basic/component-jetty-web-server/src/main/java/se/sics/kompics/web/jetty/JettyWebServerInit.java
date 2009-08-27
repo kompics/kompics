@@ -28,7 +28,7 @@ import se.sics.kompics.Init;
  * The <code>JettyWebServerInit</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: JettyWebServerInit.java 750 2009-04-02 09:55:01Z Cosmin $
+ * @version $Id$
  */
 public final class JettyWebServerInit extends Init {
 
