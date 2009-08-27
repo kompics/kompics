@@ -26,7 +26,7 @@ import se.sics.kompics.Request;
  * The <code>WebRequest</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: WebRequest.java 750 2009-04-02 09:55:01Z Cosmin $
+ * @version $Id$
  */
 public final class WebRequest extends Request {
 
