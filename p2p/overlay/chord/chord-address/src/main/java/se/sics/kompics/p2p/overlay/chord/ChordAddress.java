@@ -28,7 +28,7 @@ import se.sics.kompics.p2p.overlay.key.NumericRingKey;
  * The <code>ChordAddress</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: ChordAddress.java 750 2009-04-02 09:55:01Z Cosmin $
+ * @version $Id$
  */
 public final class ChordAddress extends OverlayAddress implements
 		Comparable<ChordAddress> {
