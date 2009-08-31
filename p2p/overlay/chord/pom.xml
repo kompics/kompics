@@ -23,6 +23,7 @@
     <module>component-chord-iterative-router</module>
     <module>component-chord-overlay</module>
     <module>chord-address</module>
+    <module>chord-message</module>
   </modules>
 
 	<repositories>
