@@ -43,5 +43,7 @@
     <module>port-peer-sampling</module>
     <module>port-cyclon-status</module>
     <module>component-cyclon-overlay</module>
+    <module>cyclon-address</module>
+    <module>cyclon-message</module>
   </modules>
 </project>
