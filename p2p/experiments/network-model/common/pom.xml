@@ -36,4 +36,11 @@
 			</snapshots>
 		</repository>
 	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>se.sics.kompics.basic</groupId>
+			<artifactId>kompics-port-network</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
 </project>
