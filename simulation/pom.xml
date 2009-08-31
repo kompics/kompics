@@ -20,9 +20,25 @@
 			<artifactId>kompics-core</artifactId>
 			<version>0.4.2.2-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.9.0.GA</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>
+		<repository>
+			<id>jboss</id>
+			<name>JBoss Repository</name>
+			<url>http://repository.jboss.org/maven2</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
 		<repository>
 			<id>sics-release</id>
 			<name>SICS Release Repository</name>
