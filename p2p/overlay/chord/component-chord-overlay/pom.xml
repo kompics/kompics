@@ -36,6 +36,31 @@
 			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
+			<artifactId>kompics-port-chord-status</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
+			<artifactId>kompics-port-chord-overlay</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
+			<artifactId>kompics-component-chord-ring</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
+			<artifactId>kompics-component-chord-iterative-router</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p</groupId>
+			<artifactId>kompics-port-failure-detector</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>
