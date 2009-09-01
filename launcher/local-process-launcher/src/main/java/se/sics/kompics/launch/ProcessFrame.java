@@ -22,8 +22,8 @@ package se.sics.kompics.launch;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -118,8 +118,14 @@ public class ProcessFrame extends JFrame {
 		this.setJMenuBar(getMyJMenuBar());
 
 		// Center the window
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		Dimension frameSize = getSize();
+		this.setExtendedState(this.getExtendedState() | Frame.MAXIMIZED_BOTH);
+		this.setVisible(true);
+
+		int left = this.getX();
+		int top = this.getY();
+		int width = this.getWidth();
+		int height = this.getHeight();
+
 		this.setIconImage(Toolkit.getDefaultToolkit().getImage(
 				getClass().getResource("kompics32.png")));
 		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -134,82 +140,74 @@ public class ProcessFrame extends JFrame {
 			}
 		});
 
-		if (frameSize.height > screenSize.height) {
-			frameSize.height = screenSize.height;
-		}
-		if (frameSize.width > screenSize.width) {
-			frameSize.width = screenSize.width;
-		}
-
 		if (count < 2) {
-			setSize(screenSize.width, screenSize.height - 20);
-			setLocation(0, 0);
+			setLocation(left, top);
 		} else if (count < 3) {
-			init2Frames(screenSize, frameSize);
+			init2Frames(left, top, width, height);
 		} else if (count < 6) {
-			init4Frames(screenSize, frameSize);
+			init4Frames(left, top, width, height);
 		} else {
-			init6Frames(screenSize, frameSize);
+			init6Frames(left, top, width, height);
 		}
 
 		getLocalInputTextField().requestFocusInWindow();
 	}
 
-	private void init2Frames(Dimension screenSize, Dimension frameSize) {
-		WIDTH = screenSize.width / 2;
-		HEIGHT = (screenSize.height - 20);
+	private void init2Frames(int left, int top, int width, int height) {
+		WIDTH = width / 2;
+		HEIGHT = height;
 		this.setSize(WIDTH, HEIGHT);
 
 		if (idx == 1) {
-			setLocation(0, 0);
+			setLocation(left, top);
 		} else if (idx == 2) {
-			setLocation(WIDTH, 0);
+			setLocation(left + WIDTH, top);
 		} else {
-			setLocation(WIDTH / 2, HEIGHT / 2);
+			setLocation(left + WIDTH / 2, top + HEIGHT / 2);
 		}
 	}
 
-	private void init4Frames(Dimension screenSize, Dimension frameSize) {
-		WIDTH = screenSize.width / 2;
-		HEIGHT = (screenSize.height - 20) / 2;
+	private void init4Frames(int left, int top, int width, int height) {
+		WIDTH = width / 2;
+		HEIGHT = height / 2;
 		this.setSize(WIDTH, HEIGHT);
 
 		if (idx == 1) {
-			setLocation(0, 0);
+			setLocation(left, top);
 		} else if (idx == 2) {
-			setLocation(WIDTH, 0);
+			setLocation(left + WIDTH, top);
 		} else if (idx == 3) {
-			setLocation(0, HEIGHT);
+			setLocation(left, top + HEIGHT);
 		} else if (idx == 4) {
-			setLocation(WIDTH, HEIGHT);
+			setLocation(left + WIDTH, top + HEIGHT);
 		} else {
-			setLocation(WIDTH / 2, HEIGHT / 2);
+			setLocation(left + WIDTH / 2, top + HEIGHT / 2);
 		}
 	}
 
-	private void init6Frames(Dimension screenSize, Dimension frameSize) {
-		WIDTH = screenSize.width / 3;
-		HEIGHT = (screenSize.height - 20) / 2;
+	private void init6Frames(int left, int top, int width, int height) {
+		WIDTH = width / 3;
+		HEIGHT = height / 2;
 		this.setSize(WIDTH, HEIGHT);
 
 		if (idx == 1) {
-			setLocation(0, 0);
+			setLocation(left, top);
 		} else if (idx == 2) {
-			setLocation(WIDTH, 0);
+			setLocation(left + WIDTH, top);
 		} else if (idx == 3) {
-			setLocation(2 * WIDTH, 0);
+			setLocation(left + 2 * WIDTH, top);
 		} else if (idx == 4) {
-			setLocation(0, HEIGHT);
+			setLocation(left, top + HEIGHT);
 		} else if (idx == 5) {
-			setLocation(WIDTH, HEIGHT);
+			setLocation(left + WIDTH, top + HEIGHT);
 		} else if (idx == 6) {
-			setLocation(2 * WIDTH, HEIGHT);
+			setLocation(left + 2 * WIDTH, top + HEIGHT);
 		} else if (idx == 7) {
-			setLocation(WIDTH / 2, HEIGHT / 2);
+			setLocation(left + WIDTH / 2, top + HEIGHT / 2);
 		} else if (idx == 8) {
-			setLocation(WIDTH * 3 / 2, HEIGHT / 2);
+			setLocation(left + WIDTH * 3 / 2, top + HEIGHT / 2);
 		} else {
-			setLocation(WIDTH, HEIGHT / 2);
+			setLocation(left + WIDTH, top + HEIGHT / 2);
 		}
 	}
 
