@@ -20,6 +20,13 @@
  */
 package se.sics.kompics.p2p.overlay.chord;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.Properties;
+
 /**
  * The <code>ChordConfiguration</code> class.
  * 
@@ -69,5 +76,41 @@ public final class ChordConfiguration {
 
 	public int getBootstrapRequestPeerCount() {
 		return bootstrapRequestPeerCount;
+	}
+
+	public void store(String file) throws IOException {
+		Properties p = new Properties();
+		p.setProperty("log2.ring.size", "" + log2RingSize);
+		p.setProperty("successor.list.length", "" + successorListLength);
+		p.setProperty("successor.stabilization.period", ""
+				+ successorStabilizationPeriod);
+		p.setProperty("finger.stabilization.period", ""
+				+ fingerStabilizationPeriod);
+		p.setProperty("rpc.timeout", "" + rpcTimeout);
+		p.setProperty("bootstrap.request.peer.count", ""
+				+ bootstrapRequestPeerCount);
+
+		Writer writer = new FileWriter(file);
+		p.store(writer, "se.sics.kompics.p2p.overlay.chord");
+	}
+
+	public static ChordConfiguration load(String file) throws IOException {
+		Properties p = new Properties();
+		Reader reader = new FileReader(file);
+		p.load(reader);
+
+		int log2RingSize = Integer.parseInt("log2.ring.size");
+		int successorListLength = Integer.parseInt("successor.list.length");
+		long successorStabilizationPeriod = Long
+				.parseLong("successor.stabilization.period");
+		long fingerStabilizationPeriod = Long
+				.parseLong("finger.stabilization.period");
+		long rpcTimeout = Long.parseLong("rpc.timeout");
+		int bootstrapRequestPeerCount = Integer
+				.parseInt("bootstrap.request.peer.count");
+
+		return new ChordConfiguration(log2RingSize, successorListLength,
+				successorStabilizationPeriod, fingerStabilizationPeriod,
+				rpcTimeout, bootstrapRequestPeerCount);
 	}
 }
