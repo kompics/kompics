@@ -20,24 +20,51 @@
  */
 package se.sics.kompics.web.jetty;
 
+import java.net.InetAddress;
+
 import se.sics.kompics.Init;
 
 /**
- * The <code>JettyWebServerInit</code> class.
+ * The <code>JettyWebServerConfiguration</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class JettyWebServerInit extends Init {
+public final class JettyWebServerConfiguration extends Init {
 
-	private final JettyWebServerConfiguration configuration;
+	private final InetAddress ip;
+	private final int port;
+	private final long requestTimeout;
+	private final int maxThreads;
+	private final String homePage;
 
-	public JettyWebServerInit(JettyWebServerConfiguration configuration) {
+	public JettyWebServerConfiguration(InetAddress ip, int port, long requestTimeout,
+			int maxThreads, String homePage) {
 		super();
-		this.configuration = configuration;
+		this.ip = ip;
+		this.port = port;
+		this.requestTimeout = requestTimeout;
+		this.maxThreads = maxThreads;
+		this.homePage = homePage;
 	}
 
-	public JettyWebServerConfiguration getConfiguration() {
-		return configuration;
+	public final InetAddress getIp() {
+		return ip;
+	}
+
+	public final int getPort() {
+		return port;
+	}
+
+	public final long getRequestTimeout() {
+		return requestTimeout;
+	}
+
+	public int getMaxThreads() {
+		return maxThreads;
+	}
+	
+	public String getHomePage() {
+		return homePage;
 	}
 }

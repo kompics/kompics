@@ -72,28 +72,30 @@ public final class JettyWebServer extends ComponentDefinition {
 	}
 
 	private Handler<JettyWebServerInit> handleInit = new Handler<JettyWebServerInit>() {
-		public void handle(JettyWebServerInit event) {
+		public void handle(JettyWebServerInit init) {
 			logger.debug("Handling init in thread {}", Thread.currentThread());
 
-			requestTimeout = event.getRequestTimeout();
-			homePage = event.getHomePage();
+			JettyWebServerConfiguration config = init.getConfiguration();
+			
+			requestTimeout = config.getRequestTimeout();
+			homePage = config.getHomePage();
 			if (homePage == null) {
 				homePage = "<h1>Welcome!</h1>"
 						+ "This is the JettyWebServer Kompics component.<br>"
 						+ "Please initialize me with a proper home page.";
 			}
 
-			Server server = new Server(event.getPort());
+			Server server = new Server(config.getPort());
 			// server.setStopAtShutdown(true);
 			QueuedThreadPool qtp = new QueuedThreadPool();
 			qtp.setMinThreads(1);
-			qtp.setMaxThreads(event.getMaxThreads());
+			qtp.setMaxThreads(config.getMaxThreads());
 			qtp.setDaemon(true);
 			server.setThreadPool(qtp);
 
 			Connector connector = new SelectChannelConnector();
-			connector.setHost(event.getIp().getCanonicalHostName());
-			connector.setPort(event.getPort());
+			connector.setHost(config.getIp().getCanonicalHostName());
+			connector.setPort(config.getPort());
 			server.setConnectors(new Connector[] { connector });
 
 			try {
