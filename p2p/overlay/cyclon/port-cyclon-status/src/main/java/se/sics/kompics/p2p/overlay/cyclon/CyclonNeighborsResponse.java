@@ -23,7 +23,9 @@ package se.sics.kompics.p2p.overlay.cyclon;
 import se.sics.kompics.Response;
 
 /**
- * The <code>CyclonNeighborsResponse</code> class.
+ * The <code>CyclonNeighborsResponse</code> class represents a response to a
+ * <code>CyclonNeighborsRequest</code>, asking the Cyclon component for the
+ * current set of Cyclon neighbors.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$

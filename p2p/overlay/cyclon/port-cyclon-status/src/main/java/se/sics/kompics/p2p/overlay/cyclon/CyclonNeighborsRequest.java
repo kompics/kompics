@@ -23,7 +23,8 @@ package se.sics.kompics.p2p.overlay.cyclon;
 import se.sics.kompics.Request;
 
 /**
- * The <code>CyclonNeighborsRequest</code> class.
+ * The <code>CyclonNeighborsRequest</code> class represent a request event
+ * asking the Cyclon component for the current set of Cyclon neighbors.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$

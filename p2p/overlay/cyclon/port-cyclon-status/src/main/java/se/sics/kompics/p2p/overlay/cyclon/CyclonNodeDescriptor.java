@@ -21,7 +21,8 @@
 package se.sics.kompics.p2p.overlay.cyclon;
 
 /**
- * The <code>CyclonNodeDescriptor</code> class.
+ * The <code>CyclonNodeDescriptor</code> class represent a Cyclon node
+ * descriptor, containing a Cyclon address and an age.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$

@@ -24,7 +24,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
- * The <code>CyclonNeighbors</code> class.
+ * The <code>CyclonNeighbors</code> class represents a set of Cyclon neighbors
+ * which is time-stamped with its creation time.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$

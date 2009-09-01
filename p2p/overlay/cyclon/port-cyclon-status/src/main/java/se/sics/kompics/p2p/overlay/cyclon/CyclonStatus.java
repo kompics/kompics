@@ -23,7 +23,10 @@ package se.sics.kompics.p2p.overlay.cyclon;
 import se.sics.kompics.PortType;
 
 /**
- * The <code>CyclonStatus</code> class.
+ * The <code>CyclonStatus</code> class represents a port type, provided by
+ * Cyclon, on which other components, like the <code>CyclonMonitorClient</code>
+ * can ask Cyclon for all its neighbors. The corresponding request and response
+ * events are specified.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
