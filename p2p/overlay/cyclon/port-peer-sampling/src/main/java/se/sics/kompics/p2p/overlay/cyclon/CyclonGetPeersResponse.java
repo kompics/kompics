@@ -25,7 +25,9 @@ import java.util.List;
 import se.sics.kompics.Response;
 
 /**
- * The <code>CyclonGetPeersResponse</code> class.
+ * The <code>CyclonGetPeersResponse</code> class represents the response for the
+ * Peer Sampling service request implemented by Cyclon. Cyclon triggers this
+ * response in return to a <code>CyclonGetPeersRequest</code>..
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$

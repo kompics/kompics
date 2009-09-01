@@ -23,7 +23,8 @@ package se.sics.kompics.p2p.overlay.cyclon;
 import se.sics.kompics.Event;
 
 /**
- * The <code>JoinCompleted</code> class.
+ * The <code>JoinCompleted</code> class represents a confirmation event
+ * triggered by Cyclon after a successful join.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$

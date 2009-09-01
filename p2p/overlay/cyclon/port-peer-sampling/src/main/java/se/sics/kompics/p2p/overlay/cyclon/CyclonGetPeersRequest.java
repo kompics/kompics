@@ -23,7 +23,9 @@ package se.sics.kompics.p2p.overlay.cyclon;
 import se.sics.kompics.Request;
 
 /**
- * The <code>CyclonGetPeersRequest</code> class.
+ * The <code>CyclonGetPeersRequest</code> class represents the request for the
+ * Peer Sampling service implemented by Cyclon. Cyclon handles this request and
+ * replies with a set of random peers in a <code>CyclonGetPeersResponse</code>.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$

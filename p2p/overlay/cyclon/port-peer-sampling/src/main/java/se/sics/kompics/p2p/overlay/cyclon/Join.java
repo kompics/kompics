@@ -25,7 +25,9 @@ import java.util.LinkedList;
 import se.sics.kompics.Event;
 
 /**
- * The <code>Join</code> class.
+ * The <code>Join</code> class represents an event that tells the Cyclon
+ * component to join a Cyclon network using one (or more) of the peers already
+ * in the system.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$

@@ -23,12 +23,16 @@ package se.sics.kompics.p2p.overlay.cyclon;
 import se.sics.kompics.PortType;
 
 /**
- * The <code>CyclonRandomOverlay</code> class.
+ * The <code>CyclonPeerSampling</code> class represents a port type
+ * specification for the Cyclon Peer Sampling service. It specifies the request
+ * and response events for this service, a Join event that can be sent to the
+ * Cyclon component to instruct it to join a Cyclon network, and a join
+ * completed notification event.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class CyclonRandomOverlay extends PortType {
+public final class CyclonPeerSampling extends PortType {
 	{
 		negative(CyclonGetPeersRequest.class);
 		positive(CyclonGetPeersResponse.class);
