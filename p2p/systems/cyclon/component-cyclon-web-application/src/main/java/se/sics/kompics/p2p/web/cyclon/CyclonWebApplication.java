@@ -36,7 +36,7 @@ import se.sics.kompics.p2p.overlay.cyclon.CyclonAddress;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonNeighborsRequest;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonNeighborsResponse;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonNodeDescriptor;
-import se.sics.kompics.p2p.overlay.cyclon.CyclonRandomOverlay;
+import se.sics.kompics.p2p.overlay.cyclon.CyclonPeerSampling;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonStatus;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
@@ -51,7 +51,7 @@ import se.sics.kompics.web.WebResponse;
 public class CyclonWebApplication extends ComponentDefinition {
 
 	Negative<Web> web = negative(Web.class);
-	Positive<CyclonRandomOverlay> cyclon = positive(CyclonRandomOverlay.class);
+	Positive<CyclonPeerSampling> cyclon = positive(CyclonPeerSampling.class);
 	Positive<CyclonStatus> cyclonStatus = positive(CyclonStatus.class);
 
 	private Logger logger;
