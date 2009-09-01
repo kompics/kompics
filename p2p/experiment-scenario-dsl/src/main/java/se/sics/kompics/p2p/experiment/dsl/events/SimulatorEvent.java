@@ -35,12 +35,17 @@ public class SimulatorEvent implements Comparable<SimulatorEvent>, Serializable 
 	 */
 	private static final long serialVersionUID = -7702413908499807140L;
 
+	private static long sequence = 0;
+
+	private long seqNo;
+
 	private long time;
 
 	private boolean onList = false;
 
 	public SimulatorEvent(long time) {
 		super();
+		this.seqNo = sequence++;
 		this.time = time;
 	}
 
@@ -63,12 +68,16 @@ public class SimulatorEvent implements Comparable<SimulatorEvent>, Serializable 
 	public final boolean isOnList() {
 		return onList;
 	}
-	
+
 	@Override
 	public int compareTo(SimulatorEvent that) {
 		if (this.time < that.time)
 			return -1;
 		if (this.time > that.time)
+			return 1;
+		if (this.seqNo < that.seqNo)
+			return -1;
+		if (this.seqNo > that.seqNo)
 			return 1;
 		return 0;
 	}
@@ -78,6 +87,7 @@ public class SimulatorEvent implements Comparable<SimulatorEvent>, Serializable 
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (int) (time ^ (time >>> 32));
+		result = prime * result + (int) (seqNo ^ (seqNo >>> 32));
 		return result;
 	}
 
@@ -91,6 +101,8 @@ public class SimulatorEvent implements Comparable<SimulatorEvent>, Serializable 
 			return false;
 		SimulatorEvent other = (SimulatorEvent) obj;
 		if (time != other.time)
+			return false;
+		if (seqNo != other.seqNo)
 			return false;
 		return true;
 	}
