@@ -26,7 +26,9 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.overlay.OverlayAddress;
 
 /**
- * The <code>CyclonAddress</code> class.
+ * The <code>CyclonAddress</code> class represents a Cyclon address, which is
+ * formed from a regular peer address and a numeric identifier (
+ * <code>BigInteger</code>).
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$

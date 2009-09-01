@@ -23,7 +23,7 @@ package se.sics.kompics.p2p.overlay.cyclon;
 import se.sics.kompics.network.Message;
 
 /**
- * The <code>CyclonMessage</code> class.
+ * The <code>CyclonMessage</code> class is a base class for all Cyclon messages.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
