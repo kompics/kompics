@@ -20,6 +20,14 @@
  */
 package se.sics.kompics.p2p.bootstrap;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.net.InetAddress;
+import java.util.Properties;
+
 import se.sics.kompics.address.Address;
 
 /**
@@ -31,15 +39,15 @@ import se.sics.kompics.address.Address;
 public final class BootstrapConfiguration {
 
 	private final Address bootstrapServerAddress;
-	
+
 	private final long cacheEvictAfter;
-	
+
 	private final long clientRetryPeriod;
 
 	private final int clientRetryCount;
 
 	private final long clientKeepAlivePeriod;
-	
+
 	private final int clientWebPort;
 
 	public BootstrapConfiguration(Address bootstrapServerAddress,
@@ -75,5 +83,42 @@ public final class BootstrapConfiguration {
 
 	public int getClientWebPort() {
 		return clientWebPort;
+	}
+
+	public void store(String file) throws IOException {
+		Properties p = new Properties();
+		p.setProperty("cache.evict.after", "" + cacheEvictAfter);
+		p.setProperty("client.retry.period", "" + clientRetryPeriod);
+		p.setProperty("client.retry.count", "" + clientRetryCount);
+		p.setProperty("client.keepalive.period", "" + clientKeepAlivePeriod);
+		p.setProperty("client.web.port", "" + clientWebPort);
+		p.setProperty("server.ip", ""
+				+ bootstrapServerAddress.getIp().getHostAddress());
+		p.setProperty("server.port", "" + bootstrapServerAddress.getPort());
+		p.setProperty("server.id", "" + bootstrapServerAddress.getId());
+
+		Writer writer = new FileWriter(file);
+		p.store(writer, "se.sics.kompics.p2p.bootstrap");
+	}
+
+	public static BootstrapConfiguration load(String file) throws IOException {
+		Properties p = new Properties();
+		Reader reader = new FileReader(file);
+		p.load(reader);
+
+		InetAddress ip = InetAddress.getByName(p.getProperty("server.ip"));
+		int port = Integer.parseInt(p.getProperty("server.port"));
+		int id = Integer.parseInt(p.getProperty("server.id"));
+
+		Address bootstrapServerAddress = new Address(ip, port, id);
+		long cacheEvictAfter = Long.parseLong("cache.evict.after");
+		long clientRetryPeriod = Long.parseLong("client.retry.period");
+		int clientRetryCount = Integer.parseInt("client.retry.count");
+		long clientKeepAlivePeriod = Long.parseLong("client.keepalive.period");
+		int clientWebPort = Integer.parseInt("client.web.port");
+
+		return new BootstrapConfiguration(bootstrapServerAddress,
+				cacheEvictAfter, clientRetryPeriod, clientRetryCount,
+				clientKeepAlivePeriod, clientWebPort);
 	}
 }
