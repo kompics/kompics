@@ -50,7 +50,7 @@ import se.sics.kompics.timer.Timer;
  */
 public final class Cyclon extends ComponentDefinition {
 
-	Negative<CyclonRandomOverlay> random = negative(CyclonRandomOverlay.class);
+	Negative<CyclonPeerSampling> random = negative(CyclonPeerSampling.class);
 	Negative<CyclonStatus> status = negative(CyclonStatus.class);
 	Positive<Network> network = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
