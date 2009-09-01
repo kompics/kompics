@@ -103,8 +103,8 @@ public class CyclonMonitorServer extends ComponentDefinition {
 		subscribe(handleViewEvictPeer, timer);
 	}
 
-	private Handler<P2pMonitorServerInit> handleInit = new Handler<P2pMonitorServerInit>() {
-		public void handle(P2pMonitorServerInit event) {
+	private Handler<CyclonMonitorServerInit> handleInit = new Handler<CyclonMonitorServerInit>() {
+		public void handle(CyclonMonitorServerInit event) {
 			evictAfter = event.getConfiguration().getViewEvictAfter();
 			webPort = event.getConfiguration().getClientWebPort();
 

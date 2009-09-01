@@ -23,16 +23,16 @@ package se.sics.kompics.p2p.monitor.cyclon.server;
 import se.sics.kompics.Init;
 
 /**
- * The <code>P2pMonitorServerInit</code> class.
+ * The <code>CyclonMonitorServerInit</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class P2pMonitorServerInit extends Init {
+public final class CyclonMonitorServerInit extends Init {
 
 	private final CyclonMonitorConfiguration configuration;
 
-	public P2pMonitorServerInit(CyclonMonitorConfiguration configuration) {
+	public CyclonMonitorServerInit(CyclonMonitorConfiguration configuration) {
 		super();
 		this.configuration = configuration;
 	}
