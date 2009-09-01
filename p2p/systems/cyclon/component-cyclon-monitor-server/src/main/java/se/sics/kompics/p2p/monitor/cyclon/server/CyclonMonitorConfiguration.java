@@ -26,8 +26,7 @@ import se.sics.kompics.address.Address;
  * The <code>CyclonMonitorConfiguration</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: CyclonMonitorConfiguration.java 750 2009-04-02 09:55:01Z Cosmin
- *          $
+ * @version $Id$
  */
 public class CyclonMonitorConfiguration {
 

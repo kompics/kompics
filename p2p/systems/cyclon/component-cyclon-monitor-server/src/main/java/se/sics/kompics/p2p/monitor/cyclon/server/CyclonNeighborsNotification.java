@@ -28,8 +28,7 @@ import se.sics.kompics.p2p.overlay.cyclon.CyclonNeighbors;
  * The <code>CyclonNeighborsNotification</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: CyclonNeighborsNotification.java 750 2009-04-02 09:55:01Z
- *          Cosmin $
+ * @version $Id$
  */
 public final class CyclonNeighborsNotification extends Message {
 
