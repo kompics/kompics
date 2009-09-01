@@ -20,6 +20,14 @@
  */
 package se.sics.kompics.p2p.monitor.chord.server;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.net.InetAddress;
+import java.util.Properties;
+
 import se.sics.kompics.address.Address;
 
 /**
@@ -28,7 +36,7 @@ import se.sics.kompics.address.Address;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public class ChordMonitorConfiguration {
+public final class ChordMonitorConfiguration {
 
 	private final Address monitorServerAddress;
 
@@ -61,5 +69,38 @@ public class ChordMonitorConfiguration {
 
 	public int getClientWebPort() {
 		return clientWebPort;
+	}
+
+	public void store(String file) throws IOException {
+		Properties p = new Properties();
+		p.setProperty("view.evict.after", "" + viewEvictAfter);
+		p.setProperty("client.update.period", "" + clientUpdatePeriod);
+		p.setProperty("client.web.port", "" + clientWebPort);
+		p.setProperty("server.ip", ""
+				+ monitorServerAddress.getIp().getHostAddress());
+		p.setProperty("server.port", "" + monitorServerAddress.getPort());
+		p.setProperty("server.id", "" + monitorServerAddress.getId());
+
+		Writer writer = new FileWriter(file);
+		p.store(writer, "se.sics.kompics.p2p.monitor.chord");
+	}
+
+	public static ChordMonitorConfiguration load(String file)
+			throws IOException {
+		Properties p = new Properties();
+		Reader reader = new FileReader(file);
+		p.load(reader);
+
+		InetAddress ip = InetAddress.getByName(p.getProperty("server.ip"));
+		int port = Integer.parseInt(p.getProperty("server.port"));
+		int id = Integer.parseInt(p.getProperty("server.id"));
+
+		Address monitorServerAddress = new Address(ip, port, id);
+		long viewEvictAfter = Long.parseLong("view.evict.after");
+		long clientUpdatePeriod = Long.parseLong("client.update.period");
+		int clientWebPort = Integer.parseInt("client.web.port");
+
+		return new ChordMonitorConfiguration(monitorServerAddress,
+				viewEvictAfter, clientUpdatePeriod, clientWebPort);
 	}
 }
