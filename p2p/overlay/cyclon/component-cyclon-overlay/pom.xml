@@ -37,6 +37,26 @@
 			<version>${kompics.version}</version>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
+			<artifactId>kompics-port-peer-sampling</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
+			<artifactId>kompics-port-cyclon-status</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math</artifactId>
+			<version>2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
+			<artifactId>cyclon-message</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>
