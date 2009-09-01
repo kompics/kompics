@@ -20,24 +20,28 @@
  */
 package se.sics.kompics.p2p.fd.ping;
 
-import se.sics.kompics.Init;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.Properties;
 
 /**
  * The <code>PingFailureDetectorConfiguration</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: PingFailureDetectorConfiguration.java 750 2009-04-02 09:55:01Z
- *          Cosmin $
+ * @version $Id$
  */
-public final class PingFailureDetectorConfiguration extends Init {
+public final class PingFailureDetectorConfiguration {
 
 	private final long livePeriod;
 	private final long suspectedPeriod;
 	private final long minRto;
 	private final long timeoutPeriodIncrement;
 
-	public PingFailureDetectorConfiguration(long livePeriod, long suspectedPeriod,
-			long minRto, long timeoutPeriodIncrement) {
+	public PingFailureDetectorConfiguration(long livePeriod,
+			long suspectedPeriod, long minRto, long timeoutPeriodIncrement) {
 		this.livePeriod = livePeriod;
 		this.suspectedPeriod = suspectedPeriod;
 		this.minRto = minRto;
@@ -58,5 +62,32 @@ public final class PingFailureDetectorConfiguration extends Init {
 
 	public final long getTimeoutPeriodIncrement() {
 		return timeoutPeriodIncrement;
+	}
+
+	public void store(String file) throws IOException {
+		Properties p = new Properties();
+		p.setProperty("live.period", "" + livePeriod);
+		p.setProperty("suspected.period", "" + suspectedPeriod);
+		p.setProperty("rto.min", "" + minRto);
+		p.setProperty("timeout.period.increment", "" + timeoutPeriodIncrement);
+
+		Writer writer = new FileWriter(file);
+		p.store(writer, "se.sics.kompics.p2p.fd.ping");
+	}
+
+	public static PingFailureDetectorConfiguration load(String file)
+			throws IOException {
+		Properties p = new Properties();
+		Reader reader = new FileReader(file);
+		p.load(reader);
+
+		long livePeriod = Long.parseLong("live.period");
+		long suspectedPeriod = Long.parseLong("suspected.period");
+		long minRto = Long.parseLong("rto.min");
+		long timeoutPeriodIncrement = Long
+				.parseLong("timeout.period.increment");
+
+		return new PingFailureDetectorConfiguration(livePeriod,
+				suspectedPeriod, minRto, timeoutPeriodIncrement);
 	}
 }
