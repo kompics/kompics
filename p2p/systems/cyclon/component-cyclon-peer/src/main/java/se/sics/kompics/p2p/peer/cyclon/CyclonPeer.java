@@ -51,7 +51,7 @@ import se.sics.kompics.p2p.overlay.cyclon.CyclonGetPeersResponse;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonInit;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonNeighborsRequest;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonNeighborsResponse;
-import se.sics.kompics.p2p.overlay.cyclon.CyclonRandomOverlay;
+import se.sics.kompics.p2p.overlay.cyclon.CyclonPeerSampling;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonStatus;
 import se.sics.kompics.p2p.overlay.cyclon.Join;
 import se.sics.kompics.p2p.overlay.cyclon.JoinCompleted;
@@ -122,8 +122,8 @@ public final class CyclonPeer extends ComponentDefinition {
 
 		connect(cyclon.getPositive(CyclonStatus.class), webapp
 				.getNegative(CyclonStatus.class));
-		connect(cyclon.getPositive(CyclonRandomOverlay.class), webapp
-				.getNegative(CyclonRandomOverlay.class));
+		connect(cyclon.getPositive(CyclonPeerSampling.class), webapp
+				.getNegative(CyclonPeerSampling.class));
 
 		connect(cyclon.getPositive(CyclonStatus.class), monitor
 				.getNegative(CyclonStatus.class));
@@ -132,12 +132,12 @@ public final class CyclonPeer extends ComponentDefinition {
 
 		subscribe(handleJoin, cyclonPeer);
 		subscribe(handleJoinCompleted, cyclon
-				.getPositive(CyclonRandomOverlay.class));
+				.getPositive(CyclonPeerSampling.class));
 		subscribe(handleBootstrapResponse, bootstrap
 				.getPositive(P2pBootstrap.class));
 		subscribe(handlePeerRequest, cyclonPeer);
 		subscribe(handlePeerResponse, cyclon
-				.getPositive(CyclonRandomOverlay.class));
+				.getPositive(CyclonPeerSampling.class));
 		subscribe(handleNeighborsRequest, cyclonPeer);
 		subscribe(handleNeighborsResponse, cyclon
 				.getPositive(CyclonStatus.class));
@@ -196,7 +196,7 @@ public final class CyclonPeer extends ComponentDefinition {
 							.getOverlayAddress());
 				}
 				trigger(new Join(cyclonSelf, cyclonInsiders), cyclon
-						.getPositive(CyclonRandomOverlay.class));
+						.getPositive(CyclonPeerSampling.class));
 				bootstrapped = true;
 			}
 		}
@@ -214,7 +214,7 @@ public final class CyclonPeer extends ComponentDefinition {
 
 	Handler<CyclonGetPeersRequest> handlePeerRequest = new Handler<CyclonGetPeersRequest>() {
 		public void handle(CyclonGetPeersRequest event) {
-			trigger(event, cyclon.getPositive(CyclonRandomOverlay.class));
+			trigger(event, cyclon.getPositive(CyclonPeerSampling.class));
 		}
 	};
 
