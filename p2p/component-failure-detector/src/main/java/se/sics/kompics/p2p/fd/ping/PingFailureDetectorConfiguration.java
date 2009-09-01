@@ -81,11 +81,12 @@ public final class PingFailureDetectorConfiguration {
 		Reader reader = new FileReader(file);
 		p.load(reader);
 
-		long livePeriod = Long.parseLong("live.period");
-		long suspectedPeriod = Long.parseLong("suspected.period");
-		long minRto = Long.parseLong("rto.min");
-		long timeoutPeriodIncrement = Long
-				.parseLong("timeout.period.increment");
+		long livePeriod = Long.parseLong(p.getProperty("live.period"));
+		long suspectedPeriod = Long
+				.parseLong(p.getProperty("suspected.period"));
+		long minRto = Long.parseLong(p.getProperty("rto.min"));
+		long timeoutPeriodIncrement = Long.parseLong(p
+				.getProperty("timeout.period.increment"));
 
 		return new PingFailureDetectorConfiguration(livePeriod,
 				suspectedPeriod, minRto, timeoutPeriodIncrement);

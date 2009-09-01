@@ -99,15 +99,16 @@ public final class ChordConfiguration {
 		Reader reader = new FileReader(file);
 		p.load(reader);
 
-		int log2RingSize = Integer.parseInt("log2.ring.size");
-		int successorListLength = Integer.parseInt("successor.list.length");
-		long successorStabilizationPeriod = Long
-				.parseLong("successor.stabilization.period");
-		long fingerStabilizationPeriod = Long
-				.parseLong("finger.stabilization.period");
-		long rpcTimeout = Long.parseLong("rpc.timeout");
-		int bootstrapRequestPeerCount = Integer
-				.parseInt("bootstrap.request.peer.count");
+		int log2RingSize = Integer.parseInt(p.getProperty("log2.ring.size"));
+		int successorListLength = Integer.parseInt(p
+				.getProperty("successor.list.length"));
+		long successorStabilizationPeriod = Long.parseLong(p
+				.getProperty("successor.stabilization.period"));
+		long fingerStabilizationPeriod = Long.parseLong(p
+				.getProperty("finger.stabilization.period"));
+		long rpcTimeout = Long.parseLong(p.getProperty("rpc.timeout"));
+		int bootstrapRequestPeerCount = Integer.parseInt(p
+				.getProperty("bootstrap.request.peer.count"));
 
 		return new ChordConfiguration(log2RingSize, successorListLength,
 				successorStabilizationPeriod, fingerStabilizationPeriod,

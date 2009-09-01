@@ -92,7 +92,7 @@ public final class JettyWebServerConfiguration {
 
 		InetAddress ip = InetAddress.getByName(p.getProperty("server.ip"));
 		int port = Integer.parseInt(p.getProperty("server.port"));
-		long requestTimeout = Long.parseLong("request.timeout");
+		long requestTimeout = Long.parseLong(p.getProperty("request.timeout"));
 		int maxThreads = Integer.parseInt(p.getProperty("threads.max"));
 		String homePage = p.getProperty("home.page");
 

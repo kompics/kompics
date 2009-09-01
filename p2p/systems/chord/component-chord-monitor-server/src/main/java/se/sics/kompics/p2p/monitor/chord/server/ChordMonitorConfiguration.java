@@ -96,9 +96,10 @@ public final class ChordMonitorConfiguration {
 		int id = Integer.parseInt(p.getProperty("server.id"));
 
 		Address monitorServerAddress = new Address(ip, port, id);
-		long viewEvictAfter = Long.parseLong("view.evict.after");
-		long clientUpdatePeriod = Long.parseLong("client.update.period");
-		int clientWebPort = Integer.parseInt("client.web.port");
+		long viewEvictAfter = Long.parseLong(p.getProperty("view.evict.after"));
+		long clientUpdatePeriod = Long.parseLong(p
+				.getProperty("client.update.period"));
+		int clientWebPort = Integer.parseInt(p.getProperty("client.web.port"));
 
 		return new ChordMonitorConfiguration(monitorServerAddress,
 				viewEvictAfter, clientUpdatePeriod, clientWebPort);

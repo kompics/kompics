@@ -111,11 +111,15 @@ public final class BootstrapConfiguration {
 		int id = Integer.parseInt(p.getProperty("server.id"));
 
 		Address bootstrapServerAddress = new Address(ip, port, id);
-		long cacheEvictAfter = Long.parseLong("cache.evict.after");
-		long clientRetryPeriod = Long.parseLong("client.retry.period");
-		int clientRetryCount = Integer.parseInt("client.retry.count");
-		long clientKeepAlivePeriod = Long.parseLong("client.keepalive.period");
-		int clientWebPort = Integer.parseInt("client.web.port");
+		long cacheEvictAfter = Long.parseLong(p
+				.getProperty("cache.evict.after"));
+		long clientRetryPeriod = Long.parseLong(p
+				.getProperty("client.retry.period"));
+		int clientRetryCount = Integer.parseInt(p
+				.getProperty("client.retry.count"));
+		long clientKeepAlivePeriod = Long.parseLong(p
+				.getProperty("client.keepalive.period"));
+		int clientWebPort = Integer.parseInt(p.getProperty("client.web.port"));
 
 		return new BootstrapConfiguration(bootstrapServerAddress,
 				cacheEvictAfter, clientRetryPeriod, clientRetryCount,
