@@ -20,9 +20,13 @@
  */
 package se.sics.kompics.web.jetty;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.InetAddress;
-
-import se.sics.kompics.Init;
+import java.util.Properties;
 
 /**
  * The <code>JettyWebServerConfiguration</code> class.
@@ -30,7 +34,7 @@ import se.sics.kompics.Init;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class JettyWebServerConfiguration extends Init {
+public final class JettyWebServerConfiguration {
 
 	private final InetAddress ip;
 	private final int port;
@@ -38,8 +42,8 @@ public final class JettyWebServerConfiguration extends Init {
 	private final int maxThreads;
 	private final String homePage;
 
-	public JettyWebServerConfiguration(InetAddress ip, int port, long requestTimeout,
-			int maxThreads, String homePage) {
+	public JettyWebServerConfiguration(InetAddress ip, int port,
+			long requestTimeout, int maxThreads, String homePage) {
 		super();
 		this.ip = ip;
 		this.port = port;
@@ -63,8 +67,36 @@ public final class JettyWebServerConfiguration extends Init {
 	public int getMaxThreads() {
 		return maxThreads;
 	}
-	
+
 	public String getHomePage() {
 		return homePage;
+	}
+
+	public void store(String file) throws IOException {
+		Properties p = new Properties();
+		p.setProperty("server.ip", "" + ip.getHostAddress());
+		p.setProperty("server.port", "" + port);
+		p.setProperty("request.timeout", "" + requestTimeout);
+		p.setProperty("threads.max", "" + maxThreads);
+		p.setProperty("home.page", homePage);
+
+		Writer writer = new FileWriter(file);
+		p.store(writer, "se.sics.kompics.web.jetty");
+	}
+
+	public static JettyWebServerConfiguration load(String file)
+			throws IOException {
+		Properties p = new Properties();
+		Reader reader = new FileReader(file);
+		p.load(reader);
+
+		InetAddress ip = InetAddress.getByName(p.getProperty("server.ip"));
+		int port = Integer.parseInt(p.getProperty("server.port"));
+		long requestTimeout = Long.parseLong("request.timeout");
+		int maxThreads = Integer.parseInt(p.getProperty("threads.max"));
+		String homePage = p.getProperty("home.page");
+
+		return new JettyWebServerConfiguration(ip, port, requestTimeout,
+				maxThreads, homePage);
 	}
 }
