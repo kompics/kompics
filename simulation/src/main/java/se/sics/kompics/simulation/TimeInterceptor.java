@@ -41,7 +41,7 @@ import javassist.expr.MethodCall;
  */
 public class TimeInterceptor implements Translator {
 
-	private static final String s = "se.sics.kompics.simulator.SimulatorSystem";
+	private static final String s = "se.sics.kompics.simulation.SimulatorSystem";
 
 	private static HashSet<String> exceptions = new HashSet<String>();
 
