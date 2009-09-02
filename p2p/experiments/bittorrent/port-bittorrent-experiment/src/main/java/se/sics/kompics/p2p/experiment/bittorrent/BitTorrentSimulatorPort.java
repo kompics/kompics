@@ -21,6 +21,7 @@
 package se.sics.kompics.p2p.experiment.bittorrent;
 
 import se.sics.kompics.PortType;
+import se.sics.kompics.p2p.experiment.dsl.events.TerminateExperiment;
 
 /**
  * The <code>BitTorrentSimulatorPort</code> class.

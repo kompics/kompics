@@ -155,8 +155,8 @@ public class BitTorrentClient extends ComponentDefinition {
 
 			chokingRound = -1;
 
-			logger = LoggerFactory.getLogger("se.sics.kompics.p2p.bittorrent"
-					+ ".peer.BitTorrentPeer@" + self.getPeerId());
+			logger = LoggerFactory.getLogger("se.sics.kompics.p2p.cdn.bittorrent"
+					+ ".client.BitTorrentClient@" + self.getPeerId());
 			logger.info("Initialized. I have {} pieces out of {}", myPieces
 					.cardinality(), myPieces.getSize());
 		}
