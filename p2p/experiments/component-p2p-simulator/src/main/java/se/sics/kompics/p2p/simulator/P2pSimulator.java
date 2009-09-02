@@ -45,6 +45,7 @@ import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessStartEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessTerminatedEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.TakeSnapshotEvent;
+import se.sics.kompics.p2p.experiment.dsl.events.TerminateExperiment;
 import se.sics.kompics.simulation.Simulator;
 import se.sics.kompics.simulation.SimulatorScheduler;
 import se.sics.kompics.simulation.SimulatorSystem;
@@ -109,6 +110,7 @@ public final class P2pSimulator extends ComponentDefinition implements
 		subscribe(handleSPT, timer);
 		subscribe(handleCT, timer);
 		subscribe(handleCPT, timer);
+		subscribe(handleTerminate, simulationPort);
 	}
 
 	public boolean advanceSimulation() {
@@ -416,6 +418,14 @@ public final class P2pSimulator extends ComponentDefinition implements
 				logger.warn("Cannot find periodic timeout {}", event
 						.getTimeoutId());
 			}
+		}
+	};
+
+	Handler<TerminateExperiment> handleTerminate = new Handler<TerminateExperiment>() {
+		public void handle(TerminateExperiment event) {
+			SimulationTerminatedEvent terminatedEvent = new SimulationTerminatedEvent(
+					CLOCK, 0, false);
+			futureEventList.scheduleFutureEvent(CLOCK, terminatedEvent);
 		}
 	};
 
