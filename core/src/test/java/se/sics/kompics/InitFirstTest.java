@@ -31,6 +31,7 @@ import org.junit.Test;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id: InitFirstTest.java 739 2009-03-28 18:04:55Z Cosmin $
  */
+@SuppressWarnings("unused")
 public class InitFirstTest {
 
 	public static class TestEvent extends Event {

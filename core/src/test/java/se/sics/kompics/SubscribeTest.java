@@ -33,6 +33,7 @@ import org.junit.Test;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
+@SuppressWarnings("unused")
 public class SubscribeTest {
 
 	private static class TestEvent extends Init {

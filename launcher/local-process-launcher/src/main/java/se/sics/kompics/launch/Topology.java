@@ -41,6 +41,7 @@ import se.sics.kompics.address.Address;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
+@SuppressWarnings("unused")
 public abstract class Topology implements Serializable {
 
 	/**

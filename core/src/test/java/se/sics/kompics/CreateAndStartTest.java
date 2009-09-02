@@ -33,6 +33,7 @@ import org.junit.Test;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
+@SuppressWarnings("unused")
 public class CreateAndStartTest {
 
 	private static class TestRoot0 extends ComponentDefinition {
