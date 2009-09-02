@@ -23,14 +23,14 @@ package se.sics.kompics.p2p.experiment.cyclon;
 import se.sics.kompics.PortType;
 
 /**
- * The <code>CyclonSimulatorPort</code> class represents a Cyclon-specific port
+ * The <code>CyclonExperiment</code> class represents a Cyclon-specific port
  * type, used by the P2pSimulator and P2pOrchestrator to send scenario
  * operations to the <code>CyclonSimulator</code>.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public class CyclonSimulatorPort extends PortType {
+public class CyclonExperiment extends PortType {
 	{
 		positive(CyclonPeerJoin.class);
 		positive(CyclonPeerFail.class);
