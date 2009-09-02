@@ -49,6 +49,7 @@ import se.sics.kompics.p2p.cdn.bittorrent.client.JoinSwarm;
 import se.sics.kompics.p2p.cdn.bittorrent.message.BitTorrentMessage;
 import se.sics.kompics.p2p.experiment.bittorrent.bw.model.BwDelayedMessage;
 import se.sics.kompics.p2p.experiment.bittorrent.bw.model.Link;
+import se.sics.kompics.p2p.experiment.dsl.events.TerminateExperiment;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
