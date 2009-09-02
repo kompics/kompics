@@ -63,7 +63,7 @@ import se.sics.kompics.web.WebRequest;
  */
 public final class CyclonSimulator extends ComponentDefinition {
 
-	Positive<CyclonSimulatorPort> simulator = positive(CyclonSimulatorPort.class);
+	Positive<CyclonExperiment> simulator = positive(CyclonExperiment.class);
 	Positive<Network> network = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 	Negative<Web> web = negative(Web.class);

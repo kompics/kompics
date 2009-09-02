@@ -43,7 +43,7 @@ import se.sics.kompics.web.jetty.JettyWebServerConfiguration;
 import se.sics.kompics.web.jetty.JettyWebServerInit;
 
 /**
- * The <code>BootstrapServerMain</code> class.
+ * The <code>ChordMonitorServerMain</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
@@ -52,6 +52,8 @@ public class ChordMonitorServerMain extends ComponentDefinition {
 	static {
 		PropertyConfigurator.configureAndWatch("log4j.properties");
 	}
+	
+	/** The Constant logger. */
 	private static final Logger logger = LoggerFactory
 			.getLogger(ChordMonitorServerMain.class);
 

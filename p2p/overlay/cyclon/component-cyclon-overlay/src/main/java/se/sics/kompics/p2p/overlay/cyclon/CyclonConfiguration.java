@@ -20,7 +20,13 @@
  */
 package se.sics.kompics.p2p.overlay.cyclon;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 import java.math.BigInteger;
+import java.util.Properties;
 
 /**
  * The <code>CyclonConfiguration</code> class contains configuration parameters
@@ -99,5 +105,37 @@ public final class CyclonConfiguration {
 
 	public int getBootstrapRequestPeerCount() {
 		return bootstrapRequestPeerCount;
+	}
+
+	public void store(String file) throws IOException {
+		Properties p = new Properties();
+		p.setProperty("shuffle.length", "" + shuffleLength);
+		p.setProperty("cache.size", "" + cacheSize);
+		p.setProperty("shuffle.period", "" + shufflePeriod);
+		p.setProperty("shuffle.timeout", "" + shuffleTimeout);
+		p.setProperty("id.space.size", "" + identifierSpaceSize);
+		p.setProperty("bootstrap.request.peer.count", ""
+				+ bootstrapRequestPeerCount);
+
+		Writer writer = new FileWriter(file);
+		p.store(writer, "se.sics.kompics.p2p.overlay.cyclon");
+	}
+
+	public static CyclonConfiguration load(String file) throws IOException {
+		Properties p = new Properties();
+		Reader reader = new FileReader(file);
+		p.load(reader);
+
+		int shuffleLength = Integer.parseInt(p.getProperty("shuffle.length"));
+		int cacheSize = Integer.parseInt(p.getProperty("cache.size"));
+		long shufflePeriod = Long.parseLong(p.getProperty("shuffle.period"));
+		long shuffleTimeout = Long.parseLong(p.getProperty("shuffle.timeout"));
+		BigInteger identifierSpaceSize = new BigInteger(p
+				.getProperty("id.space.size"));
+		int bootstrapRequestPeerCount = Integer.parseInt(p
+				.getProperty("bootstrap.request.peer.count"));
+
+		return new CyclonConfiguration(shuffleLength, cacheSize, shufflePeriod,
+				shuffleTimeout, identifierSpaceSize, bootstrapRequestPeerCount);
 	}
 }

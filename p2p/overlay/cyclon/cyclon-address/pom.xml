@@ -6,7 +6,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
-  <artifactId>cyclon-address</artifactId>
+  <artifactId>kompics-cyclon-address</artifactId>
   <version>0.4.2.2-SNAPSHOT</version>
   <dependencies>
   	<dependency>

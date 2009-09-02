@@ -53,7 +53,7 @@
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
-			<artifactId>chord-message</artifactId>
+			<artifactId>kompics-chord-message</artifactId>
 			<version>0.4.2.2-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
