@@ -14,6 +14,14 @@
 	<version>0.4.2.2-SNAPSHOT</version>
 	<description>Chord Simulation Kompics Example</description>
 
+	<dependencies>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.experiments.chord</groupId>
+			<artifactId>kompics-component-chord-simulation-main</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+
 	<repositories>
 		<repository>
 			<id>sics-release</id>
