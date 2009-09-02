@@ -17,6 +17,8 @@
 	<modules>
 		<module>component-bittorrent-tracker</module>
 		<module>component-bittorrent-client</module>
+		<module>bittorrent-address</module>
+		<module>bittorrent-message</module>
 	</modules>
 
 	<repositories>
