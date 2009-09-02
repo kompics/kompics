@@ -1,16 +1,15 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>se.sics.kompics.archetypes</groupId>
 		<artifactId>kompics-archetypes</artifactId>
-		<version>0.4.2.2-SNAPSHOT</version>
+		<version>0.4.2.2</version>
 	</parent>
 
 	<groupId>se.sics.kompics.archetypes</groupId>
 	<artifactId>kompics-archetype-port</artifactId>
-	<version>0.4.2.2-SNAPSHOT</version>
+	<version>0.4.2.2</version>
 	<name>Kompics Port Archetype</name>
 	<packaging>maven-archetype</packaging>
 	<url>http://kompics.sics.se</url>
