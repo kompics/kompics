@@ -20,51 +20,14 @@
  */
 package se.sics.kompics.p2p.experiment.dsl.events;
 
+import se.sics.kompics.Event;
+
 /**
- * The <code>SimulationTerminatedEvent</code> class.
+ * The <code>TerminateExperiment</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class SimulationTerminatedEvent extends SimulatorEvent {
+public class TerminateExperiment extends Event {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5884731040528351273L;
-
-	private final long delay;
-
-	private int waitFor;
-
-	private boolean relativeTime;
-
-	public SimulationTerminatedEvent(long time, int waitFor,
-			boolean relativeTime) {
-		super(time);
-		delay = time;
-		this.relativeTime = relativeTime;
-		this.waitFor = waitFor;
-	}
-
-	public boolean isRelativeTime() {
-		return relativeTime;
-	}
-
-	public final boolean shouldTerminateNow() {
-		waitFor--;
-		return waitFor <= 0 ? true : false;
-	}
-
-	public final void setTime(long time) {
-		time += delay;
-		if (time > getTime()) {
-			// only move time forward
-			super.setTime(time);
-		}
-	}
-
-	public long getDelay() {
-		return delay;
-	}
 }

@@ -85,6 +85,7 @@ public abstract class SimulationScenario implements Serializable {
 	private final Random random;
 	private final LinkedList<StochasticProcess> processes;
 	private int processCount;
+	private SimulationTerminatedEvent terminatedEvent;
 
 	public SimulationScenario() {
 		this.random = new Random();
@@ -100,12 +101,6 @@ public abstract class SimulationScenario implements Serializable {
 		return random;
 	}
 
-	/**
-	 * The <code>StochasticProcess</code> class.
-	 * 
-	 * @author Cosmin Arad <cosmin@sics.se>
-	 * @version $Id$
-	 */
 	protected abstract class StochasticProcess implements Serializable {
 		/**
 		 * 
@@ -320,13 +315,20 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	protected final void terminateAt(long time) {
+		SimulationTerminatedEvent terminationEvent = new SimulationTerminatedEvent(
+				time, 0, false);
+		terminatedEvent = terminationEvent;
+	}
+
 	protected final void terminateAfterTerminationOf(long delay,
 			StochasticProcess... process) {
 		HashSet<StochasticProcess> procs = new HashSet<StochasticProcess>(
 				Arrays.asList(process));
 
 		SimulationTerminatedEvent terminationEvent = new SimulationTerminatedEvent(
-				delay, procs.size());
+				delay, procs.size(), true);
+		terminatedEvent = terminationEvent;
 		for (StochasticProcess stochasticProcess : procs) {
 			if (!stochasticProcess.started) {
 				throw new RuntimeException(stochasticProcess.name
@@ -497,6 +499,9 @@ public abstract class SimulationScenario implements Serializable {
 		if (started == 0) {
 			System.err
 					.println("ERROR: Processes have circular relative start times");
+		}
+		if (terminatedEvent != null && !terminatedEvent.isRelativeTime()) {
+			eventList.add(terminatedEvent);
 		}
 
 		return eventList;
