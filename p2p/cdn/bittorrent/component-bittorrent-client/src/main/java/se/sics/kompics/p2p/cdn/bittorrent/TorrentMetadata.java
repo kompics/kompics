@@ -20,9 +20,17 @@
  */
 package se.sics.kompics.p2p.cdn.bittorrent;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
 import java.io.Serializable;
+import java.io.Writer;
 import java.math.BigInteger;
+import java.net.InetAddress;
+import java.util.Properties;
 
+import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.cdn.bittorrent.address.BitTorrentAddress;
 
 /**
@@ -69,5 +77,40 @@ public final class TorrentMetadata implements Serializable {
 
 	public int getPieceSize() {
 		return pieceSize;
+	}
+
+	public void store(String file) throws IOException {
+		Properties p = new Properties();
+		p.setProperty("tracker.ip", ""
+				+ tracker.getPeerAddress().getIp().getHostAddress());
+		p.setProperty("tracker.port", "" + tracker.getPeerAddress().getPort());
+		p.setProperty("tracker.id", "" + tracker.getPeerAddress().getId());
+		p.setProperty("tracker.peer.id", "" + tracker.getPeerId());
+		p.setProperty("torrent.id", "" + torrentId);
+		p.setProperty("piece.count", "" + pieceCount);
+		p.setProperty("piece.size", "" + pieceSize);
+
+		Writer writer = new FileWriter(file);
+		p.store(writer, "se.sics.kompics.p2p.bittorrent.torrent.metadata");
+	}
+
+	public static TorrentMetadata load(String file) throws IOException {
+		Properties p = new Properties();
+		Reader reader = new FileReader(file);
+		p.load(reader);
+
+		InetAddress ip = InetAddress.getByName(p.getProperty("tracker.ip"));
+		int port = Integer.parseInt(p.getProperty("tracker.port"));
+		int id = Integer.parseInt(p.getProperty("tracker.id"));
+		BigInteger trackerBigId = new BigInteger(p
+				.getProperty("tracker.peer.id"));
+
+		BitTorrentAddress tracker = new BitTorrentAddress(new Address(ip, port,
+				id), trackerBigId);
+		BigInteger torrentId = new BigInteger(p.getProperty("torrent.id"));
+		int pieceCount = Integer.parseInt(p.getProperty("piece.count"));
+		int pieceSize = Integer.parseInt(p.getProperty("piece.size"));
+
+		return new TorrentMetadata(torrentId, tracker, pieceCount, pieceSize);
 	}
 }

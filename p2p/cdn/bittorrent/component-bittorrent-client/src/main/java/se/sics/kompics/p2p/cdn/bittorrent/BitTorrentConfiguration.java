@@ -20,7 +20,13 @@
  */
 package se.sics.kompics.p2p.cdn.bittorrent;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
 import java.io.Serializable;
+import java.io.Writer;
+import java.util.Properties;
 
 /**
  * The <code>BitTorrentConfiguration</code> class.
@@ -78,11 +84,14 @@ public final class BitTorrentConfiguration implements Serializable {
 
 	private final long keepAlivePeriod;
 
+	private final boolean selfishPeers;
+
 	public BitTorrentConfiguration(int activePeersCount, int minPeersThreshold,
 			int maxInitiatedConnections, int maxPeers, int blockSize,
 			int randomPieceCount, int requestPipelineLength, int chokingPeriod,
 			int transferHistoryLength, int transferRateWindow,
-			int snubbedWindow, int unchokeWindow, long keepAlivePeriod) {
+			int snubbedWindow, int unchokeWindow, long keepAlivePeriod,
+			boolean selfishPeers) {
 		super();
 		this.activePeersCount = activePeersCount;
 		this.minPeersThreshold = minPeersThreshold;
@@ -97,6 +106,7 @@ public final class BitTorrentConfiguration implements Serializable {
 		this.snubbedWindow = snubbedWindow;
 		this.unchokeWindow = unchokeWindow;
 		this.keepAlivePeriod = keepAlivePeriod;
+		this.selfishPeers = selfishPeers;
 	}
 
 	public int getActivePeersCount() {
@@ -149,5 +159,66 @@ public final class BitTorrentConfiguration implements Serializable {
 
 	public long getKeepAlivePeriod() {
 		return keepAlivePeriod;
+	}
+
+	public boolean isSelfishPeers() {
+		return selfishPeers;
+	}
+
+	public void store(String file) throws IOException {
+		Properties p = new Properties();
+		p.setProperty("active.peers.count", "" + activePeersCount);
+		p.setProperty("peers.threshold.min", "" + minPeersThreshold);
+		p.setProperty("init.conn.max", "" + maxInitiatedConnections);
+		p.setProperty("peers.max", "" + maxPeers);
+		p.setProperty("block.size", "" + blockSize);
+		p.setProperty("random.piece.count", "" + randomPieceCount);
+		p.setProperty("pipeline.length", "" + requestPipelineLength);
+		p.setProperty("choking.period", "" + chokingPeriod);
+		p.setProperty("transfer.history.length", "" + transferHistoryLength);
+		p.setProperty("transfer.rate.window", "" + transferRateWindow);
+		p.setProperty("snubbed.window", "" + snubbedWindow);
+		p.setProperty("unchoke.window", "" + unchokeWindow);
+		p.setProperty("keepalive.period", "" + keepAlivePeriod);
+		p.setProperty("selfish.peers", "" + selfishPeers);
+
+		Writer writer = new FileWriter(file);
+		p.store(writer, "se.sics.kompics.p2p.bittorrent");
+	}
+
+	public static BitTorrentConfiguration load(String file) throws IOException {
+		Properties p = new Properties();
+		Reader reader = new FileReader(file);
+		p.load(reader);
+
+		int activePeersCount = Integer.parseInt(p
+				.getProperty("active.peers.count"));
+		int minPeersThreshold = Integer.parseInt(p
+				.getProperty("peers.threshold.min"));
+		int maxInitiatedConnections = Integer.parseInt(p
+				.getProperty("init.conn.max"));
+		int maxPeers = Integer.parseInt(p.getProperty("peers.max"));
+		int blockSize = Integer.parseInt(p.getProperty("block.size"));
+		int randomPieceCount = Integer.parseInt(p
+				.getProperty("random.piece.count"));
+		int requestPipelineLength = Integer.parseInt(p
+				.getProperty("pipeline.length"));
+		int chokingPeriod = Integer.parseInt(p.getProperty("choking.period"));
+		int transferHistoryLength = Integer.parseInt(p
+				.getProperty("transfer.history.length"));
+		int transferRateWindow = Integer.parseInt(p
+				.getProperty("transfer.rate.window"));
+		int snubbedWindow = Integer.parseInt(p.getProperty("snubbed.window"));
+		int unchokeWindow = Integer.parseInt(p.getProperty("unchoke.window"));
+		long keepAlivePeriod = Long
+				.parseLong(p.getProperty("keepalive.period"));
+		boolean selfishPeers = Boolean.getBoolean(p
+				.getProperty("selfish.peers"));
+
+		return new BitTorrentConfiguration(activePeersCount, minPeersThreshold,
+				maxInitiatedConnections, maxPeers, blockSize, randomPieceCount,
+				requestPipelineLength, chokingPeriod, transferHistoryLength,
+				transferRateWindow, snubbedWindow, unchokeWindow,
+				keepAlivePeriod, selfishPeers);
 	}
 }

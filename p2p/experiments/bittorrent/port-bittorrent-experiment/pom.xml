@@ -1,25 +1,50 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <parent>
-    <artifactId>kompics-bittorrent-experiments</artifactId>
-    <groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
-    <version>0.4.2.2-SNAPSHOT</version>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
-  <artifactId>kompics-port-bittorrent-experiment</artifactId>
-  <name>BitTorrentExperiment Kompics PortType</name>
-  <version>0.4.2.2-SNAPSHOT</version>
-  <description>BitTorrentExperiment Kompics PortType</description>
-  <dependencies>
-  	<dependency>
-  		<groupId>se.sics.kompics</groupId>
-  		<artifactId>kompics-core</artifactId>
-  		<version>0.4.2.2-SNAPSHOT</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>se.sics.kompics.p2p.cdn.bittorrent</groupId>
-  		<artifactId>kompics-component-bittorrent-client</artifactId>
-  		<version>0.4.2.2-SNAPSHOT</version>
-  	</dependency>
-  </dependencies>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>kompics-bittorrent-experiments</artifactId>
+		<groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
+		<version>0.4.2.2-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
+	<artifactId>kompics-port-bittorrent-experiment</artifactId>
+	<name>BitTorrentExperiment Kompics PortType</name>
+	<version>0.4.2.2-SNAPSHOT</version>
+	<description>BitTorrentExperiment Kompics PortType</description>
+	<dependencies>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-core</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.cdn.bittorrent</groupId>
+			<artifactId>kompics-component-bittorrent-client</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>sics-release</id>
+			<name>SICS Release Repository</name>
+			<url>http://kompics.sics.se/maven/repository</url>
+			<releases>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>sics-snapshot</id>
+			<name>SICS Snapshot Repository</name>
+			<url>http://kompics.sics.se/maven/snapshotrepository</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+			</snapshots>
+		</repository>
+	</repositories>
+
 </project>

@@ -70,6 +70,9 @@ public class BitTorrentExperiments {
 				// terminateAt(3600 * 1000);
 			}
 		};
+		
+		c.set();
+		
 		bitTorrentScenario1.setSeed(seed);
 		bitTorrentScenario1.simulate(BitTorrentSimulationMain.class);
 	}

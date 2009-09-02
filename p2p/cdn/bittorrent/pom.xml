@@ -19,6 +19,7 @@
 		<module>component-bittorrent-client</module>
 		<module>bittorrent-address</module>
 		<module>bittorrent-message</module>
+		<module>port-bittorrent-client</module>
 	</modules>
 
 	<repositories>

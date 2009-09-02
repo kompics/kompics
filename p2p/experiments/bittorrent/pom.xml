@@ -6,7 +6,7 @@
 		<version>0.4.2.2-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>se.sics.kompics.p2p.experiments</groupId>
+	<groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
 	<artifactId>kompics-bittorrent-experiments</artifactId>
 	<packaging>pom</packaging>
 	<name>BitTorrent experiment support components</name>
