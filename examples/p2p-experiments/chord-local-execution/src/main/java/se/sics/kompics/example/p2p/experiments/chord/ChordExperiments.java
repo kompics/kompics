@@ -82,20 +82,20 @@ public class ChordExperiments {
 						raise(5000, chordLookup, uniform(13), uniform(13));
 					}
 				};
-				StochasticProcess lowChurn = new StochasticProcess() {
-					{
-						eventInterArrivalTime(exponential(500));
-						raise(500, chordJoin, uniform(13));
-						raise(500, chordFail, uniform(13));
-					}
-				};
-				StochasticProcess highChurn = new StochasticProcess() {
-					{
-						eventInterArrivalTime(exponential(50));
-						raise(500, chordJoin, uniform(13));
-						raise(500, chordFail, uniform(13));
-					}
-				};
+//				StochasticProcess lowChurn = new StochasticProcess() {
+//					{
+//						eventInterArrivalTime(exponential(500));
+//						raise(500, chordJoin, uniform(13));
+//						raise(500, chordFail, uniform(13));
+//					}
+//				};
+//				StochasticProcess highChurn = new StochasticProcess() {
+//					{
+//						eventInterArrivalTime(exponential(50));
+//						raise(500, chordJoin, uniform(13));
+//						raise(500, chordFail, uniform(13));
+//					}
+//				};
 
 				process1.start();
 				process2.startAfterTerminationOf(2000, process1);
