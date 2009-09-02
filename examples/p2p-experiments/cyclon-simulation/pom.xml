@@ -36,4 +36,11 @@
 			</snapshots>
 		</repository>
 	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.experiments.cyclon</groupId>
+			<artifactId>kompics-component-cyclon-simulation-main</artifactId>
+			<version>0.4.2.2-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
 </project>
