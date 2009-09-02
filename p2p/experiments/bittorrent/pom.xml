@@ -12,4 +12,9 @@
 	<name>BitTorrent experiment support components</name>
 	<version>0.4.2.2-SNAPSHOT</version>
 	<description>BitTorrent experiment support components</description>
+	<modules>
+		<module>port-bittorrent-experiment</module>
+		<module>component-bittorrent-simulator</module>
+		<module>component-bittorrent-simulation-main</module>
+	</modules>
 </project>
