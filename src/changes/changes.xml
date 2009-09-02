@@ -4,6 +4,20 @@
 		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
+        <release version="0.4.2.2" date="2009-09-02" description="P2P framework release">
+            <action dev="cosmin" type="add">
+[Kompics P2P Framework]: added the complete P2P framework.
+            </action>
+            <action dev="cosmin" type="add">
+[Kompics P2P Overlays]: added Chord and Cyclon implementations.
+            </action>
+            <action dev="cosmin" type="add">
+[Kompics P2P Systems]: added Chord and Cyclon deployment components.
+            </action>
+            <action dev="cosmin" type="add">
+[Kompics P2P Experiments]: added Chord, Cyclon, and BitTorrent experiment components.
+            </action>
+        </release>
         <release version="0.4.2.1" date="2009-04-02" description="Maintenance release">
             <action dev="cosmin" type="fix">
 [Kompics core]: components with init subscriptions in their constructor execute Init before any other event.
