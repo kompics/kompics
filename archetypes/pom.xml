@@ -4,13 +4,13 @@
 	<parent>
 		<groupId>se.sics.kompics</groupId>
 		<artifactId>kompics-parent-pom</artifactId>
-		<version>0.4.2.2</version>
+		<version>0.4.2.3-SNAPSHOT</version>
 	</parent>
 
 	<groupId>se.sics.kompics.archetypes</groupId>
 	<artifactId>kompics-archetypes</artifactId>
 	<packaging>pom</packaging>
-	<version>0.4.2.2</version>
+	<version>0.4.2.3-SNAPSHOT</version>
 	<name>Kompics archetypes</name>
 
 	<modules>

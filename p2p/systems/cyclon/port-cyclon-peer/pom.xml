@@ -4,12 +4,12 @@
 	<parent>
 		<artifactId>kompics-cyclon-system</artifactId>
 		<groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
-		<version>0.4.2.2</version>
+		<version>0.4.2.3-SNAPSHOT</version>
 	</parent>
 
 	<groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
 	<artifactId>kompics-port-cyclon-peer</artifactId>
-	<version>0.4.2.2</version>
+	<version>0.4.2.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>CyclonPeer Kompics PortType</name>
 	<description>CyclonPeer Kompics PortType</description>
@@ -40,12 +40,12 @@
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
 			<artifactId>kompics-port-cyclon-status</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
 			<artifactId>kompics-port-cyclon-peer-sampling</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

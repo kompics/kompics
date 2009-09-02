@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-chord-overlay</artifactId>
         <groupId>se.sics.kompics.p2p.overlay.chord</groupId>
-        <version>0.4.2.2</version>
+        <version>0.4.2.3-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 	<artifactId>kompics-component-chord-overlay</artifactId>
-	<version>0.4.2.2</version>
+	<version>0.4.2.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Chord Kompics Component</name>
 	<description>Chord Kompics Component</description>
@@ -38,27 +38,27 @@
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 			<artifactId>kompics-port-chord-status</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 			<artifactId>kompics-port-chord-overlay</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 			<artifactId>kompics-component-chord-ring</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 			<artifactId>kompics-component-chord-iterative-router</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p</groupId>
 			<artifactId>kompics-port-failure-detector</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

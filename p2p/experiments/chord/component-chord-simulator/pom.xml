@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-chord-experiments</artifactId>
         <groupId>se.sics.kompics.p2p.experiments.chord</groupId>
-        <version>0.4.2.2</version>
+        <version>0.4.2.3-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.experiments.chord</groupId>
 	<artifactId>kompics-component-chord-simulator</artifactId>
-	<version>0.4.2.2</version>
+	<version>0.4.2.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>ChordSimulator Kompics Component</name>
 	<description>ChordSimulator Kompics Component</description>
@@ -43,12 +43,12 @@
 		<dependency>
 			<groupId>se.sics.kompics.p2p.experiments.chord</groupId>
 			<artifactId>kompics-port-chord-experiment</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 			<artifactId>kompics-component-chord-peer</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

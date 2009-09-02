@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-cyclon-experiements</artifactId>
         <groupId>se.sics.kompics.p2p.experiments.cyclon</groupId>
-        <version>0.4.2.2</version>
+        <version>0.4.2.3-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.experiments.cyclon</groupId>
 	<artifactId>kompics-component-cyclon-simulator</artifactId>
-	<version>0.4.2.2</version>
+	<version>0.4.2.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>CyclonSimulator Kompics Component</name>
 	<description>CyclonSimulator Kompics Component</description>
@@ -38,12 +38,12 @@
 		<dependency>
 			<groupId>se.sics.kompics.p2p.experiments.cyclon</groupId>
 			<artifactId>kompics-port-cyclon-experiment</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
 			<artifactId>kompics-component-cyclon-peer</artifactId>
-			<version>0.4.2.2</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
