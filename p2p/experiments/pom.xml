@@ -21,6 +21,7 @@
 		<module>cyclon</module>
 		<module>component-p2p-simulator</module>
 		<module>component-p2p-orchestrator</module>
+		<module>bittorrent</module>
 	</modules>
 
 	<repositories>
