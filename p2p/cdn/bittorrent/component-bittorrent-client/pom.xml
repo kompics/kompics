@@ -13,7 +13,7 @@
 	<description>BitTorrentClient Kompics Component</description>
 
 	<properties>
-		<kompics.version>0.4.2.2</kompics.version>
+		<kompics.version>0.4.2.3-SNAPSHOT</kompics.version>
 	</properties>
 
 	<dependencies>
