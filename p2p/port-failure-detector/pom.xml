@@ -14,15 +14,11 @@
 	<name>FailureDetector Kompics PortType</name>
 	<description>FailureDetector Kompics PortType</description>
 
-	<properties>
-		<kompics.version>0.4.2.2</kompics.version>
-	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>${kompics.version}</version>
+			<version>0.4.2.3-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
