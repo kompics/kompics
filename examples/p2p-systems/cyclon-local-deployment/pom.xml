@@ -7,7 +7,7 @@
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.examples.p2p-systems</groupId>
-	<artifactId>cyclon-local-deployment</artifactId>
+	<artifactId>kompics-example-cyclon-local-deployment</artifactId>
 	<name>Cyclon Local Deployment P2P System Example</name>
 	<version>0.4.2.3-SNAPSHOT</version>
 	<description>Cyclon Local Deployment P2P System Example</description>
