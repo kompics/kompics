@@ -15,6 +15,7 @@
 	<description>Kompics examples and demos</description>
 	<modules>
 		<module>p2p-experiments</module>
+		<module>p2p-systems</module>
 	</modules>
 
     <repositories>
