@@ -88,6 +88,8 @@ public class MinaHandler extends IoHandlerAdapter {
 
 		networkComponent.networkException(new NetworkException(address,
 				protocol));
+		
+		throw new RuntimeException("MINA exception", cause);
 	}
 
 	/*

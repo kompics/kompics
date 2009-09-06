@@ -20,6 +20,8 @@
  */
 package se.sics.kompics.p2p.overlay.cyclon;
 
+import java.io.Serializable;
+
 /**
  * The <code>CyclonNodeDescriptor</code> class represent a Cyclon node
  * descriptor, containing a Cyclon address and an age.
@@ -27,7 +29,13 @@ package se.sics.kompics.p2p.overlay.cyclon;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public class CyclonNodeDescriptor implements Comparable<CyclonNodeDescriptor> {
+public class CyclonNodeDescriptor implements Comparable<CyclonNodeDescriptor>,
+		Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1906679375438244117L;
 
 	private final CyclonAddress cyclonAddress;
 	private int age;

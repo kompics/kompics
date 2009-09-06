@@ -20,6 +20,7 @@
  */
 package se.sics.kompics.p2p.overlay.cyclon;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -29,7 +30,12 @@ import java.util.ArrayList;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public class DescriptorBuffer {
+public class DescriptorBuffer implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4414783055393007206L;
 
 	private final CyclonAddress from;
 

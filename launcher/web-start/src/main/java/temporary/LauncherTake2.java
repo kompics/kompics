@@ -22,10 +22,14 @@ public class LauncherTake2 {
 				classPath, new Configuration2(4001).set(), "-Dpeer.id=3");
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
 				classPath, new Configuration2(4003).set(), "-Dpeer.id=100");
-//		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-//				classPath, new Configuration(4005).set(), "-Dpeer.id=1024");
-//		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-//				classPath, new Configuration(4007).set(), "-Dpeer.id=2048");
+		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
+				classPath, new Configuration2(4005).set(), "-Dpeer.id=1024");
+		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
+				classPath, new Configuration2(4007).set(), "-Dpeer.id=2048");
+		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
+				classPath, new Configuration2(4009).set(), "-Dpeer.id=3192");
+		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
+				classPath, new Configuration2(4011).set(), "-Dpeer.id=4096");
 		launcher.launchAll();
 	}
 }
