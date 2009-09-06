@@ -66,8 +66,6 @@ public class CyclonWebApplication extends ComponentDefinition {
 
 	private Address monitorWebAddress, bootstrapWebAddress;
 
-	int webPort;
-
 	public CyclonWebApplication() {
 		subscribe(handleInit, control);
 		subscribe(handleWebRequest, web);
@@ -79,7 +77,6 @@ public class CyclonWebApplication extends ComponentDefinition {
 			self = init.getSelf();
 			monitorWebAddress = init.getMonitorWebAddress();
 			bootstrapWebAddress = init.getBootstrapWebAddress();
-			webPort = init.getWebPort();
 
 			logger = LoggerFactory.getLogger(CyclonWebApplication.class
 					.getName()
@@ -190,7 +187,8 @@ public class CyclonWebApplication extends ComponentDefinition {
 	private final void appendPeerLink(StringBuilder sb, OverlayAddress address) {
 		sb.append("<a href=\"http://");
 		sb.append(address.getPeerAddress().getIp().getHostAddress());
-		sb.append(":").append(webPort).append("/");
+		sb.append(":").append(address.getPeerAddress().getPort() - 1).append(
+				"/");
 		sb.append(address.getPeerAddress().getId()).append("/").append("\">");
 		sb.append(address.toString()).append("</a>");
 	}
@@ -199,7 +197,7 @@ public class CyclonWebApplication extends ComponentDefinition {
 			String label) {
 		sb.append("<a href=\"http://");
 		sb.append(peerAddress.getIp().getHostAddress());
-		sb.append(":").append(webPort).append("/");
+		sb.append(":").append(peerAddress.getPort() - 1).append("/");
 		sb.append(peerAddress.getId()).append("/Cyclon").append("\">");
 		sb.append(label).append("</a>");
 	}

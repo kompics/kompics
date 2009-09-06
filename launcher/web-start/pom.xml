@@ -58,5 +58,15 @@
 			<artifactId>kompics-component-chord-monitor-server-main</artifactId>
 			<version>0.4.2.3-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
+			<artifactId>kompics-component-cyclon-monitor-server-main</artifactId>
+			<version>0.4.2.3-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
+			<artifactId>kompics-component-cyclon-peer-main</artifactId>
+			<version>0.4.2.3-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>

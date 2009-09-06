@@ -76,9 +76,12 @@ public class ProcLauncher {
 				arguments.add("-D" + key + "=" + value);
 			}
 
+			String title = "";
 			for (String s : sProps) {
 				arguments.add(s);
+				title += " " + s;
 			}
+			mainFrame.setTitle(mainFrame.getTitle() + title);
 
 			arguments.add(mainComponent);
 

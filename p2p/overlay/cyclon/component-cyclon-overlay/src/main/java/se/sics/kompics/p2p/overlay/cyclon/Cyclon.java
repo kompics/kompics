@@ -42,8 +42,9 @@ import se.sics.kompics.timer.Timer;
 /**
  * The <code>Cyclon</code> class is component implementing the Cyclon protocol.
  * 
- * TODO You have to extend this class to implement the Cyclon join protocol based on
- * random walks. You define your own messages and handlers for the random walk.
+ * TODO You have to extend this class to implement the Cyclon join protocol
+ * based on random walks. You define your own messages and handlers for the
+ * random walk.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
@@ -151,6 +152,8 @@ public final class Cyclon extends ComponentDefinition {
 
 		trigger(st, timer);
 		trigger(request, network);
+
+		logger.debug("Initiated Shuffle with {}", peer);
 	}
 
 	/**

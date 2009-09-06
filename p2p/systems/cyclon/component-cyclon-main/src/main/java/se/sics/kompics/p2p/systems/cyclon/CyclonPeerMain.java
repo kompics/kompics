@@ -21,6 +21,7 @@
 package se.sics.kompics.p2p.systems.cyclon;
 
 import java.io.IOException;
+import java.math.BigInteger;
 
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
@@ -38,6 +39,8 @@ import se.sics.kompics.p2p.monitor.cyclon.server.CyclonMonitorConfiguration;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonConfiguration;
 import se.sics.kompics.p2p.peer.cyclon.CyclonPeer;
 import se.sics.kompics.p2p.peer.cyclon.CyclonPeerInit;
+import se.sics.kompics.p2p.peer.cyclon.CyclonPeerPort;
+import se.sics.kompics.p2p.peer.cyclon.JoinCyclon;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.web.Web;
@@ -95,6 +98,9 @@ public final class CyclonPeerMain extends ComponentDefinition {
 		connect(cyclonPeer.getNegative(Network.class), network
 				.getPositive(Network.class));
 		connect(cyclonPeer.getPositive(Web.class), web.getNegative(Web.class));
+
+		trigger(new JoinCyclon(new BigInteger(System.getProperty("peer.id"))),
+				cyclonPeer.getPositive(CyclonPeerPort.class));
 
 		logger.info("Started. Network={} Web={}", networkConfiguration
 				.getAddress(), webConfiguration.getIp().getHostAddress() + ":"

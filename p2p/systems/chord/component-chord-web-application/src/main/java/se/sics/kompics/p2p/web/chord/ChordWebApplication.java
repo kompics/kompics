@@ -80,8 +80,6 @@ public class ChordWebApplication extends ComponentDefinition {
 
 	private Address monitorWebAddress, bootstrapWebAddress;
 
-	int webPort;
-
 	public ChordWebApplication() {
 		subscribe(handleInit, control);
 
@@ -98,7 +96,6 @@ public class ChordWebApplication extends ComponentDefinition {
 			self = init.getSelf();
 			monitorWebAddress = init.getMonitorWebAddress();
 			bootstrapWebAddress = init.getBootstrapWebAddress();
-			webPort = init.getWebPort();
 
 			logger = LoggerFactory.getLogger(ChordWebApplication.class
 					.getName()

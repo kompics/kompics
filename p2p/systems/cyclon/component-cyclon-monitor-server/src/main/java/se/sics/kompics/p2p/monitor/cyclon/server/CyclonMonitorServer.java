@@ -88,8 +88,6 @@ public class CyclonMonitorServer extends ComponentDefinition {
 
 	private long evictAfter;
 
-	private int webPort;
-
 	public CyclonMonitorServer() {
 		this.view = new HashMap<OverlayAddress, OverlayViewEntry>();
 		this.alivePeers = new TreeMap<OverlayAddress, CyclonNeighbors>();
@@ -106,7 +104,6 @@ public class CyclonMonitorServer extends ComponentDefinition {
 	private Handler<CyclonMonitorServerInit> handleInit = new Handler<CyclonMonitorServerInit>() {
 		public void handle(CyclonMonitorServerInit event) {
 			evictAfter = event.getConfiguration().getViewEvictAfter();
-			webPort = event.getConfiguration().getClientWebPort();
 
 			logger.debug("INIT");
 
@@ -511,7 +508,8 @@ public class CyclonMonitorServer extends ComponentDefinition {
 	private final void appendPeerLink(StringBuilder sb, OverlayAddress address) {
 		sb.append("<a href=\"http://");
 		sb.append(address.getPeerAddress().getIp().getHostAddress());
-		sb.append(":").append(webPort).append("/");
+		sb.append(":").append(address.getPeerAddress().getPort() - 1).append(
+				"/");
 		sb.append(address.getPeerAddress().getId()).append("/").append("\">");
 		// show dead peer links in red
 		if (deadPeers.containsKey(address)) {
