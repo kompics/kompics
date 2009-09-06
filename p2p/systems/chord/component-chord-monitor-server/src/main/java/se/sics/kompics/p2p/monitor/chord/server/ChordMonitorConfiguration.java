@@ -34,7 +34,8 @@ import se.sics.kompics.address.Address;
  * The <code>ChordMonitorConfiguration</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id$
+ * @version $Id: ChordMonitorConfiguration.java 1149 2009-09-01 23:55:47Z Cosmin
+ *          $
  */
 public final class ChordMonitorConfiguration {
 
@@ -46,13 +47,17 @@ public final class ChordMonitorConfiguration {
 
 	private final int clientWebPort;
 
+	private final int serverWebPort;
+
 	public ChordMonitorConfiguration(Address monitorServerAddress,
-			long viewEvictAfter, long clientUpdatePeriod, int clientWebPort) {
+			long viewEvictAfter, long clientUpdatePeriod, int clientWebPort,
+			int serverWebPort) {
 		super();
 		this.monitorServerAddress = monitorServerAddress;
 		this.viewEvictAfter = viewEvictAfter;
 		this.clientUpdatePeriod = clientUpdatePeriod;
 		this.clientWebPort = clientWebPort;
+		this.serverWebPort = serverWebPort;
 	}
 
 	public Address getMonitorServerAddress() {
@@ -71,11 +76,16 @@ public final class ChordMonitorConfiguration {
 		return clientWebPort;
 	}
 
+	public int getServerWebPort() {
+		return serverWebPort;
+	}
+
 	public void store(String file) throws IOException {
 		Properties p = new Properties();
 		p.setProperty("view.evict.after", "" + viewEvictAfter);
 		p.setProperty("client.update.period", "" + clientUpdatePeriod);
 		p.setProperty("client.web.port", "" + clientWebPort);
+		p.setProperty("server.web.port", "" + serverWebPort);
 		p.setProperty("server.ip", ""
 				+ monitorServerAddress.getIp().getHostAddress());
 		p.setProperty("server.port", "" + monitorServerAddress.getPort());
@@ -100,8 +110,10 @@ public final class ChordMonitorConfiguration {
 		long clientUpdatePeriod = Long.parseLong(p
 				.getProperty("client.update.period"));
 		int clientWebPort = Integer.parseInt(p.getProperty("client.web.port"));
+		int serverWebPort = Integer.parseInt(p.getProperty("server.web.port"));
 
 		return new ChordMonitorConfiguration(monitorServerAddress,
-				viewEvictAfter, clientUpdatePeriod, clientWebPort);
+				viewEvictAfter, clientUpdatePeriod, clientWebPort,
+				serverWebPort);
 	}
 }

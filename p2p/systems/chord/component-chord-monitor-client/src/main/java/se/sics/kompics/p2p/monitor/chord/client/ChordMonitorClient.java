@@ -60,6 +60,8 @@ public class ChordMonitorClient extends ComponentDefinition {
 
 	private Address self;
 
+	private int clientWebPort;
+
 	private long updatePeriod;
 
 	public ChordMonitorClient() {
@@ -78,6 +80,7 @@ public class ChordMonitorClient extends ComponentDefinition {
 			updatePeriod = event.getConfiguration().getClientUpdatePeriod();
 			monitorServerAddress = event.getConfiguration()
 					.getMonitorServerAddress();
+			clientWebPort = event.getConfiguration().getClientWebPort();
 
 			logger = LoggerFactory.getLogger(getClass().getName() + "@"
 					+ self.getId());
@@ -129,7 +132,8 @@ public class ChordMonitorClient extends ComponentDefinition {
 			if (event.getNeighbors().getLocalPeer() != null) {
 				// only send notification to the server if the peer has joined
 				ChordNeighborsNotification viewNotification = new ChordNeighborsNotification(
-						self, monitorServerAddress, event.getNeighbors());
+						self, monitorServerAddress, clientWebPort, event
+								.getNeighbors());
 
 				trigger(viewNotification, network);
 			}

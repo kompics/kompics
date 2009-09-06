@@ -78,10 +78,10 @@ public class PeerProber {
 	}
 
 	void ping() {
-		logger.debug("PING");
 		intervalPingTimeoutId = fd.setPingTimer(suspected, probedPeer);
 		pongTimeoutId = fd.sendPing(System.currentTimeMillis(), probedPeer,
 				times.getRTO());
+		logger.debug("PING {}", pongTimeoutId);
 	}
 
 	void pong(UUID pongId, long ts) {

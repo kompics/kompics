@@ -70,7 +70,7 @@ public class Configuration {
 			+ "\">Chord Monitor Server</a><br>";
 
 	BootstrapConfiguration bootConfiguration = new BootstrapConfiguration(
-			bootServerAddress, 60000, 4000, 3, 30000, webPort);
+			bootServerAddress, 60000, 4000, 3, 30000, webPort, webPort);
 
 	CyclonMonitorConfiguration monitorConfiguration = new CyclonMonitorConfiguration(
 			cyclonMonitorServerAddress, 10000, 5000, webPort);

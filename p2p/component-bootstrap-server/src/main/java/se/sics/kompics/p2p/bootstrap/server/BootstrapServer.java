@@ -90,7 +90,7 @@ public class BootstrapServer extends ComponentDefinition {
 			evictAfter = event.getConfiguration().getCacheEvictAfter();
 			self = event.getConfiguration().getBootstrapServerAddress();
 
-			webPort = event.getConfiguration().getClientWebPort();
+			webPort = event.getConfiguration().getServerWebPort();
 			webAddress = "http://" + self.getIp().getHostAddress() + ":"
 					+ webPort + "/" + self.getId() + "/";
 
@@ -147,8 +147,9 @@ public class BootstrapServer extends ComponentDefinition {
 				Collections.sort(sorted);
 				for (CacheEntry cacheEntry : sorted) {
 					PeerEntry peerEntry = new PeerEntry(overlay, cacheEntry
-							.getOverlayAddress(), cacheEntry.getPeerAddress(),
-							now - cacheEntry.getAddedAt(), now
+							.getOverlayAddress(), cacheEntry.getPeerWebPort(),
+							cacheEntry.getPeerAddress(), now
+									- cacheEntry.getAddedAt(), now
 									- cacheEntry.getRefreshedAt());
 					peers.add(peerEntry);
 					peersMax--;
@@ -222,7 +223,8 @@ public class BootstrapServer extends ComponentDefinition {
 				if (entry == null) {
 					// add a new entry
 					entry = new CacheEntry(address, overlay, peerEntry
-							.getOverlayAddress(), now, now);
+							.getOverlayAddress(), peerEntry.getPeerWebPort(),
+							now, now);
 					overlayCache.put(address, entry);
 
 					// set a new eviction timeout
@@ -364,8 +366,8 @@ public class BootstrapServer extends ComponentDefinition {
 			sb.append("</div></td><td><div align=\"center\">");
 			String webAddress = "http://"
 					+ cacheEntry.getPeerAddress().getIp().getHostAddress()
-					+ ":" + webPort + "/" + cacheEntry.getPeerAddress().getId()
-					+ "/";
+					+ ":" + cacheEntry.getPeerWebPort() + "/"
+					+ cacheEntry.getPeerAddress().getId() + "/";
 			sb.append("<a href=\"").append(webAddress).append("\">");
 			sb.append(cacheEntry.getOverlayAddress().toString()).append("</a>");
 			sb.append("</div></td><td><div align=\"left\">");

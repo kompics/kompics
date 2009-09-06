@@ -39,6 +39,8 @@ public final class CacheEntry implements Comparable<CacheEntry> {
 
 	private final OverlayAddress overlayAddress;
 
+	private final int peerWebPort;
+
 	private long refreshedAt;
 
 	private UUID evictionTimerId;
@@ -46,12 +48,14 @@ public final class CacheEntry implements Comparable<CacheEntry> {
 	private final long addedAt;
 
 	public CacheEntry(Address peerAddress, String overlay,
-			OverlayAddress overlayAddress, long now, long addedAt) {
+			OverlayAddress overlayAddress, int peerWebPort, long now,
+			long addedAt) {
 		this.peerAddress = peerAddress;
 		this.overlay = overlay;
 		this.overlayAddress = overlayAddress;
 		this.refreshedAt = now;
 		this.addedAt = addedAt;
+		this.peerWebPort = peerWebPort;
 	}
 
 	public Address getPeerAddress() {
@@ -66,6 +70,10 @@ public final class CacheEntry implements Comparable<CacheEntry> {
 		return overlayAddress;
 	}
 
+	public int getPeerWebPort() {
+		return peerWebPort;
+	}
+	
 	public long getRefreshedAt() {
 		return refreshedAt;
 	}

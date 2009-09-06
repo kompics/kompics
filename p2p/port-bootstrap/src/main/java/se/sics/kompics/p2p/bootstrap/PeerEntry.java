@@ -42,16 +42,19 @@ public final class PeerEntry implements Serializable {
 
 	private final OverlayAddress overlayAddress;
 
+	private final int peerWebPort;
+
 	private final long age;
 
 	private final long freshness;
 
 	public PeerEntry(String overlay, OverlayAddress overlayAddress,
-			Address address, long age, long freshness) {
+			int peerWebPort, Address address, long age, long freshness) {
 		this.overlay = overlay;
 		this.overlayAddress = overlayAddress;
 		this.age = age;
 		this.freshness = freshness;
+		this.peerWebPort = peerWebPort;
 	}
 
 	public long getAge() {
@@ -68,6 +71,10 @@ public final class PeerEntry implements Serializable {
 
 	public OverlayAddress getOverlayAddress() {
 		return overlayAddress;
+	}
+	
+	public int getPeerWebPort() {
+		return peerWebPort;
 	}
 
 	@Override

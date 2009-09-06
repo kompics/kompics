@@ -76,8 +76,6 @@ public class ChordMonitorServer extends ComponentDefinition {
 
 	private long evictAfter;
 
-	private int webPort;
-
 	public ChordMonitorServer() {
 		this.view = new HashMap<OverlayAddress, OverlayViewEntry>();
 		this.successor = new HashMap<OverlayAddress, OverlayAddress>();
@@ -96,7 +94,6 @@ public class ChordMonitorServer extends ComponentDefinition {
 	private Handler<ChordMonitorServerInit> handleInit = new Handler<ChordMonitorServerInit>() {
 		public void handle(ChordMonitorServerInit event) {
 			evictAfter = event.getConfiguration().getViewEvictAfter();
-			webPort = event.getConfiguration().getClientWebPort();
 
 			logger.debug("INIT");
 		}
@@ -108,7 +105,7 @@ public class ChordMonitorServer extends ComponentDefinition {
 			ChordNeighbors neighbors = event.getChordNeighbors();
 			ChordAddress chordAddress = neighbors.getLocalPeer();
 
-			addPeerToView(chordAddress, neighbors);
+			addPeerToView(chordAddress, event.getClientWebPort(), neighbors);
 
 			OverlayAddress pred = alivePeers.lowerKey(chordAddress);
 			if (pred != null) {
@@ -148,7 +145,8 @@ public class ChordMonitorServer extends ComponentDefinition {
 		}
 	};
 
-	private void addPeerToView(OverlayAddress address, ChordNeighbors neighbors) {
+	private void addPeerToView(OverlayAddress address, int clientWebPort,
+			ChordNeighbors neighbors) {
 		long now = System.currentTimeMillis();
 
 		alivePeers.put(address, neighbors);
@@ -156,7 +154,7 @@ public class ChordMonitorServer extends ComponentDefinition {
 
 		OverlayViewEntry entry = view.get(address);
 		if (entry == null) {
-			entry = new OverlayViewEntry(address, now, now);
+			entry = new OverlayViewEntry(address, clientWebPort, now, now);
 			view.put(address, entry);
 
 			// set eviction timer
@@ -513,9 +511,14 @@ public class ChordMonitorServer extends ComponentDefinition {
 	}
 
 	private final void appendPeerLink(StringBuilder sb, OverlayAddress address) {
+		OverlayViewEntry viewEntry = view.get(address);
+		int wp = 8080;
+		if (viewEntry!=null) {
+			wp = viewEntry.getClientWebPort();
+		}
 		sb.append("<a href=\"http://");
 		sb.append(address.getPeerAddress().getIp().getHostAddress());
-		sb.append(":").append(webPort).append("/");
+		sb.append(":").append(wp).append("/");
 		sb.append(address.getPeerAddress().getId()).append("/").append("\">");
 		// show dead peer links in red
 		if (deadPeers.containsKey(address)) {

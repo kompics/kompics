@@ -415,7 +415,8 @@ public class ChordWebApplication extends ComponentDefinition {
 	private final void appendPeerLink(StringBuilder sb, OverlayAddress address) {
 		sb.append("<a href=\"http://");
 		sb.append(address.getPeerAddress().getIp().getHostAddress());
-		sb.append(":").append(webPort).append("/");
+		sb.append(":").append(address.getPeerAddress().getPort() - 1).append(
+				"/");
 		sb.append(address.getPeerAddress().getId()).append("/").append("\">");
 		sb.append(address.toString()).append("</a>");
 	}
@@ -424,7 +425,7 @@ public class ChordWebApplication extends ComponentDefinition {
 			String label) {
 		sb.append("<a href=\"http://");
 		sb.append(peerAddress.getIp().getHostAddress());
-		sb.append(":").append(webPort).append("/");
+		sb.append(":").append(peerAddress.getPort() - 1).append("/");
 		sb.append(peerAddress.getId()).append("/Chord").append("\">");
 		sb.append(label).append("</a>");
 	}

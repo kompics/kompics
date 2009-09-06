@@ -34,20 +34,28 @@ public class OverlayViewEntry {
 
 	private final OverlayAddress address;
 
+	private final int clientWebPort;
+
 	private long refreshedAt;
 
 	private UUID evictionTimerId;
 
 	private final long addedAt;
 
-	public OverlayViewEntry(OverlayAddress address, long now, long addedAt) {
+	public OverlayViewEntry(OverlayAddress address, int clientWebPort,
+			long now, long addedAt) {
 		this.address = address;
+		this.clientWebPort = clientWebPort;
 		this.refreshedAt = now;
 		this.addedAt = addedAt;
 	}
 
 	public OverlayAddress getOverlayAddress() {
 		return address;
+	}
+	
+	public int getClientWebPort() {
+		return clientWebPort;
 	}
 
 	public long getRefreshedAt() {

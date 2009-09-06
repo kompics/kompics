@@ -64,10 +64,10 @@ public class Configuration {
 			+ monitorId + "/" + "\">Monitor Server</a>";
 
 	BootstrapConfiguration bootConfiguration = new BootstrapConfiguration(
-			bootServerAddress, 60000, 4000, 3, 30000, webPort);
+			bootServerAddress, 60000, 4000, 3, 30000, webPort, webPort);
 
 	ChordMonitorConfiguration monitorConfiguration = new ChordMonitorConfiguration(
-			monitorServerAddress, 10000, 2000, webPort);
+			monitorServerAddress, 10000, 2000, webPort, webPort);
 
 	PingFailureDetectorConfiguration fdConfiguration = new PingFailureDetectorConfiguration(
 			1000, 5000, 1000, 0);

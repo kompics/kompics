@@ -99,7 +99,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 			pongTimeoutIncrement = event.getConfiguration()
 					.getTimeoutPeriodIncrement();
 			self = event.getSelf();
-			logger = LoggerFactory.getLogger(PingFailureDetector.class.getName()
+			logger = LoggerFactory.getLogger(PingFailureDetector.class
+					.getName()
 					+ "@" + self.getId());
 		};
 	};
@@ -175,8 +176,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 
 	private Handler<Ping> handlePing = new Handler<Ping>() {
 		public void handle(Ping event) {
-			logger.debug("Received Ping from {}. Sending Pong.", event
-					.getSource());
+			logger.debug("Received Ping from {}. Sending Pong. {}", event
+					.getSource(), event.getId());
 			trigger(new Pong(event.getId(), event.getTs(), self, event
 					.getSource()), net);
 		}

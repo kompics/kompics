@@ -70,6 +70,7 @@ public class BootstrapClient extends ComponentDefinition {
 
 	private Address bootstrapServerAddress;
 	private Address self;
+	private int clientWebPort;
 	private long refreshPeriod;
 	private long retryPeriod;
 	private int retriesCount;
@@ -98,6 +99,7 @@ public class BootstrapClient extends ComponentDefinition {
 					.getClientRetryCount();
 			bootstrapServerAddress = init.getBootstrapConfiguration()
 					.getBootstrapServerAddress();
+			clientWebPort = init.getBootstrapConfiguration().getClientWebPort();
 			self = init.getSelf();
 
 			logger = LoggerFactory.getLogger(BootstrapClient.class.getName()
@@ -193,7 +195,7 @@ public class BootstrapClient extends ComponentDefinition {
 	private Handler<BootstrapCompleted> handleBootstrapCompleted = new Handler<BootstrapCompleted>() {
 		public void handle(BootstrapCompleted event) {
 			PeerEntry peerEntry = new PeerEntry(event.getOverlay(), event
-					.getOverlayAddress(), self, 0, 0);
+					.getOverlayAddress(), clientWebPort, self, 0, 0);
 
 			overlays.add(peerEntry);
 

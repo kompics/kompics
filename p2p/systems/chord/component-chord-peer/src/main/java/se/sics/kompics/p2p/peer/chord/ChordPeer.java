@@ -161,7 +161,8 @@ public final class ChordPeer extends ComponentDefinition {
 					.getChordConfiguration().getFingerStabilizationPeriod(),
 					init.getChordConfiguration().getRpcTimeout()), chord
 					.getControl());
-			trigger(new PingFailureDetectorInit(self, init.getFdConfiguration()),
+			trigger(
+					new PingFailureDetectorInit(self, init.getFdConfiguration()),
 					fd.getControl());
 			trigger(new BootstrapClientInit(self, init
 					.getBootstrapConfiguration()), bootstrap.getControl());
@@ -176,10 +177,11 @@ public final class ChordPeer extends ComponentDefinition {
 
 			chordSelf = new ChordAddress(self, event.getNodeKey());
 
-			trigger(new ChordWebApplicationInit(chordSelf, monitorConfiguration
-					.getMonitorServerAddress(), bootstrapConfiguration
-					.getBootstrapServerAddress(), monitorConfiguration
-					.getClientWebPort()), webapp.getControl());
+			trigger(new ChordWebApplicationInit(chordSelf,
+					bootstrapConfiguration.getBootstrapServerAddress(),
+					monitorConfiguration.getMonitorServerAddress(),
+					monitorConfiguration.getClientWebPort()), webapp
+					.getControl());
 
 			BootstrapRequest request = new BootstrapRequest("Chord",
 					bootstrapRequestPeerCount);

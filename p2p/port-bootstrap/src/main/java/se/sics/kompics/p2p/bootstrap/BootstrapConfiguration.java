@@ -50,15 +50,18 @@ public final class BootstrapConfiguration {
 
 	private final int clientWebPort;
 
+	private final int serverWebPort;
+
 	public BootstrapConfiguration(Address bootstrapServerAddress,
 			long cacheEvictAfter, long clientRetryPeriod, int clientRetryCount,
-			long clientKeepAlivePeriod, int clientWebPort) {
+			long clientKeepAlivePeriod, int clientWebPort, int serverWebPort) {
 		this.bootstrapServerAddress = bootstrapServerAddress;
 		this.cacheEvictAfter = cacheEvictAfter;
 		this.clientRetryPeriod = clientRetryPeriod;
 		this.clientRetryCount = clientRetryCount;
 		this.clientKeepAlivePeriod = clientKeepAlivePeriod;
 		this.clientWebPort = clientWebPort;
+		this.serverWebPort = serverWebPort;
 	}
 
 	public Address getBootstrapServerAddress() {
@@ -85,6 +88,10 @@ public final class BootstrapConfiguration {
 		return clientWebPort;
 	}
 
+	public int getServerWebPort() {
+		return serverWebPort;
+	}
+
 	public void store(String file) throws IOException {
 		Properties p = new Properties();
 		p.setProperty("cache.evict.after", "" + cacheEvictAfter);
@@ -92,6 +99,7 @@ public final class BootstrapConfiguration {
 		p.setProperty("client.retry.count", "" + clientRetryCount);
 		p.setProperty("client.keepalive.period", "" + clientKeepAlivePeriod);
 		p.setProperty("client.web.port", "" + clientWebPort);
+		p.setProperty("server.web.port", "" + serverWebPort);
 		p.setProperty("server.ip", ""
 				+ bootstrapServerAddress.getIp().getHostAddress());
 		p.setProperty("server.port", "" + bootstrapServerAddress.getPort());
@@ -120,9 +128,10 @@ public final class BootstrapConfiguration {
 		long clientKeepAlivePeriod = Long.parseLong(p
 				.getProperty("client.keepalive.period"));
 		int clientWebPort = Integer.parseInt(p.getProperty("client.web.port"));
+		int serverWebPort = Integer.parseInt(p.getProperty("server.web.port"));
 
 		return new BootstrapConfiguration(bootstrapServerAddress,
 				cacheEvictAfter, clientRetryPeriod, clientRetryCount,
-				clientKeepAlivePeriod, clientWebPort);
+				clientKeepAlivePeriod, clientWebPort, serverWebPort);
 	}
 }

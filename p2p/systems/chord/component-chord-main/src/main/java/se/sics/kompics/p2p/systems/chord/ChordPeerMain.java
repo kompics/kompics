@@ -37,8 +37,11 @@ import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.fd.ping.PingFailureDetectorConfiguration;
 import se.sics.kompics.p2p.monitor.chord.server.ChordMonitorConfiguration;
 import se.sics.kompics.p2p.overlay.chord.ChordConfiguration;
+import se.sics.kompics.p2p.overlay.key.NumericRingKey;
 import se.sics.kompics.p2p.peer.chord.ChordPeer;
 import se.sics.kompics.p2p.peer.chord.ChordPeerInit;
+import se.sics.kompics.p2p.peer.chord.ChordPeerPort;
+import se.sics.kompics.p2p.peer.chord.JoinChordRing;
 import se.sics.kompics.timer.Timer;
 import se.sics.kompics.timer.java.JavaTimer;
 import se.sics.kompics.web.Web;
@@ -98,6 +101,10 @@ public final class ChordPeerMain extends ComponentDefinition {
 		connect(chordPeer.getNegative(Network.class), network
 				.getPositive(Network.class));
 		connect(chordPeer.getPositive(Web.class), web.getNegative(Web.class));
+
+		trigger(new JoinChordRing(new NumericRingKey(Integer.parseInt(System
+				.getProperty("peer.id")))), chordPeer
+				.getPositive(ChordPeerPort.class));
 
 		logger.info("Started. Network={} Web={}", networkConfiguration
 				.getAddress(), webConfiguration.getIp().getHostAddress() + ":"

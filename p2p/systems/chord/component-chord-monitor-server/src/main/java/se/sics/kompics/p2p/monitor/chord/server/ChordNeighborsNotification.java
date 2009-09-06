@@ -28,8 +28,7 @@ import se.sics.kompics.p2p.overlay.chord.ChordNeighbors;
  * The <code>ChordNeighborsNotification</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: ChordNeighborsNotification.java 750 2009-04-02 09:55:01Z Cosmin
- *          $
+ * @version $Id$
  */
 public final class ChordNeighborsNotification extends Message {
 
@@ -40,13 +39,16 @@ public final class ChordNeighborsNotification extends Message {
 
 	private final Address peerAddress;
 
+	private final int clientWebPort;
+
 	private final ChordNeighbors chordNeighbors;
 
 	public ChordNeighborsNotification(Address peerAddress, Address destination,
-			ChordNeighbors neighbors) {
+			int clientWebPort, ChordNeighbors neighbors) {
 		super(peerAddress, destination);
 		this.peerAddress = peerAddress;
 		this.chordNeighbors = neighbors;
+		this.clientWebPort = clientWebPort;
 	}
 
 	public Address getPeerAddress() {
@@ -55,5 +57,9 @@ public final class ChordNeighborsNotification extends Message {
 
 	public ChordNeighbors getChordNeighbors() {
 		return chordNeighbors;
+	}
+
+	public int getClientWebPort() {
+		return clientWebPort;
 	}
 }
