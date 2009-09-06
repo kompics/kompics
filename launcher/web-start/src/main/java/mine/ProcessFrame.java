@@ -49,11 +49,12 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
+import mine.ProcLauncher.Proc;
+
 /**
  * The <code>ProcessFrame</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
  * @version $Id: ProcessFrame.java 1148 2009-09-01 23:30:59Z Cosmin $
  */
 @SuppressWarnings("serial")
@@ -75,13 +76,13 @@ public class ProcessFrame extends JFrame {
 	private JTextArea logArea = null;
 	private JScrollPane scrollPane;
 
-	private String processId;
 	private int idx;
-	private String command;
 
 	private int count;
 
-	private ProcessLauncher processLauncher;
+	private Proc proc;
+	
+	private String processId;
 
 	/**
 	 * Instantiates a new process output frame.
@@ -97,21 +98,20 @@ public class ProcessFrame extends JFrame {
 	 * @param launcher
 	 *            the launcher
 	 */
-	public ProcessFrame(ProcessLauncher processLauncher, String command,
-			String processID, int idx, int count) {
+	public ProcessFrame(Proc proc, int idx, int count) {
 		super();
-		this.processLauncher = processLauncher;
-		this.processId = processID;
-		this.command = command;
+		this.proc = proc;
 		this.count = count;
 		this.idx = idx;
+		String names[] = proc.getMainComponent().split("\\.");
+		this.processId = names[names.length - 1];
 		initialize();
 	}
 
 	private void initialize() {
 		this.setSize(WIDTH, HEIGHT);
 		this.setContentPane(getJContentPane());
-		this.setTitle("Process " + processId + " - " + command);
+		this.setTitle("Process " + processId);
 
 		this.setJMenuBar(getMyJMenuBar());
 
@@ -129,7 +129,7 @@ public class ProcessFrame extends JFrame {
 		setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
-				processLauncher.kill(false);
+				proc.kill(false);
 			}
 		});
 		this.addWindowFocusListener(new WindowAdapter() {
@@ -226,7 +226,7 @@ public class ProcessFrame extends JFrame {
 			killAll.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if (e.getActionCommand().equals("Kill all processes")) {
-//						launcher.killAll();
+						proc.killAll();
 					}
 				}
 			});
@@ -257,7 +257,7 @@ public class ProcessFrame extends JFrame {
 				public void actionPerformed(ActionEvent e) {
 					if (e.getActionCommand()
 							.equals("Kill process " + processId)) {
-						processLauncher.kill(false);
+						proc.kill(false);
 					}
 				}
 			});
@@ -299,7 +299,7 @@ public class ProcessFrame extends JFrame {
 			localInputTextField.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
-						processLauncher.input(e.getActionCommand());
+						proc.input(e.getActionCommand());
 						append(e.getActionCommand() + "\n");
 						localInputTextField.setText("");
 					} catch (IOException e1) {
@@ -316,7 +316,7 @@ public class ProcessFrame extends JFrame {
 			globalInputTextField.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
-						processLauncher.globalInput(e.getActionCommand());
+						proc.globalInput(e.getActionCommand());
 						globalInputTextField.setText("");
 					} catch (IOException e1) {
 					}

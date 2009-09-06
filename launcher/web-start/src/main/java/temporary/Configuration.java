@@ -57,7 +57,7 @@ public class Configuration {
 	ChordConfiguration chordConfiguration;
 	NetworkConfiguration networkConfiguration;
 
-	public Configuration(int networkPort, boolean boot, boolean mon) {
+	public Configuration(int networkPort) {
 		super();
 		this.networkPort = networkPort;
 		this.webPort = networkPort - 1;
@@ -93,25 +93,17 @@ public class Configuration {
 				+ "<a href=\""
 				+ monitorWebAddress + monitorId + "/" + "\">Monitor Server</a>";
 
-		if (boot) {
-			jettyWebServerConfiguration = new JettyWebServerConfiguration(ip,
-					bootWebPort, webRequestTimeout, webThreads, homePage);
-		} else if (mon) {
-			jettyWebServerConfiguration = new JettyWebServerConfiguration(ip,
-					monitorWebPort, webRequestTimeout, webThreads, homePage);
-		} else {
-			jettyWebServerConfiguration = new JettyWebServerConfiguration(ip,
-					webPort, webRequestTimeout, webThreads, homePage);
-		}
+		jettyWebServerConfiguration = new JettyWebServerConfiguration(ip,
+				webPort, webRequestTimeout, webThreads, homePage);
 
 		bootConfiguration = new BootstrapConfiguration(bootServerAddress,
 				60000, 4000, 3, 30000, webPort, bootWebPort);
 
 		monitorConfiguration = new ChordMonitorConfiguration(
-				monitorServerAddress, 10000, 2000, webPort, monitorWebPort);
+				monitorServerAddress, 10000, 1000, webPort, monitorWebPort);
 
 		fdConfiguration = new PingFailureDetectorConfiguration(1000, 5000,
-				10000,  1000);
+				10000, 1000);
 
 		chordConfiguration = new ChordConfiguration(13, 13, 1000, 1000, 3000,
 				20);

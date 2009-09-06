@@ -86,7 +86,7 @@ public final class ProcessLauncher extends Thread {
 	 * @see java.lang.Runnable#run()
 	 */
 	public final void run() {
-		mainFrame = new ProcessFrame(this, "", "" + id, idx, processCount);
+//		mainFrame = new ProcessFrame(this, "", "" + id, idx, processCount);
 		launchProcess("null", "started");
 		waitFor();
 		semaphore.release();

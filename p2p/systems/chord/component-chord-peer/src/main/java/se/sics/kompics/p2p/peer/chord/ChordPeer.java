@@ -178,8 +178,8 @@ public final class ChordPeer extends ComponentDefinition {
 			chordSelf = new ChordAddress(self, event.getNodeKey());
 
 			trigger(new ChordWebApplicationInit(chordSelf,
-					bootstrapConfiguration.getBootstrapServerAddress(),
 					monitorConfiguration.getMonitorServerAddress(),
+					bootstrapConfiguration.getBootstrapServerAddress(),
 					monitorConfiguration.getClientWebPort()), webapp
 					.getControl());
 

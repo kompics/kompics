@@ -85,15 +85,15 @@ public class PeerProber {
 	}
 
 	void pong(UUID pongId, long ts) {
-		logger.debug("PoNG {}", pongId);
+		long RTT = System.currentTimeMillis() - ts;
+		times.updateRTO(RTT);
+
+		logger.debug("PoNG {} RTT={}", pongId, RTT);
 
 		if (suspected == true) {
 			suspected = false;
 			reviseSuspicion();
 		}
-
-		long RTT = System.currentTimeMillis() - ts;
-		times.updateRTO(RTT);
 	}
 
 	void pongTimedOut() {
