@@ -43,8 +43,9 @@ public final class Ping extends Message {
 
 	private final long ts;
 
-	public Ping(UUID id, long ts, Address source, Address destination) {
-		super(source, destination, Transport.UDP);
+	public Ping(UUID id, long ts, Address source, Address destination,
+			Transport protocol) {
+		super(source, destination, protocol);
 		this.id = id;
 		this.ts = ts;
 	}

@@ -43,8 +43,9 @@ public final class Pong extends Message {
 
 	private final long ts;
 
-	public Pong(UUID id, long ts, Address source, Address destination) {
-		super(source, destination, Transport.UDP);
+	public Pong(UUID id, long ts, Address source, Address destination,
+			Transport protocol) {
+		super(source, destination, protocol);
 		this.id = id;
 		this.ts = ts;
 	}

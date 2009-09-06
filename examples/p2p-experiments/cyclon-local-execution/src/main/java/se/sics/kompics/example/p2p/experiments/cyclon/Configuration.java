@@ -28,6 +28,7 @@ import java.net.UnknownHostException;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.NetworkConfiguration;
+import se.sics.kompics.network.Transport;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.monitor.cyclon.server.CyclonMonitorConfiguration;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonConfiguration;
@@ -77,7 +78,7 @@ public class Configuration {
 			bootServerAddress, 60000, 4000, 3, 30000, webPort, webPort);
 
 	CyclonMonitorConfiguration monitorConfiguration = new CyclonMonitorConfiguration(
-			cyclonMonitorServerAddress, 10000, 5000, webPort);
+			cyclonMonitorServerAddress, 10000, 5000, webPort, Transport.TCP);
 
 	CyclonConfiguration cyclonConfiguration = new CyclonConfiguration(5, 15,
 			1000, 3000, new BigInteger("2").pow(13), 20);

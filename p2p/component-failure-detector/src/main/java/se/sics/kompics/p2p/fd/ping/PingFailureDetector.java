@@ -34,6 +34,7 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
+import se.sics.kompics.network.Transport;
 import se.sics.kompics.p2p.fd.FailureDetector;
 import se.sics.kompics.p2p.fd.PeerFailureSuspicion;
 import se.sics.kompics.p2p.fd.StartProbingPeer;
@@ -72,6 +73,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 
 	private final PingFailureDetector thisFd;
 
+	private Transport protocol;
+
 	public PingFailureDetector() {
 		peerProbers = new HashMap<Address, PeerProber>();
 		this.outstandingTimeouts = new HashSet<UUID>();
@@ -98,6 +101,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 			deadPingInterval = event.getConfiguration().getSuspectedPeriod();
 			pongTimeoutIncrement = event.getConfiguration()
 					.getTimeoutPeriodIncrement();
+			protocol = event.getConfiguration().getProtocol();
+
 			self = event.getSelf();
 			logger = LoggerFactory.getLogger(PingFailureDetector.class
 					.getName()
@@ -179,7 +184,7 @@ public final class PingFailureDetector extends ComponentDefinition {
 			logger.debug("Received Ping from {}. Sending Pong. {}", event
 					.getSource(), event.getId());
 			trigger(new Pong(event.getId(), event.getTs(), self, event
-					.getSource()), net);
+					.getSource(), protocol), net);
 		}
 	};
 
@@ -228,7 +233,7 @@ public final class PingFailureDetector extends ComponentDefinition {
 		outstandingTimeouts.add(pongTimeoutId);
 
 		trigger(st, timer);
-		trigger(new Ping(pongTimeoutId, ts, self, probedPeer), net);
+		trigger(new Ping(pongTimeoutId, ts, self, probedPeer, protocol), net);
 		return pongTimeoutId;
 	}
 

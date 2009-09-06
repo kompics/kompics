@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.NetworkConfiguration;
+import se.sics.kompics.network.Transport;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.fd.ping.PingFailureDetectorConfiguration;
 import se.sics.kompics.p2p.monitor.chord.server.ChordMonitorConfiguration;
@@ -71,10 +72,10 @@ public class Configuration {
 			bootServerAddress, 60000, 4000, 3, 30000, webPort, webPort);
 
 	ChordMonitorConfiguration monitorConfiguration = new ChordMonitorConfiguration(
-			monitorServerAddress, 10000, 2000, webPort, webPort);
+			monitorServerAddress, 10000, 2000, webPort, webPort, Transport.TCP);
 
 	PingFailureDetectorConfiguration fdConfiguration = new PingFailureDetectorConfiguration(
-			1000, 5000, 1000, 0);
+			1000, 5000, 1000, 0, Transport.TCP);
 
 	ChordConfiguration chordConfiguration = new ChordConfiguration(13, 13,
 			1000, 1000, 3000, 20);

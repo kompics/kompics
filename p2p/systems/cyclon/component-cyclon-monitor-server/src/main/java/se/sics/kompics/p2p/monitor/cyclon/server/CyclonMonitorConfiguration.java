@@ -29,12 +29,14 @@ import java.net.InetAddress;
 import java.util.Properties;
 
 import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Transport;
 
 /**
  * The <code>CyclonMonitorConfiguration</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id$
+ * @version $Id: CyclonMonitorConfiguration.java 1161 2009-09-02 12:48:33Z
+ *          Cosmin $
  */
 public class CyclonMonitorConfiguration {
 
@@ -46,13 +48,17 @@ public class CyclonMonitorConfiguration {
 
 	private final int clientWebPort;
 
+	private final Transport protocol;
+
 	public CyclonMonitorConfiguration(Address monitorServerAddress,
-			long viewEvictAfter, long clientUpdatePeriod, int clientWebPort) {
+			long viewEvictAfter, long clientUpdatePeriod, int clientWebPort,
+			Transport protocol) {
 		super();
 		this.monitorServerAddress = monitorServerAddress;
 		this.viewEvictAfter = viewEvictAfter;
 		this.clientUpdatePeriod = clientUpdatePeriod;
 		this.clientWebPort = clientWebPort;
+		this.protocol = protocol;
 	}
 
 	public Address getMonitorServerAddress() {
@@ -71,6 +77,10 @@ public class CyclonMonitorConfiguration {
 		return clientWebPort;
 	}
 
+	public Transport getProtocol() {
+		return protocol;
+	}
+
 	public void store(String file) throws IOException {
 		Properties p = new Properties();
 		p.setProperty("view.evict.after", "" + viewEvictAfter);
@@ -80,6 +90,7 @@ public class CyclonMonitorConfiguration {
 				+ monitorServerAddress.getIp().getHostAddress());
 		p.setProperty("server.port", "" + monitorServerAddress.getPort());
 		p.setProperty("server.id", "" + monitorServerAddress.getId());
+		p.setProperty("transport.protocol", protocol.name());
 
 		Writer writer = new FileWriter(file);
 		p.store(writer, "se.sics.kompics.p2p.monitor.cyclon");
@@ -100,8 +111,10 @@ public class CyclonMonitorConfiguration {
 		long clientUpdatePeriod = Long.parseLong(p
 				.getProperty("client.update.period"));
 		int clientWebPort = Integer.parseInt(p.getProperty("client.web.port"));
+		Transport protocol = Enum.valueOf(Transport.class, p
+				.getProperty("transport.protocol"));
 
 		return new CyclonMonitorConfiguration(monitorServerAddress,
-				viewEvictAfter, clientUpdatePeriod, clientWebPort);
+				viewEvictAfter, clientUpdatePeriod, clientWebPort, protocol);
 	}
 }

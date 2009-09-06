@@ -32,6 +32,7 @@ import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
+import se.sics.kompics.network.Transport;
 import se.sics.kompics.p2p.monitor.chord.server.ChordNeighborsNotification;
 import se.sics.kompics.p2p.overlay.chord.ChordNeighborsRequest;
 import se.sics.kompics.p2p.overlay.chord.ChordNeighborsResponse;
@@ -63,6 +64,8 @@ public class ChordMonitorClient extends ComponentDefinition {
 	private int clientWebPort;
 
 	private long updatePeriod;
+	
+	private Transport protocol;
 
 	public ChordMonitorClient() {
 		subscribe(handleInit, control);
@@ -81,6 +84,7 @@ public class ChordMonitorClient extends ComponentDefinition {
 			monitorServerAddress = event.getConfiguration()
 					.getMonitorServerAddress();
 			clientWebPort = event.getConfiguration().getClientWebPort();
+			protocol = event.getConfiguration().getProtocol();
 
 			logger = LoggerFactory.getLogger(getClass().getName() + "@"
 					+ self.getId());
@@ -132,8 +136,8 @@ public class ChordMonitorClient extends ComponentDefinition {
 			if (event.getNeighbors().getLocalPeer() != null) {
 				// only send notification to the server if the peer has joined
 				ChordNeighborsNotification viewNotification = new ChordNeighborsNotification(
-						self, monitorServerAddress, clientWebPort, event
-								.getNeighbors());
+						self, monitorServerAddress, protocol, clientWebPort,
+						event.getNeighbors());
 
 				trigger(viewNotification, network);
 			}

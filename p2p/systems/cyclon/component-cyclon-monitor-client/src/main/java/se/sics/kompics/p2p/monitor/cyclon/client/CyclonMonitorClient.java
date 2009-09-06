@@ -32,6 +32,7 @@ import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
+import se.sics.kompics.network.Transport;
 import se.sics.kompics.p2p.monitor.cyclon.server.CyclonNeighborsNotification;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonNeighborsRequest;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonNeighborsResponse;
@@ -62,6 +63,8 @@ public class CyclonMonitorClient extends ComponentDefinition {
 
 	private long updatePeriod;
 
+	private Transport protocol;
+
 	public CyclonMonitorClient() {
 		subscribe(handleInit, control);
 		subscribe(handleStart, control);
@@ -78,6 +81,7 @@ public class CyclonMonitorClient extends ComponentDefinition {
 			updatePeriod = event.getConfiguration().getClientUpdatePeriod();
 			monitorServerAddress = event.getConfiguration()
 					.getMonitorServerAddress();
+			protocol = event.getConfiguration().getProtocol();
 
 			logger = LoggerFactory.getLogger(getClass().getName() + "@"
 					+ self.getId());
@@ -129,7 +133,8 @@ public class CyclonMonitorClient extends ComponentDefinition {
 			if (event.getNeighbors().getSelf() != null) {
 				// only send notification to the server if the peer has joined
 				CyclonNeighborsNotification viewNotification = new CyclonNeighborsNotification(
-						self, monitorServerAddress, event.getNeighbors());
+						self, monitorServerAddress, protocol, event
+								.getNeighbors());
 
 				trigger(viewNotification, network);
 			}

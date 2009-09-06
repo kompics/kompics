@@ -22,6 +22,7 @@ package se.sics.kompics.p2p.monitor.cyclon.server;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.Transport;
 import se.sics.kompics.p2p.overlay.cyclon.CyclonNeighbors;
 
 /**
@@ -42,8 +43,8 @@ public final class CyclonNeighborsNotification extends Message {
 	private final CyclonNeighbors cyclonNeighbors;
 
 	public CyclonNeighborsNotification(Address peerAddress,
-			Address destination, CyclonNeighbors neighbors) {
-		super(peerAddress, destination);
+			Address destination, Transport protocol, CyclonNeighbors neighbors) {
+		super(peerAddress, destination, protocol);
 		this.peerAddress = peerAddress;
 		this.cyclonNeighbors = neighbors;
 	}

@@ -27,11 +27,14 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.Properties;
 
+import se.sics.kompics.network.Transport;
+
 /**
  * The <code>PingFailureDetectorConfiguration</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id$
+ * @version $Id: PingFailureDetectorConfiguration.java 1149 2009-09-01 23:55:47Z
+ *          Cosmin $
  */
 public final class PingFailureDetectorConfiguration {
 
@@ -39,13 +42,16 @@ public final class PingFailureDetectorConfiguration {
 	private final long suspectedPeriod;
 	private final long minRto;
 	private final long timeoutPeriodIncrement;
+	private final Transport protocol;
 
 	public PingFailureDetectorConfiguration(long livePeriod,
-			long suspectedPeriod, long minRto, long timeoutPeriodIncrement) {
+			long suspectedPeriod, long minRto, long timeoutPeriodIncrement,
+			Transport protocol) {
 		this.livePeriod = livePeriod;
 		this.suspectedPeriod = suspectedPeriod;
 		this.minRto = minRto;
 		this.timeoutPeriodIncrement = timeoutPeriodIncrement;
+		this.protocol = protocol;
 	}
 
 	public final long getLivePeriod() {
@@ -64,12 +70,17 @@ public final class PingFailureDetectorConfiguration {
 		return timeoutPeriodIncrement;
 	}
 
+	public Transport getProtocol() {
+		return protocol;
+	}
+
 	public void store(String file) throws IOException {
 		Properties p = new Properties();
 		p.setProperty("live.period", "" + livePeriod);
 		p.setProperty("suspected.period", "" + suspectedPeriod);
 		p.setProperty("rto.min", "" + minRto);
 		p.setProperty("timeout.period.increment", "" + timeoutPeriodIncrement);
+		p.setProperty("transport.protocol", protocol.name());
 
 		Writer writer = new FileWriter(file);
 		p.store(writer, "se.sics.kompics.p2p.fd.ping");
@@ -87,8 +98,10 @@ public final class PingFailureDetectorConfiguration {
 		long minRto = Long.parseLong(p.getProperty("rto.min"));
 		long timeoutPeriodIncrement = Long.parseLong(p
 				.getProperty("timeout.period.increment"));
+		Transport protocol = Enum.valueOf(Transport.class, p
+				.getProperty("transport.protocol"));
 
 		return new PingFailureDetectorConfiguration(livePeriod,
-				suspectedPeriod, minRto, timeoutPeriodIncrement);
+				suspectedPeriod, minRto, timeoutPeriodIncrement, protocol);
 	}
 }

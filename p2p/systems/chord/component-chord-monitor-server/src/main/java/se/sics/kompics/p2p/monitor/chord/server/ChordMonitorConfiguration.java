@@ -29,6 +29,7 @@ import java.net.InetAddress;
 import java.util.Properties;
 
 import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Transport;
 
 /**
  * The <code>ChordMonitorConfiguration</code> class.
@@ -49,15 +50,18 @@ public final class ChordMonitorConfiguration {
 
 	private final int serverWebPort;
 
+	private final Transport protocol;
+
 	public ChordMonitorConfiguration(Address monitorServerAddress,
 			long viewEvictAfter, long clientUpdatePeriod, int clientWebPort,
-			int serverWebPort) {
+			int serverWebPort, Transport protocol) {
 		super();
 		this.monitorServerAddress = monitorServerAddress;
 		this.viewEvictAfter = viewEvictAfter;
 		this.clientUpdatePeriod = clientUpdatePeriod;
 		this.clientWebPort = clientWebPort;
 		this.serverWebPort = serverWebPort;
+		this.protocol = protocol;
 	}
 
 	public Address getMonitorServerAddress() {
@@ -80,6 +84,10 @@ public final class ChordMonitorConfiguration {
 		return serverWebPort;
 	}
 
+	public Transport getProtocol() {
+		return protocol;
+	}
+
 	public void store(String file) throws IOException {
 		Properties p = new Properties();
 		p.setProperty("view.evict.after", "" + viewEvictAfter);
@@ -90,6 +98,7 @@ public final class ChordMonitorConfiguration {
 				+ monitorServerAddress.getIp().getHostAddress());
 		p.setProperty("server.port", "" + monitorServerAddress.getPort());
 		p.setProperty("server.id", "" + monitorServerAddress.getId());
+		p.setProperty("transport.protocol", protocol.name());
 
 		Writer writer = new FileWriter(file);
 		p.store(writer, "se.sics.kompics.p2p.monitor.chord");
@@ -111,9 +120,11 @@ public final class ChordMonitorConfiguration {
 				.getProperty("client.update.period"));
 		int clientWebPort = Integer.parseInt(p.getProperty("client.web.port"));
 		int serverWebPort = Integer.parseInt(p.getProperty("server.web.port"));
+		Transport protocol = Enum.valueOf(Transport.class, p
+				.getProperty("transport.protocol"));
 
 		return new ChordMonitorConfiguration(monitorServerAddress,
 				viewEvictAfter, clientUpdatePeriod, clientWebPort,
-				serverWebPort);
+				serverWebPort, protocol);
 	}
 }

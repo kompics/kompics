@@ -28,6 +28,7 @@ import java.util.Properties;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.NetworkConfiguration;
+import se.sics.kompics.network.Transport;
 import se.sics.kompics.p2p.bootstrap.BootstrapConfiguration;
 import se.sics.kompics.p2p.fd.ping.PingFailureDetectorConfiguration;
 import se.sics.kompics.p2p.monitor.chord.server.ChordMonitorConfiguration;
@@ -72,7 +73,6 @@ public class Configuration {
 		Address bootServerAddress = new Address(ip, bootNetPort, bootId);
 		Address monitorServerAddress = new Address(ip, monitorNetPort,
 				monitorId);
-		Address peer0Address = new Address(ip, networkPort, 0);
 
 		int webRequestTimeout = 5000;
 		int webThreads = 2;
@@ -81,8 +81,6 @@ public class Configuration {
 				+ bootWebPort + "/";
 		String monitorWebAddress = "http://" + ip.getHostAddress() + ":"
 				+ monitorWebPort + "/";
-		String webAddress = "http://" + ip.getHostAddress() + ":" + webPort
-				+ "/";
 
 		String homePage = "<h2>Welcome to the Kompics Peer-to-Peer Framework!</h2>"
 				+ "<a href=\""
@@ -100,10 +98,11 @@ public class Configuration {
 				60000, 4000, 3, 30000, webPort, bootWebPort);
 
 		monitorConfiguration = new ChordMonitorConfiguration(
-				monitorServerAddress, 10000, 1000, webPort, monitorWebPort);
+				monitorServerAddress, 10000, 1000, webPort, monitorWebPort,
+				Transport.TCP);
 
 		fdConfiguration = new PingFailureDetectorConfiguration(1000, 5000,
-				10000, 1000);
+				10000, 1000, Transport.UDP);
 
 		chordConfiguration = new ChordConfiguration(13, 13, 1000, 1000, 3000,
 				20);

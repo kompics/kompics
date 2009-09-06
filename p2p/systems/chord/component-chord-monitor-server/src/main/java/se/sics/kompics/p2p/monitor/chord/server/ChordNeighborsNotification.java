@@ -22,13 +22,15 @@ package se.sics.kompics.p2p.monitor.chord.server;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.Transport;
 import se.sics.kompics.p2p.overlay.chord.ChordNeighbors;
 
 /**
  * The <code>ChordNeighborsNotification</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id$
+ * @version $Id: ChordNeighborsNotification.java 1214 2009-09-06 14:36:29Z
+ *          Cosmin $
  */
 public final class ChordNeighborsNotification extends Message {
 
@@ -44,8 +46,8 @@ public final class ChordNeighborsNotification extends Message {
 	private final ChordNeighbors chordNeighbors;
 
 	public ChordNeighborsNotification(Address peerAddress, Address destination,
-			int clientWebPort, ChordNeighbors neighbors) {
-		super(peerAddress, destination);
+			Transport protocol, int clientWebPort, ChordNeighbors neighbors) {
+		super(peerAddress, destination, protocol);
 		this.peerAddress = peerAddress;
 		this.chordNeighbors = neighbors;
 		this.clientWebPort = clientWebPort;
