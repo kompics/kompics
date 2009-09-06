@@ -97,7 +97,7 @@ public class Configuration2 {
 				60000, 4000, 3, 30000, webPort, bootWebPort);
 
 		monitorConfiguration = new CyclonMonitorConfiguration(
-				monitorServerAddress, 10000, 5000, webPort, Transport.TCP);
+				monitorServerAddress, 10000, 1000, webPort, Transport.UDP);
 
 		cyclonConfiguration = new CyclonConfiguration(5, 15, 1000, 3000,
 				new BigInteger("2").pow(13), 20);

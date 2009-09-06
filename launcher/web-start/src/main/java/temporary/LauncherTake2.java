@@ -30,6 +30,10 @@ public class LauncherTake2 {
 				classPath, new Configuration2(4009).set(), "-Dpeer.id=3192");
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
 				classPath, new Configuration2(4011).set(), "-Dpeer.id=4096");
+		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
+				classPath, new Configuration2(4013).set(), "-Dpeer.id=5555");
+		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
+				classPath, new Configuration2(4015).set(), "-Dpeer.id=6789");
 		launcher.launchAll();
 	}
 }
