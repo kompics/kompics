@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.Transport;
 
 /**
  * The <code>Ping</code> class.
@@ -43,7 +44,7 @@ public final class Ping extends Message {
 	private final long ts;
 
 	public Ping(UUID id, long ts, Address source, Address destination) {
-		super(source, destination);
+		super(source, destination, Transport.UDP);
 		this.id = id;
 		this.ts = ts;
 	}
@@ -54,5 +55,33 @@ public final class Ping extends Message {
 
 	public final long getTs() {
 		return ts;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + (int) (ts ^ (ts >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Ping other = (Ping) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (ts != other.ts)
+			return false;
+		return true;
 	}
 }

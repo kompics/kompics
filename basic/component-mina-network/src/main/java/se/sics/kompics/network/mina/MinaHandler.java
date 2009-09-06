@@ -102,7 +102,8 @@ public class MinaHandler extends IoHandlerAdapter {
 			throws Exception {
 		super.messageReceived(session, message);
 
-		logger.debug("Message received from {}", session.getRemoteAddress());
+		logger.debug("Message received from {} msg={}", session
+				.getRemoteAddress(), message);
 		networkComponent.deliverMessage((Message) message, protocol, session);
 	}
 

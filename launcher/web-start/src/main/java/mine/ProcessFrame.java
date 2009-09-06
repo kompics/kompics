@@ -31,8 +31,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -344,11 +342,11 @@ public class ProcessFrame extends JFrame {
 			logArea.setFont(new Font("Courier New", Font.PLAIN, 12));
 			logArea.setBackground(Color.DARK_GRAY);
 			logArea.setForeground(Color.WHITE);
-			logArea.addFocusListener(new FocusAdapter() {
-				public void focusGained(FocusEvent e) {
-					getLocalInputTextField().requestFocusInWindow();
-				}
-			});
+//			logArea.addFocusListener(new FocusAdapter() {
+//				public void focusGained(FocusEvent e) {
+//					getLocalInputTextField().requestFocusInWindow();
+//				}
+//			});
 		}
 		return logArea;
 	}

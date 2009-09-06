@@ -146,6 +146,7 @@ public final class MinaNetwork extends ComponentDefinition {
 					.getFilterChain();
 			udpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
+			
 			udpAcceptor.getSessionConfig().setReuseAddress(true);
 			try {
 				udpAcceptor.bind(localSocketAddress);

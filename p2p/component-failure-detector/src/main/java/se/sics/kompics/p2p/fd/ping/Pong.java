@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.Transport;
 
 /**
  * The <code>Pong</code> class.
@@ -43,7 +44,7 @@ public final class Pong extends Message {
 	private final long ts;
 
 	public Pong(UUID id, long ts, Address source, Address destination) {
-		super(source, destination);
+		super(source, destination, Transport.UDP);
 		this.id = id;
 		this.ts = ts;
 	}
