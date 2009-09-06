@@ -1,4 +1,4 @@
-package mine;
+package se.sics.kompics.launch;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Properties;
 
-public class ProcLauncher {
+public class ProcessLauncher {
 
 	public class Proc extends Thread implements Comparable<Proc> {
 		private long delay;

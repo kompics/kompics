@@ -18,7 +18,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package temporary;
+package se.sics.kompics.example.p2p.system.cyclon.local;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +41,7 @@ import se.sics.kompics.web.jetty.JettyWebServerConfiguration;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id: Configuration.java 1150 2009-09-02 00:00:40Z Cosmin $
  */
-public class Configuration2 {
+public class Configuration {
 
 	final int networkPort;
 	final int webPort;
@@ -57,7 +57,7 @@ public class Configuration2 {
 	CyclonConfiguration cyclonConfiguration;
 	NetworkConfiguration networkConfiguration;
 
-	public Configuration2(int networkPort) {
+	public Configuration(int networkPort) {
 		super();
 		this.networkPort = networkPort;
 		this.webPort = networkPort - 1;

@@ -1,39 +1,40 @@
-package temporary;
+package se.sics.kompics.example.p2p.system.cyclon.local;
 
 import java.io.IOException;
 
-import mine.ProcLauncher;
+import se.sics.kompics.launch.ProcessLauncher;
 import se.sics.kompics.p2p.systems.bootstrap.server.BootstrapServerMain;
 import se.sics.kompics.p2p.systems.cyclon.CyclonPeerMain;
 import se.sics.kompics.p2p.systems.cyclon.monitor.server.CyclonMonitorServerMain;
 
-public class LauncherTake2 {
+public class CyclonLocalSystemLauncher {
 	public static void main(String[] args) throws IOException,
 			InterruptedException {
 
 		String classPath = System.getProperty("java.class.path");
 
-		ProcLauncher launcher = new ProcLauncher();
+		ProcessLauncher launcher = new ProcessLauncher();
 		launcher.addProcess(0, BootstrapServerMain.class.getCanonicalName(),
-				classPath, new Configuration2(7001).set());
+				classPath, new Configuration(7001).set());
 		launcher.addProcess(0, CyclonMonitorServerMain.class.getCanonicalName(),
-				classPath, new Configuration2(7003).set());
+				classPath, new Configuration(7003).set());
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-				classPath, new Configuration2(4001).set(), "-Dpeer.id=3");
+				classPath, new Configuration(4001).set(), "-Dpeer.id=3");
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-				classPath, new Configuration2(4003).set(), "-Dpeer.id=100");
+				classPath, new Configuration(4003).set(), "-Dpeer.id=100");
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-				classPath, new Configuration2(4005).set(), "-Dpeer.id=1024");
+				classPath, new Configuration(4005).set(), "-Dpeer.id=1024");
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-				classPath, new Configuration2(4007).set(), "-Dpeer.id=2048");
+				classPath, new Configuration(4007).set(), "-Dpeer.id=2048");
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-				classPath, new Configuration2(4009).set(), "-Dpeer.id=3192");
+				classPath, new Configuration(4009).set(), "-Dpeer.id=3192");
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-				classPath, new Configuration2(4011).set(), "-Dpeer.id=4096");
+				classPath, new Configuration(4011).set(), "-Dpeer.id=4096");
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-				classPath, new Configuration2(4013).set(), "-Dpeer.id=5555");
+				classPath, new Configuration(4013).set(), "-Dpeer.id=5555");
 		launcher.addProcess(1000, CyclonPeerMain.class.getCanonicalName(),
-				classPath, new Configuration2(4015).set(), "-Dpeer.id=6789");
+				classPath, new Configuration(4015).set(), "-Dpeer.id=6789");
+		
 		launcher.launchAll();
 	}
 }
