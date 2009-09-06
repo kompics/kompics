@@ -70,7 +70,7 @@ public abstract class Scenario {
 	private final String mainClass;
 	final String name;
 
-	private HashMap<Integer, ProcessLauncher> processes = new HashMap<Integer, ProcessLauncher>();
+	private HashMap<Integer, OldProcessLauncher> processes = new HashMap<Integer, OldProcessLauncher>();
 	private HashMap<Integer, Command> commands = new HashMap<Integer, Command>();
 	private int processCount = 0;
 
@@ -168,7 +168,7 @@ public abstract class Scenario {
 		// create process launchers
 		for (int pid : commands.keySet()) {
 			Command command = commands.get(pid);
-			ProcessLauncher processLauncher = createProcess(pid, idx++,
+			OldProcessLauncher processLauncher = createProcess(pid, idx++,
 					command, now, semaphore);
 			processes.put(pid, processLauncher);
 
@@ -194,7 +194,7 @@ public abstract class Scenario {
 	 * Kill all.
 	 */
 	public final void killAll() {
-		for (ProcessLauncher processLauncher : processes.values()) {
+		for (OldProcessLauncher processLauncher : processes.values()) {
 			processLauncher.kill(true);
 		}
 	}
@@ -203,22 +203,22 @@ public abstract class Scenario {
 	 * Kill.
 	 */
 	public final void killNode(int id) {
-		ProcessLauncher processLauncher = processes.get(id);
+		OldProcessLauncher processLauncher = processes.get(id);
 		if (processLauncher != null) {
 			processLauncher.kill(false);
 		}
 	}
 
-	private ProcessLauncher createProcess(int id, int idx, Command command,
+	private OldProcessLauncher createProcess(int id, int idx, Command command,
 			long now, Semaphore semaphore) {
-		ProcessLauncher processLauncher = new ProcessLauncher(classPath,
+		OldProcessLauncher processLauncher = new OldProcessLauncher(classPath,
 				mainClass, "-Dlog4j.properties=log4j.properties", command, id,
 				idx, this, now, semaphore);
 		return processLauncher;
 	}
 
 	private void tryRecover(int id, final String command) {
-		final ProcessLauncher processLauncher = processes.get(id);
+		final OldProcessLauncher processLauncher = processes.get(id);
 		if (processLauncher == null) {
 			System.err.println("Scenario does not contain process " + id);
 			return;
@@ -231,7 +231,7 @@ public abstract class Scenario {
 	}
 
 	final void globalInput(String string) throws IOException {
-		for (ProcessLauncher processLauncher : processes.values()) {
+		for (OldProcessLauncher processLauncher : processes.values()) {
 			processLauncher.handleInput(string);
 		}
 	}

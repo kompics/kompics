@@ -57,7 +57,7 @@ import javax.swing.KeyStroke;
  * @version $Id$
  */
 @SuppressWarnings("serial")
-public class ProcessFrame extends JFrame {
+public class OldProcessFrame extends JFrame {
 
 	private static int WIDTH = 700;
 
@@ -81,7 +81,7 @@ public class ProcessFrame extends JFrame {
 
 	private int count;
 
-	private ProcessLauncher processLauncher;
+	private OldProcessLauncher processLauncher;
 	private Scenario launcher;
 
 	/**
@@ -98,7 +98,7 @@ public class ProcessFrame extends JFrame {
 	 * @param launcher
 	 *            the launcher
 	 */
-	public ProcessFrame(ProcessLauncher processLauncher, String command,
+	public OldProcessFrame(OldProcessLauncher processLauncher, String command,
 			String processID, int idx, int count, Scenario launcher) {
 		super();
 		this.processLauncher = processLauncher;

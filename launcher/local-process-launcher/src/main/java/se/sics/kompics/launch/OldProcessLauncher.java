@@ -31,13 +31,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import se.sics.kompics.launch.Scenario.Command;
 
 /**
- * The <code>ProcessLauncher</code> class.
+ * The <code>OldProcessLauncher</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public final class ProcessLauncher extends Thread {
+public final class OldProcessLauncher extends Thread {
 
 	private final String classpath;
 	private final String mainClass;
@@ -50,7 +50,7 @@ public final class ProcessLauncher extends Thread {
 
 	private Process process;
 	private int processCount;
-	private ProcessFrame mainFrame;
+	private OldProcessFrame mainFrame;
 	private BufferedWriter input;
 	private Scenario scenario;
 	private final long startedAt;
@@ -71,10 +71,10 @@ public final class ProcessLauncher extends Thread {
 	 * @param launcher
 	 *            the launcher
 	 */
-	public ProcessLauncher(String classpath, String mainClass,
+	public OldProcessLauncher(String classPath, String mainClass,
 			String log4jProperties, Command command, int id, int idx,
 			Scenario launcher, long now, Semaphore semaphore) {
-		this.classpath = classpath;
+		this.classpath = classPath;
 		this.mainClass = mainClass;
 		this.log4jProperties = log4jProperties;
 		this.command = command;
@@ -92,7 +92,7 @@ public final class ProcessLauncher extends Thread {
 	 * @see java.lang.Runnable#run()
 	 */
 	public final void run() {
-		mainFrame = new ProcessFrame(this, command.command, "" + id, idx,
+		mainFrame = new OldProcessFrame(this, command.command, "" + id, idx,
 				processCount, scenario);
 
 		Command cmd = command;
