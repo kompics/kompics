@@ -8,7 +8,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.examples.p2p-systems</groupId>
-	<artifactId>kompics-p2p-systems</artifactId>
+	<artifactId>kompics-p2p-system-examples</artifactId>
 	<packaging>pom</packaging>
 	<name>Kompics P2P System Examples</name>
 	<version>0.4.2.3-SNAPSHOT</version>
