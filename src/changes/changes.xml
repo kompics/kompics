@@ -4,6 +4,17 @@
 		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
+        <release version="0.4.2.3" date="2009-09-08" description="Maintenance release">
+            <action dev="cosmin" type="add">
+[Kompics P2P Framework]: added local process launcher and examples.
+            </action>
+            <action dev="jdowling" type="add">
+[Kompics P2P Framework]: added distributed process launcher.
+            </action>
+            <action dev="cosmin" type="fix">
+[Kompics P2P Framework]: fixed minor issues and improved configurations.
+            </action>
+        </release>
         <release version="0.4.2.2" date="2009-09-02" description="P2P framework release">
             <action dev="cosmin" type="add">
 [Kompics P2P Framework]: added the complete P2P framework.
