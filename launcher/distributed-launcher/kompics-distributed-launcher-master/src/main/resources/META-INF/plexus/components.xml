@@ -1,0 +1,10 @@
+<component-set>
+  <components>
+    <component>
+      <role>se.sics.kompics.wan.util.Transporter</role>
+      <role-hint>default</role-hint>
+      <implementation>se.sics.kompics.wan.util.DefaultTransporter</implementation>
+    </component>
+  </components>
+</component-set>
+

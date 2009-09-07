@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>se.sics.kompics.launcher</groupId>
+        <artifactId>kompics-distributed-launcher</artifactId>
+        <version>0.4.2.3-SNAPSHOT</version>
+    </parent>
+
+    <groupId>se.sics.kompics.launcher</groupId>
+    <version>0.4.2.3-SNAPSHOT</version>
+    <artifactId>kompics-distributed-launcher-common</artifactId>
+    <packaging>jar</packaging>
+    <name>distributed launcher common</name>
+
+
+    <dependencies>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>20040616</version>
+        </dependency>
+
+        <dependency>
+            <groupId>xalan</groupId>
+            <artifactId>xalan</artifactId>
+            <version>2.7.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>se.sics.kompics.basic</groupId>
+            <artifactId>kompics-component-jetty-web-server</artifactId>
+            <version>${kompics.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>se.sics.kompics.p2p</groupId>
+            <artifactId>kompics-port-bootstrap</artifactId>
+            <version>${kompics.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>se.sics.kompics.p2p</groupId>
+            <artifactId>kompics-component-failure-detector</artifactId>
+            <version>0.4.2.3-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>se.sics.kompics.p2p.systems.chord</groupId>
+            <artifactId>kompics-component-chord-monitor-server</artifactId>
+            <version>0.4.2.3-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>se.sics.kompics.p2p.overlay.chord</groupId>
+            <artifactId>kompics-component-chord-overlay</artifactId>
+            <version>0.4.2.3-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
+            <artifactId>kompics-component-cyclon-peer-main</artifactId>
+            <version>0.4.2.3-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
+            <artifactId>kompics-component-cyclon-monitor-server-main</artifactId>
+            <version>0.4.2.3-SNAPSHOT</version>
+        </dependency>
+
+
+<!--
+            <dependency>
+                <groupId>se.sics.kompics.p2p</groupId>
+                <artifactId>kompics-p2p</artifactId>
+                <version>${kompics.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+
+            <dependency>
+                <groupId>se.sics.kompics.p2p.distributed-launcher</groupId>
+                <artifactId>kompics-p2p-distributed-launcher</artifactId>
+                <version>${kompics.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+		<dependency>
+			<groupId>se.kth.id2210</groupId>
+			<artifactId>lab2</artifactId>
+			<version>0.4.2.3-SNAPSHOT</version>
+
+			<exclusions>
+				<exclusion>
+					<groupId>org.mortbay.jetty</groupId>
+					<artifactId>jetty</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.mortbay.jetty</groupId>
+					<artifactId>jetty-client</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.mortbay.jetty</groupId>
+					<artifactId>jetty-sslengine</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.mortbay.jetty</groupId>
+					<artifactId>jetty-util</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.mortbay.jetty</groupId>
+					<artifactId>servlet-api</artifactId>
+				</exclusion>
+			</exclusions>
+
+		</dependency>
+-->
+
+
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+            <version>1.6</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>1.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.3</version>
+        </dependency>
+
+    </dependencies>
+
+
+    <repositories>
+        <repository>
+            <id>sics-release</id>
+            <name>SICS Repository</name>
+            <url>http://kompics.sics.se/maven/repository
+            </url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>sics-snapshot</id>
+            <name>SICS Snapshot Repository</name>
+            <url>http://kompics.sics.se/maven/snapshotrepository
+            </url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+                <!--
+                <repository>
+			<id>ServeBox.org</id>
+			<name>ServeBox Repository</name>
+			<url>http://maven.servebox.org/repository
+			</url>
+		</repository>
+		<repository>
+			<id>maven-repository.dev.java.net</id>
+			<name>Java Dev Net Repository</name>
+			<url>http://download.java.net/maven/2/</url>
+
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+                -->
+    </repositories>
+
+</project>
+

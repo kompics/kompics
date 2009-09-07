@@ -1,0 +1,105 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>se.sics.kompics</groupId>
+	<version>0.1</version>
+	<artifactId>dummy</artifactId>
+	<packaging>jar</packaging>
+	<name>Dummy used by kompics-daemon-launcher</name>
+	
+	<properties>
+		<jobId>0</jobId>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>se.sics.kompics</groupId>
+			<artifactId>kompics-manual</artifactId>
+			<version>0.4.2-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<source>1.6</source>
+					<target>1.6</target>
+					<debug>true</debug>
+					<optimize>true</optimize>
+					<showDeprecations>true</showDeprecations>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<archive>
+						<manifest>
+							<mainClass>se.sics.kompics.manual.example1.Root</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<phase>verify</phase>
+					</execution>
+				</executions>
+				<configuration>
+					<executable>java</executable>
+					<mainClass>se.sics.kompics.manual.example1.Root</mainClass>
+					<arguments>
+						<argument>-classpath</argument>
+						<classpath />
+						<argument></argument>
+						<!--
+                                                se.sics.kompics.manual.example1.Root
+							add extra arguments at the command line using: mvn exec:exec
+							-Darg1 -Darg2 .. -DargN
+						-->
+					</arguments>
+					<phase>verify</phase>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>sics-snapshot</id>
+			<url>http://kompics.sics.se/maven/snapshotrepository</url>
+			<name>SICS Snapshot Repository</name>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>		
+		<repository>
+			<id>sics-release</id>
+			<url>http://kompics.sics.se/maven/repository</url>
+			<name>SICS Release Repository</name>			
+			<releases>
+				<enabled>true</enabled>			
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+</project>
+
