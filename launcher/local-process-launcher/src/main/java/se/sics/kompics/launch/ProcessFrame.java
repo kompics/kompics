@@ -58,9 +58,9 @@ import se.sics.kompics.launch.ProcessLauncher.Proc;
 @SuppressWarnings("serial")
 public class ProcessFrame extends JFrame {
 
-	private static int WIDTH = 700;
+	private int WIDTH = 700;
 
-	private static int HEIGHT = 510;
+	private int HEIGHT = 510;
 
 	private javax.swing.JPanel jContentPane = null;
 
@@ -79,7 +79,7 @@ public class ProcessFrame extends JFrame {
 	private int count;
 
 	private Proc proc;
-	
+
 	private String processId;
 
 	/**
@@ -342,11 +342,11 @@ public class ProcessFrame extends JFrame {
 			logArea.setFont(new Font("Courier New", Font.PLAIN, 12));
 			logArea.setBackground(Color.DARK_GRAY);
 			logArea.setForeground(Color.WHITE);
-//			logArea.addFocusListener(new FocusAdapter() {
-//				public void focusGained(FocusEvent e) {
-//					getLocalInputTextField().requestFocusInWindow();
-//				}
-//			});
+			// logArea.addFocusListener(new FocusAdapter() {
+			// public void focusGained(FocusEvent e) {
+			// getLocalInputTextField().requestFocusInWindow();
+			// }
+			// });
 		}
 		return logArea;
 	}
