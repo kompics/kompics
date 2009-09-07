@@ -37,7 +37,7 @@
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-mina-network
             </artifactId>
-            <version>${kompics.version}</version>
+            <version>0.4.2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
@@ -45,14 +45,14 @@
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-java-timer
             </artifactId>
-            <version>${kompics.version}</version>
+            <version>0.4.2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-experiment-scenario-dsl</artifactId>
-            <version>${kompics.version}</version>
+            <version>0.4.2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 

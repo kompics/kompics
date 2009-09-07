@@ -39,47 +39,33 @@
             <artifactId>maven-embedder</artifactId>
             <scope>compile</scope>
             <version>3.0-alpha-2</version>
-<!--
-
-
-                        <exclusions>
-				<exclusion>
-					<groupId>org.apache.maven.mercury</groupId>
-					<artifactId>mercury-plexus</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.maven</groupId>
-					<artifactId>maven-reporting-api</artifactId>
-				</exclusion>
-			</exclusions>
--->
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-mina-network
             </artifactId>
-            <version>${kompics.version}</version>
+            <version>0.4.2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-port-timer
             </artifactId>
-            <version>${kompics.version}</version>
+            <version>0.4.2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-java-timer
             </artifactId>
-            <version>${kompics.version}</version>
+            <version>0.4.2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-experiment-scenario-dsl</artifactId>
-            <version>${kompics.version}</version>
+            <version>0.4.2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
@@ -87,41 +73,10 @@
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-component-bootstrap-client
             </artifactId>
-            <version>${kompics.version}</version>
+            <version>0.4.2.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
-<!--
-        <dependency>
-            <groupId>se.kth.id2210</groupId>
-            <artifactId>lab2</artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
-
-            <exclusions>
-                <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>jetty</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>jetty-client</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>jetty-sslengine</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>jetty-util</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>servlet-api</artifactId>
-                </exclusion>
-            </exclusions>
-
-        </dependency>
--->
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
