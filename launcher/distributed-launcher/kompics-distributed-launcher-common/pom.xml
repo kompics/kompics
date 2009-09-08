@@ -11,7 +11,7 @@
     <version>0.4.2.4-SNAPSHOT</version>
     <artifactId>kompics-distributed-launcher-common</artifactId>
     <packaging>jar</packaging>
-    <name>distributed launcher common</name>
+    <name>Kompics distributed launcher common</name>
 
 
     <dependencies>
