@@ -1,37 +1,36 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>kompics-p2p-system-examples</artifactId>
 		<groupId>se.sics.kompics.examples.p2p-systems</groupId>
-		<version>0.4.2.3-SNAPSHOT</version>
+		<version>0.4.2.3</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.examples.p2p-systems</groupId>
 	<artifactId>kompics-example-cyclon-local-deployment</artifactId>
 	<name>Cyclon Local Deployment P2P System Example</name>
-	<version>0.4.2.3-SNAPSHOT</version>
+	<version>0.4.2.3</version>
 	<description>Cyclon Local Deployment P2P System Example</description>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
 			<artifactId>kompics-component-cyclon-peer-main</artifactId>
-			<version>0.4.2.3-SNAPSHOT</version>
+			<version>0.4.2.3</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.launcher</groupId>
 			<artifactId>kompics-local-process-launcher</artifactId>
-			<version>0.4.2.3-SNAPSHOT</version>
+			<version>0.4.2.3</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems</groupId>
 			<artifactId>kompics-component-bootstrap-server-main</artifactId>
-			<version>0.4.2.3-SNAPSHOT</version>
+			<version>0.4.2.3</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
 			<artifactId>kompics-component-cyclon-monitor-server-main</artifactId>
-			<version>0.4.2.3-SNAPSHOT</version>
+			<version>0.4.2.3</version>
 		</dependency>
 	</dependencies>
 

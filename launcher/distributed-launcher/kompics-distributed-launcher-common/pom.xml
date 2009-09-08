@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>se.sics.kompics.launcher</groupId>
         <artifactId>kompics-distributed-launcher</artifactId>
-        <version>0.4.2.3-SNAPSHOT</version>
+        <version>0.4.2.3</version>
     </parent>
 
     <groupId>se.sics.kompics.launcher</groupId>
-    <version>0.4.2.3-SNAPSHOT</version>
+    <version>0.4.2.3</version>
     <artifactId>kompics-distributed-launcher-common</artifactId>
     <packaging>jar</packaging>
     <name>distributed launcher common</name>
@@ -32,27 +31,27 @@
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-jetty-web-server</artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-port-bootstrap</artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-component-failure-detector</artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p.systems.chord</groupId>
             <artifactId>kompics-component-chord-monitor-server</artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
             <scope>compile</scope>
         </dependency>
 
@@ -60,19 +59,19 @@
         <dependency>
             <groupId>se.sics.kompics.p2p.overlay.chord</groupId>
             <artifactId>kompics-component-chord-overlay</artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
             <artifactId>kompics-component-cyclon-peer-main</artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
             <artifactId>kompics-component-cyclon-monitor-server-main</artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
         </dependency>
 
         <dependency>

@@ -3,14 +3,14 @@
 	<parent>
 		<artifactId>kompics-overlay-networks</artifactId>
 		<groupId>se.sics.kompics.p2p.overlay</groupId>
-		<version>0.4.2.3-SNAPSHOT</version>
+		<version>0.4.2.3</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.p2p.overlay</groupId>
 	<artifactId>kompics-overlay-address</artifactId>
 	<name>Kompics Overlay Address</name>
-	<version>0.4.2.3-SNAPSHOT</version>
+	<version>0.4.2.3</version>
 	<description>Kompics Overlay Address</description>
 
 	<repositories>
@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-address</artifactId>
-			<version>0.4.2.3-SNAPSHOT</version>
+			<version>0.4.2.3</version>
 		</dependency>
 	</dependencies>
 </project>

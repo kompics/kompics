@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>kompics-p2p</artifactId>
 		<groupId>se.sics.kompics.p2p</groupId>
-		<version>0.4.2.3-SNAPSHOT</version>
+		<version>0.4.2.3</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -11,7 +11,7 @@
 	<artifactId>kompics-content-distribution-networks</artifactId>
 	<packaging>pom</packaging>
 	<name>Kompics Content Distribution Networks</name>
-	<version>0.4.2.3-SNAPSHOT</version>
+	<version>0.4.2.3</version>
 	<description>Kompics Content Distribution Networks</description>
 	<modules>
 		<module>bittorrent</module>

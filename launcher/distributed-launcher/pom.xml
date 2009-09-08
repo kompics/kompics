@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>se.sics.kompics.launcher</groupId>
         <artifactId>kompics-launchers</artifactId>
-        <version>0.4.2.3-SNAPSHOT</version>
+        <version>0.4.2.3</version>
     </parent>
 
     <groupId>se.sics.kompics.launcher</groupId>
     <artifactId>kompics-distributed-launcher</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.2.3-SNAPSHOT</version>
+    <version>0.4.2.3</version>
     <properties>
         <kompics.version>0.4.2.3-SNAPSHOT</kompics.version>
         <java.version>1.6</java.version>
@@ -37,7 +36,7 @@
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-mina-network
             </artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
             <scope>compile</scope>
         </dependency>
 
@@ -45,14 +44,14 @@
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-java-timer
             </artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-experiment-scenario-dsl</artifactId>
-            <version>0.4.2.3-SNAPSHOT</version>
+            <version>0.4.2.3</version>
             <scope>compile</scope>
         </dependency>
 

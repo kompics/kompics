@@ -3,14 +3,14 @@
   <parent>
     <artifactId>kompics-p2p</artifactId>
     <groupId>se.sics.kompics.p2p</groupId>
-    <version>0.4.2.3-SNAPSHOT</version>
+    <version>0.4.2.3</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics.p2p</groupId>
   <artifactId>kompics-experiment-scenario-dsl</artifactId>
   <name>Kompics P2P Experiment Scenario Domain-Specific Language</name>
-  <version>0.4.2.3-SNAPSHOT</version>
+  <version>0.4.2.3</version>
   <description>Kompics P2P Experiment Scenario Domain-Specific Language</description>
 
 	<repositories>
@@ -41,12 +41,12 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.3-SNAPSHOT</version>
+			<version>0.4.2.3</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.simulation</groupId>
 			<artifactId>kompics-simulation</artifactId>
-			<version>0.4.2.3-SNAPSHOT</version>
+			<version>0.4.2.3</version>
 		</dependency>
 	</dependencies>
 </project>
