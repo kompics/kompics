@@ -4,11 +4,11 @@
     <parent>
         <groupId>se.sics.kompics.launcher</groupId>
         <artifactId>kompics-distributed-launcher</artifactId>
-        <version>0.4.2.3</version>
+        <version>0.4.2.4-SNAPSHOT</version>
     </parent>
 
     <groupId>se.sics.kompics.launcher</groupId>
-    <version>0.4.2.3</version>
+    <version>0.4.2.4-SNAPSHOT</version>
     <artifactId>kompics-distributed-launcher-common</artifactId>
     <packaging>jar</packaging>
     <name>distributed launcher common</name>
@@ -31,27 +31,27 @@
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-jetty-web-server</artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-port-bootstrap</artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-component-failure-detector</artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p.systems.chord</groupId>
             <artifactId>kompics-component-chord-monitor-server</artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
@@ -59,19 +59,19 @@
         <dependency>
             <groupId>se.sics.kompics.p2p.overlay.chord</groupId>
             <artifactId>kompics-component-chord-overlay</artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
             <artifactId>kompics-component-cyclon-peer-main</artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
             <artifactId>kompics-component-cyclon-monitor-server-main</artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
         </dependency>
 
         <dependency>

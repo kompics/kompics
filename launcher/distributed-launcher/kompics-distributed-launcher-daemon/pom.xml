@@ -4,11 +4,11 @@
     <parent>
         <groupId>se.sics.kompics.launcher</groupId>
         <artifactId>kompics-distributed-launcher</artifactId>
-        <version>0.4.2.3</version>
+        <version>0.4.2.4-SNAPSHOT</version>
     </parent>
 
     <groupId>se.sics.kompics.launcher</groupId>
-    <version>0.4.2.3</version>
+    <version>0.4.2.4-SNAPSHOT</version>
     <artifactId>kompics-distributed-launcher-daemon</artifactId>
     <packaging>jar</packaging>
     <name>distributed launcher daemon</name>
@@ -43,28 +43,28 @@
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-mina-network
             </artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-port-timer
             </artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-java-timer
             </artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-experiment-scenario-dsl</artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
@@ -72,7 +72,7 @@
             <groupId>se.sics.kompics.p2p</groupId>
             <artifactId>kompics-component-bootstrap-client
             </artifactId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 

@@ -4,12 +4,12 @@
     <parent>
         <artifactId>kompics-distributed-launcher</artifactId>
         <groupId>se.sics.kompics.launcher</groupId>
-        <version>0.4.2.3</version>
+        <version>0.4.2.4-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.kompics.launcher</groupId>
     <artifactId>kompics-distributed-launcher-gui</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
     <name>GUI for launching distributed Kompics applications.</name>
     <build>
         <plugins>
@@ -71,7 +71,7 @@
         <dependency>
             <artifactId>kompics-distributed-launcher-master</artifactId>
             <groupId>se.sics.kompics.launcher</groupId>
-            <version>0.4.2.3</version>
+            <version>0.4.2.4-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
