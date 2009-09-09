@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>kompics-overlay-networks</artifactId>
 		<groupId>se.sics.kompics.p2p.overlay</groupId>
-		<version>0.4.2.4</version>
+		<version>0.4.2.5-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -12,7 +12,7 @@
 	<artifactId>kompics-chord-overlay</artifactId>
 	<packaging>pom</packaging>
 	<name>Chord</name>
-	<version>0.4.2.4</version>
+	<version>0.4.2.5-SNAPSHOT</version>
 	<description>Kompics implementation of Chord</description>
 	<modules>
     <module>port-chord-overlay</module>

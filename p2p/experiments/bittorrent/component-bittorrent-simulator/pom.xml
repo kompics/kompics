@@ -2,32 +2,32 @@
 	<parent>
 		<artifactId>kompics-bittorrent-experiments</artifactId>
 		<groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
-		<version>0.4.2.4</version>
+		<version>0.4.2.5-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
 	<artifactId>kompics-component-bittorrent-simulator</artifactId>
 	<name>BitTorrentSimulator component</name>
-	<version>0.4.2.4</version>
+	<version>0.4.2.5-SNAPSHOT</version>
 	<description>BitTorrentSimulator component</description>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.4</version>
+			<version>0.4.2.5-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-timer</artifactId>
-			<version>0.4.2.4</version>
+			<version>0.4.2.5-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-network</artifactId>
-			<version>0.4.2.4</version>
+			<version>0.4.2.5-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
 			<artifactId>kompics-port-bittorrent-experiment</artifactId>
-			<version>0.4.2.4</version>
+			<version>0.4.2.5-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

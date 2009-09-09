@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>kompics-parent-pom</artifactId>
 		<groupId>se.sics.kompics</groupId>
-		<version>0.4.2.4</version>
+		<version>0.4.2.5-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -11,7 +11,7 @@
 	<artifactId>kompics-examples</artifactId>
 	<packaging>pom</packaging>
 	<name>Kompics examples and demos</name>
-	<version>0.4.2.4</version>
+	<version>0.4.2.5-SNAPSHOT</version>
 	<description>Kompics examples and demos</description>
 	<modules>
 		<module>p2p-experiments</module>
