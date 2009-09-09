@@ -21,6 +21,7 @@
 package se.sics.kompics.p2p.experiment.chord;
 
 import se.sics.kompics.PortType;
+import se.sics.kompics.p2p.experiment.dsl.events.TerminateExperiment;
 
 /**
  * The <code>ChordExperiment</code> class.
@@ -35,5 +36,6 @@ public class ChordExperiment extends PortType {
 		positive(ChordPeerFail.class);
 		positive(ChordLookup.class);
 		positive(CollectData.class);
+		negative(TerminateExperiment.class);
 	}
 }

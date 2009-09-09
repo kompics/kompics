@@ -24,6 +24,11 @@
 			<artifactId>kompics-overlay-key</artifactId>
 			<version>0.4.2.4-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>se.sics.kompics.p2p</groupId>
+			<artifactId>kompics-experiment-scenario-dsl</artifactId>
+			<version>0.4.2.4-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>

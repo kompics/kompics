@@ -48,7 +48,7 @@ public class Configuration {
 		} catch (UnknownHostException e) {
 		}
 	}
-	int networkPort = 2210;
+	int networkPort = 8081;
 	int webPort = 8080;
 	int bootId = Integer.MAX_VALUE;
 	int cyclonMonitorId = Integer.MAX_VALUE - 1;

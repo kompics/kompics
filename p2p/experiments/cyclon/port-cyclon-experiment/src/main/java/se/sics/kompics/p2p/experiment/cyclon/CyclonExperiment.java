@@ -21,6 +21,7 @@
 package se.sics.kompics.p2p.experiment.cyclon;
 
 import se.sics.kompics.PortType;
+import se.sics.kompics.p2p.experiment.dsl.events.TerminateExperiment;
 
 /**
  * The <code>CyclonExperiment</code> class represents a Cyclon-specific port
@@ -36,5 +37,6 @@ public class CyclonExperiment extends PortType {
 		positive(CyclonPeerFail.class);
 		positive(CyclonPeerGetPeer.class);
 		positive(CollectCyclonData.class);
+		negative(TerminateExperiment.class);
 	}
 }

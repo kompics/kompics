@@ -327,7 +327,7 @@ public final class P2pOrchestrator extends ComponentDefinition {
 					activeTimers.remove(id);
 					logger.debug("canceled timer {}", task.timeout);
 				} else {
-					logger.warn("Cannot find timeout {}", id);
+					logger.debug("Cannot find timeout {}", id);
 				}
 			}
 		}
@@ -346,7 +346,7 @@ public final class P2pOrchestrator extends ComponentDefinition {
 					activePeriodicTimers.remove(id);
 					logger.debug("canceled periodic timer {}", task.timeout);
 				} else {
-					logger.warn("Cannot find periodic timeout {}", id);
+					logger.debug("Cannot find periodic timeout {}", id);
 				}
 			}
 		}

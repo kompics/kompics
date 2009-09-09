@@ -29,7 +29,7 @@ import se.sics.kompics.p2p.experiment.cyclon.CyclonPeerJoin;
 import se.sics.kompics.p2p.experiment.dsl.SimulationScenario;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation1;
-import se.sics.kompics.p2p.experiments.cyclon.CyclonSimulationMain;
+import se.sics.kompics.p2p.experiments.cyclon.CyclonExecutionMain;
 
 /**
  * The <code>CyclonExperiments</code> class.
@@ -38,7 +38,7 @@ import se.sics.kompics.p2p.experiments.cyclon.CyclonSimulationMain;
  * @version $Id$
  */
 @SuppressWarnings("serial")
-public class CyclonExperiments {
+public class CyclonExecutionExperiments {
 	public static void main(String[] args) throws Throwable {
 		SimulationScenario cyclonScenario1 = new SimulationScenario() {
 			{
@@ -91,8 +91,8 @@ public class CyclonExperiments {
 		configuration.set();
 
 		cyclonScenario1.setSeed(seed);
-		cyclonScenario1.simulate(CyclonSimulationMain.class);
-		// cyclonScenario1.execute(CyclonExecutionMain.class);
+		// cyclonScenario1.simulate(CyclonSimulationMain.class);
+		cyclonScenario1.execute(CyclonExecutionMain.class);
 	}
 
 	// operations

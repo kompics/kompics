@@ -51,7 +51,7 @@ public final class Configuration implements Serializable {
 		} catch (UnknownHostException e) {
 		}
 	}
-	int networkPort = 2210;
+	int networkPort = 8081;
 	int webPort = 8080;
 	int trackerId = Integer.MAX_VALUE;
 

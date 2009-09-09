@@ -30,7 +30,7 @@ import se.sics.kompics.p2p.experiment.dsl.SimulationScenario;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation1;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation2;
-import se.sics.kompics.p2p.experiments.chord.ChordExecutionMain;
+import se.sics.kompics.p2p.experiments.chord.ChordSimulationMain;
 import se.sics.kompics.p2p.overlay.key.NumericRingKey;
 
 /**
@@ -40,7 +40,7 @@ import se.sics.kompics.p2p.overlay.key.NumericRingKey;
  * @version $Id$
  */
 @SuppressWarnings("serial")
-public class ChordExperiments {
+public class ChordSimulationExperiments {
 	public static void main(String[] args) throws Throwable {
 		SimulationScenario chordScenario1 = new SimulationScenario() {
 			{
@@ -82,20 +82,20 @@ public class ChordExperiments {
 						raise(5000, chordLookup, uniform(13), uniform(13));
 					}
 				};
-//				StochasticProcess lowChurn = new StochasticProcess() {
-//					{
-//						eventInterArrivalTime(exponential(500));
-//						raise(500, chordJoin, uniform(13));
-//						raise(500, chordFail, uniform(13));
-//					}
-//				};
-//				StochasticProcess highChurn = new StochasticProcess() {
-//					{
-//						eventInterArrivalTime(exponential(50));
-//						raise(500, chordJoin, uniform(13));
-//						raise(500, chordFail, uniform(13));
-//					}
-//				};
+				// StochasticProcess lowChurn = new StochasticProcess() {
+				// {
+				// eventInterArrivalTime(exponential(500));
+				// raise(500, chordJoin, uniform(13));
+				// raise(500, chordFail, uniform(13));
+				// }
+				// };
+				// StochasticProcess highChurn = new StochasticProcess() {
+				// {
+				// eventInterArrivalTime(exponential(50));
+				// raise(500, chordJoin, uniform(13));
+				// raise(500, chordFail, uniform(13));
+				// }
+				// };
 
 				process1.start();
 				process2.startAfterTerminationOf(2000, process1);
@@ -114,10 +114,10 @@ public class ChordExperiments {
 
 		Configuration configuration = new Configuration();
 		configuration.set();
-		
+
 		chordScenario1.setSeed(seed + 2);
-		// chordScenario1.simulate(ChordSimulationMain.class);
-		chordScenario1.execute(ChordExecutionMain.class);
+		chordScenario1.simulate(ChordSimulationMain.class);
+		// chordScenario1.execute(ChordExecutionMain.class);
 	}
 
 	// operations
