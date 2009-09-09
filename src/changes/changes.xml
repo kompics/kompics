@@ -4,6 +4,11 @@
 		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
+        <release version="0.4.2.4" date="2009-09-09" description="Maintenance release">
+            <action dev="cosmin" type="fix">
+[Kompics P2P Framework]: fixed minor configuration issues.
+            </action>
+        </release>
         <release version="0.4.2.3" date="2009-09-08" description="Maintenance release">
             <action dev="cosmin" type="add">
 [Kompics P2P Framework]: added local process launcher and examples.
