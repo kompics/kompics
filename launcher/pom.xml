@@ -15,7 +15,7 @@
 
 	<modules>
 		<module>local-process-launcher</module>
-		<module>distributed-launcher</module>
+		<!--<module>distributed-launcher</module>-->
 		<module>web-start</module>
 	</modules>
 
