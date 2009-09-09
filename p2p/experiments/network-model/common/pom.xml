@@ -3,14 +3,14 @@
 	<parent>
 		<artifactId>kompics-network-models</artifactId>
 		<groupId>se.sics.kompics.p2p.experiments.network-model</groupId>
-		<version>0.4.2.4-SNAPSHOT</version>
+		<version>0.4.2.4</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.p2p.experiments.network-model</groupId>
 	<artifactId>kompics-network-model-common</artifactId>
 	<name>Kompics Network Models Common</name>
-	<version>0.4.2.4-SNAPSHOT</version>
+	<version>0.4.2.4</version>
 	<description>Kompics Network Models Common</description>
 
 	<repositories>
@@ -39,7 +39,7 @@
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-network</artifactId>
-			<version>0.4.2.4-SNAPSHOT</version>
+			<version>0.4.2.4</version>
 		</dependency>
 	</dependencies>
 </project>
