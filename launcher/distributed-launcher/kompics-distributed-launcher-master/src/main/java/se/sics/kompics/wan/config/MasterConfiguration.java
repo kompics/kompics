@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.experiment.dsl.SimulationScenario;
-import se.sics.kompics.simulator.SimulationScenarioLoadException;
 import se.sics.kompics.wan.ssh.Host;
 import se.sics.kompics.wan.util.AddressParserException;
 import se.sics.kompics.wan.util.HostsParser;

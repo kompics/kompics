@@ -1,4 +1,4 @@
-package se.sics.kompics.simulator;
+package se.sics.kompics.wan.config;
 
 public class SimulationScenarioLoadException extends Exception {
 
