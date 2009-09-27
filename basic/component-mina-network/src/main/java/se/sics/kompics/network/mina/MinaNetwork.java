@@ -31,6 +31,7 @@ import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
+import org.apache.mina.filter.compression.CompressionFilter;
 import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
 import org.apache.mina.transport.socket.nio.NioDatagramConnector;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
@@ -139,11 +140,14 @@ public final class MinaNetwork extends ComponentDefinition {
 			localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
 					init.getSelf().getPort());
 
+			int compressionLevel = CompressionFilter.COMPRESSION_MAX;
+
 			// UDP Acceptor
 			udpAcceptor = new NioDatagramAcceptor();
 			udpAcceptor.setHandler(udpHandler);
 			DefaultIoFilterChainBuilder udpAcceptorChain = udpAcceptor
 					.getFilterChain();
+			udpAcceptorChain.addLast("compress", new CompressionFilter(compressionLevel));
 			udpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
 			
@@ -160,14 +164,16 @@ public final class MinaNetwork extends ComponentDefinition {
 			udpConnector.setHandler(udpHandler);
 			DefaultIoFilterChainBuilder udpConnectorChain = udpConnector
 					.getFilterChain();
+			udpConnectorChain.addLast("compress", new CompressionFilter(compressionLevel));
 			udpConnectorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
-
+	
 			// TCP Acceptor
 			tcpAcceptor = new NioSocketAcceptor();
 			tcpAcceptor.setHandler(tcpHandler);
 			DefaultIoFilterChainBuilder tcpAcceptorChain = tcpAcceptor
 					.getFilterChain();
+			tcpAcceptorChain.addLast("compress", new CompressionFilter(compressionLevel));
 			tcpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
 //			tcpAcceptor.setReuseAddress(true);
@@ -180,9 +186,11 @@ public final class MinaNetwork extends ComponentDefinition {
 
 			// TCP Connector
 			tcpConnector = new NioSocketConnector();
+			tcpConnector.getSessionConfig().setTcpNoDelay(true); //  Nagle's algorithm disabled 
 			tcpConnector.setHandler(tcpHandler);
 			DefaultIoFilterChainBuilder tcpConnectorChain = tcpConnector
 					.getFilterChain();
+			tcpConnectorChain.addLast("compress", new CompressionFilter(compressionLevel));
 			tcpConnectorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
 

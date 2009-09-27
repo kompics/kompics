@@ -102,7 +102,7 @@ public class Configuration {
 				Transport.TCP);
 
 		fdConfiguration = new PingFailureDetectorConfiguration(1000, 5000,
-				10000, 1000, Transport.UDP);
+				10000, 1000, Transport.TCP);
 
 		chordConfiguration = new ChordConfiguration(13, 13, 1000, 1000, 3000,
 				20);
