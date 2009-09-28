@@ -32,6 +32,7 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
 import org.apache.mina.filter.compression.CompressionFilter;
+import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
 import org.apache.mina.transport.socket.nio.NioDatagramConnector;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
@@ -176,7 +177,9 @@ public final class MinaNetwork extends ComponentDefinition {
 			tcpAcceptorChain.addLast("compress", new CompressionFilter(compressionLevel));
 			tcpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
-//			tcpAcceptor.setReuseAddress(true);
+			tcpAcceptorChain.addLast("logger", new LoggingFilter("mina"));
+
+			//			tcpAcceptor.setReuseAddress(true);
 			try {
 				tcpAcceptor.bind(localSocketAddress);
 			} catch (IOException e) {
@@ -193,6 +196,7 @@ public final class MinaNetwork extends ComponentDefinition {
 			tcpConnectorChain.addLast("compress", new CompressionFilter(compressionLevel));
 			tcpConnectorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
+			tcpConnectorChain.addLast("logger", new LoggingFilter("mina"));
 
 			ExceptionMonitor.setInstance(new ExceptionMonitor() {
 				@Override

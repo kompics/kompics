@@ -64,8 +64,14 @@ public class ProcessLauncher {
 
 			List<String> arguments = new ArrayList<String>();
 			arguments.add("java");
-			arguments.add("-classpath");
-			arguments.add(classPath);
+			arguments.add("-Xmx1g");
+
+			String title = "";
+			for (String s : sProps) {
+				arguments.add(s);
+				title += " " + s;
+			}
+			mainFrame.setTitle(mainFrame.getTitle() + title);
 
 			Enumeration<String> keys = (Enumeration<String>) pProps
 					.propertyNames();
@@ -76,12 +82,8 @@ public class ProcessLauncher {
 				arguments.add("-D" + key + "=" + value);
 			}
 
-			String title = "";
-			for (String s : sProps) {
-				arguments.add(s);
-				title += " " + s;
-			}
-			mainFrame.setTitle(mainFrame.getTitle() + title);
+			arguments.add("-classpath");
+			arguments.add(classPath);
 
 			arguments.add(mainComponent);
 

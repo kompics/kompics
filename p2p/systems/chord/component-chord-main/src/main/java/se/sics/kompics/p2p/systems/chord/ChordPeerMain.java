@@ -63,7 +63,7 @@ public final class ChordPeerMain extends ComponentDefinition {
 			.getLogger(ChordPeerMain.class);
 
 	public static void main(String[] args) {
-		Kompics.createAndStart(ChordPeerMain.class, 1);
+		Kompics.createAndStart(ChordPeerMain.class, 8);
 	}
 
 	public ChordPeerMain() throws IOException {

@@ -15,9 +15,9 @@ public class ChordLocalSystemLauncher {
 
 		ProcessLauncher launcher = new ProcessLauncher();
 		launcher.addProcess(0, BootstrapServerMain.class.getCanonicalName(),
-				classPath, new Configuration(7001).set());
+				classPath, new Configuration(7005).set());
 		launcher.addProcess(0, ChordMonitorServerMain.class.getCanonicalName(),
-				classPath, new Configuration(7003).set());
+				classPath, new Configuration(7007).set());
 		launcher.addProcess(1000, ChordPeerMain.class.getCanonicalName(),
 				classPath, new Configuration(4001).set(), "-Dpeer.id=3");
 		launcher.addProcess(1000, ChordPeerMain.class.getCanonicalName(),
@@ -29,12 +29,12 @@ public class ChordLocalSystemLauncher {
 		launcher.addProcess(1000, ChordPeerMain.class.getCanonicalName(),
 				classPath, new Configuration(4009).set(), "-Dpeer.id=3072");
 		launcher.addProcess(1000, ChordPeerMain.class.getCanonicalName(),
-				classPath, new Configuration(40011).set(), "-Dpeer.id=4096");
+				classPath, new Configuration(4011).set(), "-Dpeer.id=4096");
 		launcher.addProcess(1000, ChordPeerMain.class.getCanonicalName(),
-				classPath, new Configuration(40013).set(), "-Dpeer.id=5555");
+				classPath, new Configuration(4013).set(), "-Dpeer.id=5555");
 		launcher.addProcess(1000, ChordPeerMain.class.getCanonicalName(),
 				classPath, new Configuration(4015).set(), "-Dpeer.id=6789");
-		
+
 		launcher.launchAll();
 	}
 }

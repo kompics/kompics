@@ -46,10 +46,10 @@ public class Configuration {
 	final int networkPort;
 	final int webPort;
 
-	final int bootNetPort = 7001;
-	final int bootWebPort = 7000;
-	final int monitorNetPort = 7003;
-	final int monitorWebPort = 7002;
+	final int bootNetPort = 7005;
+	final int bootWebPort = 7004;
+	final int monitorNetPort = 7007;
+	final int monitorWebPort = 7006;
 
 	JettyWebServerConfiguration jettyWebServerConfiguration;
 	BootstrapConfiguration bootConfiguration;
