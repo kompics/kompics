@@ -62,7 +62,7 @@ public final class CyclonPeerMain extends ComponentDefinition {
 			.getLogger(CyclonPeerMain.class);
 
 	public static void main(String[] args) {
-		Kompics.createAndStart(CyclonPeerMain.class, 1);
+		Kompics.createAndStart(CyclonPeerMain.class, 8);
 	}
 
 	public CyclonPeerMain() throws IOException {
