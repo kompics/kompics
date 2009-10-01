@@ -58,7 +58,7 @@ public class ChordMonitorServerMain extends ComponentDefinition {
 			.getLogger(ChordMonitorServerMain.class);
 
 	public static void main(String[] args) {
-		Kompics.createAndStart(ChordMonitorServerMain.class, 1);
+		Kompics.createAndStart(ChordMonitorServerMain.class, 8);
 	}
 
 	/**

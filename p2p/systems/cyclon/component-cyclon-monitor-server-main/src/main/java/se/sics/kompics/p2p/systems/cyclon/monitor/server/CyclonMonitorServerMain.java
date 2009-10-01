@@ -56,7 +56,7 @@ public class CyclonMonitorServerMain extends ComponentDefinition {
 			.getLogger(CyclonMonitorServerMain.class);
 
 	public static void main(String[] args) {
-		Kompics.createAndStart(CyclonMonitorServerMain.class, 1);
+		Kompics.createAndStart(CyclonMonitorServerMain.class, 8);
 	}
 
 	/**

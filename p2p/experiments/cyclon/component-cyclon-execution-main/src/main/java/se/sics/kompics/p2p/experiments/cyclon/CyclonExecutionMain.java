@@ -67,7 +67,7 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 			.getProperty("scenario"));
 
 	public static void main(String[] args) {
-		Kompics.createAndStart(CyclonExecutionMain.class, 1);
+		Kompics.createAndStart(CyclonExecutionMain.class, 8);
 	}
 
 	public CyclonExecutionMain() throws InterruptedException, IOException {

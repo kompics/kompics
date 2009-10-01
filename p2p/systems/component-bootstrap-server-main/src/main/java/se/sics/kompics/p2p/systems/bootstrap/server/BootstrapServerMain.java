@@ -56,7 +56,7 @@ public class BootstrapServerMain extends ComponentDefinition {
 			.getLogger(BootstrapServerMain.class);
 
 	public static void main(String[] args) {
-		Kompics.createAndStart(BootstrapServerMain.class, 1);
+		Kompics.createAndStart(BootstrapServerMain.class, 8);
 	}
 
 	public BootstrapServerMain() throws IOException {

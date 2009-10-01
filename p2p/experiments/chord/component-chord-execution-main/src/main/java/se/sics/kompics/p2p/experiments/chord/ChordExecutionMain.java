@@ -68,7 +68,7 @@ public final class ChordExecutionMain extends ComponentDefinition {
 			.getProperty("scenario"));
 
 	public static void main(String[] args) {
-		Kompics.createAndStart(ChordExecutionMain.class, 1);
+		Kompics.createAndStart(ChordExecutionMain.class, 8);
 	}
 
 	public ChordExecutionMain() throws InterruptedException, IOException {
