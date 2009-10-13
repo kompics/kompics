@@ -335,7 +335,7 @@ public class BootstrapServer extends ComponentDefinition {
 		sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
 		sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
 		sb.append("Kompics P2P Bootstrap Cache for " + overlay + "</h2>");
-		sb.append("<table width=\"600\" border=\"0\" align=\"center\"><tr>");
+		sb.append("<table width=\"1000\" border=\"0\" align=\"center\"><tr>");
 		sb
 				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
 		sb.append("<th class=\"style2\" width=\"80\" scope=\"col\">Age</th>");
@@ -344,7 +344,7 @@ public class BootstrapServer extends ComponentDefinition {
 		sb.append("<th class=\"style2\" width=\"300\" scope=\"col\">" + overlay
 				+ " id</th>");
 		sb
-				.append("<th class=\"style2\" width=\"300\" scope=\"col\">Peer address</th></tr>");
+				.append("<th class=\"style2\" width=\"700\" scope=\"col\">Peer address</th></tr>");
 		long now = System.currentTimeMillis();
 
 		Collection<CacheEntry> entries = cache.get(overlay).values();
