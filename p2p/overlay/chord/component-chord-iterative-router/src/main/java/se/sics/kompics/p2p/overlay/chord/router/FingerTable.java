@@ -130,9 +130,11 @@ public class FingerTable {
 			// it belongs to this interval
 			// we update no matter what
 			if (finger[i] == null
-					|| (fresh && newPeer.getKey().belongsTo(begin[i],
-							finger[i].getKey(), IntervalBounds.CLOSED_OPEN,
-							ringSize))) {
+					|| (fresh
+							&& newPeer.getKey().belongsTo(begin[i],
+									finger[i].getKey(),
+									IntervalBounds.CLOSED_OPEN, ringSize) && !finger[i]
+							.getKey().equals(begin[i]))) {
 				// it is closer to the beginning of the interval than
 				// the current finger
 				finger[i] = newPeer;
