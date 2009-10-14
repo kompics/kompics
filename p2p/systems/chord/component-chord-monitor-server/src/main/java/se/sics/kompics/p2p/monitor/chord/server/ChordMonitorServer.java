@@ -108,18 +108,18 @@ public class ChordMonitorServer extends ComponentDefinition {
 			addPeerToView(chordAddress, event.getClientWebPort(), neighbors);
 
 			OverlayAddress pred = alivePeers.lowerKey(chordAddress);
-			if (pred != null) {
-				predecessor.put(chordAddress, pred);
-			} else {
-				predecessor.put(chordAddress, alivePeers.lastKey());
+			if (pred == null) {
+				pred = alivePeers.lastKey();
 			}
+			predecessor.put(chordAddress, pred);
+			successor.put(pred, chordAddress);
 
 			OverlayAddress succ = alivePeers.higherKey(chordAddress);
-			if (succ != null) {
-				successor.put(chordAddress, succ);
-			} else {
-				successor.put(chordAddress, alivePeers.firstKey());
+			if (succ == null) {
+				succ = alivePeers.firstKey();
 			}
+			successor.put(chordAddress, succ);
+			predecessor.put(succ, chordAddress);
 
 			logger.debug("Got notification from peer {}", peerAddress);
 		}
@@ -513,7 +513,7 @@ public class ChordMonitorServer extends ComponentDefinition {
 	private final void appendPeerLink(StringBuilder sb, OverlayAddress address) {
 		OverlayViewEntry viewEntry = view.get(address);
 		int wp = 8080;
-		if (viewEntry!=null) {
+		if (viewEntry != null) {
 			wp = viewEntry.getClientWebPort();
 		}
 		sb.append("<a href=\"http://");
