@@ -37,8 +37,6 @@ public class NumericRingKey implements RingKey, Serializable,
 	 */
 	private static final long serialVersionUID = -3472289897908435858L;
 
-	public static final BigInteger RING_SIZE = BigInteger.valueOf(2).pow(160);
-
 	private final BigInteger id;
 
 	public NumericRingKey(BigInteger id) {
@@ -56,12 +54,8 @@ public class NumericRingKey implements RingKey, Serializable,
 	@Override
 	public final boolean belongsTo(RingKey from, RingKey to,
 			IntervalBounds bounds) {
-		return belongsTo((NumericRingKey) from, (NumericRingKey) to, bounds);
-	}
-
-	public final boolean belongsTo(NumericRingKey from, NumericRingKey to,
-			IntervalBounds bounds) {
-		return belongsTo(from, to, bounds, RING_SIZE);
+		throw new RuntimeException(
+				"NumericRingKey.belongsTo must specify ringSize");
 	}
 
 	public final boolean belongsTo(NumericRingKey from, NumericRingKey to,
