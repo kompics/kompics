@@ -22,6 +22,10 @@ public class ChannelFilterSet {
 		inheritedFilters = new HashMap<Class<? extends Event>, ArrayList<Class<? extends Event>>>();
 	}
 
+//	public boolean containsChannel(ChannelCore<?> channel) {
+//		return filtersByChannel.containsKey(channel);
+//	}
+
 	@SuppressWarnings("unchecked")
 	void addChannelFilter(ChannelCore<?> channel, ChannelFilter<?, ?> filter) {
 		Class<? extends Event> eventType = filter.getEventType();

@@ -285,8 +285,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 					if (pe.isChannel()) {
 						ChannelCore<?> caller = (ChannelCore<?>) pe
 								.getChannel();
-						deliverToCallerChannel(event, wid, caller);
-						delivered = true;
+						delivered = deliverToCallerChannel(event, wid, caller);
 					} else {
 						ComponentCore component = pe.getComponent();
 						if (component == owner) {
@@ -346,17 +345,24 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 
 	// delivers this response event to the channel through which the
 	// corresponding request event came (called holding read lock)
-	private void deliverToCallerChannel(Event event, int wid,
+	private boolean deliverToCallerChannel(Event event, int wid,
 			ChannelCore<?> caller) {
 		// Kompics.logger.debug("Caller +{}-{} in {} fwd {}", new Object[] {
 		// caller.getPositivePort().pair.owner.component,
 		// caller.getNegativePort().pair.owner.component,
 		// caller.getNegativePort().owner.component, event });
+
+		// do not deliver if this channel was disconnected
+		if (!allChannels.contains(caller)) {
+			return false;
+		}
+
 		if (isPositive) {
 			caller.forwardToNegative(event, wid);
 		} else {
 			caller.forwardToPositive(event, wid);
 		}
+		return true;
 	}
 
 	// deliver event to the local component (called holding read lock)
