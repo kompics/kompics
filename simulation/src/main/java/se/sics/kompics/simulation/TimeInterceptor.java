@@ -20,6 +20,7 @@
  */
 package se.sics.kompics.simulation;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -45,6 +46,12 @@ public class TimeInterceptor implements Translator {
 
 	private static HashSet<String> exceptions = new HashSet<String>();
 
+	private File directory;
+
+	public TimeInterceptor(File directory) {
+		this.directory = directory;
+	}
+
 	public void start(ClassPool pool) throws NotFoundException,
 			CannotCompileException {
 
@@ -55,8 +62,10 @@ public class TimeInterceptor implements Translator {
 		exceptions.add("org.mortbay.thread.QueuedThreadPool");
 		exceptions.add("org.mortbay.io.nio.SelectorManager");
 		exceptions.add("org.mortbay.io.nio.SelectorManager$SelectSet");
-		exceptions.add("org.apache.commons.math.stat.descriptive.SummaryStatistics");
-		exceptions.add("org.apache.commons.math.stat.descriptive.DescriptiveStatistics");
+		exceptions
+				.add("org.apache.commons.math.stat.descriptive.SummaryStatistics");
+		exceptions
+				.add("org.apache.commons.math.stat.descriptive.DescriptiveStatistics");
 
 		// try to add user-defined exceptions from properties file
 		InputStream in = ClassLoader
@@ -84,6 +93,9 @@ public class TimeInterceptor implements Translator {
 		String outerClass = (d == -1 ? classname : classname.substring(0, d));
 
 		if (exceptions.contains(outerClass)) {
+			CtClass cc = pool.get(classname);
+			saveClass(cc);
+
 			return;
 		}
 
@@ -152,6 +164,20 @@ public class TimeInterceptor implements Translator {
 			// }
 			// }
 		});
+
+		saveClass(cc);
+	}
+
+	private void saveClass(CtClass cc) {
+		if (directory != null) {
+			try {
+				cc.writeFile(directory.getAbsolutePath());
+			} catch (CannotCompileException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	// private void makeSerializable(ClassPool pool, CtClass cc)
