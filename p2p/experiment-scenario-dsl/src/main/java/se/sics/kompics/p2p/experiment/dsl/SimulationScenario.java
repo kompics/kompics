@@ -34,6 +34,7 @@ import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Properties;
 import java.util.Random;
 import java.util.TimeZone;
 
@@ -450,7 +451,49 @@ public abstract class SimulationScenario implements Serializable {
 							return new Loader();
 						}
 					});
-			cl.addTranslator(ClassPool.getDefault(), new TimeInterceptor());
+			cl.addTranslator(ClassPool.getDefault(), new TimeInterceptor(null));
+			Thread.currentThread().setContextClassLoader(cl);
+			TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+			cl.run(main.getCanonicalName(), null);
+		} catch (Throwable e) {
+			throw new RuntimeException("Exception caught during simulation", e);
+		}
+	}
+
+	public final void transform(Class<? extends ComponentDefinition> main,
+			String directory) {
+		Properties p = new Properties();
+
+		File dir = null;
+		File file = null;
+		try {
+			dir = new File(directory);
+			dir.mkdirs();
+			dir.setWritable(true);
+			file = File.createTempFile("scenario", ".bin", dir);
+			ObjectOutputStream oos = new ObjectOutputStream(
+					new FileOutputStream(file));
+			oos.writeObject(this);
+			oos.flush();
+			oos.close();
+			System.setProperty("scenario", file.getAbsolutePath());
+			p.setProperty("scenario", file.getAbsolutePath());
+			p
+					.store(new FileOutputStream(file.getAbsolutePath()
+							+ ".properties"), null);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			Loader cl = AccessController
+					.doPrivileged(new PrivilegedAction<Loader>() {
+						@Override
+						public Loader run() {
+							return new Loader();
+						}
+					});
+			cl.addTranslator(ClassPool.getDefault(), new TimeInterceptor(dir));
 			Thread.currentThread().setContextClassLoader(cl);
 			TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 			cl.run(main.getCanonicalName(), null);
