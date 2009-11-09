@@ -146,6 +146,7 @@ public class MinaHandler extends IoHandlerAdapter {
 	public void sessionOpened(IoSession session) throws Exception {
 		super.sessionOpened(session);
 		logger.debug("Connection opened to {}", session.getRemoteAddress());
+		session.setAttribute("protocol", protocol);
 		networkComponent.networkSessionOpened(session);
 	}
 }
