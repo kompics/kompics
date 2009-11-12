@@ -90,4 +90,44 @@ public class NumericRingKeyTest {
 		Assert.assertEquals(key5, key13.getSymmetricKey(2, 4, size));
 		Assert.assertEquals(key9, key13.getSymmetricKey(3, 4, size));
 	}
+
+	@Test
+	public void testOddSymmetricKey() {
+		BigInteger size = new BigInteger("16");
+		int f = 5;
+
+		Assert.assertEquals(key(1), key(1).getSymmetricKey(0, f, size));
+		Assert.assertEquals(key(4), key(1).getSymmetricKey(1, f, size));
+		Assert.assertEquals(key(7), key(1).getSymmetricKey(2, f, size));
+		Assert.assertEquals(key(10), key(1).getSymmetricKey(3, f, size));
+		Assert.assertEquals(key(13), key(1).getSymmetricKey(4, f, size));
+
+		Assert.assertEquals(key(4), key(4).getSymmetricKey(0, f, size));
+		Assert.assertEquals(key(7), key(4).getSymmetricKey(1, f, size));
+		Assert.assertEquals(key(10), key(4).getSymmetricKey(2, f, size));
+		Assert.assertEquals(key(13), key(4).getSymmetricKey(3, f, size));
+		Assert.assertEquals(key(0), key(4).getSymmetricKey(4, f, size));
+
+		Assert.assertEquals(key(7), key(7).getSymmetricKey(0, f, size));
+		Assert.assertEquals(key(10), key(7).getSymmetricKey(1, f, size));
+		Assert.assertEquals(key(13), key(7).getSymmetricKey(2, f, size));
+		Assert.assertEquals(key(0), key(7).getSymmetricKey(3, f, size));
+		Assert.assertEquals(key(3), key(7).getSymmetricKey(4, f, size));
+
+		Assert.assertEquals(key(10), key(10).getSymmetricKey(0, f, size));
+		Assert.assertEquals(key(13), key(10).getSymmetricKey(1, f, size));
+		Assert.assertEquals(key(0), key(10).getSymmetricKey(2, f, size));
+		Assert.assertEquals(key(3), key(10).getSymmetricKey(3, f, size));
+		Assert.assertEquals(key(6), key(10).getSymmetricKey(4, f, size));
+
+		Assert.assertEquals(key(13), key(13).getSymmetricKey(0, f, size));
+		Assert.assertEquals(key(0), key(13).getSymmetricKey(1, f, size));
+		Assert.assertEquals(key(3), key(13).getSymmetricKey(2, f, size));
+		Assert.assertEquals(key(6), key(13).getSymmetricKey(3, f, size));
+		Assert.assertEquals(key(9), key(13).getSymmetricKey(4, f, size));
+	}
+
+	private NumericRingKey key(long k) {
+		return new NumericRingKey(k);
+	}
 }
