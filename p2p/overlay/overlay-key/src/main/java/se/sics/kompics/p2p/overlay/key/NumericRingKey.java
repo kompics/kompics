@@ -80,6 +80,13 @@ public class NumericRingKey implements RingKey, Serializable,
 		}
 	}
 
+	public final NumericRingKey getSymmetricKey(int replica,
+			int replicationFactor, BigInteger ringSize) {
+		return new NumericRingKey(modPlus(id, ringSize.divide(
+				BigInteger.valueOf(replicationFactor)).multiply(
+				BigInteger.valueOf(replica)), ringSize));
+	}
+
 	public final NumericRingKey successor(BigInteger ringSize) {
 		return new NumericRingKey(modPlus(id, BigInteger.ONE, ringSize));
 	}

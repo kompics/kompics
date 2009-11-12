@@ -51,7 +51,6 @@ public class NumericRingKeyTest {
 		Assert.assertFalse(key8.belongsTo(key0, key0,
 				IntervalBounds.CLOSED_CLOSED, size));
 
-		
 		Assert.assertFalse(key0.belongsTo(key0, key0, IntervalBounds.OPEN_OPEN,
 				size));
 		Assert.assertTrue(key0.belongsTo(key0, key0,
@@ -60,5 +59,35 @@ public class NumericRingKeyTest {
 				IntervalBounds.CLOSED_OPEN, size));
 		Assert.assertTrue(key0.belongsTo(key0, key0,
 				IntervalBounds.CLOSED_CLOSED, size));
+	}
+
+	@Test
+	public void testSymmetricKey() {
+		BigInteger size = new BigInteger("16");
+
+		NumericRingKey key1 = new NumericRingKey(1);
+		NumericRingKey key5 = new NumericRingKey(5);
+		NumericRingKey key9 = new NumericRingKey(9);
+		NumericRingKey key13 = new NumericRingKey(13);
+
+		Assert.assertEquals(key1, key1.getSymmetricKey(0, 4, size));
+		Assert.assertEquals(key5, key1.getSymmetricKey(1, 4, size));
+		Assert.assertEquals(key9, key1.getSymmetricKey(2, 4, size));
+		Assert.assertEquals(key13, key1.getSymmetricKey(3, 4, size));
+
+		Assert.assertEquals(key5, key5.getSymmetricKey(0, 4, size));
+		Assert.assertEquals(key9, key5.getSymmetricKey(1, 4, size));
+		Assert.assertEquals(key13, key5.getSymmetricKey(2, 4, size));
+		Assert.assertEquals(key1, key5.getSymmetricKey(3, 4, size));
+
+		Assert.assertEquals(key9, key9.getSymmetricKey(0, 4, size));
+		Assert.assertEquals(key13, key9.getSymmetricKey(1, 4, size));
+		Assert.assertEquals(key1, key9.getSymmetricKey(2, 4, size));
+		Assert.assertEquals(key5, key9.getSymmetricKey(3, 4, size));
+
+		Assert.assertEquals(key13, key13.getSymmetricKey(0, 4, size));
+		Assert.assertEquals(key1, key13.getSymmetricKey(1, 4, size));
+		Assert.assertEquals(key5, key13.getSymmetricKey(2, 4, size));
+		Assert.assertEquals(key9, key13.getSymmetricKey(3, 4, size));
 	}
 }
