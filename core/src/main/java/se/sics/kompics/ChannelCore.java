@@ -81,6 +81,8 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 
 	/* === PRIVATE === */
 
+	private boolean destroyed;
+
 	private PortCore<P> positivePort, negativePort;
 
 	private P portType;
@@ -89,6 +91,15 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 		this.positivePort = positivePort;
 		this.negativePort = negativePort;
 		this.portType = portType;
+		this.destroyed = false;
+	}
+
+	boolean isDestroyed() {
+		return destroyed;
+	}
+
+	void destroy() {
+		destroyed = true;
 	}
 
 	PortCore<P> getPositivePort() {
@@ -100,18 +111,20 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 	}
 
 	void forwardToPositive(Event event, int wid) {
-		positivePort.doTrigger(event, wid, this);
+		if (!destroyed)
+			positivePort.doTrigger(event, wid, this);
 	}
 
 	void forwardToNegative(Event event, int wid) {
-		negativePort.doTrigger(event, wid, this);
+		if (!destroyed)
+			negativePort.doTrigger(event, wid, this);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		return this == obj;
 	}
-	
+
 	@Override
 	public String toString() {
 		return portType.getClass().getCanonicalName();

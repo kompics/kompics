@@ -133,6 +133,7 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		rwLock.writeLock().lock();
 		try {
 			ChannelCore<P> channel = remotePorts.remove(remotePort);
+			channel.destroy();
 			filteredChannels.removeChannel(channel);
 			unfilteredChannels.remove(channel);
 			allChannels.remove(channel);
@@ -353,9 +354,9 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 		// caller.getNegativePort().owner.component, event });
 
 		// do not deliver if this channel was disconnected
-		if (!allChannels.contains(caller)) {
-			return false;
-		}
+		// if (!allChannels.contains(caller)) {
+		// return false;
+		// }
 
 		if (isPositive) {
 			caller.forwardToNegative(event, wid);
