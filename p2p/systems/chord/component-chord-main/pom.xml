@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-chord-system</artifactId>
         <groupId>se.sics.kompics.p2p.systems.chord</groupId>
-        <version>0.4.2.5</version>
+        <version>0.4.2.6-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 	<artifactId>kompics-component-chord-peer-main</artifactId>
-	<version>0.4.2.5</version>
+	<version>0.4.2.6-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>ChordPeerMain Kompics Component</name>
 	<description>ChordPeerMain Kompics Component</description>
@@ -16,28 +16,28 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-component-java-timer</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-component-mina-network</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-component-jetty-web-server</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 			<artifactId>kompics-component-chord-peer</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

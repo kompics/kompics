@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-chord-system</artifactId>
         <groupId>se.sics.kompics.p2p.systems.chord</groupId>
-        <version>0.4.2.5</version>
+        <version>0.4.2.6-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 	<artifactId>kompics-component-chord-peer</artifactId>
-	<version>0.4.2.5</version>
+	<version>0.4.2.6-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>ChordPeer Kompics Component</name>
 	<description>ChordPeer Kompics Component</description>
@@ -16,50 +16,50 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-timer</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-network</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p</groupId>
 			<artifactId>kompics-component-failure-detector</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 			<artifactId>kompics-component-chord-monitor-client</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p</groupId>
 			<artifactId>kompics-component-bootstrap-client</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 			<artifactId>kompics-component-chord-overlay</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 			<artifactId>kompics-component-chord-web-application</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 			<artifactId>kompics-port-chord-peer</artifactId>
-			<version>0.4.2.5</version>
+			<version>0.4.2.6-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

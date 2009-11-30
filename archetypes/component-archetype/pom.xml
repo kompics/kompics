@@ -4,12 +4,12 @@
 	<parent>
 		<groupId>se.sics.kompics.archetypes</groupId>
 		<artifactId>kompics-archetypes</artifactId>
-		<version>0.4.2.5</version>
+		<version>0.4.2.6-SNAPSHOT</version>
 	</parent>
 
 	<groupId>se.sics.kompics.archetypes</groupId>
 	<artifactId>kompics-archetype-component</artifactId>
-	<version>0.4.2.5</version>
+	<version>0.4.2.6-SNAPSHOT</version>
 	<name>Kompics Component Archetype</name>
 	<packaging>maven-archetype</packaging>
 	<url>http://kompics.sics.se</url>
