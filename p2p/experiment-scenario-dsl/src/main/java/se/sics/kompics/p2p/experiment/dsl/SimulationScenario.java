@@ -93,63 +93,124 @@ import se.sics.kompics.simulation.TimeInterceptor;
  */
 public abstract class SimulationScenario implements Serializable {
 
-	/**
-	 * 
-	 */
+	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 5278102582431240537L;
 
+	/** The logger. */
 	private static Logger logger = LoggerFactory
 			.getLogger("se.sics.kompics.simulation.CodeInstrumenter");
 
+	/** The random. */
 	private final Random random;
+	
+	/** The processes. */
 	private final LinkedList<StochasticProcess> processes;
+	
+	/** The process count. */
 	private int processCount;
+	
+	/** The terminated event. */
 	private SimulationTerminatedEvent terminatedEvent;
 
+	/**
+	 * Instantiates a new simulation scenario.
+	 */
 	public SimulationScenario() {
 		this.random = new Random();
 		this.processes = new LinkedList<StochasticProcess>();
 		this.processCount = 0;
 	}
 
+	/**
+	 * Sets the seed.
+	 * 
+	 * @param seed the new seed
+	 */
 	public void setSeed(long seed) {
 		random.setSeed(seed);
 	}
 
+	/**
+	 * Gets the random.
+	 * 
+	 * @return the random
+	 */
 	public Random getRandom() {
 		return random;
 	}
 
+	/**
+	 * The <code>StochasticProcess</code> class.
+	 * 
+	 * @author Cosmin Arad <cosmin@sics.se>
+	 * @version $Id$
+	 */
 	protected abstract class StochasticProcess implements Serializable {
-		/**
-		 * 
-		 */
+		
+		/** The Constant serialVersionUID. */
 		private static final long serialVersionUID = -6303689523381305745L;
+		
+		/** The relative start time. */
 		private boolean relativeStartTime;
+		
+		/** The start time. */
 		private long startTime;
+		
+		/** The start event. */
 		private StochasticProcessStartEvent startEvent;
+		
+		/** The terminate event. */
 		private StochasticProcessTerminatedEvent terminateEvent;
+		
+		/** The stochastic event. */
 		private StochasticProcessEvent stochasticEvent;
+		
+		/** The inter arrival time. */
 		private Distribution<Long> interArrivalTime = null;
+		
+		/** The generators. */
 		private LinkedList<OperationGenerator> generators = new LinkedList<OperationGenerator>();
+		
+		/** The name. */
 		private final String name;
+		
+		/** The started. */
 		private boolean started = false;
 
+		/**
+		 * Instantiates a new stochastic process.
+		 * 
+		 * @param name the name
+		 */
 		protected StochasticProcess(String name) {
 			this.name = name;
 			processCount++;
 		}
 
+		/**
+		 * Instantiates a new stochastic process.
+		 */
 		protected StochasticProcess() {
 			processCount++;
 			this.name = "Process" + processCount;
 		}
 
+		/**
+		 * Event inter arrival time.
+		 * 
+		 * @param interArrivalTime the inter arrival time
+		 */
 		protected final void eventInterArrivalTime(
 				Distribution<Long> interArrivalTime) {
 			this.interArrivalTime = interArrivalTime;
 		}
 
+		/**
+		 * Raise.
+		 * 
+		 * @param count the count
+		 * @param op the op
+		 */
 		protected final <E extends Event> void raise(int count, Operation<E> op) {
 			if (count <= 0) {
 				throw new RuntimeException(
@@ -161,6 +222,13 @@ public abstract class SimulationScenario implements Serializable {
 			generators.add(generator);
 		}
 
+		/**
+		 * Raise.
+		 * 
+		 * @param count the count
+		 * @param op1 the op1
+		 * @param d1 the d1
+		 */
 		protected final <E extends Event, P1 extends Number> void raise(
 				int count, Operation1<E, P1> op1, Distribution<P1> d1) {
 			if (count <= 0) {
@@ -173,6 +241,14 @@ public abstract class SimulationScenario implements Serializable {
 			generators.add(generator);
 		}
 
+		/**
+		 * Raise.
+		 * 
+		 * @param count the count
+		 * @param op2 the op2
+		 * @param d1 the d1
+		 * @param d2 the d2
+		 */
 		protected final <E extends Event, P1 extends Number, P2 extends Number> void raise(
 				int count, Operation2<E, P1, P2> op2, Distribution<P1> d1,
 				Distribution<P2> d2) {
@@ -186,6 +262,15 @@ public abstract class SimulationScenario implements Serializable {
 			generators.add(generator);
 		}
 
+		/**
+		 * Raise.
+		 * 
+		 * @param count the count
+		 * @param op3 the op3
+		 * @param d1 the d1
+		 * @param d2 the d2
+		 * @param d3 the d3
+		 */
 		protected final <E extends Event, P1 extends Number, P2 extends Number, P3 extends Number> void raise(
 				int count, Operation3<E, P1, P2, P3> op3, Distribution<P1> d1,
 				Distribution<P2> d2, Distribution<P3> d3) {
@@ -199,6 +284,16 @@ public abstract class SimulationScenario implements Serializable {
 			generators.add(generator);
 		}
 
+		/**
+		 * Raise.
+		 * 
+		 * @param count the count
+		 * @param op4 the op4
+		 * @param d1 the d1
+		 * @param d2 the d2
+		 * @param d3 the d3
+		 * @param d4 the d4
+		 */
 		protected final <E extends Event, P1 extends Number, P2 extends Number, P3 extends Number, P4 extends Number, P5 extends Number> void raise(
 				int count, Operation4<E, P1, P2, P3, P4> op4,
 				Distribution<P1> d1, Distribution<P2> d2, Distribution<P3> d3,
@@ -213,6 +308,17 @@ public abstract class SimulationScenario implements Serializable {
 			generators.add(generator);
 		}
 
+		/**
+		 * Raise.
+		 * 
+		 * @param count the count
+		 * @param op5 the op5
+		 * @param d1 the d1
+		 * @param d2 the d2
+		 * @param d3 the d3
+		 * @param d4 the d4
+		 * @param d5 the d5
+		 */
 		protected final <E extends Event, P1 extends Number, P2 extends Number, P3 extends Number, P4 extends Number, P5 extends Number> void raise(
 				int count, Operation5<E, P1, P2, P3, P4, P5> op5,
 				Distribution<P1> d1, Distribution<P2> d2, Distribution<P3> d3,
@@ -227,6 +333,9 @@ public abstract class SimulationScenario implements Serializable {
 			generators.add(generator);
 		}
 
+		/**
+		 * Start.
+		 */
 		public final void start() {
 			relativeStartTime = false;
 			startTime = 0;
@@ -243,6 +352,11 @@ public abstract class SimulationScenario implements Serializable {
 			processes.add(this);
 		}
 
+		/**
+		 * Start at.
+		 * 
+		 * @param time the time
+		 */
 		public final void startAt(long time) {
 			relativeStartTime = false;
 			startTime = time;
@@ -259,6 +373,11 @@ public abstract class SimulationScenario implements Serializable {
 			processes.add(this);
 		}
 
+		/**
+		 * Start at same time with.
+		 * 
+		 * @param process the process
+		 */
 		public final void startAtSameTimeWith(StochasticProcess process) {
 			relativeStartTime = true;
 			started = true;
@@ -281,6 +400,12 @@ public abstract class SimulationScenario implements Serializable {
 			processes.add(this);
 		}
 
+		/**
+		 * Start after start of.
+		 * 
+		 * @param delay the delay
+		 * @param process the process
+		 */
 		public final void startAfterStartOf(long delay,
 				StochasticProcess process) {
 			relativeStartTime = true;
@@ -304,6 +429,12 @@ public abstract class SimulationScenario implements Serializable {
 			processes.add(this);
 		}
 
+		/**
+		 * Start after termination of.
+		 * 
+		 * @param delay the delay
+		 * @param process the process
+		 */
 		public final void startAfterTerminationOf(long delay,
 				StochasticProcess... process) {
 			relativeStartTime = true;
@@ -334,12 +465,23 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Terminate at.
+	 * 
+	 * @param time the time
+	 */
 	protected final void terminateAt(long time) {
 		SimulationTerminatedEvent terminationEvent = new SimulationTerminatedEvent(
 				time, 0, false);
 		terminatedEvent = terminationEvent;
 	}
 
+	/**
+	 * Terminate after termination of.
+	 * 
+	 * @param delay the delay
+	 * @param process the process
+	 */
 	protected final void terminateAfterTerminationOf(long delay,
 			StochasticProcess... process) {
 		HashSet<StochasticProcess> procs = new HashSet<StochasticProcess>(
@@ -358,55 +500,152 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Constant.
+	 * 
+	 * @param value the value
+	 * 
+	 * @return the distribution< double>
+	 */
 	protected final Distribution<Double> constant(double value) {
 		return new ConstantDistribution<Double>(Double.class, value);
 	}
 
+	/**
+	 * Constant.
+	 * 
+	 * @param value the value
+	 * 
+	 * @return the distribution< long>
+	 */
 	protected final Distribution<Long> constant(long value) {
 		return new ConstantDistribution<Long>(Long.class, value);
 	}
 
+	/**
+	 * Constant.
+	 * 
+	 * @param value the value
+	 * 
+	 * @return the distribution< big integer>
+	 */
 	protected final Distribution<BigInteger> constant(BigInteger value) {
 		return new ConstantDistribution<BigInteger>(BigInteger.class, value);
 	}
 
+	/**
+	 * Uniform.
+	 * 
+	 * @param min the min
+	 * @param max the max
+	 * 
+	 * @return the distribution< double>
+	 */
 	protected final Distribution<Double> uniform(double min, double max) {
 		return new DoubleUniformDistribution(min, max, random);
 	}
 
+	/**
+	 * Uniform.
+	 * 
+	 * @param min the min
+	 * @param max the max
+	 * 
+	 * @return the distribution< long>
+	 */
 	protected final Distribution<Long> uniform(long min, long max) {
 		return new LongUniformDistribution(min, max, random);
 	}
 
+	/**
+	 * Uniform.
+	 * 
+	 * @param min the min
+	 * @param max the max
+	 * 
+	 * @return the distribution< big integer>
+	 */
 	protected final Distribution<BigInteger> uniform(BigInteger min,
 			BigInteger max) {
 		return new BigIntegerUniformDistribution(min, max, random);
 	}
 
+	/**
+	 * Uniform.
+	 * 
+	 * @param numBits the num bits
+	 * 
+	 * @return the distribution< big integer>
+	 */
 	protected final Distribution<BigInteger> uniform(int numBits) {
 		return new BigIntegerUniformDistribution(numBits, random);
 	}
 
+	/**
+	 * Exponential.
+	 * 
+	 * @param mean the mean
+	 * 
+	 * @return the distribution< double>
+	 */
 	protected final Distribution<Double> exponential(double mean) {
 		return new DoubleExponentialDistribution(mean, random);
 	}
 
+	/**
+	 * Exponential.
+	 * 
+	 * @param mean the mean
+	 * 
+	 * @return the distribution< long>
+	 */
 	protected final Distribution<Long> exponential(long mean) {
 		return new LongExponentialDistribution(mean, random);
 	}
 
+	/**
+	 * Exponential.
+	 * 
+	 * @param mean the mean
+	 * 
+	 * @return the distribution< big integer>
+	 */
 	protected final Distribution<BigInteger> exponential(BigInteger mean) {
 		return new BigIntegerExponentialDistribution(mean, random);
 	}
 
+	/**
+	 * Normal.
+	 * 
+	 * @param mean the mean
+	 * @param variance the variance
+	 * 
+	 * @return the distribution< double>
+	 */
 	protected final Distribution<Double> normal(double mean, double variance) {
 		return new DoubleNormalDistribution(mean, variance, random);
 	}
 
+	/**
+	 * Normal.
+	 * 
+	 * @param mean the mean
+	 * @param variance the variance
+	 * 
+	 * @return the distribution< long>
+	 */
 	protected final Distribution<Long> normal(long mean, long variance) {
 		return new LongNormalDistribution(mean, variance, random);
 	}
 
+	/**
+	 * Normal.
+	 * 
+	 * @param mean the mean
+	 * @param variance the variance
+	 * 
+	 * @return the distribution< big integer>
+	 */
 	protected final Distribution<BigInteger> normal(BigInteger mean,
 			BigInteger variance) {
 		return new BigIntegerNormalDistribution(mean, variance, random);
@@ -419,12 +658,25 @@ public abstract class SimulationScenario implements Serializable {
 	 * @version $Id$
 	 */
 	protected final static class Snapshot {
+		
+		/** The take snapshot event. */
 		private final TakeSnapshot takeSnapshotEvent;
 
+		/**
+		 * Instantiates a new snapshot.
+		 * 
+		 * @param takeSnapshotEvent the take snapshot event
+		 */
 		public Snapshot(TakeSnapshot takeSnapshotEvent) {
 			this.takeSnapshotEvent = takeSnapshotEvent;
 		}
 
+		/**
+		 * Take after termination of.
+		 * 
+		 * @param delay the delay
+		 * @param process the process
+		 */
 		public void takeAfterTerminationOf(long delay,
 				StochasticProcess... process) {
 			HashSet<StochasticProcess> procs = new HashSet<StochasticProcess>(
@@ -438,6 +690,13 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Snapshot.
+	 * 
+	 * @param takeSnapshotEvent the take snapshot event
+	 * 
+	 * @return the snapshot
+	 */
 	protected final Snapshot snapshot(TakeSnapshot takeSnapshotEvent) {
 		return new Snapshot(takeSnapshotEvent);
 	}
@@ -445,7 +704,7 @@ public abstract class SimulationScenario implements Serializable {
 	/**
 	 * Executes simulation.
 	 * 
-	 * @param main
+	 * @param main the main
 	 */
 	public final void simulate(Class<? extends ComponentDefinition> main) {
 		File file = null;
@@ -478,6 +737,12 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Transform.
+	 * 
+	 * @param main the main
+	 * @param directory the directory
+	 */
 	public final void transform(Class<? extends ComponentDefinition> main,
 			String directory) {
 		Properties p = new Properties();
@@ -520,6 +785,11 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Execute.
+	 * 
+	 * @param main the main
+	 */
 	public final void execute(Class<? extends ComponentDefinition> main) {
 		File file = null;
 		try {
@@ -548,6 +818,11 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Generate event list.
+	 * 
+	 * @return the linked list< simulator event>
+	 */
 	public final LinkedList<SimulatorEvent> generateEventList() {
 		LinkedList<SimulatorEvent> eventList = new LinkedList<SimulatorEvent>();
 		int started = 0;
@@ -568,6 +843,13 @@ public abstract class SimulationScenario implements Serializable {
 		return eventList;
 	}
 
+	/**
+	 * Load.
+	 * 
+	 * @param scenarioFile the scenario file
+	 * 
+	 * @return the simulation scenario
+	 */
 	public static SimulationScenario load(String scenarioFile) {
 		SimulationScenario scenario = null;
 		try {
@@ -588,6 +870,12 @@ public abstract class SimulationScenario implements Serializable {
 		return scenario;
 	}
 
+	/**
+	 * Sim.
+	 * 
+	 * @param main the main
+	 * @param args the args
+	 */
 	public final void sim(Class<? extends ComponentDefinition> main,
 			String... args) {
 		File file = null;
@@ -627,6 +915,12 @@ public abstract class SimulationScenario implements Serializable {
 		launchSimulation(main, args);
 	}
 
+	/**
+	 * Launch simulation.
+	 * 
+	 * @param main the main
+	 * @param args the args
+	 */
 	private void launchSimulation(Class<? extends ComponentDefinition> main,
 			String... args) {
 		LinkedList<String> arguments = new LinkedList<String>();
@@ -678,6 +972,11 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Save simulation command line.
+	 * 
+	 * @param args the args
+	 */
 	private void saveSimulationCommandLine(final LinkedList<String> args) {
 		File file = null;
 		try {
@@ -713,6 +1012,13 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Gets the jvm args.
+	 * 
+	 * @param args the args
+	 * 
+	 * @return the jvm args
+	 */
 	private LinkedList<String> getJvmArgs(String[] args) {
 		LinkedList<String> list = new LinkedList<String>();
 		boolean maxHeap = false;
@@ -738,6 +1044,13 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/**
+	 * Gets the application args.
+	 * 
+	 * @param args the args
+	 * 
+	 * @return the application args
+	 */
 	private LinkedList<String> getApplicationArgs(String[] args) {
 		LinkedList<String> list = new LinkedList<String>();
 		for (int i = 0; i < args.length; i++) {
@@ -748,9 +1061,15 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/** The Constant directory. */
 	private static final String directory = "./target/kompics-simulation/";
+	
+	/** The exceptions. */
 	private static HashSet<String> exceptions = new HashSet<String>();
 
+	/**
+	 * Prepare instrumentation exceptions.
+	 */
 	private void prepareInstrumentationExceptions() {
 		// well known exceptions
 		exceptions.add("java.lang.ref.Reference");
@@ -785,6 +1104,11 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Instrument boot.
+	 * 
+	 * @param bootString the boot string
+	 */
 	private void instrumentBoot(String bootString) {
 		String bootCp = System.getProperty("sun.boot.class.path");
 		try {
@@ -796,6 +1120,9 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Instrument application.
+	 */
 	private void instrumentApplication() {
 		String cp = System.getProperty("java.class.path");
 		try {
@@ -807,6 +1134,16 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Transform classes.
+	 * 
+	 * @param classPath the class path
+	 * @param boot the boot
+	 * 
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws NotFoundException the not found exception
+	 * @throws CannotCompileException the cannot compile exception
+	 */
 	private void transformClasses(String classPath, String boot)
 			throws IOException, NotFoundException, CannotCompileException {
 		LinkedList<String> classes = getAllClasses(classPath);
@@ -837,6 +1174,7 @@ public abstract class SimulationScenario implements Serializable {
 			CtClass ctc = pool.getCtClass(classname);
 
 			if (!exceptions.contains(outerClass)) {
+				ctc.defrost();
 				ctc.instrument(ci);
 			} else {
 				logger.trace("Skipping " + classname);
@@ -849,11 +1187,23 @@ public abstract class SimulationScenario implements Serializable {
 				+ " classes.");
 	}
 
+	/**
+	 * Already instrumented boot.
+	 * 
+	 * @param bootString the boot string
+	 * 
+	 * @return true, if successful
+	 */
 	private boolean alreadyInstrumentedBoot(String bootString) {
 		File f = new File(directory + bootString);
 		return f.exists() && f.isDirectory();
 	}
 
+	/**
+	 * Boot string.
+	 * 
+	 * @return the string
+	 */
 	private String bootString() {
 		String os = System.getProperty("os.name");
 		int sp = os.indexOf(' ');
@@ -870,6 +1220,11 @@ public abstract class SimulationScenario implements Serializable {
 				+ "-" + os + "-" + System.getProperty("os.arch");
 	}
 
+	/**
+	 * Good env.
+	 * 
+	 * @return true, if successful
+	 */
 	private boolean goodEnv() {
 		if (System.getProperty("java.vendor").startsWith("Sun"))
 			return true;
@@ -878,6 +1233,12 @@ public abstract class SimulationScenario implements Serializable {
 		return false;
 	}
 
+	/**
+	 * Save class.
+	 * 
+	 * @param cc the cc
+	 * @param dir the dir
+	 */
 	private void saveClass(CtClass cc, String dir) {
 		File directory = new File(dir);
 		if (directory != null) {
@@ -891,6 +1252,14 @@ public abstract class SimulationScenario implements Serializable {
 		}
 	}
 
+	/**
+	 * Copy resources.
+	 * 
+	 * @param classPath the class path
+	 * @param boot the boot
+	 * 
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private void copyResources(String classPath, String boot)
 			throws IOException {
 		LinkedList<String> resources = getAllResources(classPath);
@@ -940,6 +1309,15 @@ public abstract class SimulationScenario implements Serializable {
 				+ " resources.");
 	}
 
+	/**
+	 * Gets the all classes.
+	 * 
+	 * @param cp the cp
+	 * 
+	 * @return the all classes
+	 * 
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private LinkedList<String> getAllClasses(String cp) throws IOException {
 		LinkedList<String> list = new LinkedList<String>();
 
@@ -949,6 +1327,15 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/**
+	 * Gets the all resources.
+	 * 
+	 * @param cp the cp
+	 * 
+	 * @return the all resources
+	 * 
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private LinkedList<String> getAllResources(String cp) throws IOException {
 		LinkedList<String> list = new LinkedList<String>();
 
@@ -958,6 +1345,13 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/**
+	 * Gets the all locations.
+	 * 
+	 * @param cp the cp
+	 * 
+	 * @return the all locations
+	 */
 	private LinkedList<String> getAllLocations(String cp) {
 		LinkedList<String> list = new LinkedList<String>();
 
@@ -967,6 +1361,15 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/**
+	 * Gets the classes from location.
+	 * 
+	 * @param location the location
+	 * 
+	 * @return the classes from location
+	 * 
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private LinkedList<String> getClassesFromLocation(String location)
 			throws IOException {
 		File f = new File(location);
@@ -982,6 +1385,15 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/**
+	 * Gets the classes from jar.
+	 * 
+	 * @param jar the jar
+	 * 
+	 * @return the classes from jar
+	 * 
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private LinkedList<String> getClassesFromJar(File jar) throws IOException {
 		JarFile j = new JarFile(jar);
 
@@ -1003,6 +1415,14 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/**
+	 * Gets the classes from directory.
+	 * 
+	 * @param directory the directory
+	 * @param pack the pack
+	 * 
+	 * @return the classes from directory
+	 */
 	private LinkedList<String> getClassesFromDirectory(File directory,
 			String pack) {
 		String[] files = directory.list();
@@ -1027,6 +1447,15 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/**
+	 * Gets the resources from location.
+	 * 
+	 * @param location the location
+	 * 
+	 * @return the resources from location
+	 * 
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private LinkedList<String> getResourcesFromLocation(String location)
 			throws IOException {
 		File f = new File(location);
@@ -1042,6 +1471,15 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/**
+	 * Gets the resources from jar.
+	 * 
+	 * @param jar the jar
+	 * 
+	 * @return the resources from jar
+	 * 
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	private LinkedList<String> getResourcesFromJar(File jar) throws IOException {
 		JarFile j = new JarFile(jar);
 
@@ -1060,6 +1498,14 @@ public abstract class SimulationScenario implements Serializable {
 		return list;
 	}
 
+	/**
+	 * Gets the resources from directory.
+	 * 
+	 * @param directory the directory
+	 * @param pack the pack
+	 * 
+	 * @return the resources from directory
+	 */
 	private LinkedList<String> getResourcesFromDirectory(File directory,
 			String pack) {
 		String[] files = directory.list();
