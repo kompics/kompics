@@ -3,14 +3,14 @@
 	<parent>
 		<artifactId>kompics-parent-pom</artifactId>
 		<groupId>se.sics.kompics</groupId>
-		<version>0.4.2.5-SNAPSHOT</version>
+		<version>0.4.2.5</version>
 	</parent>
 	
 	<groupId>se.sics.kompics.launcher</groupId>
 	<artifactId>kompics-launchers</artifactId>
 	<packaging>pom</packaging>
 	<name>Lunchers for Kompics systems and demos</name>
-	<version>0.4.2.5-SNAPSHOT</version>
+	<version>0.4.2.5</version>
 	<description>Launchers for Kompics systems and demos</description>
 
 	<modules>

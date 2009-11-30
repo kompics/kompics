@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>kompics-p2p</artifactId>
 		<groupId>se.sics.kompics.p2p</groupId>
-		<version>0.4.2.5-SNAPSHOT</version>
+		<version>0.4.2.5</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -11,7 +11,7 @@
 	<artifactId>kompics-distributed-hash-tables</artifactId>
 	<packaging>pom</packaging>
 	<name>Kompics Distributed Hash Tables</name>
-	<version>0.4.2.5-SNAPSHOT</version>
+	<version>0.4.2.5</version>
 	<description>Kompics Distributed Hash Tables</description>
 
 	<repositories>
