@@ -121,6 +121,42 @@ by putting together protocols programmed as event-driven components.
 						<configuration>
 						</configuration> 
 						-->
+						<configuration>
+							<!-- <aggregate>false</aggregate>-->
+							<breakiterator>true</breakiterator>
+							<charset>UTF-8</charset>
+							<docencoding>UTF-8</docencoding>
+							<windowtitle>
+								Kompics ${project.version} API Documentation
+							</windowtitle>
+							<doctitle>
+								Kompics ${project.version} API Documentation
+							</doctitle>
+							<encoding>UTF-8</encoding>
+							<links>
+								<link>http://java.sun.com/javase/6/docs/api/</link>
+								<link>http://www.slf4j.org/api/</link>
+							</links>
+							<groups>
+								<group>
+									<title>Kompics Core</title>
+									<packages>se.sics.kompics</packages>
+								</group>
+								<group>
+									<title>Kompics Network</title>
+									<packages>se.sics.kompics.network:se.sics.kompics.network.*</packages>
+								</group>
+								<group>
+									<title>Kompics Timer</title>
+									<packages>se.sics.kompics.timer:se.sics.kompics.timer.*</packages>
+								</group>
+								<group>
+									<title>Kompics Distributed System Launcher</title>
+									<packages>se.sics.kompics.launch</packages>
+								</group>
+							</groups>
+							<locale>en_US</locale>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -144,49 +180,11 @@ by putting together protocols programmed as event-driven components.
 
 	<reporting>
 		<plugins>
-			<plugin>
-				<inherited>true</inherited>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<configuration>
-					<!-- <aggregate>false</aggregate>-->
-					<breakiterator>true</breakiterator>
-					<charset>UTF-8</charset>
-					<docencoding>UTF-8</docencoding>
-					<windowtitle>
-						Kompics ${project.version} API Documentation
-					</windowtitle>
-					<doctitle>
-						Kompics ${project.version} API Documentation
-					</doctitle>
-					<encoding>UTF-8</encoding>
-					<links>
-						<link>http://java.sun.com/javase/6/docs/api/</link>
-						<link>http://www.slf4j.org/api/</link>
-					</links>
-					<groups>
-						<group>
-							<title>Kompics Core</title>
-							<packages>se.sics.kompics</packages>
-						</group>
-						<group>
-							<title>Kompics Network</title>
-							<packages>se.sics.kompics.network:se.sics.kompics.network.*</packages>
-						</group>
-						<group>
-							<title>Kompics Timer</title>
-							<packages>se.sics.kompics.timer:se.sics.kompics.timer.*</packages>
-						</group>
-						<group>
-							<title>Kompics Distributed System Launcher</title>
-							<packages>se.sics.kompics.launch</packages>
-						</group>
-					</groups>
-					<locale>en_US</locale>
-				</configuration>
-			</plugin>
 			<!--
-				<plugin> <groupId>org.codehaus.mojo</groupId>
+				<plugin> <inherited>true</inherited>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId> </plugin> <plugin>
+				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>findbugs-maven-plugin</artifactId> <configuration>
 				<threshold>Normal</threshold> <linkXref>true</linkXref>
 				</configuration> </plugin>
