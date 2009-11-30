@@ -43,7 +43,7 @@ public final class KingLatencyMap implements NetworkModel {
 	}
 
 	private final int addressToInt(Address address) {
-		int h = address.hashCode();
+		int h = address.getId();
 		h = h < 0 ? -h : h;
 		return h % KingMatrix.SIZE;
 	}
