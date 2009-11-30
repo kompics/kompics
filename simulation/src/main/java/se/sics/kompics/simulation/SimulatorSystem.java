@@ -20,6 +20,8 @@
  */
 package se.sics.kompics.simulation;
 
+import java.util.TimeZone;
+
 /**
  * The <code>SimulatorSystem</code> class.
  * 
@@ -39,7 +41,8 @@ public class SimulatorSystem {
 		if (simulator != null) {
 			return simulator.java_lang_System_currentTimeMillis();
 		}
-		throw new RuntimeException("No simulator is yet set to handle time");
+		// throw new RuntimeException("No simulator is yet set to handle time");
+		return 1;
 	}
 
 	// System.nanoTime() redirected here
@@ -47,7 +50,8 @@ public class SimulatorSystem {
 		if (simulator != null) {
 			return simulator.java_lang_System_nanoTime();
 		}
-		throw new RuntimeException("No simulator is yet set to handle time");
+		// throw new RuntimeException("No simulator is yet set to handle time");
+		return 1;
 	}
 
 	// Thread.sleep(long milliseconds) redirected here
@@ -74,13 +78,13 @@ public class SimulatorSystem {
 			simulator.java_lang_Thread_start();
 			return;
 		}
-		throw new RuntimeException("No simulator is yet set. from "
-				+ Thread.currentThread().getStackTrace()[2]);
+		throw new RuntimeException(
+				"No simulator is yet set. Attempted to start a thread at "
+						+ Thread.currentThread().getStackTrace()[2]);
 	}
 
-	// java.util.Random.next*() redirected here
-	public static Object random() {
-		throw new RuntimeException("Warning: simulated code generates random "
-				+ "numbers. Make sure the seed is chosen deterministically.");
+	// java.util.TimeZone.getDefault() redirected here
+	public static TimeZone getDefaultTimeZone() {
+		return TimeZone.getTimeZone("GMT");
 	}
 }

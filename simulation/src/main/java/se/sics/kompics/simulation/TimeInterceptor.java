@@ -141,28 +141,7 @@ public class TimeInterceptor implements Translator {
 						&& method.equals("start")) {
 					m.replace("{ " + s + ".start(); }");
 				}
-				// redirect calls to Random.next*()
-				// if (className.equals("java.util.Random")
-				// && method.startsWith("next")) {
-				// m.replace("{ $_ = " + s + ".random(); }");
-				// }
 			}
-
-			// @Override
-			// public void edit(NewExpr e) throws CannotCompileException {
-			// String className = e.getClassName();
-			// try {
-			// if (className.equals("java.util.Random")) {
-			// System.err.println("FOUND RAND in " +
-			// e.getEnclosingClass().getName());
-			// }
-			// CtConstructor constructor = e.getConstructor();
-			// // constructor.
-			// } catch (NotFoundException e1) {
-			// throw new RuntimeException("Cannot instrument constructor "
-			// + className + "()", e1);
-			// }
-			// }
 		});
 
 		saveClass(cc);
