@@ -108,7 +108,7 @@ by putting together protocols programmed as event-driven components.
 						<id>attach-javadoc</id>
 						<phase>verify</phase>
 						<goals>
-							<goal>install</goal>
+							<goal>jar</goal>
 						</goals>
 					</execution>
 					<execution>
