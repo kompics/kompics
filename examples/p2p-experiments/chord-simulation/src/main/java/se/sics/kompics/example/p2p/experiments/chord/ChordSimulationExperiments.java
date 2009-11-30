@@ -39,7 +39,7 @@ import se.sics.kompics.p2p.overlay.key.NumericRingKey;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-@SuppressWarnings("serial")
+@SuppressWarnings( { "serial", "unused" })
 public class ChordSimulationExperiments {
 	public static void main(String[] args) throws Throwable {
 		SimulationScenario chordScenario1 = new SimulationScenario() {
@@ -99,9 +99,9 @@ public class ChordSimulationExperiments {
 
 				process1.start();
 				process2.startAfterTerminationOf(2000, process1);
-				process3.startAfterTerminationOf(3000, process2);
+				// process3.startAfterTerminationOf(3000, process2);
 
-				dataBegin.startAfterTerminationOf(1000, process3);
+				dataBegin.startAfterTerminationOf(1000, process2);
 				// highChurn.startAfterTerminationOf(0, dataBegin);
 				process4.startAfterTerminationOf(0, dataBegin);
 				dataEnd.startAfterTerminationOf(5000, process4);
@@ -117,6 +117,7 @@ public class ChordSimulationExperiments {
 
 		chordScenario1.setSeed(seed + 2);
 		chordScenario1.simulate(ChordSimulationMain.class);
+		// chordScenario1.sim(ChordSimulationMain.class);
 		// chordScenario1.execute(ChordExecutionMain.class);
 	}
 
