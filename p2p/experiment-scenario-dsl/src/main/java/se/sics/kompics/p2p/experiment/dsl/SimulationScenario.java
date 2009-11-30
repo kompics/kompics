@@ -20,26 +20,41 @@
  */
 package se.sics.kompics.p2p.experiment.dsl;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
+import javassist.CannotCompileException;
 import javassist.ClassPool;
+import javassist.CtClass;
 import javassist.Loader;
+import javassist.NotFoundException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Event;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.ConcreteOperation;
@@ -82,6 +97,9 @@ public abstract class SimulationScenario implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 5278102582431240537L;
+
+	private static Logger logger = LoggerFactory
+			.getLogger("se.sics.kompics.simulation.CodeInstrumenter");
 
 	private final Random random;
 	private final LinkedList<StochasticProcess> processes;
@@ -568,5 +586,500 @@ public abstract class SimulationScenario implements Serializable {
 			System.exit(0);
 		}
 		return scenario;
+	}
+
+	public final void sim(Class<? extends ComponentDefinition> main,
+			String... args) {
+		File file = null;
+		try {
+			file = File.createTempFile("scenario", ".bin");
+			ObjectOutputStream oos = new ObjectOutputStream(
+					new FileOutputStream(file));
+			oos.writeObject(this);
+			oos.flush();
+			oos.close();
+			System.setProperty("scenario", file.getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// 1. validate environment: quit if not Sun
+		if (!goodEnv()) {
+			throw new RuntimeException("Only Sun JRE usable for simulation");
+		}
+
+		// 2. compute boot-string
+		String bootString = bootString();
+
+		// 3. check if it already exists; goto 5 if it does
+		if (!alreadyInstrumentedBoot(bootString)) {
+			// 4. transform and generate boot classes in boot-string directory
+			prepareInstrumentationExceptions();
+			instrumentBoot(bootString);
+		} else {
+			prepareInstrumentationExceptions();
+		}
+
+		// 5. transform and generate application classes
+		instrumentApplication();
+
+		// 6. launch simulation process
+		launchSimulation(main, args);
+	}
+
+	private void launchSimulation(Class<? extends ComponentDefinition> main,
+			String... args) {
+		LinkedList<String> arguments = new LinkedList<String>();
+
+		String java = System.getProperty("java.home");
+		String sep = System.getProperty("file.separator");
+		String pathSep = System.getProperty("path.separator");
+		java += sep + "bin" + sep + "java";
+
+		if (System.getProperty("os.name").startsWith("Windows")) {
+			arguments.add("\"" + java + "\"");
+		} else {
+			arguments.add(java);
+		}
+
+		arguments.add("-Xbootclasspath:" + directory + bootString() + pathSep
+				+ directory + "application");
+
+		arguments.add("-classpath");
+		arguments.add(directory + "application");
+
+		arguments.addAll(getJvmArgs(args));
+
+		arguments.add("-Dscenario=" + System.getProperty("scenario"));
+
+		arguments.add(main.getName());
+
+		arguments.addAll(getApplicationArgs(args));
+
+		ProcessBuilder pb = new ProcessBuilder(arguments);
+		pb.redirectErrorStream(true);
+
+		saveSimulationCommandLine(arguments);
+
+		try {
+			Process process = pb.start();
+			BufferedReader out = new BufferedReader(new InputStreamReader(
+					process.getInputStream()));
+
+			String line;
+			do {
+				line = out.readLine();
+				if (line != null) {
+					System.out.println(line);
+				}
+			} while (line != null);
+		} catch (IOException e) {
+			throw new RuntimeException("Cannot start simulation process", e);
+		}
+	}
+
+	private void saveSimulationCommandLine(final LinkedList<String> args) {
+		File file = null;
+		try {
+			// Windows batch file
+			file = new File(directory + "run-simulation.bat");
+			PrintStream ps = new PrintStream(file);
+
+			for (String arg : args) {
+				ps.println(arg.replaceAll(directory, "") + "\t^");
+				// ps.println(arg + "\t^");
+			}
+			ps.println(";");
+
+			ps.flush();
+			ps.close();
+
+			// Linux/Unix Bash script
+			file = new File(directory + "run-simulation.sh");
+			ps = new PrintStream(file);
+			ps.println("#!/bin/bash");
+			ps.println();
+
+			for (String arg : args) {
+				ps.println(arg.replaceAll(directory, "") + "\t\\");
+				// ps.println(arg + "\t\\");
+			}
+			ps.println(";");
+
+			ps.flush();
+			ps.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private LinkedList<String> getJvmArgs(String[] args) {
+		LinkedList<String> list = new LinkedList<String>();
+		boolean maxHeap = false;
+
+		for (int i = 0; i < args.length; i++) {
+			if (args[i].startsWith("-JVM:")) {
+				String a = args[i].substring(5);
+
+				if (a.startsWith("-Xmx")) {
+					maxHeap = true;
+				}
+				if (a.startsWith("-Xbootclasspath") || a.startsWith("-cp")
+						|| a.startsWith("-classpath")) {
+					continue; // ignore class-path settings
+				}
+				list.add(a);
+			}
+		}
+
+		if (!maxHeap) {
+			list.add("-Xmx1g");
+		}
+		return list;
+	}
+
+	private LinkedList<String> getApplicationArgs(String[] args) {
+		LinkedList<String> list = new LinkedList<String>();
+		for (int i = 0; i < args.length; i++) {
+			if (!args[i].startsWith("-JVM:")) {
+				list.add(args[i]);
+			}
+		}
+		return list;
+	}
+
+	private static final String directory = "./target/kompics-simulation/";
+	private static HashSet<String> exceptions = new HashSet<String>();
+
+	private void prepareInstrumentationExceptions() {
+		// well known exceptions
+		exceptions.add("java.lang.ref.Reference");
+		exceptions.add("java.lang.ref.Finalizer");
+		exceptions.add("se.sics.kompics.p2p.simulator.P2pSimulator");
+		exceptions.add("org.apache.log4j.PropertyConfigurator");
+		exceptions.add("org.apache.log4j.helpers.FileWatchdog");
+		exceptions.add("org.mortbay.thread.QueuedThreadPool");
+		exceptions.add("org.mortbay.io.nio.SelectorManager");
+		exceptions.add("org.mortbay.io.nio.SelectorManager$SelectSet");
+		exceptions
+				.add("org.apache.commons.math.stat.descriptive.SummaryStatistics");
+		exceptions
+				.add("org.apache.commons.math.stat.descriptive.DescriptiveStatistics");
+
+		// try to add user-defined exceptions from properties file
+		InputStream in = ClassLoader
+				.getSystemResourceAsStream("timer.interceptor.properties");
+		Properties p = new Properties();
+		if (in != null) {
+			try {
+				p.load(in);
+				for (String classname : p.stringPropertyNames()) {
+					String value = p.getProperty(classname);
+					if (value != null && value.equals("IGNORE")) {
+						exceptions.add(classname);
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void instrumentBoot(String bootString) {
+		String bootCp = System.getProperty("sun.boot.class.path");
+		try {
+			transformClasses(bootCp, bootString);
+			copyResources(bootCp, bootString);
+		} catch (Throwable t) {
+			throw new RuntimeException(
+					"Exception caught while preparing simulation", t);
+		}
+	}
+
+	private void instrumentApplication() {
+		String cp = System.getProperty("java.class.path");
+		try {
+			transformClasses(cp, null);
+			copyResources(cp, null);
+		} catch (Throwable t) {
+			throw new RuntimeException(
+					"Exception caught while preparing simulation", t);
+		}
+	}
+
+	private void transformClasses(String classPath, String boot)
+			throws IOException, NotFoundException, CannotCompileException {
+		LinkedList<String> classes = getAllClasses(classPath);
+
+		ClassPool pool = new ClassPool();
+		pool.appendSystemPath();
+
+		String target = directory;
+		if (boot == null) {
+			pool.appendPathList(classPath);
+			target += "application";
+			logger.info("Instrumenting application classes to:" + target);
+		} else {
+			target += boot;
+			logger.info("Instrumenting bootstrap classes to:" + target);
+		}
+		CodeInstrumenter ci = new CodeInstrumenter();
+
+		int count = classes.size();
+		long start = System.currentTimeMillis();
+
+		for (final String classname : classes) {
+
+			int d = classname.indexOf("$");
+			String outerClass = (d == -1 ? classname : classname
+					.substring(0, d));
+
+			CtClass ctc = pool.getCtClass(classname);
+
+			if (!exceptions.contains(outerClass)) {
+				ctc.instrument(ci);
+			} else {
+				logger.trace("Skipping " + classname);
+			}
+			saveClass(ctc, target);
+		}
+
+		long stop = System.currentTimeMillis();
+		logger.info("It took " + (stop - start) + "ms to instrument " + count
+				+ " classes.");
+	}
+
+	private boolean alreadyInstrumentedBoot(String bootString) {
+		File f = new File(directory + bootString);
+		return f.exists() && f.isDirectory();
+	}
+
+	private String bootString() {
+		String os = System.getProperty("os.name");
+		int sp = os.indexOf(' ');
+		if (sp != -1) {
+			os = os.substring(0, sp);
+		}
+		String vendor = System.getProperty("java.vendor");
+		sp = vendor.indexOf(' ');
+		if (sp != -1) {
+			vendor = vendor.substring(0, sp);
+		}
+
+		return "boot-" + vendor + "-" + System.getProperty("java.version")
+				+ "-" + os + "-" + System.getProperty("os.arch");
+	}
+
+	private boolean goodEnv() {
+		if (System.getProperty("java.vendor").startsWith("Sun"))
+			return true;
+		// we should change this method to accept more (or less) Java
+		// environments known to be (un)acceptable for our instrumentation
+		return false;
+	}
+
+	private void saveClass(CtClass cc, String dir) {
+		File directory = new File(dir);
+		if (directory != null) {
+			try {
+				cc.writeFile(directory.getAbsolutePath());
+			} catch (CannotCompileException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void copyResources(String classPath, String boot)
+			throws IOException {
+		LinkedList<String> resources = getAllResources(classPath);
+
+		String target = directory;
+		if (boot == null) {
+			target += "application";
+			logger.info("Copying application resources to:" + target);
+		} else {
+			target += boot;
+			logger.info("Copying bootstrap resources to:" + target);
+		}
+
+		int count = resources.size();
+		long start = System.currentTimeMillis();
+
+		for (final String resourceName : resources) {
+			InputStream is = Thread.currentThread().getContextClassLoader()
+					.getResourceAsStream(resourceName);
+
+			String targetFile = target + "/" + resourceName;
+			File dir = new File(new File(targetFile).getParent());
+			if (!dir.exists()) {
+				dir.mkdirs();
+				dir.setWritable(true);
+			}
+			OutputStream os = new FileOutputStream(targetFile);
+			byte buffer[] = new byte[65536];
+			int len;
+
+			long ms = System.currentTimeMillis();
+
+			// copy the resource
+			while ((len = is.read(buffer)) > 0) {
+				os.write(buffer, 0, len);
+			}
+			is.close();
+			os.close();
+
+			ms = System.currentTimeMillis() - ms;
+			logger.trace("Copying " + resourceName + " to "
+					+ (target + "/" + resourceName) + " - took " + ms + "ms.");
+		}
+
+		long stop = System.currentTimeMillis();
+		logger.info("It took " + (stop - start) + "ms to copy " + count
+				+ " resources.");
+	}
+
+	private LinkedList<String> getAllClasses(String cp) throws IOException {
+		LinkedList<String> list = new LinkedList<String>();
+
+		for (String location : getAllLocations(cp)) {
+			list.addAll(getClassesFromLocation(location));
+		}
+		return list;
+	}
+
+	private LinkedList<String> getAllResources(String cp) throws IOException {
+		LinkedList<String> list = new LinkedList<String>();
+
+		for (String location : getAllLocations(cp)) {
+			list.addAll(getResourcesFromLocation(location));
+		}
+		return list;
+	}
+
+	private LinkedList<String> getAllLocations(String cp) {
+		LinkedList<String> list = new LinkedList<String>();
+
+		for (String string : cp.split(System.getProperty("path.separator"))) {
+			list.add(string);
+		}
+		return list;
+	}
+
+	private LinkedList<String> getClassesFromLocation(String location)
+			throws IOException {
+		File f = new File(location);
+
+		if (f.exists() && f.isDirectory()) {
+			return getClassesFromDirectory(f, "");
+		}
+		if (f.exists() && f.isFile() && f.getName().endsWith(".jar")) {
+			return getClassesFromJar(f);
+		}
+
+		LinkedList<String> list = new LinkedList<String>();
+		return list;
+	}
+
+	private LinkedList<String> getClassesFromJar(File jar) throws IOException {
+		JarFile j = new JarFile(jar);
+
+		LinkedList<String> list = new LinkedList<String>();
+
+		// System.err.println("Jar entries: " + j.size());
+
+		Enumeration<JarEntry> entries = j.entries();
+		while (entries.hasMoreElements()) {
+			JarEntry entry = entries.nextElement();
+
+			if (entry.getName().endsWith(".class")) {
+				String className = entry.getName().substring(0,
+						entry.getName().lastIndexOf('.'));
+				list.add(className.replace('/', '.'));
+			}
+			// System.err.println(entry);
+		}
+		return list;
+	}
+
+	private LinkedList<String> getClassesFromDirectory(File directory,
+			String pack) {
+		String[] files = directory.list();
+
+		LinkedList<String> list = new LinkedList<String>();
+		for (String string : files) {
+			File f = new File(directory + System.getProperty("file.separator")
+					+ string);
+
+			if (f.isFile() && f.getName().endsWith(".class")) {
+				String className = f.getName().substring(0,
+						f.getName().lastIndexOf('.'));
+				list.add(pack + className);
+			}
+
+			if (f.isDirectory()) {
+				LinkedList<String> classes = getClassesFromDirectory(f, pack
+						+ f.getName() + ".");
+				list.addAll(classes);
+			}
+		}
+		return list;
+	}
+
+	private LinkedList<String> getResourcesFromLocation(String location)
+			throws IOException {
+		File f = new File(location);
+
+		if (f.exists() && f.isDirectory()) {
+			return getResourcesFromDirectory(f, "");
+		}
+		if (f.exists() && f.isFile() && f.getName().endsWith(".jar")) {
+			return getResourcesFromJar(f);
+		}
+
+		LinkedList<String> list = new LinkedList<String>();
+		return list;
+	}
+
+	private LinkedList<String> getResourcesFromJar(File jar) throws IOException {
+		JarFile j = new JarFile(jar);
+
+		LinkedList<String> list = new LinkedList<String>();
+
+		Enumeration<JarEntry> entries = j.entries();
+		while (entries.hasMoreElements()) {
+			JarEntry entry = entries.nextElement();
+
+			if (!entry.getName().endsWith(".class") && !entry.isDirectory()
+					&& !entry.getName().startsWith("META-INF")) {
+				String resourceName = entry.getName();
+				list.add(resourceName);
+			}
+		}
+		return list;
+	}
+
+	private LinkedList<String> getResourcesFromDirectory(File directory,
+			String pack) {
+		String[] files = directory.list();
+
+		LinkedList<String> list = new LinkedList<String>();
+		for (String string : files) {
+			File f = new File(directory + System.getProperty("file.separator")
+					+ string);
+
+			if (f.isFile() && !f.getName().endsWith(".class")) {
+				String resourceName = f.getName();
+				list.add(pack + resourceName);
+			}
+
+			if (f.isDirectory()) {
+				LinkedList<String> resources = getResourcesFromDirectory(f,
+						pack + f.getName() + "/");
+				list.addAll(resources);
+			}
+		}
+		return list;
 	}
 }
