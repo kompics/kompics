@@ -4,6 +4,35 @@
 		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
+        <release version="0.4.2.5" date="2009-11-30" description="Maintenance release">
+            <action dev="cosmin" type="add">
+[Kompics]: source code and Javadocs are now added to all components.
+            </action>
+            <action dev="cosmin" type="fix">
+[Kompics P2P Framework]: simulation is now reproducible on different machines running the same JVM version; simulation can now be easily profiled.
+            </action>
+            <action dev="cosmin" type="add">
+[MinaNetwork component]: added traffic compression (traffic compressed up till 2%!!!)
+            </action> 
+            <action dev="cosmin" type="fix">
+[Kompics core]: fixed a bug with multiple responses.
+            </action>       
+            <action dev="cosmin" type="fix">
+[Kompics core]: fixed a BUG: response events were delivered even after channel was disconnected.
+            </action>       
+            <action dev="cosmin" type="fix">
+[Kompics P2P Framework]: removed default ringSize from NumericRingKey
+            </action>
+            <action dev="cosmin" type="fix">
+[MinaNetwork component]: fixed a bug in MINA: session protocol attribute was not set for accepted sessions; as a result some sessions were not removed when they were closed...
+            </action> 
+            <action dev="cosmin" type="fix">
+[Chord component]: fixed minor bug related to the peer refreshing its fingers with other peers that is hears about through lookups
+            </action> 
+            <action dev="cosmin" type="fix">
+[ChordMonitorServer component]: fixed a minor bug in ChordMonitorServer.
+            </action> 
+        </release>
         <release version="0.4.2.4" date="2009-09-09" description="Maintenance release">
             <action dev="cosmin" type="fix">
 [Kompics P2P Framework]: fixed minor configuration issues.
