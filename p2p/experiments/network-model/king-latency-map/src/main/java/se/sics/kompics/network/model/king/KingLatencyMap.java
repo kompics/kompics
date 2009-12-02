@@ -22,6 +22,7 @@ package se.sics.kompics.network.model.king;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Random;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
@@ -31,14 +32,49 @@ import se.sics.kompics.network.model.common.NetworkModel;
  * The <code>KingLatencyMap</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
+ * @author Tallat Shafaat <tallat@sics.se>
  * @version $Id$
  */
 public final class KingLatencyMap implements NetworkModel {
+
+	private final Random random;
+
+	private long[] repeatedDiagonal;
+
+	public KingLatencyMap() {
+		random = new Random();
+		initRepeatedDiagonal(random);
+	}
+
+	public KingLatencyMap(long seed) {
+		random = new Random(seed);
+		initRepeatedDiagonal(random);
+	}
+
+	private void initRepeatedDiagonal(Random r) {
+		repeatedDiagonal = new long[KingMatrix.SIZE];
+
+		for (int i = 0; i < repeatedDiagonal.length; i++) {
+			int j = r.nextInt(KingMatrix.SIZE);
+			int k = r.nextInt(KingMatrix.SIZE);
+			while(k == j) {
+				k = r.nextInt(KingMatrix.SIZE);
+			}
+			repeatedDiagonal[i] = KingMatrix.KING[j][k];
+		}
+	}
 
 	@Override
 	public long getLatencyMs(Message message) {
 		int s = addressToInt(message.getSource());
 		int d = addressToInt(message.getDestination());
+
+		if (s == d) {
+			if (message.getSource().getId() != message.getDestination().getId()) {
+				return repeatedDiagonal[s];
+			}
+		}
+
 		return KingMatrix.KING[s][d];
 	}
 
