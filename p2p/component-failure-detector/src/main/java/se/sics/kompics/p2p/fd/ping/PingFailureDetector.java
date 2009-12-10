@@ -242,8 +242,9 @@ public final class PingFailureDetector extends ComponentDefinition {
 		ScheduleTimeout st = new ScheduleTimeout(interval);
 		st.setTimeoutEvent(new SendPing(st, probedPeer));
 		UUID intervalPingTimeoutId = st.getTimeoutEvent().getTimeoutId();
-		outstandingTimeouts.add(intervalPingTimeoutId);
 
+		// we must not add this timeout id to outstandingTimeout!
+		
 		trigger(st, timer);
 		return intervalPingTimeoutId;
 	}
