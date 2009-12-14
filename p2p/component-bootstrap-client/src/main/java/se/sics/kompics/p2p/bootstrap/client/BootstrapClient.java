@@ -61,7 +61,8 @@ public class BootstrapClient extends ComponentDefinition {
 	Positive<Network> network = positive(Network.class);
 	Positive<Timer> timer = positive(Timer.class);
 
-	private Logger logger;
+	private static Logger logger = LoggerFactory
+			.getLogger(BootstrapClient.class);
 
 	private final HashSet<UUID> outstandingTimeouts;
 	private BootstrapRequest activeBootstrapRequest;
@@ -101,9 +102,6 @@ public class BootstrapClient extends ComponentDefinition {
 					.getBootstrapServerAddress();
 			clientWebPort = init.getBootstrapConfiguration().getClientWebPort();
 			self = init.getSelf();
-
-			logger = LoggerFactory.getLogger(BootstrapClient.class.getName()
-					+ "@" + self.getId());
 		}
 	};
 
@@ -126,9 +124,8 @@ public class BootstrapClient extends ComponentDefinition {
 			trigger(request, network);
 			trigger(st, timer);
 
-			logger
-					.debug("Sending GetPeersRequest to "
-							+ bootstrapServerAddress);
+			logger.debug("@{}: Sending GetPeersRequest to ", self.getId(),
+					bootstrapServerAddress);
 		}
 	};
 
@@ -157,8 +154,8 @@ public class BootstrapClient extends ComponentDefinition {
 				trigger(request, network);
 				trigger(st, timer);
 
-				logger.debug("Sending GetPeersRequest to  "
-						+ bootstrapServerAddress);
+				logger.debug("@{}: Sending GetPeersRequest to  ", self.getId(),
+						bootstrapServerAddress);
 			} else {
 				BootstrapResponse response = new BootstrapResponse(
 						activeBootstrapRequest, false, activeBootstrapRequest
@@ -186,7 +183,8 @@ public class BootstrapClient extends ComponentDefinition {
 					activeBootstrapRequest, true, activeBootstrapRequest
 							.getOverlay(), event.getPeers());
 
-			logger.debug("Received GetPeersResponse {}" + event.getPeers());
+			logger.debug("@{}: Received GetPeersResponse {}", self.getId(),
+					event.getPeers());
 			trigger(response, bootstrap);
 		}
 	};

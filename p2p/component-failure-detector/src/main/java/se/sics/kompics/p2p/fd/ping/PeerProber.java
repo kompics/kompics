@@ -25,9 +25,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import se.sics.kompics.address.Address;
 import se.sics.kompics.p2p.fd.PeerFailureSuspicion;
 import se.sics.kompics.p2p.fd.StartProbingPeer;
@@ -42,8 +39,7 @@ import se.sics.kompics.p2p.overlay.OverlayAddress;
  * @version $Id$
  */
 public class PeerProber {
-
-	private Logger logger;
+//	private static Logger logger = LoggerFactory.getLogger(PeerProber.class);
 
 	private UUID intervalPingTimeoutId;
 	private UUID pongTimeoutId;
@@ -69,8 +65,6 @@ public class PeerProber {
 		requests = new HashMap<UUID, StartProbingPeer>();
 
 		this.times = new PeerResponseTime(fd.minRto);
-		logger = LoggerFactory.getLogger(fd.logger.getName() + "->"
-				+ probedPeer.getId());
 	}
 
 	void start() {
@@ -81,14 +75,14 @@ public class PeerProber {
 		intervalPingTimeoutId = fd.setPingTimer(suspected, probedPeer);
 		pongTimeoutId = fd.sendPing(System.currentTimeMillis(), probedPeer,
 				times.getRTO());
-		logger.debug("PING {}", pongTimeoutId);
+//		logger.debug("@{}: PING {}", pongTimeoutId);
 	}
 
 	void pong(UUID pongId, long ts) {
 		long RTT = System.currentTimeMillis() - ts;
 		times.updateRTO(RTT);
 
-		logger.debug("PoNG {} RTT={}", pongId, RTT);
+//		logger.debug("@{}: PoNG {} RTT={}", pongId, RTT);
 
 		if (suspected == true) {
 			suspected = false;
@@ -105,8 +99,7 @@ public class PeerProber {
 	}
 
 	private void suspect() {
-		logger.debug("Peer {} is suspected", probedPeer);
-
+//		logger.debug("Peer {} is suspected", probedPeer);
 		for (StartProbingPeer req : requests.values()) {
 			PeerFailureSuspicion commPeerSuspectedEvent = new PeerFailureSuspicion(
 					req, probedPeer, req.getOverlayAddress(),

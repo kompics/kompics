@@ -61,7 +61,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 	Positive<Timer> timer = positive(Timer.class);
 	Positive<Network> net = positive(Network.class);
 
-	Logger logger;
+	private static Logger logger = LoggerFactory
+			.getLogger(PingFailureDetector.class);
 
 	private final HashSet<UUID> outstandingTimeouts;
 
@@ -104,9 +105,6 @@ public final class PingFailureDetector extends ComponentDefinition {
 			protocol = event.getConfiguration().getProtocol();
 
 			self = event.getSelf();
-			logger = LoggerFactory.getLogger(PingFailureDetector.class
-					.getName()
-					+ "@" + self.getId());
 		};
 	};
 
@@ -119,10 +117,12 @@ public final class PingFailureDetector extends ComponentDefinition {
 				peerProber.addRequest(event);
 				peerProbers.put(peerAddress, peerProber);
 				peerProber.start();
-				logger.debug("Started probing peer {}", peerAddress);
+				logger.debug("@{}: Started probing peer {}", self.getId(),
+						peerAddress);
 			} else {
 				peerProber.addRequest(event);
-				logger.debug("Peer {} is already being probed", peerAddress);
+				logger.debug("@{}: Peer {} is already being probed", self
+						.getId(), peerAddress);
 			}
 		}
 	};
@@ -138,16 +138,18 @@ public final class PingFailureDetector extends ComponentDefinition {
 					if (last) {
 						peerProbers.remove(peerAddress);
 						prober.stop();
-						logger.debug("Stoped probing peer {}", peerAddress);
+						logger.debug("@{}: Stoped probing peer {}", self
+								.getId(), peerAddress);
 					}
 				} else {
-					logger.debug(
-							"I have no request {} for the probing of peer {}",
-							requestId, peerAddress);
+					logger
+							.debug(
+									"@{}: I have no request for the probing of peer {}",
+									self.getId(), peerAddress);
 				}
 			} else {
-				logger.debug("Peer {} is not currently being probed",
-						peerAddress);
+				logger.debug("@{}: Peer {} is not currently being probed", self
+						.getId(), peerAddress);
 			}
 		}
 	};
@@ -159,7 +161,7 @@ public final class PingFailureDetector extends ComponentDefinition {
 			if (prober != null) {
 				prober.ping();
 			} else {
-				logger.debug("Peer {} is not currently being probed", peer);
+				logger.debug("@{}: Peer {} is not currently being probed", self.getId(),peer);
 			}
 		}
 	};
@@ -173,7 +175,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 				if (peerProber != null) {
 					peerProber.pongTimedOut();
 				} else {
-					logger.debug("Peer {} is not currently being probed", peer);
+					logger.debug("@{}: Peer {} is not currently being probed",
+							self.getId(), peer);
 				}
 			}
 		}
@@ -181,8 +184,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 
 	private Handler<Ping> handlePing = new Handler<Ping>() {
 		public void handle(Ping event) {
-			logger.debug("Received Ping from {}. Sending Pong. {}", event
-					.getSource(), event.getId());
+			logger.debug("@{}: Received Ping from {}. Sending Pong. {}", self
+					.getId(), event.getSource());
 			trigger(new Pong(event.getId(), event.getTs(), self, event
 					.getSource(), protocol), net);
 		}
@@ -199,7 +202,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 			if (peerProber != null) {
 				peerProber.pong(event.getId(), event.getTs());
 			} else {
-				logger.debug("Peer {} is not currently being probed", peer);
+				logger.debug("@{}: Peer {} is not currently being probed", self
+						.getId(), peer);
 			}
 		}
 	};
@@ -244,7 +248,7 @@ public final class PingFailureDetector extends ComponentDefinition {
 		UUID intervalPingTimeoutId = st.getTimeoutEvent().getTimeoutId();
 
 		// we must not add this timeout id to outstandingTimeout!
-		
+
 		trigger(st, timer);
 		return intervalPingTimeoutId;
 	}
