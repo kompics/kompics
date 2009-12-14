@@ -1,16 +1,18 @@
 package se.sics.kompics;
 
+import java.lang.ref.WeakReference;
+
 public final class RequestPathElement {
 
-	private final ChannelCore<?> channel;
+	private final WeakReference<ChannelCore<?>> channel;
 
-	private final ComponentCore component;
+	private final WeakReference<ComponentCore> component;
 
 	private final boolean isChannel;
 
 	public RequestPathElement(ChannelCore<?> channel) {
 		super();
-		this.channel = channel;
+		this.channel = new WeakReference<ChannelCore<?>>(channel);
 		this.component = null;
 		this.isChannel = true;
 	}
@@ -18,16 +20,16 @@ public final class RequestPathElement {
 	public RequestPathElement(ComponentCore component) {
 		super();
 		this.channel = null;
-		this.component = component;
+		this.component = new WeakReference<ComponentCore>(component);
 		this.isChannel = false;
 	}
 
 	public ChannelCore<?> getChannel() {
-		return channel;
+		return channel.get();
 	}
 
 	public ComponentCore getComponent() {
-		return component;
+		return component.get();
 	}
 
 	public boolean isChannel() {
@@ -37,8 +39,9 @@ public final class RequestPathElement {
 	@Override
 	public String toString() {
 		if (isChannel) {
-			return "Channel: " + channel;
+			return "Channel: " + channel.get();
 		}
-		return "Component: " + component.component;
+		ComponentCore c = component.get();
+		return "Component: " + (c == null ? null : c.component);
 	}
 }
