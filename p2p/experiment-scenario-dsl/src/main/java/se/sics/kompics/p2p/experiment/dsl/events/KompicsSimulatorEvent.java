@@ -37,6 +37,16 @@ public class KompicsSimulatorEvent extends SimulatorEvent {
 
 	protected transient Event event;
 
+	private boolean canceled = false;
+
+	public boolean canceled() {
+		return canceled;
+	}
+
+	public void cancel() {
+		canceled = true;
+	}
+
 	public KompicsSimulatorEvent(Event event, long time) {
 		super(time);
 		this.event = event;
@@ -48,7 +58,7 @@ public class KompicsSimulatorEvent extends SimulatorEvent {
 
 	@Override
 	public String toString() {
-		return "KE@" + getTime() + ": " + event ;
+		return "KE@" + getTime() + ": " + event;
 	}
 
 	@Override
