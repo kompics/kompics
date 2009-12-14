@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.p2p.bootstrap.client;
 
-import se.sics.kompics.timer.SchedulePeriodicTimeout;
+import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timeout;
 
 /**
@@ -31,7 +31,7 @@ import se.sics.kompics.timer.Timeout;
  */
 public final class ClientRefreshPeer extends Timeout {
 
-	public ClientRefreshPeer(SchedulePeriodicTimeout request) {
+	public ClientRefreshPeer(ScheduleTimeout request) {
 		super(request);
 	}
 }

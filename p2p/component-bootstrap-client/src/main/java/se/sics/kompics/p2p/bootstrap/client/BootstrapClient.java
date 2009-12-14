@@ -44,7 +44,6 @@ import se.sics.kompics.p2p.bootstrap.server.CacheGetPeersRequest;
 import se.sics.kompics.p2p.bootstrap.server.CacheGetPeersResponse;
 import se.sics.kompics.p2p.bootstrap.server.CacheResetRequest;
 import se.sics.kompics.timer.CancelTimeout;
-import se.sics.kompics.timer.SchedulePeriodicTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
@@ -203,10 +202,9 @@ public class BootstrapClient extends ComponentDefinition {
 			trigger(request, network);
 
 			// set refresh periodic timer
-			SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(
-					refreshPeriod, refreshPeriod);
-			spt.setTimeoutEvent(new ClientRefreshPeer(spt));
-			trigger(spt, timer);
+			ScheduleTimeout st = new ScheduleTimeout(refreshPeriod);
+			st.setTimeoutEvent(new ClientRefreshPeer(st));
+			trigger(st, timer);
 		}
 	};
 
