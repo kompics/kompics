@@ -22,9 +22,9 @@ public class ChannelFilterSet {
 		inheritedFilters = new HashMap<Class<? extends Event>, ArrayList<Class<? extends Event>>>();
 	}
 
-//	public boolean containsChannel(ChannelCore<?> channel) {
-//		return filtersByChannel.containsKey(channel);
-//	}
+	// public boolean containsChannel(ChannelCore<?> channel) {
+	// return filtersByChannel.containsKey(channel);
+	// }
 
 	@SuppressWarnings("unchecked")
 	void addChannelFilter(ChannelCore<?> channel, ChannelFilter<?, ?> filter) {
@@ -191,5 +191,9 @@ public class ChannelFilterSet {
 			}
 		}
 		return result;
+	}
+
+	public boolean isEmpty() {
+		return filtersByChannel.isEmpty();
 	}
 }
