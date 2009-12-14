@@ -166,7 +166,10 @@ public final class P2pSimulator extends ComponentDefinition implements
 		} else if (event instanceof PeriodicSimulatorEvent) {
 			executePeriodicSimulatorEvent((PeriodicSimulatorEvent) event);
 		} else if (event instanceof KompicsSimulatorEvent) {
-			executeKompicsEvent(((KompicsSimulatorEvent) event).getEvent());
+			KompicsSimulatorEvent kse = (KompicsSimulatorEvent) event;
+			if (!kse.canceled()) {
+				executeKompicsEvent(kse.getEvent());
+			}
 		} else if (event instanceof TakeSnapshotEvent) {
 			executeTakeSnapshotEvent((TakeSnapshotEvent) event);
 		} else if (event instanceof SimulationTerminatedEvent) {
@@ -396,11 +399,15 @@ public final class P2pSimulator extends ComponentDefinition implements
 			KompicsSimulatorEvent kse = activeTimers.remove(timeoutId);
 
 			if (kse != null) {
-				boolean removed = futureEventList.cancelFutureEvent(CLOCK, kse);
-				if (!removed) {
-					logger.warn("Cannot find timeout {}", event.getTimeoutId());
-				}
+				kse.cancel();
+				
+				// boolean removed = futureEventList.cancelFutureEvent(CLOCK,
+				// kse);
+				// if (!removed) {
+				// logger.warn("Cannot find timeout {}", event.getTimeoutId());
+				// }
 			} else {
+				// CancelTimeout comes after expiration or previous cancelation 
 				logger.warn("Cannot find timeout {}", event.getTimeoutId());
 			}
 		}
