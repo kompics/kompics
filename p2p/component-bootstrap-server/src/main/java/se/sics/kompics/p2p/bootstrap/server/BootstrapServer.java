@@ -122,7 +122,7 @@ public class BootstrapServer extends ComponentDefinition {
 				if (overlayEvictionTimoutIds.contains(event.getTimeoutId())) {
 					removePeerFromCache(event.getPeerAddress(), event
 							.getOverlay(), event.getEpoch());
-					outstandingTimeouts.remove(event.getTimeoutId());
+					overlayEvictionTimoutIds.remove(event.getTimeoutId());
 				}
 			}
 			dumpCacheToLog();
