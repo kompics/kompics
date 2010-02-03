@@ -59,7 +59,8 @@ public final class Kompics {
 	 *            the main
 	 */
 	public static void createAndStart(Class<? extends ComponentDefinition> main) {
-		createAndStart(main, Runtime.getRuntime().availableProcessors());
+		// createAndStart(main, Runtime.getRuntime().availableProcessors());
+		createAndStart(main, 1);
 	}
 
 	/**
@@ -76,9 +77,7 @@ public final class Kompics {
 			throw new RuntimeException("Kompics already created");
 		on = true;
 
-		if (scheduler == null) {
-			scheduler = new WorkStealingScheduler(workers);
-		}
+		scheduler = new WorkStealingScheduler(workers);
 
 		try {
 			ComponentDefinition mainComponent = main.newInstance();
@@ -106,10 +105,14 @@ public final class Kompics {
 	private Kompics() {
 	}
 
-	static void shutdown() {
+	public static void shutdown() {
 		// TODO stop and destroy components
+
+		if (scheduler instanceof WorkStealingScheduler) {
+			((WorkStealingScheduler) scheduler).shutdown();
+		}
+
 		on = false;
-		scheduler = null;
 	}
 
 	/**

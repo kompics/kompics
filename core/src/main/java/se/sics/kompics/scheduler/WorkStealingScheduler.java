@@ -42,6 +42,8 @@ public final class WorkStealingScheduler extends Scheduler {
 
 	private final Worker[] workers;
 
+	private final boolean[] on;
+
 	private final SpinlockQueue<Worker> sleepingWorkers;
 	private final AtomicInteger sleepingWorkerCount;
 
@@ -56,15 +58,27 @@ public final class WorkStealingScheduler extends Scheduler {
 		workers = new Worker[workerCount];
 		sleepingWorkers = new SpinlockQueue<Worker>();
 		sleepingWorkerCount = new AtomicInteger(0);
+		on = new boolean[workerCount];
 
 		for (int i = 0; i < workers.length; i++) {
 			workers[i] = new Worker(this, i);
+			on[i] = true;
 		}
 	}
 
 	public final void proceed() {
 		for (int i = 0; i < workers.length; i++) {
 			workers[i].start();
+		}
+	}
+
+	public final void shutdown() {
+		for (int i = 0; i < workers.length; i++) {
+			synchronized (workers[i]) {
+				on[i] = false;
+				workers[i].quitWhenNoMoreWork();
+				workers[i].notify();
+			}
 		}
 	}
 
@@ -121,11 +135,16 @@ public final class WorkStealingScheduler extends Scheduler {
 			sleepingWorkers.offer(w);
 			sleepingWorkerCount.incrementAndGet();
 			try {
-//				Kompics.logger.debug("{} sleeping.", w.getWid());
+				// Kompics.logger.debug("{} sleeping.", w.getWid());
+				if (!on[w.getWid()]) {
+					// do not wait when the worker is supposed to quit
+					return;
+				}
+
 				w.wait();
 			} catch (InterruptedException e) {
 			}
-//			Kompics.logger.debug("{} woke up.", w.getWid());
+			// Kompics.logger.debug("{} woke up.", w.getWid());
 		}
 	}
 
@@ -144,7 +163,7 @@ public final class WorkStealingScheduler extends Scheduler {
 		Kompics.logger.error("TOTAL: executed {}, stole {}, slept {}",
 				new Object[] { ex, ws, sl });
 	}
-	
+
 	final void execute(Component component, int w) {
 		executeComponent(component, w);
 	}

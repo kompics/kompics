@@ -20,6 +20,7 @@
  */
 package se.sics.kompics.scheduler;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import se.sics.kompics.ComponentCore;
@@ -39,9 +40,11 @@ public class Worker extends Thread {
 	private final int wid;
 
 	private final SpinlockQueue<ComponentCore> workQueue;
-	
+
 	private final AtomicInteger workCount;
-	
+
+	private final AtomicBoolean shouldQuit;
+
 	int executionCount, workStealingCount, sleepCount;
 
 	/**
@@ -58,29 +61,40 @@ public class Worker extends Thread {
 		this.wid = wid;
 		this.workQueue = new SpinlockQueue<ComponentCore>();
 		this.workCount = new AtomicInteger(0);
-		super.setName("Worker-" + wid);
+		this.shouldQuit = new AtomicBoolean(false);
+		super.setName("Kompics worker-" + wid);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Thread#run()
 	 */
 	@Override
 	public final void run() {
 		while (true) {
 			try {
-				executeComponent();
+				boolean stillOn = executeComponent();
+				if (!stillOn) {
+					return;
+				}
 			} finally {
 				// run forever
 			}
 		}
 	}
 
-	private final void executeComponent() {
+	private final boolean executeComponent() {
 		ComponentCore core = null;
 		do {
 			// try to do local work
 			core = workQueue.poll();
 			if (core == null) {
+				// got no more work; should I quit?
+				if (shouldQuit.get()) {
+					return false;
+				}
+
 				// try to steal work from other workers
 				workStealingCount++;
 				core = scheduler.stealWork(wid);
@@ -96,7 +110,9 @@ public class Worker extends Thread {
 
 		executionCount++;
 		scheduler.execute(core, wid);
-//		core.execute(wid);
+		// core.execute(wid);
+
+		return true;
 	}
 
 	final ComponentCore getWork() {
@@ -120,7 +136,7 @@ public class Worker extends Thread {
 	public final int getWorkCount() {
 		return workCount.get();
 	}
-	
+
 	/**
 	 * Gets the wid.
 	 * 
@@ -128,5 +144,9 @@ public class Worker extends Thread {
 	 */
 	public final int getWid() {
 		return wid;
+	}
+
+	final void quitWhenNoMoreWork() {
+		shouldQuit.set(true);
 	}
 }
