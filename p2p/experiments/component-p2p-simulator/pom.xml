@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-p2p-experiments</artifactId>
         <groupId>se.sics.kompics.p2p.experiments</groupId>
-        <version>0.4.2.6</version>
+        <version>0.4.2.7-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.experiments</groupId>
 	<artifactId>kompics-component-p2p-simulator</artifactId>
-	<version>0.4.2.6</version>
+	<version>0.4.2.7-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>P2pSimulator Kompics Component</name>
 	<description>P2pSimulator Kompics Component</description>
@@ -16,30 +16,30 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-timer</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-network</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p</groupId>
 			<artifactId>kompics-experiment-scenario-dsl</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.experiments.network-model</groupId>
 			<artifactId>kompics-network-model-common</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

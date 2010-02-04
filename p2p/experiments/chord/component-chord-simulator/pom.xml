@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-chord-experiments</artifactId>
         <groupId>se.sics.kompics.p2p.experiments.chord</groupId>
-        <version>0.4.2.6</version>
+        <version>0.4.2.7-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.experiments.chord</groupId>
 	<artifactId>kompics-component-chord-simulator</artifactId>
-	<version>0.4.2.6</version>
+	<version>0.4.2.7-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>ChordSimulator Kompics Component</name>
 	<description>ChordSimulator Kompics Component</description>
@@ -16,19 +16,19 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-timer</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-network</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -39,12 +39,12 @@
 		<dependency>
 			<groupId>se.sics.kompics.p2p.experiments.chord</groupId>
 			<artifactId>kompics-port-chord-experiment</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 			<artifactId>kompics-component-chord-peer</artifactId>
-			<version>0.4.2.6</version>
+			<version>0.4.2.7-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
