@@ -4,6 +4,20 @@
 		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
+		<release version="0.4.2.6" date="2010-02-04" description="Maintenance release">
+			<action dev="cosmin" type="add">
+[Kompics core]: added a shutdown mechanism for the work-stealing scheduler.
+			</action>
+			<action dev="cosmin" type="fix">
+[Kompics core]: reduced memory footprint by allocating some data structures lazily.
+			</action>
+            <action dev="cosmin" type="fix">
+[Kompics P2P Framework]: removed a couple of memory leaks. Now everything is free of memory leaks.
+            </action>
+            <action dev="cosmin" type="fix">
+[Kompics P2P Framework/Simulation]: made King latency map return non-zero latency when used for more than 1740 peers and different peers map on the same cells in the latency matrix; also replaced 0s with random latency normally distributed around the mean.
+            </action>
+		</release>
         <release version="0.4.2.5" date="2009-11-30" description="Maintenance release">
             <action dev="cosmin" type="add">
 [Kompics]: source code and Javadocs are now added to all components.
