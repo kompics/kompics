@@ -115,10 +115,10 @@ public class ChordSimulationExperiments {
 		Configuration configuration = new Configuration();
 		configuration.set();
 
-		chordScenario1.setSeed(seed + 2);
-		chordScenario1.simulate(ChordSimulationMain.class);
-		// chordScenario1.sim(ChordSimulationMain.class);
-		// chordScenario1.execute(ChordExecutionMain.class);
+//		chordScenario1.setSeed(seed + 2);
+//		chordScenario1.simulate(ChordSimulationMain.class);
+		 chordScenario1.sim(ChordSimulationMain.class);
+//		 chordScenario1.execute(ChordExecutionMain.class);
 	}
 
 	// operations
