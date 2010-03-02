@@ -77,7 +77,9 @@ public final class Kompics {
 			throw new RuntimeException("Kompics already created");
 		on = true;
 
-		scheduler = new WorkStealingScheduler(workers);
+		if (scheduler == null) {
+			scheduler = new WorkStealingScheduler(workers);
+		}
 
 		try {
 			ComponentDefinition mainComponent = main.newInstance();
