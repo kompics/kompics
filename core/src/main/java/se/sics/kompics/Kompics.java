@@ -115,6 +115,7 @@ public final class Kompics {
 		}
 
 		on = false;
+		scheduler = null;
 	}
 
 	/**
