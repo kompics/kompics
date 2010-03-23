@@ -84,6 +84,11 @@ public class ComponentCore implements Component {
 	public Positive<ControlPort> getControl() {
 		return positiveControl;
 	}
+	
+	public Positive<ControlPort> control() {
+		return positiveControl;
+	}
+
 
 	/*
 	 * (non-Javadoc)
@@ -99,6 +104,10 @@ public class ComponentCore implements Component {
 		return port;
 	}
 
+	public <P extends PortType> Negative<P> required(Class<P> portType) {
+		return getNegative(portType);
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -111,6 +120,10 @@ public class ComponentCore implements Component {
 			throw new RuntimeException(component + " has no positive "
 					+ portType.getCanonicalName());
 		return port;
+	}
+
+	public <P extends PortType> Positive<P> provided(Class<P> portType) {
+		return getPositive(portType);
 	}
 
 	<P extends PortType> Negative<P> createNegativePort(Class<P> portType) {

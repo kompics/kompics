@@ -68,7 +68,7 @@ public abstract class PortType {
 	}
 
 	/**
-	 * Positive.
+	 * specifies an indication, response, or confirmation event type
 	 * 
 	 * @param eventType
 	 *            the event type
@@ -78,12 +78,30 @@ public abstract class PortType {
 	}
 
 	/**
-	 * Negative.
+	 * specifies an indication, response, or confirmation event type
+	 * 
+	 * @param eventType
+	 */
+	protected final void indication(Class<? extends Event> eventType) {
+		positive.add(eventType);
+	}
+
+	/**
+	 * specifies a request event type
 	 * 
 	 * @param eventType
 	 *            the event type
 	 */
 	protected final void negative(Class<? extends Event> eventType) {
+		negative.add(eventType);
+	}
+
+	/**
+	 * specifies a request event type
+	 * 
+	 * @param eventType
+	 */
+	protected final void request(Class<? extends Event> eventType) {
 		negative.add(eventType);
 	}
 
@@ -137,12 +155,15 @@ public abstract class PortType {
 	 * 
 	 * @return true, if successful
 	 */
-	public final boolean hasEvent(boolean positive, Class<? extends Event> eventType) {
+	public final boolean hasEvent(boolean positive,
+			Class<? extends Event> eventType) {
 		return (positive == true ? hasPositive(eventType)
 				: hasNegative(eventType));
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

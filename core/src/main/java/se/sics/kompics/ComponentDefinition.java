@@ -43,6 +43,10 @@ public abstract class ComponentDefinition {
 		return core.createNegativePort(portType);
 	}
 
+	protected final <P extends PortType> Negative<P> provides(Class<P> portType) {
+		return core.createNegativePort(portType);
+	}
+
 	/**
 	 * Positive.
 	 * 
@@ -53,6 +57,18 @@ public abstract class ComponentDefinition {
 	 *         < p>
 	 */
 	protected final <P extends PortType> Positive<P> positive(Class<P> portType) {
+		return core.createPositivePort(portType);
+	}
+
+	/**
+	 * specifies that this component requires a port of type
+	 * <code>portType</code>.
+	 * 
+	 * @param <P>
+	 * @param portType
+	 * @return
+	 */
+	protected final <P extends PortType> Positive<P> requires(Class<P> portType) {
 		return core.createPositivePort(portType);
 	}
 
