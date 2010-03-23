@@ -36,6 +36,7 @@ import javax.imageio.ImageIO;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.apache.commons.codec.binary.Base64;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
@@ -60,7 +61,6 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.web.Web;
 import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.WebResponse;
-import sun.misc.BASE64Encoder;
 
 /**
  * The <code>CyclonMonitorServer</code> class.
@@ -291,8 +291,8 @@ public class CyclonMonitorServer extends ComponentDefinition {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageIO.write(image, "png", out);
 			out.close();
-			BASE64Encoder bencoder = new BASE64Encoder();
-			imageString = bencoder.encode(out.toByteArray());
+			Base64 bencoder = new Base64();
+			imageString = new String(bencoder.encode(out.toByteArray()));
 			imageString = "data:image/png;base64," + imageString;
 		} catch (IOException e) {
 			sb.append(e);
