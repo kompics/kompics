@@ -180,7 +180,9 @@ public final class Chord extends ComponentDefinition {
 	Handler<LeaveRing> handleLeave = new Handler<LeaveRing>() {
 		public void handle(LeaveRing event) {
 			if (!inside) {
-				logger.error("Not inside ring");
+				if (logger != null) {
+					logger.error("Not inside ring");
+				}
 				return;
 			}
 			trigger(event, ring.getPositive(ChordPeriodicStabilization.class));
@@ -262,7 +264,7 @@ public final class Chord extends ComponentDefinition {
 			logger.debug("NEW_FINGER_TABLE {}", event.getFingerTableView());
 			fingerTableView = event.getFingerTableView();
 
-			 if (inside && !earlyLookupRequests.isEmpty()) {
+			if (inside && !earlyLookupRequests.isEmpty()) {
 				for (ChordLookupRequest request : earlyLookupRequests) {
 					trigger(request, router.getPositive(ChordRouter.class));
 				}

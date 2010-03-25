@@ -122,7 +122,10 @@ public class FingerTable {
 		BigInteger distance = newPeer.getKey().ringMinus(localPeer.getKey(),
 				ringSize);
 		int i = distance.bitLength() - 1;
-
+		if (i == -1) {
+			return false;
+		}
+		
 		boolean changed = false;
 
 		if (newPeer.getKey().belongsTo(begin[i], end[i],
