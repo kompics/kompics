@@ -84,11 +84,10 @@ public class ComponentCore implements Component {
 	public Positive<ControlPort> getControl() {
 		return positiveControl;
 	}
-	
+
 	public Positive<ControlPort> control() {
 		return positiveControl;
 	}
-
 
 	/*
 	 * (non-Javadoc)
@@ -434,6 +433,10 @@ public class ComponentCore implements Component {
 				}
 			}
 		}
+
+		public java.lang.Class<Start> getEventType() {
+			return Start.class;
+		};
 	};
 
 	Handler<Stop> handleStop = new Handler<Stop>() {
@@ -447,6 +450,10 @@ public class ComponentCore implements Component {
 				}
 			}
 		}
+
+		public java.lang.Class<Stop> getEventType() {
+			return Stop.class;
+		};
 	};
 
 	@Override
