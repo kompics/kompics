@@ -22,6 +22,7 @@ package se.sics.kompics.p2p.bootstrap.server;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.RewriteableMessage;
 
 /**
  * The <code>CacheResetRequest</code> class.
@@ -29,7 +30,7 @@ import se.sics.kompics.network.Message;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class CacheResetRequest extends Message {
+public final class CacheResetRequest extends RewriteableMessage {
 
 	/**
 	 * 
@@ -47,4 +48,22 @@ public final class CacheResetRequest extends Message {
 	public String getOverlay() {
 		return overlay;
 	}
+
+    @Override
+    public Message rewriteSourceAddress(Address src)
+    {
+        Message msg = new CacheResetRequest(src,
+                this.getDestination(),
+                this.getOverlay());
+        return msg;
+    }
+
+    @Override
+    public Message rewriteDestinationAddress(Address dest)
+    {
+        Message msg = new CacheResetRequest(this.getSource(),
+                dest,
+                this.getOverlay());
+        return msg;
+    }
 }

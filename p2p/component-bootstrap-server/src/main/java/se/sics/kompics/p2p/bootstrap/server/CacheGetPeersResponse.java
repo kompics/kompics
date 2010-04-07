@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.RewriteableMessage;
 import se.sics.kompics.p2p.bootstrap.PeerEntry;
 
 /**
@@ -33,7 +34,7 @@ import se.sics.kompics.p2p.bootstrap.PeerEntry;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class CacheGetPeersResponse extends Message {
+public final class CacheGetPeersResponse extends RewriteableMessage {
 
 	/**
 	 * 
@@ -58,4 +59,24 @@ public final class CacheGetPeersResponse extends Message {
 	public UUID getRequestId() {
 		return requestId;
 	}
+
+    @Override
+    public Message rewriteSourceAddress(Address src)
+    {
+        Message msg = new CacheGetPeersResponse(this.getPeers(),
+                this.getRequestId(),
+                src,
+                this.getDestination());
+        return msg;
+    }
+
+    @Override
+    public Message rewriteDestinationAddress(Address dest)
+    {
+        Message msg = new CacheGetPeersResponse(this.getPeers(),
+                this.getRequestId(),
+                this.getSource(),
+                dest);
+        return msg;
+    }
 }
