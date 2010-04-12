@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-chord-overlay</artifactId>
         <groupId>se.sics.kompics.p2p.overlay.chord</groupId>
-        <version>0.4.2.7</version>
+        <version>0.4.3-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 	<artifactId>kompics-component-chord-ring</artifactId>
-	<version>0.4.2.7</version>
+	<version>0.4.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>ChordRing Kompics Component</name>
 	<description>ChordRing Kompics Component</description>
@@ -16,40 +16,40 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.7</version>
+			<version>0.4.3-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-timer</artifactId>
-			<version>0.4.2.7</version>
+			<version>0.4.3-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-network</artifactId>
-			<version>0.4.2.7</version>
+			<version>0.4.3-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 			<artifactId>kompics-port-chord-ring</artifactId>
-			<version>0.4.2.7</version>
+			<version>0.4.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p</groupId>
 			<artifactId>kompics-port-failure-detector</artifactId>
-			<version>0.4.2.7</version>
+			<version>0.4.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 			<artifactId>kompics-port-chord-router</artifactId>
-			<version>0.4.2.7</version>
+			<version>0.4.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.chord</groupId>
 			<artifactId>kompics-chord-message</artifactId>
-			<version>0.4.2.7</version>
+			<version>0.4.3-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
