@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-cyclon-experiements</artifactId>
         <groupId>se.sics.kompics.p2p.experiments.cyclon</groupId>
-        <version>0.4.2.7-SNAPSHOT</version>
+        <version>0.4.2.7</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.experiments.cyclon</groupId>
 	<artifactId>kompics-port-cyclon-experiment</artifactId>
-	<version>0.4.2.7-SNAPSHOT</version>
+	<version>0.4.2.7</version>
 	<packaging>jar</packaging>
 	<name>CyclonExperiment Kompics PortType</name>
 	<description>CyclonExperiment Kompics PortType</description>
@@ -16,13 +16,13 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.7-SNAPSHOT</version>
+			<version>0.4.2.7</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p</groupId>
 			<artifactId>kompics-experiment-scenario-dsl</artifactId>
-			<version>0.4.2.7-SNAPSHOT</version>
+			<version>0.4.2.7</version>
 		</dependency>
 	</dependencies>
 

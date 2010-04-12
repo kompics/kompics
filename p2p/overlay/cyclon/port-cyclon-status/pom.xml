@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-cyclon-overlay</artifactId>
         <groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
-        <version>0.4.2.7-SNAPSHOT</version>
+        <version>0.4.2.7</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
 	<artifactId>kompics-port-cyclon-status</artifactId>
-	<version>0.4.2.7-SNAPSHOT</version>
+	<version>0.4.2.7</version>
 	<packaging>jar</packaging>
 	<name>CyclonStatus Kompics PortType</name>
 	<description>CyclonStatus Kompics PortType</description>
@@ -16,13 +16,13 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.7-SNAPSHOT</version>
+			<version>0.4.2.7</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.overlay.cyclon</groupId>
 			<artifactId>kompics-cyclon-address</artifactId>
-			<version>0.4.2.7-SNAPSHOT</version>
+			<version>0.4.2.7</version>
 		</dependency>
 	</dependencies>
 

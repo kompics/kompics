@@ -2,24 +2,24 @@
   <parent>
     <artifactId>kompics-bittorrent</artifactId>
     <groupId>se.sics.kompics.p2p.cdn.bittorrent</groupId>
-    <version>0.4.2.7-SNAPSHOT</version>
+    <version>0.4.2.7</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.sics.kompics.p2p.cdn.bittorrent</groupId>
   <artifactId>kompics-port-bittorrent-client</artifactId>
   <name>BitTorrentClient Kompics PortType</name>
-  <version>0.4.2.7-SNAPSHOT</version>
+  <version>0.4.2.7</version>
   <description>BitTorrentClient Kompics PortType</description>
   <dependencies>
   	<dependency>
   		<groupId>se.sics.kompics</groupId>
   		<artifactId>kompics-core</artifactId>
-  		<version>0.4.2.7-SNAPSHOT</version>
+  		<version>0.4.2.7</version>
   	</dependency>
   	<dependency>
   		<groupId>se.sics.kompics.p2p.cdn.bittorrent</groupId>
   		<artifactId>kompics-bittorrent-address</artifactId>
-  		<version>0.4.2.7-SNAPSHOT</version>
+  		<version>0.4.2.7</version>
   	</dependency>
   </dependencies>
 </project>

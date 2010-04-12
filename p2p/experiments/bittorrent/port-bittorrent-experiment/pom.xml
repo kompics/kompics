@@ -2,29 +2,29 @@
 	<parent>
 		<artifactId>kompics-bittorrent-experiments</artifactId>
 		<groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
-		<version>0.4.2.7-SNAPSHOT</version>
+		<version>0.4.2.7</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.p2p.experiments.bittorrent</groupId>
 	<artifactId>kompics-port-bittorrent-experiment</artifactId>
 	<name>BitTorrentExperiment Kompics PortType</name>
-	<version>0.4.2.7-SNAPSHOT</version>
+	<version>0.4.2.7</version>
 	<description>BitTorrentExperiment Kompics PortType</description>
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.2.7-SNAPSHOT</version>
+			<version>0.4.2.7</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.cdn.bittorrent</groupId>
 			<artifactId>kompics-component-bittorrent-client</artifactId>
-			<version>0.4.2.7-SNAPSHOT</version>
+			<version>0.4.2.7</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p</groupId>
 			<artifactId>kompics-experiment-scenario-dsl</artifactId>
-			<version>0.4.2.7-SNAPSHOT</version>
+			<version>0.4.2.7</version>
 		</dependency>
 	</dependencies>
 
