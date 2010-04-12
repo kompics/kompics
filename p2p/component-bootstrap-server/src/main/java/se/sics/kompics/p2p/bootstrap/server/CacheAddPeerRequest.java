@@ -24,7 +24,6 @@ import java.util.Set;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
-import se.sics.kompics.network.RewriteableMessage;
 import se.sics.kompics.p2p.bootstrap.PeerEntry;
 
 /**
@@ -33,7 +32,7 @@ import se.sics.kompics.p2p.bootstrap.PeerEntry;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class CacheAddPeerRequest extends RewriteableMessage {
+public final class CacheAddPeerRequest extends Message {
 
 	/**
 	 * 
@@ -50,40 +49,12 @@ public final class CacheAddPeerRequest extends RewriteableMessage {
 		this.peerAddress = peerAddress;
 		this.peerOverlays = peerOverlays;
 	}
-        
-        private CacheAddPeerRequest(Address src, CacheAddPeerRequest msg)
-        {
-                super(src, msg.getDestination());
-                this.peerAddress = msg.getPeerAddress();
-                this.peerOverlays = msg.getPeerOverlays();
-        }
 
-        private CacheAddPeerRequest(CacheAddPeerRequest msg, Address dest)
-        {
-            super(msg.getSource(), dest);
-            this.peerAddress = msg.getPeerAddress();
-            this.peerOverlays = msg.getPeerOverlays();
-        }
-        
 	public Address getPeerAddress() {
 		return peerAddress;
 	}
-        
+	
 	public Set<PeerEntry> getPeerOverlays() {
 		return peerOverlays;
 	}
-
-    @Override
-    public Message rewriteSourceAddress(Address src)
-    {
-        Message msg = new CacheAddPeerRequest(src, this);
-        return msg;
-    }
-
-    @Override
-    public Message rewriteDestinationAddress(Address dest)
-    {
-        Message msg = new CacheAddPeerRequest(this, dest);
-        return msg;
-    }
 }
