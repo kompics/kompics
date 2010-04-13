@@ -4,6 +4,14 @@
 		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
+		<release version="0.4.2.7" date="2010-04-13" description="Maintenance release">
+			<action dev="cosmin" type="update">
+[Kompics core]: added simpler constructs: provides, requires, request, indication, provided, required, control.
+			</action>
+            <action dev="cosmin" type="fix">
+[Kompics P2P Framework/Simulation]: minor fixes.
+            </action>
+		</release>
 		<release version="0.4.2.6" date="2010-02-04" description="Maintenance release">
 			<action dev="cosmin" type="add">
 [Kompics core]: added a shutdown mechanism for the work-stealing scheduler.
