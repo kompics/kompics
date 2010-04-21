@@ -1,6 +1,6 @@
 /**
  * This file is part of the Kompics P2P Framework.
- * 
+ *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
@@ -24,17 +24,19 @@ import java.util.UUID;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.RewriteableMessage;
+import se.sics.kompics.network.RewriteableRetryMessage;
 
 /**
  * The <code>CacheGetPeersRequest</code> class.
- * 
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class CacheGetPeersRequest extends Message {
+public final class CacheGetPeersRequest extends RewriteableMessage {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 7871535098863400423L;
 

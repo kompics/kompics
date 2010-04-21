@@ -1,6 +1,6 @@
 /**
  * This file is part of the Kompics P2P Framework.
- * 
+ *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
@@ -24,18 +24,19 @@ import java.util.Set;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.RewriteableMessage;
 import se.sics.kompics.p2p.bootstrap.PeerEntry;
 
 /**
  * The <code>CacheAddPeerRequest</code> class.
- * 
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class CacheAddPeerRequest extends Message {
+public final class CacheAddPeerRequest extends RewriteableMessage {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -7283261091849790434L;
 
@@ -50,11 +51,26 @@ public final class CacheAddPeerRequest extends Message {
 		this.peerOverlays = peerOverlays;
 	}
 
+        private CacheAddPeerRequest(Address src, CacheAddPeerRequest msg)
+        {
+                super(src, msg.getDestination());
+                this.peerAddress = msg.getPeerAddress();
+                this.peerOverlays = msg.getPeerOverlays();
+        }
+
+        private CacheAddPeerRequest(CacheAddPeerRequest msg, Address dest)
+        {
+            super(msg.getSource(), dest);
+            this.peerAddress = msg.getPeerAddress();
+            this.peerOverlays = msg.getPeerOverlays();
+        }
+
 	public Address getPeerAddress() {
 		return peerAddress;
 	}
-	
+
 	public Set<PeerEntry> getPeerOverlays() {
 		return peerOverlays;
 	}
+
 }

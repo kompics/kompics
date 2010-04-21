@@ -1,6 +1,6 @@
 /**
  * This file is part of the Kompics P2P Framework.
- * 
+ *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
@@ -36,7 +36,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.network.Network;
+import se.sics.kompics.network.NatNetwork;
 import se.sics.kompics.p2p.bootstrap.PeerEntry;
 import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.ScheduleTimeout;
@@ -47,387 +47,432 @@ import se.sics.kompics.web.WebResponse;
 
 /**
  * The <code>BootstrapServer</code> class.
- * 
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public class BootstrapServer extends ComponentDefinition {
+public class BootstrapServer extends ComponentDefinition
+{
 
-	Positive<Network> network = positive(Network.class);
-	Positive<Timer> timer = positive(Timer.class);
-	Negative<Web> web = negative(Web.class);
+    Positive<NatNetwork> network = positive(NatNetwork.class);
+    Positive<Timer> timer = positive(Timer.class);
+    Negative<Web> web = negative(Web.class);
+    private static final Logger logger = LoggerFactory.getLogger(BootstrapServer.class);
+    private final HashMap<String, HashSet<UUID>> outstandingTimeouts;
+    private final HashMap<String, HashMap<Address, CacheEntry>> cache;
+    private final HashMap<String, Long> cacheEpoch;
+    private long evictAfter;
+    private Address self;
+    private String webAddress;
+    private int webPort;
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(BootstrapServer.class);
+    public BootstrapServer()
+    {
+        this.cache = new HashMap<String, HashMap<Address, CacheEntry>>();
+        this.cacheEpoch = new HashMap<String, Long>();
 
-	private final HashMap<String, HashSet<UUID>> outstandingTimeouts;
-	private final HashMap<String, HashMap<Address, CacheEntry>> cache;
-	private final HashMap<String, Long> cacheEpoch;
+        outstandingTimeouts = new HashMap<String, HashSet<UUID>>();
 
-	private long evictAfter;
-	private Address self;
-	private String webAddress;
-	private int webPort;
+        subscribe(handleInit, control);
 
-	public BootstrapServer() {
-		this.cache = new HashMap<String, HashMap<Address, CacheEntry>>();
-		this.cacheEpoch = new HashMap<String, Long>();
+        subscribe(handleWebRequest, web);
+        subscribe(handleCacheResetRequest, network);
+        subscribe(handleCacheAddPeerRequest, network);
+        subscribe(handleCacheGetPeersRequest, network);
 
-		outstandingTimeouts = new HashMap<String, HashSet<UUID>>();
+        subscribe(handleCacheEvictPeer, timer);
+    }
 
-		subscribe(handleInit, control);
+    private Handler<BootstrapServerInit> handleInit = new Handler<BootstrapServerInit>()
+    {
 
-		subscribe(handleWebRequest, web);
-		subscribe(handleCacheResetRequest, network);
-		subscribe(handleCacheAddPeerRequest, network);
-		subscribe(handleCacheGetPeersRequest, network);
+        public void handle(BootstrapServerInit event)
+        {
+            evictAfter = event.getConfiguration().getCacheEvictAfter();
+            self = event.getConfiguration().getBootstrapServerAddress();
 
-		subscribe(handleCacheEvictPeer, timer);
-	}
+            webPort = event.getConfiguration().getServerWebPort();
+            webAddress = "http://" + self.getIp().getHostAddress() + ":"
+                    + webPort + "/" + self.getId() + "/";
 
-	private Handler<BootstrapServerInit> handleInit = new Handler<BootstrapServerInit>() {
-		public void handle(BootstrapServerInit event) {
-			evictAfter = event.getConfiguration().getCacheEvictAfter();
-			self = event.getConfiguration().getBootstrapServerAddress();
+            logger.debug("Started");
+            dumpCacheToLog();
+        }
 
-			webPort = event.getConfiguration().getServerWebPort();
-			webAddress = "http://" + self.getIp().getHostAddress() + ":"
-					+ webPort + "/" + self.getId() + "/";
+    };
+    private Handler<CacheResetRequest> handleCacheResetRequest = new Handler<CacheResetRequest>()
+    {
 
-			logger.debug("Started");
-			dumpCacheToLog();
-		}
-	};
+        public void handle(CacheResetRequest event)
+        {
+            resetCache(event.getOverlay());
+        }
 
-	private Handler<CacheResetRequest> handleCacheResetRequest = new Handler<CacheResetRequest>() {
-		public void handle(CacheResetRequest event) {
-			resetCache(event.getOverlay());
-		}
-	};
+    };
+    private Handler<CacheAddPeerRequest> handleCacheAddPeerRequest = new Handler<CacheAddPeerRequest>()
+    {
 
-	private Handler<CacheAddPeerRequest> handleCacheAddPeerRequest = new Handler<CacheAddPeerRequest>() {
-		public void handle(CacheAddPeerRequest event) {
-			addPeerToCache(event.getPeerAddress(), event.getPeerOverlays());
-			dumpCacheToLog();
-		}
-	};
+        public void handle(CacheAddPeerRequest event)
+        {
+            addPeerToCache(event.getPeerAddress(), event.getPeerOverlays());
+            dumpCacheToLog();
+        }
 
-	private Handler<CacheEvictPeer> handleCacheEvictPeer = new Handler<CacheEvictPeer>() {
-		public void handle(CacheEvictPeer event) {
-			// only evict if it was not refreshed in the meantime
-			// which means the timer is not anymore outstanding
-			HashSet<UUID> overlayEvictionTimoutIds = outstandingTimeouts
-					.get(event.getOverlay());
-			if (overlayEvictionTimoutIds != null) {
-				if (overlayEvictionTimoutIds.contains(event.getTimeoutId())) {
-					removePeerFromCache(event.getPeerAddress(), event
-							.getOverlay(), event.getEpoch());
-					overlayEvictionTimoutIds.remove(event.getTimeoutId());
-				}
-			}
-			dumpCacheToLog();
-		}
-	};
+    };
+    private Handler<CacheEvictPeer> handleCacheEvictPeer = new Handler<CacheEvictPeer>()
+    {
 
-	private Handler<CacheGetPeersRequest> handleCacheGetPeersRequest = new Handler<CacheGetPeersRequest>() {
-		public void handle(CacheGetPeersRequest event) {
-			int peersMax = event.getPeersMax();
-			HashSet<PeerEntry> peers = new HashSet<PeerEntry>();
-			long now = System.currentTimeMillis();
-			String overlay = event.getOverlay();
+        public void handle(CacheEvictPeer event)
+        {
+            // only evict if it was not refreshed in the meantime
+            // which means the timer is not anymore outstanding
+            HashSet<UUID> overlayEvictionTimoutIds = outstandingTimeouts.get(event.getOverlay());
+            if (overlayEvictionTimoutIds != null)
+            {
+                if (overlayEvictionTimoutIds.contains(event.getTimeoutId()))
+                {
+                    removePeerFromCache(event.getPeerAddress(), event.getOverlay(), event.getEpoch());
+                    overlayEvictionTimoutIds.remove(event.getTimeoutId());
+                }
+            }
+            dumpCacheToLog();
+        }
 
-			HashMap<Address, CacheEntry> overlayCache = cache.get(overlay);
+    };
+    private Handler<CacheGetPeersRequest> handleCacheGetPeersRequest = new Handler<CacheGetPeersRequest>()
+    {
 
-			if (overlayCache != null) {
-				Collection<CacheEntry> entries = overlayCache.values();
-				ArrayList<CacheEntry> sorted = new ArrayList<CacheEntry>(
-						entries);
+        public void handle(CacheGetPeersRequest event)
+        {
+            int peersMax = event.getPeersMax();
+            HashSet<PeerEntry> peers = new HashSet<PeerEntry>();
+            long now = System.currentTimeMillis();
+            String overlay = event.getOverlay();
 
-				// get the most recent up to peersMax entries
-				Collections.sort(sorted);
-				for (CacheEntry cacheEntry : sorted) {
-					PeerEntry peerEntry = new PeerEntry(overlay, cacheEntry
-							.getOverlayAddress(), cacheEntry.getPeerWebPort(),
-							cacheEntry.getPeerAddress(), now
-									- cacheEntry.getAddedAt(), now
-									- cacheEntry.getRefreshedAt());
-					peers.add(peerEntry);
-					peersMax--;
+            HashMap<Address, CacheEntry> overlayCache = cache.get(overlay);
 
-					if (peersMax == 0)
-						break;
-				}
-			}
+            if (overlayCache != null)
+            {
+                Collection<CacheEntry> entries = overlayCache.values();
+                ArrayList<CacheEntry> sorted = new ArrayList<CacheEntry>(
+                        entries);
 
-			CacheGetPeersResponse response = new CacheGetPeersResponse(peers,
-					event.getRequestId(), self, event.getSource());
-			trigger(response, network);
+                // get the most recent up to peersMax entries
+                Collections.sort(sorted);
+                for (CacheEntry cacheEntry : sorted)
+                {
+                    PeerEntry peerEntry = new PeerEntry(overlay, cacheEntry.getOverlayAddress(), cacheEntry.getPeerWebPort(),
+                            cacheEntry.getPeerAddress(), now
+                            - cacheEntry.getAddedAt(), now
+                            - cacheEntry.getRefreshedAt());
+                    peers.add(peerEntry);
+                    peersMax--;
 
-			logger.debug("Responded with {} peers to peer {}", peers.size(),
-					event.getSource());
-		}
-	};
+                    if (peersMax == 0)
+                    {
+                        break;
+                    }
+                }
+            }
 
-	private Handler<WebRequest> handleWebRequest = new Handler<WebRequest>() {
-		public void handle(WebRequest event) {
-			logger.debug("Handling WebRequest");
+            CacheGetPeersResponse response = new CacheGetPeersResponse(peers,
+                    event.getRequestId(), self, event.getSource());
+            trigger(response, network);
 
-			WebResponse response = new WebResponse(dumpCacheToHtml(event
-					.getTarget()), event, 1, 1);
-			trigger(response, web);
-		}
-	};
+            logger.debug("Responded with {} peers to peer {}", peers.size(),
+                    event.getSource());
+        }
 
-	private final void resetCache(String overlay) {
-		// cancel all eviction timers for this overlay
-		HashSet<UUID> overlayEvictionTimoutIds = outstandingTimeouts
-				.get(overlay);
-		if (overlayEvictionTimoutIds != null) {
-			for (UUID timoutId : overlayEvictionTimoutIds) {
-				CancelTimeout ct = new CancelTimeout(timoutId);
-				trigger(ct, timer);
-			}
-			overlayEvictionTimoutIds.clear();
-		}
+    };
+    private Handler<WebRequest> handleWebRequest = new Handler<WebRequest>()
+    {
 
-		// reset cache
-		HashMap<Address, CacheEntry> overlayCache = cache.get(overlay);
-		if (overlayCache != null) {
-			overlayCache.clear();
-			Long epoch = cacheEpoch.get(overlay);
-			cacheEpoch.put(overlay, 1 + epoch);
-		} else {
-			cache.put(overlay, new HashMap<Address, CacheEntry>());
-			cacheEpoch.put(overlay, 1L);
-			outstandingTimeouts.put(overlay, new HashSet<UUID>());
-		}
-		logger.debug("Cleared cache for " + overlay);
-		dumpCacheToLog();
-	}
+        public void handle(WebRequest event)
+        {
+            logger.debug("Handling WebRequest");
 
-	private final void addPeerToCache(Address address, Set<PeerEntry> overlays) {
-		if (address != null) {
-			long now = System.currentTimeMillis();
+            WebResponse response = new WebResponse(dumpCacheToHtml(event.getTarget()), event, 1, 1);
+            trigger(response, web);
+        }
 
-			for (PeerEntry peerEntry : overlays) {
-				String overlay = peerEntry.getOverlay();
+    };
 
-				HashMap<Address, CacheEntry> overlayCache = cache.get(overlay);
-				if (overlayCache == null) {
-					overlayCache = new HashMap<Address, CacheEntry>();
-					cache.put(overlay, overlayCache);
-					cacheEpoch.put(overlay, 1L);
-					outstandingTimeouts.put(overlay, new HashSet<UUID>());
-				}
-				CacheEntry entry = overlayCache.get(address);
-				if (entry == null) {
-					// add a new entry
-					entry = new CacheEntry(address, overlay, peerEntry
-							.getOverlayAddress(), peerEntry.getPeerWebPort(),
-							now, now);
-					overlayCache.put(address, entry);
+    private final void resetCache(String overlay)
+    {
+        // cancel all eviction timers for this overlay
+        HashSet<UUID> overlayEvictionTimoutIds = outstandingTimeouts.get(overlay);
+        if (overlayEvictionTimoutIds != null)
+        {
+            for (UUID timoutId : overlayEvictionTimoutIds)
+            {
+                CancelTimeout ct = new CancelTimeout(timoutId);
+                trigger(ct, timer);
+            }
+            overlayEvictionTimoutIds.clear();
+        }
 
-					// set a new eviction timeout
-					ScheduleTimeout st = new ScheduleTimeout(evictAfter);
-					st.setTimeoutEvent(new CacheEvictPeer(st, address, overlay,
-							cacheEpoch.get(overlay)));
+        // reset cache
+        HashMap<Address, CacheEntry> overlayCache = cache.get(overlay);
+        if (overlayCache != null)
+        {
+            overlayCache.clear();
+            Long epoch = cacheEpoch.get(overlay);
+            cacheEpoch.put(overlay, 1 + epoch);
+        }
+        else
+        {
+            cache.put(overlay, new HashMap<Address, CacheEntry>());
+            cacheEpoch.put(overlay, 1L);
+            outstandingTimeouts.put(overlay, new HashSet<UUID>());
+        }
+        logger.debug("Cleared cache for " + overlay);
+        dumpCacheToLog();
+    }
 
-					UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
-					entry.setEvictionTimerId(evictionTimerId);
-					outstandingTimeouts.get(overlay).add(evictionTimerId);
-					trigger(st, timer);
+    private final void addPeerToCache(Address address, Set<PeerEntry> overlays)
+    {
+        if (address != null)
+        {
+            long now = System.currentTimeMillis();
 
-					logger.debug("Added peer {}", address);
-				} else {
-					// update an existing entry
-					entry.setRefreshedAt(now);
+            for (PeerEntry peerEntry : overlays)
+            {
+                String overlay = peerEntry.getOverlay();
 
-					// cancel an old eviction timeout, if it exists
-					UUID oldTimeoutId = entry.getEvictionTimerId();
-					if (oldTimeoutId != null) {
-						trigger(new CancelTimeout(oldTimeoutId), timer);
-						outstandingTimeouts.get(overlay).remove(oldTimeoutId);
-					}
-					// set a new eviction timeout
-					ScheduleTimeout st = new ScheduleTimeout(evictAfter);
-					st.setTimeoutEvent(new CacheEvictPeer(st, address, overlay,
-							cacheEpoch.get(overlay)));
+                HashMap<Address, CacheEntry> overlayCache = cache.get(overlay);
+                if (overlayCache == null)
+                {
+                    overlayCache = new HashMap<Address, CacheEntry>();
+                    cache.put(overlay, overlayCache);
+                    cacheEpoch.put(overlay, 1L);
+                    outstandingTimeouts.put(overlay, new HashSet<UUID>());
+                }
+                CacheEntry entry = overlayCache.get(address);
+                if (entry == null)
+                {
+                    // add a new entry
+                    entry = new CacheEntry(address, overlay, peerEntry.getOverlayAddress(), peerEntry.getPeerWebPort(),
+                            now, now);
+                    overlayCache.put(address, entry);
 
-					UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
-					entry.setEvictionTimerId(evictionTimerId);
-					outstandingTimeouts.get(overlay).add(evictionTimerId);
-					trigger(st, timer);
+                    // set a new eviction timeout
+                    ScheduleTimeout st = new ScheduleTimeout(evictAfter);
+                    st.setTimeoutEvent(new CacheEvictPeer(st, address, overlay,
+                            cacheEpoch.get(overlay)));
 
-					logger.debug("Refreshed peer {}", address);
-				}
-			}
-		}
-	}
+                    UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
+                    entry.setEvictionTimerId(evictionTimerId);
+                    outstandingTimeouts.get(overlay).add(evictionTimerId);
+                    trigger(st, timer);
 
-	private final void removePeerFromCache(Address address, String overlay,
-			long epoch) {
-		long thisEpoch = cacheEpoch.get(overlay);
-		if (address != null && epoch == thisEpoch) {
-			cache.get(overlay).remove(address);
+                    logger.debug("Added peer {}", address);
+                }
+                else
+                {
+                    // update an existing entry
+                    entry.setRefreshedAt(now);
 
-			logger.debug("Removed peer {}", address);
-		}
-	}
+                    // cancel an old eviction timeout, if it exists
+                    UUID oldTimeoutId = entry.getEvictionTimerId();
+                    if (oldTimeoutId != null)
+                    {
+                        trigger(new CancelTimeout(oldTimeoutId), timer);
+                        outstandingTimeouts.get(overlay).remove(oldTimeoutId);
+                    }
+                    // set a new eviction timeout
+                    ScheduleTimeout st = new ScheduleTimeout(evictAfter);
+                    st.setTimeoutEvent(new CacheEvictPeer(st, address, overlay,
+                            cacheEpoch.get(overlay)));
 
-	private void dumpCacheToLog() {
-		for (String overlay : cache.keySet()) {
-			dumpCacheToLog(overlay);
-		}
-	}
+                    UUID evictionTimerId = st.getTimeoutEvent().getTimeoutId();
+                    entry.setEvictionTimerId(evictionTimerId);
+                    outstandingTimeouts.get(overlay).add(evictionTimerId);
+                    trigger(st, timer);
 
-	private void dumpCacheToLog(String overlay) {
-		logger.info("Overlay {} now contains:", overlay);
-		logger.info("Age=====Freshness==Peer address=========================");
-		long now = System.currentTimeMillis();
+                    logger.debug("Refreshed peer {}", address);
+                }
+            }
+        }
+    }
 
-		Collection<CacheEntry> entries = cache.get(overlay).values();
-		ArrayList<CacheEntry> sorted = new ArrayList<CacheEntry>(entries);
+    private final void removePeerFromCache(Address address, String overlay,
+            long epoch)
+    {
+        long thisEpoch = cacheEpoch.get(overlay);
+        if (address != null && epoch == thisEpoch)
+        {
+            cache.get(overlay).remove(address);
 
-		// get all peers in most recently added order
-		Collections.sort(sorted);
-		for (CacheEntry cacheEntry : sorted) {
-			logger.info("{}\t{}\t  {}", new Object[] {
-					durationToString(now - cacheEntry.getAddedAt()),
-					durationToString(now - cacheEntry.getRefreshedAt()),
-					cacheEntry.getPeerAddress() });
-		}
+            logger.debug("Removed peer {}", address);
+        }
+    }
 
-		logger.info("========================================================");
-	}
+    private void dumpCacheToLog()
+    {
+        for (String overlay : cache.keySet())
+        {
+            dumpCacheToLog(overlay);
+        }
+    }
 
-	private String dumpCacheToHtml(String overlay) {
-		if (!cache.containsKey(overlay)) {
-			StringBuilder sb = new StringBuilder(
-					"<!DOCTYPE html PUBLIC \"-//W3C");
-			sb
-					.append("//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR");
-			sb
-					.append("/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http:");
-			sb
-					.append("//www.w3.org/1999/xhtml\"><head><meta http-equiv=\"Conten");
-			sb.append("t-Type\" content=\"text/html; charset=utf-8\" />");
-			sb.append("<title>Kompics P2P Bootstrap Server</title>");
-			sb.append("<style type=\"text/css\"><!--.style2 {font-family: ");
-			sb
-					.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
-			sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
-			sb.append("Kompics P2P Bootstrap Overlays:</h2><br>");
-			for (String o : cache.keySet()) {
-				sb.append("<a href=\"" + webAddress + o + "\">" + o + "</a>")
-						.append("<br>");
-			}
-			sb.append("</body></html>");
-			return sb.toString();
-		}
+    private void dumpCacheToLog(String overlay)
+    {
+        logger.info("Overlay {} now contains:", overlay);
+        logger.info("Age=====Freshness==Peer address=========================");
+        long now = System.currentTimeMillis();
 
-		StringBuilder sb = new StringBuilder("<!DOCTYPE html PUBLIC \"-//W3C");
-		sb.append("//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR");
-		sb.append("/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http:");
-		sb.append("//www.w3.org/1999/xhtml\"><head><meta http-equiv=\"Conten");
-		sb.append("t-Type\" content=\"text/html; charset=utf-8\" />");
-		sb.append("<title>Kompics P2P Bootstrap Server</title>");
-		sb.append("<style type=\"text/css\"><!--.style2 {font-family: ");
-		sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
-		sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
-		sb.append("Kompics P2P Bootstrap Cache for " + overlay + "</h2>");
-		sb.append("<table width=\"1000\" border=\"0\" align=\"center\"><tr>");
-		sb
-				.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
-		sb.append("<th class=\"style2\" width=\"80\" scope=\"col\">Age</th>");
-		sb
-				.append("<th class=\"style2\" width=\"120\" scope=\"col\">Freshness</th>");
-		sb.append("<th class=\"style2\" width=\"300\" scope=\"col\">" + overlay
-				+ " id</th>");
-		sb
-				.append("<th class=\"style2\" width=\"700\" scope=\"col\">Peer address</th></tr>");
-		long now = System.currentTimeMillis();
+        Collection<CacheEntry> entries = cache.get(overlay).values();
+        ArrayList<CacheEntry> sorted = new ArrayList<CacheEntry>(entries);
 
-		Collection<CacheEntry> entries = cache.get(overlay).values();
-		ArrayList<CacheEntry> sorted = new ArrayList<CacheEntry>(entries);
+        // get all peers in most recently added order
+        Collections.sort(sorted);
+        for (CacheEntry cacheEntry : sorted)
+        {
+            logger.info("{}\t{}\t  {}", new Object[]
+                    {
+                        durationToString(now - cacheEntry.getAddedAt()),
+                        durationToString(now - cacheEntry.getRefreshedAt()),
+                        cacheEntry.getPeerAddress()
+                    });
+        }
 
-		// get all peers in most recently added order
-		Collections.sort(sorted);
+        logger.info("========================================================");
+    }
 
-		int count = 1;
+    private String dumpCacheToHtml(String overlay)
+    {
+        if (!cache.containsKey(overlay))
+        {
+            StringBuilder sb = new StringBuilder(
+                    "<!DOCTYPE html PUBLIC \"-//W3C");
+            sb.append("//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR");
+            sb.append("/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http:");
+            sb.append("//www.w3.org/1999/xhtml\"><head><meta http-equiv=\"Conten");
+            sb.append("t-Type\" content=\"text/html; charset=utf-8\" />");
+            sb.append("<title>Kompics P2P Bootstrap Server</title>");
+            sb.append("<style type=\"text/css\"><!--.style2 {font-family: ");
+            sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
+            sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
+            sb.append("Kompics P2P Bootstrap Overlays:</h2><br>");
+            for (String o : cache.keySet())
+            {
+                sb.append("<a href=\"" + webAddress + o + "\">" + o + "</a>").append("<br>");
+            }
+            sb.append("</body></html>");
+            return sb.toString();
+        }
 
-		for (CacheEntry cacheEntry : sorted) {
-			sb.append("<tr>");
-			sb.append("<td><div align=\"center\">").append(count++);
-			sb.append("</div></td>");
-			sb.append("<td><div align=\"right\">");
-			sb.append(durationToString(now - cacheEntry.getAddedAt()));
-			sb.append("</div></td><td><div align=\"right\">");
-			sb.append(durationToString(now - cacheEntry.getRefreshedAt()));
-			sb.append("</div></td><td><div align=\"center\">");
-			String webAddress = "http://"
-					+ cacheEntry.getPeerAddress().getIp().getHostAddress()
-					+ ":" + cacheEntry.getPeerWebPort() + "/"
-					+ cacheEntry.getPeerAddress().getId() + "/";
-			sb.append("<a href=\"").append(webAddress).append("\">");
-			sb.append(cacheEntry.getOverlayAddress().toString()).append("</a>");
-			sb.append("</div></td><td><div align=\"left\">");
-			sb.append(cacheEntry.getPeerAddress());
-			sb.append("</div></td>");
-			sb.append("</tr>");
-		}
+        StringBuilder sb = new StringBuilder("<!DOCTYPE html PUBLIC \"-//W3C");
+        sb.append("//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR");
+        sb.append("/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http:");
+        sb.append("//www.w3.org/1999/xhtml\"><head><meta http-equiv=\"Conten");
+        sb.append("t-Type\" content=\"text/html; charset=utf-8\" />");
+        sb.append("<title>Kompics P2P Bootstrap Server</title>");
+        sb.append("<style type=\"text/css\"><!--.style2 {font-family: ");
+        sb.append("Arial, Helvetica, sans-serif; color: #0099FF;}--></style>");
+        sb.append("</head><body><h2 align=\"center\" class=\"style2\">");
+        sb.append("Kompics P2P Bootstrap Cache for " + overlay + "</h2>");
+        sb.append("<table width=\"1000\" border=\"0\" align=\"center\"><tr>");
+        sb.append("<th class=\"style2\" width=\"100\" scope=\"col\">Count</th>");
+        sb.append("<th class=\"style2\" width=\"80\" scope=\"col\">Age</th>");
+        sb.append("<th class=\"style2\" width=\"120\" scope=\"col\">Freshness</th>");
+        sb.append("<th class=\"style2\" width=\"300\" scope=\"col\">" + overlay
+                + " id</th>");
+        sb.append("<th class=\"style2\" width=\"700\" scope=\"col\">Peer address</th></tr>");
+        long now = System.currentTimeMillis();
 
-		sb.append("</table></body></html>");
-		return sb.toString();
-	}
+        Collection<CacheEntry> entries = cache.get(overlay).values();
+        ArrayList<CacheEntry> sorted = new ArrayList<CacheEntry>(entries);
 
-	private String durationToString(long duration) {
-		StringBuilder sb = new StringBuilder();
+        // get all peers in most recently added order
+        Collections.sort(sorted);
 
-		// get duration in seconds
-		duration /= 1000;
+        int count = 1;
 
-		int s = 0, m = 0, h = 0, d = 0, y = 0;
-		s = (int) (duration % 60);
-		// get duration in minutes
-		duration /= 60;
-		if (duration > 0) {
-			m = (int) (duration % 60);
-			// get duration in hours
-			duration /= 60;
-			if (duration > 0) {
-				h = (int) (duration % 24);
-				// get duration in days
-				duration /= 24;
-				if (duration > 0) {
-					d = (int) (duration % 365);
-					// get duration in years
-					y = (int) (duration / 365);
-				}
-			}
-		}
+        for (CacheEntry cacheEntry : sorted)
+        {
+            sb.append("<tr>");
+            sb.append("<td><div align=\"center\">").append(count++);
+            sb.append("</div></td>");
+            sb.append("<td><div align=\"right\">");
+            sb.append(durationToString(now - cacheEntry.getAddedAt()));
+            sb.append("</div></td><td><div align=\"right\">");
+            sb.append(durationToString(now - cacheEntry.getRefreshedAt()));
+            sb.append("</div></td><td><div align=\"center\">");
+            String webAddress = "http://"
+                    + cacheEntry.getPeerAddress().getIp().getHostAddress()
+                    + ":" + cacheEntry.getPeerWebPort() + "/"
+                    + cacheEntry.getPeerAddress().getId() + "/";
+            sb.append("<a href=\"").append(webAddress).append("\">");
+            sb.append(cacheEntry.getOverlayAddress().toString()).append("</a>");
+            sb.append("</div></td><td><div align=\"left\">");
+            sb.append(cacheEntry.getPeerAddress());
+            sb.append("</div></td>");
+            sb.append("</tr>");
+        }
 
-		boolean printed = false;
+        sb.append("</table></body></html>");
+        return sb.toString();
+    }
 
-		if (y > 0) {
-			sb.append(y).append("y");
-			printed = true;
-		}
-		if (d > 0) {
-			sb.append(d).append("d");
-			printed = true;
-		}
-		if (h > 0) {
-			sb.append(h).append("h");
-			printed = true;
-		}
-		if (m > 0) {
-			sb.append(m).append("m");
-			printed = true;
-		}
-		if (s > 0 || printed == false) {
-			sb.append(s).append("s");
-		}
+    private String durationToString(long duration)
+    {
+        StringBuilder sb = new StringBuilder();
 
-		return sb.toString();
-	}
+        // get duration in seconds
+        duration /= 1000;
+
+        int s = 0, m = 0, h = 0, d = 0, y = 0;
+        s = (int) (duration % 60);
+        // get duration in minutes
+        duration /= 60;
+        if (duration > 0)
+        {
+            m = (int) (duration % 60);
+            // get duration in hours
+            duration /= 60;
+            if (duration > 0)
+            {
+                h = (int) (duration % 24);
+                // get duration in days
+                duration /= 24;
+                if (duration > 0)
+                {
+                    d = (int) (duration % 365);
+                    // get duration in years
+                    y = (int) (duration / 365);
+                }
+            }
+        }
+
+        boolean printed = false;
+
+        if (y > 0)
+        {
+            sb.append(y).append("y");
+            printed = true;
+        }
+        if (d > 0)
+        {
+            sb.append(d).append("d");
+            printed = true;
+        }
+        if (h > 0)
+        {
+            sb.append(h).append("h");
+            printed = true;
+        }
+        if (m > 0)
+        {
+            sb.append(m).append("m");
+            printed = true;
+        }
+        if (s > 0 || printed == false)
+        {
+            sb.append(s).append("s");
+        }
+
+        return sb.toString();
+    }
+
 }
