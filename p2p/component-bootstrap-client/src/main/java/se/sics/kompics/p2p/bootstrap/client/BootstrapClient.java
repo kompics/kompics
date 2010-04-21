@@ -32,6 +32,7 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.kompics.address.Address;
+import se.sics.kompics.network.NatNetwork;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.p2p.bootstrap.BootstrapCacheReset;
 import se.sics.kompics.p2p.bootstrap.BootstrapCompleted;
@@ -57,7 +58,7 @@ public class BootstrapClient extends ComponentDefinition {
 
 	Negative<P2pBootstrap> bootstrap = negative(P2pBootstrap.class);
 
-	Positive<Network> network = positive(Network.class);
+	Positive<NatNetwork> network = positive(NatNetwork.class);
 	Positive<Timer> timer = positive(Timer.class);
 
 	private static Logger logger = LoggerFactory
