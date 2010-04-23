@@ -41,7 +41,6 @@ import se.sics.kompics.p2p.overlay.chord.ring.NewSuccessorList;
 import se.sics.kompics.p2p.overlay.chord.router.ChordIterativeRouter;
 import se.sics.kompics.p2p.overlay.chord.router.ChordIterativeRouterInit;
 import se.sics.kompics.p2p.overlay.chord.router.ChordRouter;
-import se.sics.kompics.p2p.overlay.chord.router.NewFingerTable;
 import se.sics.kompics.timer.Timer;
 
 /**

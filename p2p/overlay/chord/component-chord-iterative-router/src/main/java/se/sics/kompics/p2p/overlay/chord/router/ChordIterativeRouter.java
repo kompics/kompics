@@ -37,6 +37,7 @@ import se.sics.kompics.p2p.overlay.chord.ChordAddress;
 import se.sics.kompics.p2p.overlay.chord.ChordLookupRequest;
 import se.sics.kompics.p2p.overlay.chord.ChordLookupResponse;
 import se.sics.kompics.p2p.overlay.chord.LookupInfo;
+import se.sics.kompics.p2p.overlay.chord.NewFingerTable;
 import se.sics.kompics.p2p.overlay.chord.ChordLookupResponse.ChordLookupStatus;
 import se.sics.kompics.p2p.overlay.chord.ring.ChordPeriodicStabilization;
 import se.sics.kompics.p2p.overlay.chord.ring.NewPredecessor;
