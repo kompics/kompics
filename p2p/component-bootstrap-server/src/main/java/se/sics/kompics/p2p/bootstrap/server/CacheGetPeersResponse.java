@@ -25,7 +25,6 @@ import java.util.UUID;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
-import se.sics.kompics.network.RewriteableMessage;
 import se.sics.kompics.p2p.bootstrap.PeerEntry;
 
 /**
@@ -34,7 +33,7 @@ import se.sics.kompics.p2p.bootstrap.PeerEntry;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class CacheGetPeersResponse extends RewriteableMessage {
+public final class CacheGetPeersResponse extends Message {
 
 	/**
 	 * 

@@ -1,6 +1,6 @@
 /**
  * This file is part of the Kompics P2P Framework.
- *
+ * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
@@ -22,21 +22,20 @@ package se.sics.kompics.p2p.bootstrap.server;
 
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
-import se.sics.kompics.network.RewriteableMessage;
 
 /**
  * The <code>CacheResetRequest</code> class.
- *
+ * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class CacheResetRequest extends RewriteableMessage {
+public final class CacheResetRequest extends Message {
 
 	/**
-	 *
+	 * 
 	 */
 	private static final long serialVersionUID = 8037812297640544135L;
-
+	
 	private final String overlay;
 
 	public CacheResetRequest(Address peerAddress, Address destination,
