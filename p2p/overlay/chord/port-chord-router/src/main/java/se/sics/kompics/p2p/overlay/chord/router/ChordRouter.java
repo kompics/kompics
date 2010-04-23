@@ -23,6 +23,7 @@ package se.sics.kompics.p2p.overlay.chord.router;
 import se.sics.kompics.PortType;
 import se.sics.kompics.p2p.overlay.chord.ChordLookupRequest;
 import se.sics.kompics.p2p.overlay.chord.ChordLookupResponse;
+import se.sics.kompics.p2p.overlay.chord.NewFingerTable;
 
 /**
  * The <code>ChordRouter</code> class.

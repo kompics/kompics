@@ -39,6 +39,7 @@ public final class ChordStructuredOverlay extends PortType {
 		positive(ChordLookupResponse.class);
 		positive(ChordResponsibilityResponse.class);
 		positive(NewChordResponsibility.class);
+		positive(NewFingerTable.class);
 		positive(JoinRingCompleted.class);
 		positive(LeaveRingCompleted.class);
 	}

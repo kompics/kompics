@@ -270,6 +270,8 @@ public final class Chord extends ComponentDefinition {
 				}
 				earlyLookupRequests.clear();
 			}
+			
+			trigger(event, son);
 		}
 	};
 }

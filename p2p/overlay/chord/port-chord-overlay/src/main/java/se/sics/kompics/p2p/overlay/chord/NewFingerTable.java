@@ -18,7 +18,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package se.sics.kompics.p2p.overlay.chord.router;
+package se.sics.kompics.p2p.overlay.chord;
 
 import se.sics.kompics.Event;
 import se.sics.kompics.p2p.overlay.chord.FingerTableView;
@@ -27,7 +27,7 @@ import se.sics.kompics.p2p.overlay.chord.FingerTableView;
  * The <code>NewFingerTable</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id$
+ * @version $Id: NewFingerTable.java 1089 2009-08-31 09:03:49Z Cosmin $
  */
 public final class NewFingerTable extends Event {
 
