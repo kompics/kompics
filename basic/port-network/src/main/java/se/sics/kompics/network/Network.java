@@ -33,5 +33,7 @@ public final class Network extends PortType {
 	{
 		positive(Message.class);
 		negative(Message.class);
+		request(JoinMulticastGroup.class);
+		request(LeaveMulticastGroup.class);
 	}
 }

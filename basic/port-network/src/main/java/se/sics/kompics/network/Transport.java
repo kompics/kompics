@@ -28,5 +28,5 @@ package se.sics.kompics.network;
  * @version $Id$
  */
 public enum Transport {
-	UDP, TCP;
+	UDP, TCP, MULTICAST_UDP;
 }

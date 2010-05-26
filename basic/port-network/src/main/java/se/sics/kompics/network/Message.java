@@ -25,7 +25,6 @@ import java.io.Serializable;
 import se.sics.kompics.Event;
 import se.sics.kompics.address.Address;
 
-// TODO: Auto-generated Javadoc
 /**
  * The <code>Message</code> class.
  * 
