@@ -42,6 +42,8 @@ public final class NetworkConfiguration {
 
 	private final int port;
 
+	private final int multicastPort;
+
 	private final int id;
 
 	private final Address address;
@@ -51,6 +53,17 @@ public final class NetworkConfiguration {
 		this.ip = ip;
 		this.port = port;
 		this.id = id;
+		this.multicastPort = port + 1;
+		this.address = new Address(ip, port, id);
+	}
+
+	public NetworkConfiguration(InetAddress ip, int port, int id,
+			int multicastPort) {
+		super();
+		this.ip = ip;
+		this.port = port;
+		this.id = id;
+		this.multicastPort = multicastPort;
 		this.address = new Address(ip, port, id);
 	}
 
@@ -60,6 +73,10 @@ public final class NetworkConfiguration {
 
 	public int getPort() {
 		return port;
+	}
+
+	public int getMulticastPort() {
+		return multicastPort;
 	}
 
 	public int getId() {
@@ -74,6 +91,7 @@ public final class NetworkConfiguration {
 		Properties p = new Properties();
 		p.setProperty("ip", "" + ip.getHostAddress());
 		p.setProperty("port", "" + port);
+		p.setProperty("multicast.port", "" + multicastPort);
 		p.setProperty("id", "" + id);
 
 		Writer writer = new FileWriter(file);
@@ -88,7 +106,8 @@ public final class NetworkConfiguration {
 		InetAddress ip = InetAddress.getByName(p.getProperty("ip"));
 		int port = Integer.parseInt(p.getProperty("port"));
 		int id = Integer.parseInt(p.getProperty("id"));
+		int multicastPort = Integer.parseInt(p.getProperty("multicast.port"));
 
-		return new NetworkConfiguration(ip, port, id);
+		return new NetworkConfiguration(ip, port, id, multicastPort);
 	}
 }

@@ -38,17 +38,13 @@ public final class JoinMulticastGroup extends Event {
 
 	private final InetAddress group;
 
-	private final int port;
-
-	public JoinMulticastGroup(Address address, InetAddress group, int port) {
+	public JoinMulticastGroup(Address address, InetAddress group) {
 		super();
-
 		if (!group.isMulticastAddress()) {
 			throw new RuntimeException(group + " is not a multicast address.");
 		}
 		this.address = address;
 		this.group = group;
-		this.port = port;
 	}
 
 	public Address getAddress() {
@@ -57,9 +53,5 @@ public final class JoinMulticastGroup extends Event {
 
 	public InetAddress getGroup() {
 		return group;
-	}
-
-	public int getPort() {
-		return port;
 	}
 }

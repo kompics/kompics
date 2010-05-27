@@ -41,7 +41,7 @@ public abstract class Message extends Event implements Serializable {
 
 	private final Address source;
 
-	private final Address destination;
+	private Address destination;
 	
 	private transient Transport protocol;
 
@@ -89,6 +89,10 @@ public abstract class Message extends Event implements Serializable {
 	 */
 	public final Address getDestination() {
 		return destination;
+	}
+	
+	public void setDestination(Address destination) {
+		this.destination = destination;
 	}
 	
 	/**
