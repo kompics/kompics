@@ -1,9 +1,12 @@
 package test;
 
+import org.junit.Ignore;
+
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Transport;
 
+@Ignore
 public class TestMulticastMessage extends Message {
 
 	/**
