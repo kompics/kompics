@@ -38,6 +38,8 @@ public final class MinaNetworkInit extends Init {
 	/** The connect retries. */
 	private final int connectRetries;
 
+	private final int multicastPort;
+
 	/**
 	 * Instantiates a new mina network init.
 	 * 
@@ -57,9 +59,14 @@ public final class MinaNetworkInit extends Init {
 	 *            the connect retries
 	 */
 	public MinaNetworkInit(Address self, int connectRetries) {
+		this(self, 0, self.getPort() + 1);
+	}
+
+	public MinaNetworkInit(Address self, int connectRetries, int multicastPort) {
 		super();
 		this.self = self;
 		this.connectRetries = connectRetries;
+		this.multicastPort = multicastPort;
 	}
 
 	/**
@@ -78,5 +85,9 @@ public final class MinaNetworkInit extends Init {
 	 */
 	public int getConnectRetries() {
 		return connectRetries;
+	}
+
+	public int getMulticastPort() {
+		return multicastPort;
 	}
 }

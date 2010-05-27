@@ -12,27 +12,31 @@ import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
 import se.sics.kompics.network.mina.MinaNetworkInit;
 
-public class Server extends ComponentDefinition {
+public class UdpServer extends ComponentDefinition {
 
 	public static void main(String[] args) {
-		Kompics.createAndStart(Server.class);
+		Kompics.createAndStart(UdpServer.class);
 	}
 
 	Component mina;
 
-	public Server() throws UnknownHostException {
+	public UdpServer() throws UnknownHostException {
 		mina = create(MinaNetwork.class);
 		subscribe(h, mina.provided(Network.class));
 
 		Address self = new Address(InetAddress.getLocalHost(), 2222, 0);
+		// Address ms = new
+		// Address(InetAddress.getByName(MulticastReceiver.ADDRESS),
+		// MulticastReceiver.PORT,
+		// 0);
 
 		trigger(new MinaNetworkInit(self), mina.control());
 	}
 
-	Handler<TestMessage> h = new Handler<TestMessage>() {
-		public void handle(TestMessage event) {
+	Handler<TestUdpMessage> h = new Handler<TestUdpMessage>() {
+		public void handle(TestUdpMessage event) {
 			System.err.println("Received " + event.getPayload().length
-					+ " bytes " + event.getPayload()[222]);
+					+ " bytes " + new String(event.getPayload()));
 		}
 	};
 }
