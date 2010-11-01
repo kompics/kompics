@@ -134,16 +134,22 @@ public final class WorkStealingScheduler extends Scheduler {
 		synchronized (w) {
 			sleepingWorkers.offer(w);
 			sleepingWorkerCount.incrementAndGet();
-			try {
-				// Kompics.logger.debug("{} sleeping.", w.getWid());
-				if (!on[w.getWid()]) {
-					// do not wait when the worker is supposed to quit
-					return;
-				}
-
-				w.wait();
-			} catch (InterruptedException e) {
+//			try {
+//				// Kompics.logger.debug("{} sleeping.", w.getWid());
+//				if (!on[w.getWid()]) {
+//					// do not wait when the worker is supposed to quit
+//					return;
+//				}
+//
+//				w.wait();
+//			} catch (InterruptedException e) {
+//			}
+			// Kompics.logger.debug("{} sleeping.", w.getWid());
+			if (!on[w.getWid()]) {
+				// do not wait when the worker is supposed to quit
+				return;
 			}
+			w.waitForWork();
 			// Kompics.logger.debug("{} woke up.", w.getWid());
 		}
 	}

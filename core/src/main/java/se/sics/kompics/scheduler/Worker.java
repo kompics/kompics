@@ -43,6 +43,8 @@ public class Worker extends Thread {
 
 	private final AtomicInteger workCount;
 
+	private final AtomicBoolean workAvailable = new AtomicBoolean(false);
+
 	private final AtomicBoolean shouldQuit;
 
 	int executionCount, workStealingCount, sleepCount;
@@ -126,6 +128,7 @@ public class Worker extends Thread {
 	final void addWork(ComponentCore core) {
 		workQueue.offer(core);
 		workCount.incrementAndGet();
+		workAvailable.set(true);
 	}
 
 	/**
@@ -148,5 +151,18 @@ public class Worker extends Thread {
 
 	final void quitWhenNoMoreWork() {
 		shouldQuit.set(true);
+	}
+	
+	/**
+	 * The caller is expected to hold the object lock on entry
+	 */
+	public void waitForWork() {
+		try {
+			if (!workAvailable.compareAndSet(true, false)) {
+				this.wait();
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 }
