@@ -156,7 +156,7 @@ public class Worker extends Thread {
 	/**
 	 * The caller is expected to hold the object lock on entry
 	 */
-	public void waitForWork() {
+	void waitForWork() {
 		try {
 			if (!workAvailable.compareAndSet(true, false)) {
 				this.wait();
