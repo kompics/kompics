@@ -28,7 +28,7 @@ package se.sics.kompics;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public final class Fault extends Event {
+public class Fault extends Event {
 
 	private final Throwable fault;
 
