@@ -31,6 +31,8 @@ import org.mortbay.jetty.HttpConnection;
 import org.mortbay.jetty.Request;
 import org.mortbay.jetty.handler.AbstractHandler;
 
+import se.sics.kompics.web.Web;
+
 /**
  * The <code>JettyHandler</code> class.
  * 
@@ -71,6 +73,18 @@ final class JettyHandler extends AbstractHandler {
 			response.setContentLength(FAVICON_LENGTH);
 			response.setStatus(HttpServletResponse.SC_OK);
 			response.getOutputStream().write(favicon);
+		} else if (target.startsWith("/resource/")) {
+			String resource = target.substring(10); 
+			InputStream restream = Web.class.getResourceAsStream(resource);
+			byte[] b = new byte[4096];
+			int ret = 0;
+			do {
+				ret = restream.read(b);
+				if (ret <= 0) continue;
+				response.getOutputStream().write(b, 0, ret);
+			} while (ret > 0);
+			response.setStatus(HttpServletResponse.SC_OK);
+			response.getOutputStream().close();
 		} else {
 			response.setContentType("text/html");
 			response.setStatus(HttpServletResponse.SC_OK);
