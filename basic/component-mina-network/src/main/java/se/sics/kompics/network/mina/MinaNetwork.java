@@ -171,7 +171,7 @@ public final class MinaNetwork extends ComponentDefinition {
 			udpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
 
-			// udpAcceptor.getSessionConfig().setReuseAddress(true);
+			udpAcceptor.getSessionConfig().setReuseAddress(true);
 			try {
 				udpAcceptor.bind(localSocketAddress);
 			} catch (IOException e) {
@@ -200,7 +200,7 @@ public final class MinaNetwork extends ComponentDefinition {
 					new ObjectSerializationCodecFactory()));
 			tcpAcceptorChain.addLast("logger", new LoggingFilter("mina"));
 
-			// tcpAcceptor.setReuseAddress(true);
+			tcpAcceptor.setReuseAddress(true);
 			try {
 				tcpAcceptor.bind(localSocketAddress);
 			} catch (IOException e) {
