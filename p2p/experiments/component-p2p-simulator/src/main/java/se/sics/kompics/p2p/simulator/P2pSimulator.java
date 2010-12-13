@@ -309,6 +309,12 @@ public final class P2pSimulator extends ComponentDefinition implements
 	private boolean executeSimultationTerminationEvent(
 			SimulationTerminatedEvent event) {
 		if (event.shouldTerminateNow()) {
+			try {
+				trigger(new TerminateExperiment(), simulationPort);
+			} catch (Exception e) {
+				logger.warn("Could not trigger TerminateExperiment on the SimulationPort");
+			}
+			
 			logger.info("Simulation terminated.");
 			logTimeStatistics();
 			return false;
