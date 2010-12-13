@@ -44,6 +44,7 @@ import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessStartEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessTerminatedEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.TakeSnapshotEvent;
+import se.sics.kompics.p2p.experiment.dsl.events.TerminateExperiment;
 import se.sics.kompics.timer.CancelPeriodicTimeout;
 import se.sics.kompics.timer.CancelTimeout;
 import se.sics.kompics.timer.SchedulePeriodicTimeout;
@@ -223,6 +224,11 @@ public final class P2pOrchestrator extends ComponentDefinition {
 	private boolean executeSimultationTerminationEvent(
 			SimulationTerminatedEvent event) {
 		if (event.shouldTerminateNow()) {
+			try {
+				trigger(new TerminateExperiment(), simulationPort);
+			} catch (Exception e) {
+				logger.warn("Could not trigger TerminateExperiment on the SimulationPort");
+			}
 			logger.info("Orchestration terminated.");
 			return false;
 		}
