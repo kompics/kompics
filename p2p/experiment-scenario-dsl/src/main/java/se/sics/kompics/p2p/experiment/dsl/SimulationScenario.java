@@ -770,18 +770,7 @@ public abstract class SimulationScenario implements Serializable {
 	 *            the main
 	 */
 	public final void simulate(Class<? extends ComponentDefinition> main) {
-		File file = null;
-		try {
-			file = File.createTempFile("scenario", ".bin");
-			ObjectOutputStream oos = new ObjectOutputStream(
-					new FileOutputStream(file));
-			oos.writeObject(this);
-			oos.flush();
-			oos.close();
-			System.setProperty("scenario", file.getAbsolutePath());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		store();
 
 		try {
 			Loader cl = AccessController
@@ -857,18 +846,7 @@ public abstract class SimulationScenario implements Serializable {
 	 *            the main
 	 */
 	public final void execute(Class<? extends ComponentDefinition> main) {
-		File file = null;
-		try {
-			file = File.createTempFile("scenario", ".bin");
-			ObjectOutputStream oos = new ObjectOutputStream(
-					new FileOutputStream(file));
-			oos.writeObject(this);
-			oos.flush();
-			oos.close();
-			System.setProperty("scenario", file.getAbsolutePath());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		store();
 		try {
 			Loader cl = AccessController
 					.doPrivileged(new PrivilegedAction<Loader>() {
@@ -909,6 +887,22 @@ public abstract class SimulationScenario implements Serializable {
 		return eventList;
 	}
 
+
+	public void store() {
+		File file = null;
+		try {
+			file = File.createTempFile("scenario", ".bin");
+			ObjectOutputStream oos = new ObjectOutputStream(
+					new FileOutputStream(file));
+			oos.writeObject(this);
+			oos.flush();
+			oos.close();
+			System.setProperty("scenario", file.getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * Load.
 	 * 
@@ -947,18 +941,7 @@ public abstract class SimulationScenario implements Serializable {
 	 */
 	public final void sim(Class<? extends ComponentDefinition> main,
 			String... args) {
-		File file = null;
-		try {
-			file = File.createTempFile("scenario", ".bin");
-			ObjectOutputStream oos = new ObjectOutputStream(
-					new FileOutputStream(file));
-			oos.writeObject(this);
-			oos.flush();
-			oos.close();
-			System.setProperty("scenario", file.getAbsolutePath());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		store();
 
 		// 1. validate environment: quit if not Sun
 		if (!goodEnv()) {
@@ -984,6 +967,28 @@ public abstract class SimulationScenario implements Serializable {
 		launchSimulation(main, args);
 	}
 
+	public static void instrument() {
+		// 1. validate environment: quit if not Sun
+		if (!goodEnv()) {
+			throw new RuntimeException("Only Sun JRE usable for simulation");
+		}
+
+		// 2. compute boot-string
+		String bootString = bootString();
+
+		// 3. check if it already exists; goto 5 if it does
+		if (!alreadyInstrumentedBoot(bootString)) {
+			// 4. transform and generate boot classes in boot-string directory
+			prepareInstrumentationExceptions();
+			instrumentBoot(bootString);
+		} else {
+			prepareInstrumentationExceptions();
+		}
+
+		// 5. transform and generate application classes
+		instrumentApplication();
+	}
+	
 	/**
 	 * Launch simulation.
 	 * 
@@ -1151,7 +1156,7 @@ public abstract class SimulationScenario implements Serializable {
 	/**
 	 * Prepare instrumentation exceptions.
 	 */
-	private void prepareInstrumentationExceptions() {
+	private static void prepareInstrumentationExceptions() {
 		// well known exceptions
 		exceptions.add("java.lang.ref.Reference");
 		exceptions.add("java.lang.ref.Finalizer");
@@ -1191,7 +1196,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @param bootString
 	 *            the boot string
 	 */
-	private void instrumentBoot(String bootString) {
+	private static void instrumentBoot(String bootString) {
 		String bootCp = System.getProperty("sun.boot.class.path");
 		try {
 			transformClasses(bootCp, bootString);
@@ -1205,7 +1210,7 @@ public abstract class SimulationScenario implements Serializable {
 	/**
 	 * Instrument application.
 	 */
-	private void instrumentApplication() {
+	private static void instrumentApplication() {
 		String cp = System.getProperty("java.class.path");
 		try {
 			transformClasses(cp, null);
@@ -1231,7 +1236,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @throws CannotCompileException
 	 *             the cannot compile exception
 	 */
-	private void transformClasses(String classPath, String boot)
+	private static void transformClasses(String classPath, String boot)
 			throws IOException, NotFoundException, CannotCompileException {
 		LinkedList<String> classes = getAllClasses(classPath);
 
@@ -1282,7 +1287,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * 
 	 * @return true, if successful
 	 */
-	private boolean alreadyInstrumentedBoot(String bootString) {
+	private static boolean alreadyInstrumentedBoot(String bootString) {
 		File f = new File(directory + bootString);
 		return f.exists() && f.isDirectory();
 	}
@@ -1292,7 +1297,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * 
 	 * @return the string
 	 */
-	private String bootString() {
+	private static String bootString() {
 		String os = System.getProperty("os.name");
 		int sp = os.indexOf(' ');
 		if (sp != -1) {
@@ -1313,7 +1318,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * 
 	 * @return true, if successful
 	 */
-	private boolean goodEnv() {
+	private static boolean goodEnv() {
 		if (System.getProperty("java.vendor").startsWith("Sun"))
 			return true;
 		// we should change this method to accept more (or less) Java
@@ -1329,7 +1334,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @param dir
 	 *            the dir
 	 */
-	private void saveClass(CtClass cc, String dir) {
+	private static void saveClass(CtClass cc, String dir) {
 		File directory = new File(dir);
 		if (directory != null) {
 			try {
@@ -1353,7 +1358,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private void copyResources(String classPath, String boot)
+	private static void copyResources(String classPath, String boot)
 			throws IOException {
 		LinkedList<String> resources = getAllResources(classPath);
 
@@ -1413,7 +1418,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private LinkedList<String> getAllClasses(String cp) throws IOException {
+	private static LinkedList<String> getAllClasses(String cp) throws IOException {
 		LinkedList<String> list = new LinkedList<String>();
 
 		for (String location : getAllLocations(cp)) {
@@ -1433,7 +1438,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private LinkedList<String> getAllResources(String cp) throws IOException {
+	private static LinkedList<String> getAllResources(String cp) throws IOException {
 		LinkedList<String> list = new LinkedList<String>();
 
 		for (String location : getAllLocations(cp)) {
@@ -1450,7 +1455,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * 
 	 * @return the all locations
 	 */
-	private LinkedList<String> getAllLocations(String cp) {
+	private static LinkedList<String> getAllLocations(String cp) {
 		LinkedList<String> list = new LinkedList<String>();
 
 		for (String string : cp.split(System.getProperty("path.separator"))) {
@@ -1470,7 +1475,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private LinkedList<String> getClassesFromLocation(String location)
+	private static LinkedList<String> getClassesFromLocation(String location)
 			throws IOException {
 		File f = new File(location);
 
@@ -1496,7 +1501,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private LinkedList<String> getClassesFromJar(File jar) throws IOException {
+	private static LinkedList<String> getClassesFromJar(File jar) throws IOException {
 		JarFile j = new JarFile(jar);
 
 		LinkedList<String> list = new LinkedList<String>();
@@ -1527,7 +1532,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * 
 	 * @return the classes from directory
 	 */
-	private LinkedList<String> getClassesFromDirectory(File directory,
+	private static LinkedList<String> getClassesFromDirectory(File directory,
 			String pack) {
 		String[] files = directory.list();
 
@@ -1562,7 +1567,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private LinkedList<String> getResourcesFromLocation(String location)
+	private static LinkedList<String> getResourcesFromLocation(String location)
 			throws IOException {
 		File f = new File(location);
 
@@ -1588,7 +1593,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private LinkedList<String> getResourcesFromJar(File jar) throws IOException {
+	private static LinkedList<String> getResourcesFromJar(File jar) throws IOException {
 		JarFile j = new JarFile(jar);
 
 		LinkedList<String> list = new LinkedList<String>();
@@ -1616,7 +1621,7 @@ public abstract class SimulationScenario implements Serializable {
 	 * 
 	 * @return the resources from directory
 	 */
-	private LinkedList<String> getResourcesFromDirectory(File directory,
+	private static LinkedList<String> getResourcesFromDirectory(File directory,
 			String pack) {
 		String[] files = directory.list();
 
