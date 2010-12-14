@@ -109,11 +109,7 @@ public final class Kompics {
 
 	public static void shutdown() {
 		// TODO stop and destroy components
-
-		if (scheduler instanceof WorkStealingScheduler) {
-			((WorkStealingScheduler) scheduler).shutdown();
-		}
-
+		scheduler.shutdown();
 		on = false;
 		scheduler = null;
 	}
