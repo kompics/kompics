@@ -37,13 +37,15 @@ public class SimulatorScheduler extends Scheduler {
 
 	private Simulator simulator;
 
+	private boolean shutdown = false;
+	
 	public void schedule(Component c, int w) {
 		readyQueue.add(c);
 	}
 
 	public void proceed() {
 		boolean ok = true;
-		while (ok) {
+		while (ok && !shutdown) {
 			// sequentially execute all scheduled events
 			while (!readyQueue.isEmpty()) {
 				Component component = readyQueue.poll();
@@ -60,6 +62,10 @@ public class SimulatorScheduler extends Scheduler {
 		}
 	}
 
+	public void shutdown() {
+		shutdown = true;
+	}
+	
 	public void setSimulator(Simulator simulator) {
 		this.simulator = simulator;
 	}
