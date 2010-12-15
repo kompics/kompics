@@ -1182,11 +1182,15 @@ public abstract class SimulationScenario implements Serializable {
 					String value = p.getProperty(classname);
 					if (value != null && value.equals("IGNORE")) {
 						exceptions.add(classname);
+						logger.debug("Adding instrumentation exception {}",
+								classname);
 					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		} else {
+			logger.debug("Could not find timer.interceptor.properties");
 		}
 	}
 
