@@ -540,6 +540,7 @@ public final class MinaNetwork extends ComponentDefinition {
 	 */
 	final void deliverMessage(Message message, Transport protocol,
 			IoSession session) {
+		message.setProtocol(protocol);
 		logger.debug("Delivering message {} from {} to {} protocol {}",
 				new Object[] { message.toString(), message.getSource(),
 						message.getDestination(), message.getProtocol() });
