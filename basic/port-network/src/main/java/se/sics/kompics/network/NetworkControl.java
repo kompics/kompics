@@ -35,5 +35,8 @@ public final class NetworkControl extends PortType {
 		positive(NetworkSessionClosed.class);
 		positive(NetworkException.class);
 		positive(NetworkConnectionRefused.class);
+		
+		request(ConnectionStatusRequest.class);
+		indication(ConnectionStatusResponse.class);
 	}
 }
