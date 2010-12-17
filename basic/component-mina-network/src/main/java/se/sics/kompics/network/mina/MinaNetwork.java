@@ -552,7 +552,6 @@ public final class MinaNetwork extends ComponentDefinition {
 		 */
 		resolveSession(message, session, protocol);
 
-		message.setProtocol(protocol);
 		trigger(message, net);
 	}
 
