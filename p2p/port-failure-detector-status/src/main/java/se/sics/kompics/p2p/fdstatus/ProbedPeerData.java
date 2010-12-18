@@ -32,16 +32,21 @@ public final class ProbedPeerData {
 
 	public double avgRTT;
 	public double varRTT;
+	public double stdRTT;
+	public double lastRTT;
 	public double rtto;
 	public double showedRtto;
 	public double rttoMin;
 	public OverlayAddress overlayAddress;
 
-	public ProbedPeerData(double avgRTT, double varRTT, double rtto,
-			double showedRtto, double rttoMin, OverlayAddress overlayAddress) {
+	public ProbedPeerData(double avgRTT, double varRTT, double stdRTT, 
+			double lastRTT, double rtto, double showedRtto, double rttoMin,
+			OverlayAddress overlayAddress) {
 		super();
 		this.avgRTT = avgRTT;
 		this.varRTT = varRTT;
+		this.stdRTT = stdRTT;
+		this.lastRTT = lastRTT;
 		this.rtto = rtto;
 		this.showedRtto = showedRtto;
 		this.rttoMin = rttoMin;
