@@ -33,8 +33,7 @@ import se.sics.kompics.network.Transport;
  * The <code>PingFailureDetectorConfiguration</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: PingFailureDetectorConfiguration.java 1149 2009-09-01 23:55:47Z
- *          Cosmin $
+ * @version $Id$
  */
 public final class PingFailureDetectorConfiguration {
 

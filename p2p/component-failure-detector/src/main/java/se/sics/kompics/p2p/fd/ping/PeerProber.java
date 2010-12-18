@@ -73,13 +73,13 @@ public class PeerProber {
 
 	void ping() {
 		intervalPingTimeoutId = fd.setPingTimer(suspected, probedPeer);
-		pongTimeoutId = fd.sendPing(System.currentTimeMillis(), probedPeer,
+		pongTimeoutId = fd.sendPing(System.nanoTime(), probedPeer,
 				times.getRTO());
 //		logger.debug("@{}: PING {}", pongTimeoutId);
 	}
 
 	void pong(UUID pongId, long ts) {
-		long RTT = System.currentTimeMillis() - ts;
+		long RTT = System.nanoTime() - ts;
 		times.updateRTO(RTT);
 
 //		logger.debug("@{}: PoNG {} RTT={}", pongId, RTT);
