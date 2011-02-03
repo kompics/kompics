@@ -4,13 +4,13 @@
 	<parent>
 		<groupId>se.sics.kompics</groupId>
 		<artifactId>kompics-parent-pom</artifactId>
-		<version>0.4.3</version>
+		<version>0.4.4-SNAPSHOT</version>
 	</parent>
 
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-core</artifactId>
 	<packaging>jar</packaging>
-	<version>0.4.3</version>
+	<version>0.4.4-SNAPSHOT</version>
 	<name>Kompics Core</name>
 
     <repositories>

@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>kompics-p2p-systems</artifactId>
 		<groupId>se.sics.kompics.p2p.systems</groupId>
-		<version>0.4.3</version>
+		<version>0.4.4-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -12,7 +12,7 @@
 	<artifactId>kompics-cyclon-system</artifactId>
 	<packaging>pom</packaging>
 	<name>Kompics Cyclon System</name>
-	<version>0.4.3</version>
+	<version>0.4.4-SNAPSHOT</version>
 	<description>Kompics Cyclon System</description>
 
 	<repositories>

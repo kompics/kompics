@@ -4,26 +4,26 @@
 	<parent>
 		<groupId>se.sics.kompics.launcher</groupId>
 		<artifactId>kompics-launchers</artifactId>
-		<version>0.4.3</version>
+		<version>0.4.4-SNAPSHOT</version>
 	</parent>
 
 	<groupId>se.sics.kompics.launcher</groupId>
 	<artifactId>kompics-local-process-launcher</artifactId>
 	<name>Kompics Local Process Launcher</name>
 	<packaging>jar</packaging>
-	<version>0.4.3</version>
+	<version>0.4.4-SNAPSHOT</version>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.3</version>
+			<version>0.4.4-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-address</artifactId>
-			<version>0.4.3</version>
+			<version>0.4.4-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
