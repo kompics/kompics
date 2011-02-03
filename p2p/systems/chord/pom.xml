@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>kompics-p2p-systems</artifactId>
 		<groupId>se.sics.kompics.p2p.systems</groupId>
-		<version>0.4.3-SNAPSHOT</version>
+		<version>0.4.3</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -11,7 +11,7 @@
 	<artifactId>kompics-chord-system</artifactId>
 	<packaging>pom</packaging>
 	<name>Kompics Chord System</name>
-	<version>0.4.3-SNAPSHOT</version>
+	<version>0.4.3</version>
 	<description>Kompics Chord System</description>
 	<modules>
 		<module>port-chord-peer</module>

@@ -3,21 +3,21 @@
 	<parent>
 		<artifactId>kompics-parent-pom</artifactId>
 		<groupId>se.sics.kompics</groupId>
-		<version>0.4.3-SNAPSHOT</version>
+		<version>0.4.3</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.simulation</groupId>
 	<artifactId>kompics-simulation</artifactId>
 	<name>Kompics simulation support</name>
-	<version>0.4.3-SNAPSHOT</version>
+	<version>0.4.3</version>
 	<description>Support classes and a Kompics scheduler to execute Kompics systems in simulation.</description>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.4.3-SNAPSHOT</version>
+			<version>0.4.3</version>
 		</dependency>
 		<dependency>
 			<groupId>javassist</groupId>
