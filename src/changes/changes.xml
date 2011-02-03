@@ -4,6 +4,20 @@
 		<author email="cosmin>sics.se">Cosmin Arad</author>
 	</properties>
 	<body>
+		<release version="0.4.3" date="2011-02-03" description="Maintenance release">
+			<action dev="frej" type="fix">
+[Kompics core]: Fixed a bug in the work-stealing scheduler.
+			</action>
+            <action dev="cosmin" type="add">
+[MinaNetwork component]: added multicast support.
+            </action> 
+            <action dev="cosmin" type="fix">
+[MinaNetwork component]: Fixed bug in connection management.
+            </action> 
+            <action dev="cosmin" type="fix">
+[PingFailureDetector component]: improved RTT measurement accuracy, fixed moving-average bug.
+            </action>
+		</release>
 		<release version="0.4.2.7" date="2010-04-13" description="Maintenance release">
 			<action dev="cosmin" type="update">
 [Kompics core]: added simpler constructs: provides, requires, request, indication, provided, required, control.
