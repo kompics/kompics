@@ -22,6 +22,7 @@
 		<module>component-java-timer</module>
 		<module>component-mina-network</module>
 		<module>component-jetty-web-server</module>
+		<module>component-netty-network</module>
 	</modules>
 
 	<repositories>
