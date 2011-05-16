@@ -40,6 +40,8 @@ public final class MinaNetworkInit extends Init {
 
 	private final int multicastPort;
 
+	private final int compressionLevel;
+
 	/**
 	 * Instantiates a new mina network init.
 	 * 
@@ -67,6 +69,16 @@ public final class MinaNetworkInit extends Init {
 		this.self = self;
 		this.connectRetries = connectRetries;
 		this.multicastPort = multicastPort;
+		this.compressionLevel = 9;
+	}
+
+	public MinaNetworkInit(Address self, int connectRetries, int multicastPort,
+			int compressionLevel) {
+		super();
+		this.self = self;
+		this.connectRetries = connectRetries;
+		this.multicastPort = multicastPort;
+		this.compressionLevel = compressionLevel;
 	}
 
 	/**
@@ -89,5 +101,9 @@ public final class MinaNetworkInit extends Init {
 
 	public int getMulticastPort() {
 		return multicastPort;
+	}
+
+	public int getCompressionLevel() {
+		return compressionLevel;
 	}
 }

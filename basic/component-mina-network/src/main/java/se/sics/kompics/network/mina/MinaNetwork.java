@@ -148,7 +148,7 @@ public final class MinaNetwork extends ComponentDefinition {
 			localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
 					init.getSelf().getPort());
 
-			int compressionLevel = CompressionFilter.COMPRESSION_MAX;
+			int compressionLevel = init.getCompressionLevel();
 
 			// UDP Acceptor
 			udpAcceptor = new NioDatagramAcceptor();
