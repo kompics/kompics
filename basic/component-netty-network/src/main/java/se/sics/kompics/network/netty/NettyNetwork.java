@@ -60,7 +60,7 @@ import se.sics.kompics.network.Transport;
  * The <code>NettyNetwork</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: NettyNetwork.java 2837 2010-05-27 11:01:40Z Cosmin $
+ * @version $Id$
  */
 public class NettyNetwork extends ComponentDefinition {
 
@@ -104,7 +104,7 @@ public class NettyNetwork extends ComponentDefinition {
 
 	/** The handle init. */
 	Handler<NettyNetworkInit> handleInit = new Handler<NettyNetworkInit>() {
-		public void handle(NettyNetworkInit init) {
+		public void handle(final NettyNetworkInit init) {
 			connectRetries = init.getConnectRetries();
 			localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
 					init.getSelf().getPort());
@@ -114,7 +114,8 @@ public class NettyNetwork extends ComponentDefinition {
 				public ChannelPipeline getPipeline() throws Exception {
 					ChannelPipeline pipeline = Channels.pipeline();
 
-					pipeline.addLast("deflater", new ZlibEncoder(9));
+					pipeline.addLast("deflater",
+							new ZlibEncoder(init.getCompressionLevel()));
 					pipeline.addLast("inflater", new ZlibDecoder());
 
 					pipeline.addLast("decoder", new ObjectDecoder());
@@ -137,7 +138,8 @@ public class NettyNetwork extends ComponentDefinition {
 				public ChannelPipeline getPipeline() throws Exception {
 					ChannelPipeline pipeline = Channels.pipeline();
 
-					pipeline.addLast("deflater", new ZlibEncoder(9));
+					pipeline.addLast("deflater",
+							new ZlibEncoder(init.getCompressionLevel()));
 					pipeline.addLast("inflater", new ZlibDecoder());
 
 					pipeline.addLast("decoder", new ObjectDecoder());

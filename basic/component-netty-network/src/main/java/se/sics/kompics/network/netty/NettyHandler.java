@@ -38,7 +38,7 @@ import se.sics.kompics.network.Transport;
  * The <code>NettyHandler</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: NettyHandler.java 2837 2010-05-27 11:01:40Z Cosmin $
+ * @version $Id$
  */
 public class NettyHandler extends SimpleChannelUpstreamHandler {
 

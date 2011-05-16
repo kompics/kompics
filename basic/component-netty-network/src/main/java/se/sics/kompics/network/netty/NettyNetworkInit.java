@@ -27,7 +27,7 @@ import se.sics.kompics.address.Address;
  * The <code>NettyNetworkInit</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: NettyNetworkInit.java 2837 2010-05-27 11:01:40Z Cosmin $
+ * @version $Id$
  */
 public class NettyNetworkInit extends Init {
 
@@ -36,6 +36,8 @@ public class NettyNetworkInit extends Init {
 
 	/** The connect retries. */
 	private final int connectRetries;
+
+	private final int compressionLevel;
 
 	/**
 	 * Instantiates a new Netty network init.
@@ -59,6 +61,23 @@ public class NettyNetworkInit extends Init {
 		super();
 		this.self = self;
 		this.connectRetries = connectRetries;
+		this.compressionLevel = 6;
+	}
+
+	/**
+	 * Instantiates a new Netty network init.
+	 * 
+	 * @param self
+	 *            the self
+	 * @param connectRetries
+	 *            the connect retries
+	 */
+	public NettyNetworkInit(Address self, int connectRetries,
+			int compressionLevel) {
+		super();
+		this.self = self;
+		this.connectRetries = connectRetries;
+		this.compressionLevel = compressionLevel;
 	}
 
 	/**
@@ -77,5 +96,9 @@ public class NettyNetworkInit extends Init {
 	 */
 	public int getConnectRetries() {
 		return connectRetries;
+	}
+	
+	public int getCompressionLevel() {
+		return compressionLevel;
 	}
 }

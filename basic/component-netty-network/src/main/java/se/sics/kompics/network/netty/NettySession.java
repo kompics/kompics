@@ -39,7 +39,7 @@ import se.sics.kompics.network.Transport;
  * The <code>NettySession</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: NettySession.java 636 2009-02-08 01:41:23Z Cosmin $
+ * @version $Id$
  */
 public class NettySession implements ChannelFutureListener {
 
