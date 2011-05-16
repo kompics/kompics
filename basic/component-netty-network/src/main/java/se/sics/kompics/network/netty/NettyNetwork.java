@@ -37,7 +37,6 @@ import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
 import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
 import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
-import org.jboss.netty.handler.logging.LoggingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,19 +108,23 @@ public class NettyNetwork extends ComponentDefinition {
 			localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
 					init.getSelf().getPort());
 
+			final int compressionLevel = init.getCompressionLevel();
+
 			serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
 				@Override
 				public ChannelPipeline getPipeline() throws Exception {
 					ChannelPipeline pipeline = Channels.pipeline();
 
-					pipeline.addLast("deflater",
-							new ZlibEncoder(init.getCompressionLevel()));
-					pipeline.addLast("inflater", new ZlibDecoder());
+					if (compressionLevel > 0) {
+						pipeline.addLast("deflater", new ZlibEncoder(
+								compressionLevel));
+						pipeline.addLast("inflater", new ZlibDecoder());
+					}
 
 					pipeline.addLast("decoder", new ObjectDecoder());
 					pipeline.addLast("encoder", new ObjectEncoder());
 
-					pipeline.addLast("logger", new LoggingHandler("Netty"));
+					// pipeline.addLast("logger", new LoggingHandler("Netty"));
 
 					pipeline.addLast("handler", tcpHandler);
 					return pipeline;
@@ -138,14 +141,16 @@ public class NettyNetwork extends ComponentDefinition {
 				public ChannelPipeline getPipeline() throws Exception {
 					ChannelPipeline pipeline = Channels.pipeline();
 
-					pipeline.addLast("deflater",
-							new ZlibEncoder(init.getCompressionLevel()));
-					pipeline.addLast("inflater", new ZlibDecoder());
+					if (compressionLevel > 0) {
+						pipeline.addLast("deflater", new ZlibEncoder(
+								compressionLevel));
+						pipeline.addLast("inflater", new ZlibDecoder());
+					}
 
 					pipeline.addLast("decoder", new ObjectDecoder());
 					pipeline.addLast("encoder", new ObjectEncoder());
 
-					pipeline.addLast("logger", new LoggingHandler("Netty"));
+					// pipeline.addLast("logger", new LoggingHandler("Netty"));
 
 					pipeline.addLast("handler", tcpHandler);
 					return pipeline;

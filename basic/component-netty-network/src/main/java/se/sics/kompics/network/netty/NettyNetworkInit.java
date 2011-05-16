@@ -61,7 +61,7 @@ public class NettyNetworkInit extends Init {
 		super();
 		this.self = self;
 		this.connectRetries = connectRetries;
-		this.compressionLevel = 9;
+		this.compressionLevel = 0;  // do not compress by default
 	}
 
 	/**
