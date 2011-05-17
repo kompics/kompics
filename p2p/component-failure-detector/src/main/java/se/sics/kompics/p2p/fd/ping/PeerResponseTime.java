@@ -94,7 +94,7 @@ public class PeerResponseTime {
 			varRTT = ((samples * varRTT) - oldSqerr + newSqerr) / samples;
 			stdRTT = Math.sqrt(varRTT);
 
-			RTO = avgRTT + K * varRTT;
+			RTO = avgRTT + K * stdRTT;
 		
 			// replace oldRtt with newRtt
 			rtt[lastRttIdx] = newRtt;
@@ -108,7 +108,7 @@ public class PeerResponseTime {
 			varRTT = ((samples * varRTT) + sqErr) / (samples + 1);
 			stdRTT = Math.sqrt(varRTT);
 
-			RTO = avgRTT + K * varRTT;
+			RTO = avgRTT + K * stdRTT;
 
 			// add new RTT and square error to our samples
 			rtt[lastRttIdx] = newRtt;
