@@ -149,6 +149,15 @@ public final class MinaNetwork extends ComponentDefinition {
 					init.getSelf().getPort());
 
 			int compressionLevel = init.getCompressionLevel();
+			if (compressionLevel > 5) {
+				compressionLevel = CompressionFilter.COMPRESSION_MAX;
+			} else if (compressionLevel >= 1) {
+				compressionLevel = CompressionFilter.COMPRESSION_MIN;
+			} else if (compressionLevel == 0) {
+				compressionLevel = CompressionFilter.COMPRESSION_NONE;
+			} else {
+				compressionLevel = CompressionFilter.COMPRESSION_DEFAULT;
+			}
 
 			// UDP Acceptor
 			udpAcceptor = new NioDatagramAcceptor();

@@ -69,7 +69,7 @@ public final class MinaNetworkInit extends Init {
 		this.self = self;
 		this.connectRetries = connectRetries;
 		this.multicastPort = multicastPort;
-		this.compressionLevel = 9;
+		this.compressionLevel = -1;
 	}
 
 	public MinaNetworkInit(Address self, int connectRetries, int multicastPort,
