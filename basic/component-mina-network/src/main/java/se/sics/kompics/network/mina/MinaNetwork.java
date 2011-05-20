@@ -191,8 +191,11 @@ public final class MinaNetwork extends ComponentDefinition {
 			tcpAcceptor.setHandler(tcpHandler);
 			DefaultIoFilterChainBuilder tcpAcceptorChain = tcpAcceptor
 					.getFilterChain();
-			tcpAcceptorChain.addLast("compress", new CompressionFilter(
-					compressionLevel));
+			
+			if (compressionLevel != CompressionFilter.COMPRESSION_NONE) {
+				tcpAcceptorChain.addLast("compress", new CompressionFilter(
+						compressionLevel));
+			}
 			tcpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
 //			tcpAcceptorChain.addLast("logger", new LoggingFilter("mina"));
@@ -220,8 +223,11 @@ public final class MinaNetwork extends ComponentDefinition {
 			tcpConnector.setHandler(tcpHandler);
 			DefaultIoFilterChainBuilder tcpConnectorChain = tcpConnector
 					.getFilterChain();
-			tcpConnectorChain.addLast("compress", new CompressionFilter(
-					compressionLevel));
+
+			if (compressionLevel != CompressionFilter.COMPRESSION_NONE) {
+				tcpConnectorChain.addLast("compress", new CompressionFilter(
+						compressionLevel));
+			}
 			tcpConnectorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
 //			tcpConnectorChain.addLast("logger", new LoggingFilter("mina"));
