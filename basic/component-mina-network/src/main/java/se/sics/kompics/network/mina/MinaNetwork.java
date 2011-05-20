@@ -39,7 +39,6 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
 import org.apache.mina.filter.compression.CompressionFilter;
-import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
 import org.apache.mina.transport.socket.nio.NioDatagramConnector;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
@@ -196,9 +195,13 @@ public final class MinaNetwork extends ComponentDefinition {
 					compressionLevel));
 			tcpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
-			tcpAcceptorChain.addLast("logger", new LoggingFilter("mina"));
+//			tcpAcceptorChain.addLast("logger", new LoggingFilter("mina"));
 
+			tcpAcceptor.getSessionConfig().setTcpNoDelay(true);
 			tcpAcceptor.setReuseAddress(true);
+			tcpAcceptor.getSessionConfig().setKeepAlive(true);
+			tcpAcceptor.getSessionConfig().setReuseAddress(true);
+
 			try {
 				tcpAcceptor.bind(localSocketAddress);
 			} catch (IOException e) {
@@ -209,8 +212,11 @@ public final class MinaNetwork extends ComponentDefinition {
 			// TCP Connector
 			tcpConnector = new NioSocketConnector();
 			tcpConnector.getSessionConfig().setTcpNoDelay(true); // Nagle's
-			// algorithm
-			// disabled
+			// algorithm disabled
+			tcpConnector.getSessionConfig().setKeepAlive(true);
+			tcpConnector.getSessionConfig().setReuseAddress(true);
+			tcpConnector.setConnectTimeoutMillis(5000);
+			
 			tcpConnector.setHandler(tcpHandler);
 			DefaultIoFilterChainBuilder tcpConnectorChain = tcpConnector
 					.getFilterChain();
@@ -218,7 +224,7 @@ public final class MinaNetwork extends ComponentDefinition {
 					compressionLevel));
 			tcpConnectorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
-			tcpConnectorChain.addLast("logger", new LoggingFilter("mina"));
+//			tcpConnectorChain.addLast("logger", new LoggingFilter("mina"));
 
 			ExceptionMonitor.setInstance(new ExceptionMonitor() {
 				@Override
