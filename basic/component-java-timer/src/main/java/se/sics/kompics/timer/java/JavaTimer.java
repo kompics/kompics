@@ -66,7 +66,7 @@ public final class JavaTimer extends ComponentDefinition {
 		this.activeTimers = new HashMap<UUID, TimerSignalTask>();
 		this.activePeriodicTimers = new HashMap<UUID, PeriodicTimerSignalTask>();
 		this.javaTimer = new java.util.Timer("JavaTimer@"
-				+ Integer.toHexString(this.hashCode()));
+				+ Integer.toHexString(this.hashCode()), true);
 		timerComponent = this;
 
 		subscribe(handleST, timer);
