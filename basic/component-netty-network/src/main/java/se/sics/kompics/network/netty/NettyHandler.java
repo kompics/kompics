@@ -63,12 +63,12 @@ public class NettyHandler extends SimpleChannelUpstreamHandler {
 		if (address != null)
 			logger.debug("Problems with {} connection to {}", protocol, address);
 
-		logger.warn("Exception caught: {}-{} in {}/{}",
+		logger.error("Exception caught: {}-{} in {}/{}",
 				new Object[] { e.getCause(), e.getCause().getMessage(),
 						address, e.getChannel() });
 		StackTraceElement[] stackTrace = e.getCause().getStackTrace();
 		for (int i = 0; i < stackTrace.length; i++) {
-			logger.warn(" -> {}", stackTrace[i].toString());
+			logger.error(" -> {}", stackTrace[i].toString());
 		}
 
 		networkComponent.networkException(new NetworkException(address,
