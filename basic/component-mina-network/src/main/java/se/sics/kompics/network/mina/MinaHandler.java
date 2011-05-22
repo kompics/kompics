@@ -79,11 +79,11 @@ public class MinaHandler extends IoHandlerAdapter {
 					.debug("Problems with {} connection to {}", protocol,
 							address);
 
-		logger.warn("Exception caught: {}-{} in {}/{}", new Object[] { cause,
+		logger.error("Exception caught: {}-{} in {}/{}", new Object[] { cause,
 				cause.getMessage(), address, session });
 		StackTraceElement[] stackTrace = cause.getStackTrace();
 		for (int i = 0; i < stackTrace.length; i++) {
-			logger.warn(" -> {}", stackTrace[i].toString());
+			logger.error(" -> {}", stackTrace[i].toString());
 		}
 
 		networkComponent.networkException(new NetworkException(address,
