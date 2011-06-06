@@ -9,8 +9,8 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
-import se.sics.kompics.network.grizzly.GrizzlyNetwork;
-import se.sics.kompics.network.grizzly.GrizzlyNetworkInit;
+import se.sics.kompics.network.netty.NettyNetwork;
+import se.sics.kompics.network.netty.NettyNetworkInit;
 
 public class TestServer extends ComponentDefinition {
 
@@ -22,11 +22,11 @@ public class TestServer extends ComponentDefinition {
 	Address self;
 
 	public TestServer() throws UnknownHostException {
-		netty = create(GrizzlyNetwork.class);
+		netty = create(NettyNetwork.class);
 		subscribe(h, netty.provided(Network.class));
 		self = new Address(InetAddress.getLocalHost(), 2222, 0);
 
-		trigger(new GrizzlyNetworkInit(self), netty.control());
+		trigger(new NettyNetworkInit(self), netty.control());
 	}
 
 	Handler<TestMessage> h = new Handler<TestMessage>() {

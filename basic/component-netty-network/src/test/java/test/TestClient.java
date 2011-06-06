@@ -13,8 +13,8 @@ import se.sics.kompics.Kompics;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
-import se.sics.kompics.network.grizzly.GrizzlyNetwork;
-import se.sics.kompics.network.grizzly.GrizzlyNetworkInit;
+import se.sics.kompics.network.netty.NettyNetwork;
+import se.sics.kompics.network.netty.NettyNetworkInit;
 
 public class TestClient extends ComponentDefinition {
 
@@ -29,10 +29,10 @@ public class TestClient extends ComponentDefinition {
 	Component netty;
 
 	public TestClient() throws UnknownHostException {
-		netty = create(GrizzlyNetwork.class);
+		netty = create(NettyNetwork.class);
 		subscribe(start, control);
 		subscribe(h, netty.provided(Network.class));
-		trigger(new GrizzlyNetworkInit(c), netty.control());
+		trigger(new NettyNetworkInit(c), netty.control());
 	}
 
 	Handler<Start> start = new Handler<Start>() {
