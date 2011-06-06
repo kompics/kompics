@@ -1,4 +1,4 @@
-package test;
+package se.sics.kompics.network.grizzly.test;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -12,30 +12,27 @@ import se.sics.kompics.network.Network;
 import se.sics.kompics.network.grizzly.GrizzlyNetwork;
 import se.sics.kompics.network.grizzly.GrizzlyNetworkInit;
 
-public class TestServer extends ComponentDefinition {
+public class PerfServer extends ComponentDefinition {
 
 	public static void main(String[] args) {
-		Kompics.createAndStart(TestServer.class);
+		Kompics.createAndStart(PerfServer.class);
 	}
 
-	Component netty;
+	Component grizzly;
 	Address self;
 
-	public TestServer() throws UnknownHostException {
-		netty = create(GrizzlyNetwork.class);
-		subscribe(h, netty.provided(Network.class));
+	public PerfServer() throws UnknownHostException {
+		grizzly = create(GrizzlyNetwork.class);
+		subscribe(h, grizzly.provided(Network.class));
 		self = new Address(InetAddress.getLocalHost(), 2222, 0);
 
-		trigger(new GrizzlyNetworkInit(self), netty.control());
+		trigger(new GrizzlyNetworkInit(self), grizzly.control());
 	}
 
 	Handler<TestMessage> h = new Handler<TestMessage>() {
 		public void handle(TestMessage event) {
-			System.err.println("Received " + event.getPayload().length
-					+ " bytes " + new String(event.getPayload()));
-
 			trigger(new TestMessage(self, event.getSource(), "World".getBytes()),
-					netty.provided(Network.class));
+					grizzly.provided(Network.class));
 		}
 	};
 }

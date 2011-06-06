@@ -1,4 +1,4 @@
-package test;
+package se.sics.kompics.network.grizzly.test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,13 +26,13 @@ public class TestClient extends ComponentDefinition {
 	Address s = new Address(InetAddress.getLocalHost(), 2222, 0);
 	Address mcast;
 
-	Component netty;
+	Component grizzly;
 
 	public TestClient() throws UnknownHostException {
-		netty = create(GrizzlyNetwork.class);
+		grizzly = create(GrizzlyNetwork.class);
 		subscribe(start, control);
-		subscribe(h, netty.provided(Network.class));
-		trigger(new GrizzlyNetworkInit(c), netty.control());
+		subscribe(h, grizzly.provided(Network.class));
+		trigger(new GrizzlyNetworkInit(c), grizzly.control());
 	}
 
 	Handler<Start> start = new Handler<Start>() {
@@ -42,7 +42,7 @@ public class TestClient extends ComponentDefinition {
 
 			TestMessage tm = new TestMessage(c, s, message.getBytes());
 
-			trigger(tm, netty.provided(Network.class));
+			trigger(tm, grizzly.provided(Network.class));
 
 			try {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -67,8 +67,8 @@ public class TestClient extends ComponentDefinition {
 			System.err.println("Received " + event.getPayload().length
 					+ " bytes " + new String(event.getPayload()));
 
-//			trigger(new TestMessage(event.getDestination(), event.getSource(),
-//					"Hello".getBytes()), netty.provided(Network.class));
+			trigger(new TestMessage(event.getDestination(), event.getSource(),
+					"Hello".getBytes()), grizzly.provided(Network.class));
 		}
 	};
 

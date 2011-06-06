@@ -1,4 +1,4 @@
-package test;
+package se.sics.kompics.network.grizzly.test;
 
 import org.junit.Ignore;
 
