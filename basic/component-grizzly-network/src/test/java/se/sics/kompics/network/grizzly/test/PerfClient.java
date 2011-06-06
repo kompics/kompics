@@ -26,7 +26,7 @@ public class PerfClient extends ComponentDefinition {
 	Component grizzly;
 	long startTime, received = 0, lastTime, lastCount = 0;
 
-	int pipeline = 40;
+	int pipeline = 6;
 	
 	public PerfClient() throws UnknownHostException {
 		grizzly = create(GrizzlyNetwork.class);
