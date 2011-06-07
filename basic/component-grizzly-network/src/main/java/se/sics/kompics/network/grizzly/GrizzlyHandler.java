@@ -37,7 +37,7 @@ import se.sics.kompics.network.Transport;
  * The <code>GrizzlyHandler</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: GrizzlyHandler.java 4003 2011-05-22 09:24:32Z Cosmin $
+ * @version $Id$
  */
 public class GrizzlyHandler extends BaseFilter {
 

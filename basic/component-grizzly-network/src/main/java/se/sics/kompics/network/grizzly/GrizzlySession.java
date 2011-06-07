@@ -39,7 +39,7 @@ import se.sics.kompics.network.Transport;
  * The <code>GrizzlySession</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: GrizzlySession.java 3993 2011-05-16 14:14:25Z Cosmin $
+ * @version $Id$
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class GrizzlySession {

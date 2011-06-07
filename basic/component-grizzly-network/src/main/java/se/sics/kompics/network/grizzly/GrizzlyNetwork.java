@@ -56,7 +56,7 @@ import se.sics.kompics.network.grizzly.serialization.JavaSerializationFilter;
  * The <code>GrizzlyNetwork</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: GrizzlyNetwork.java 3996 2011-05-16 17:14:12Z Cosmin $
+ * @version $Id$
  */
 public class GrizzlyNetwork extends ComponentDefinition {
 

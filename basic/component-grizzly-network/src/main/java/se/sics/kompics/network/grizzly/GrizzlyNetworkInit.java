@@ -27,7 +27,7 @@ import se.sics.kompics.address.Address;
  * The <code>GrizzlyNetworkInit</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
- * @version $Id: GrizzlyNetworkInit.java 3996 2011-05-16 17:14:12Z Cosmin $
+ * @version $Id$
  */
 public class GrizzlyNetworkInit extends Init {
 
