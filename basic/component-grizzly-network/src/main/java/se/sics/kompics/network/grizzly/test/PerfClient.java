@@ -3,6 +3,8 @@ package se.sics.kompics.network.grizzly.test;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.apache.log4j.PropertyConfigurator;
+
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
@@ -15,20 +17,32 @@ import se.sics.kompics.network.grizzly.GrizzlyNetworkInit;
 
 public class PerfClient extends ComponentDefinition {
 
+	static {
+		PropertyConfigurator.configureAndWatch("log4j.properties");
+	}
+	
 	public static void main(String[] args) {
 		Kompics.createAndStart(PerfClient.class);
 	}
 
-	Address c = new Address(InetAddress.getLocalHost(), 3333, 0);
-	Address s = new Address(InetAddress.getLocalHost(), 2222, 0);
-	Address mcast;
+	Address c = new Address(InetAddress.getByName(System
+			.getProperty("PERF_CLIENT", "127.0.0.1")), 3333, 0);
+	Address s = new Address(InetAddress.getByName(System
+			.getProperty("PERF_SERVER", "127.0.0.1")), 2222, 0);
+
+//	Address c = new Address(InetAddress.getLocalHost(), 3333, 0);
+//	Address s = new Address(InetAddress.getLocalHost(), 2222, 0);
 
 	Component grizzly;
 	long startTime, received = 0, lastTime, lastCount = 0;
 
-	int pipeline = 6;
+	int pipeline = Integer.parseInt(System.getProperty("PIPELINE", "10"));
 	
 	public PerfClient() throws UnknownHostException {
+		System.err.println("Server address is " + s.getIp() + ":" + 2222);
+		System.err.println("Client address is " + c.getIp() + ":" + 3333);
+		System.err.println("Pipeline is " + pipeline);
+		
 		grizzly = create(GrizzlyNetwork.class);
 		subscribe(start, control);
 		subscribe(h, grizzly.provided(Network.class));

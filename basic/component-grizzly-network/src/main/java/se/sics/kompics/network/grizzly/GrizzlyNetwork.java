@@ -30,8 +30,6 @@ import java.util.concurrent.Executors;
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
 import org.glassfish.grizzly.filterchain.TransportFilter;
-import org.glassfish.grizzly.monitoring.jmx.GrizzlyJmxManager;
-import org.glassfish.grizzly.monitoring.jmx.JmxObject;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
 import org.glassfish.grizzly.strategies.SameThreadIOStrategy;
@@ -125,10 +123,10 @@ public class GrizzlyNetwork extends ComponentDefinition {
 			transport.setKeepAlive(true);
 			transport.setTcpNoDelay(true);
 
-			final GrizzlyJmxManager manager = GrizzlyJmxManager.instance();
-			JmxObject jmxTransportObject = transport.getMonitoringConfig()
-					.createManagementObject();
-			manager.registerAtRoot(jmxTransportObject, "GrizzlyTransport");
+//			final GrizzlyJmxManager manager = GrizzlyJmxManager.instance();
+//			JmxObject jmxTransportObject = transport.getMonitoringConfig()
+//					.createManagementObject();
+//			manager.registerAtRoot(jmxTransportObject, "GrizzlyTransport");
 
 			try {
 				transport.bind(localSocketAddress);
