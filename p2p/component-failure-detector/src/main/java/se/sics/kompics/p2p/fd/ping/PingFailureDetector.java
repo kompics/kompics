@@ -255,9 +255,11 @@ public final class PingFailureDetector extends ComponentDefinition {
 
 	void suspect(PeerFailureSuspicion suspectEvent) {
 		trigger(suspectEvent, fd);
+		logger.debug("Peer {} is suspected", suspectEvent.getPeerAddress());
 	}
 
 	void revise(PeerFailureSuspicion reviseEvent) {
 		trigger(reviseEvent, fd);
+		logger.debug("Peer {} is revised", reviseEvent.getPeerAddress());
 	}
 }
