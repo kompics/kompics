@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.UUID;
 
+import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -54,6 +55,7 @@ public class KryoMessage {
 			}
 		});
 		kryo.register(Inet4Address.class);
+		kryo.register(Address.class);
 		if (compress) {
 			kryo.register(Message.class, new DeflateCompressor(
 					new FieldSerializer(kryo, Message.class)));
