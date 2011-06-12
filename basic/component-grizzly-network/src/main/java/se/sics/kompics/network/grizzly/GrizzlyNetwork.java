@@ -103,8 +103,10 @@ public class GrizzlyNetwork extends ComponentDefinition {
 			localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
 					init.getSelf().getPort());
 
+			boolean compress = init.getCompressionLevel() != 0;
+			
 			filterChainBuilder.add(new TransportFilter());
-			filterChainBuilder.add(new KryoSerializationFilter());
+			filterChainBuilder.add(new KryoSerializationFilter(compress));
 //			filterChainBuilder.add(new JavaSerializationFilter());
 			filterChainBuilder.add(tcpHandler);
 

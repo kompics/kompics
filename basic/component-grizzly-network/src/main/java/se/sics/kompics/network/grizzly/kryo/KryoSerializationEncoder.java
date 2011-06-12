@@ -18,10 +18,10 @@ public class KryoSerializationEncoder extends
 
 	private Kryo kryo;
 
-	public KryoSerializationEncoder() {
+	public KryoSerializationEncoder(boolean compress) {
 		setMemoryManager(MemoryManager.DEFAULT_MEMORY_MANAGER);
 		kryo = new KryoReflectionFactorySupport();
-		KryoMessage.registerMessages(kryo);
+		KryoMessage.registerMessages(kryo, compress);
 	}
 
 	@Override

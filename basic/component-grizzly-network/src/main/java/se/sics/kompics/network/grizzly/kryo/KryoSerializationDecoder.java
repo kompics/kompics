@@ -21,9 +21,9 @@ public class KryoSerializationDecoder extends
 
 	private Kryo kryo;
 
-	public KryoSerializationDecoder() {
+	public KryoSerializationDecoder(boolean compress) {
 		kryo = new KryoReflectionFactorySupport();
-		KryoMessage.registerMessages(kryo);
+		KryoMessage.registerMessages(kryo, compress);
 	}
 
 	@Override
