@@ -50,7 +50,7 @@ import se.sics.kompics.network.NetworkException;
 import se.sics.kompics.network.NetworkSessionClosed;
 import se.sics.kompics.network.NetworkSessionOpened;
 import se.sics.kompics.network.Transport;
-import se.sics.kompics.network.grizzly.serialization.JavaSerializationFilter;
+import se.sics.kompics.network.grizzly.kryo.KryoSerializationFilter;
 
 /**
  * The <code>GrizzlyNetwork</code> class.
@@ -104,7 +104,8 @@ public class GrizzlyNetwork extends ComponentDefinition {
 					init.getSelf().getPort());
 
 			filterChainBuilder.add(new TransportFilter());
-			filterChainBuilder.add(new JavaSerializationFilter());
+			filterChainBuilder.add(new KryoSerializationFilter());
+//			filterChainBuilder.add(new JavaSerializationFilter());
 			filterChainBuilder.add(tcpHandler);
 
 			builder = TCPNIOTransportBuilder.newInstance();

@@ -14,6 +14,7 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.grizzly.GrizzlyNetwork;
 import se.sics.kompics.network.grizzly.GrizzlyNetworkInit;
+import se.sics.kompics.network.grizzly.kryo.KryoMessage;
 
 public class PerfClient extends ComponentDefinition {
 
@@ -22,6 +23,8 @@ public class PerfClient extends ComponentDefinition {
 	}
 	
 	public static void main(String[] args) {
+		KryoMessage.register(TestMessage.class);
+
 		Kompics.createAndStart(PerfClient.class);
 	}
 
@@ -67,7 +70,7 @@ public class PerfClient extends ComponentDefinition {
 			received++;
 			lastCount++;
 
-			if (received % 10000 == 0)
+			if (received % 100000 == 0)
 				stats();
 
 			trigger(new TestMessage(event.getDestination(), event.getSource(),
@@ -78,7 +81,7 @@ public class PerfClient extends ComponentDefinition {
 	void stats() {
 		long now = System.nanoTime();
 		
-		dumpStats("Last 10000 ", now - lastTime, lastCount);
+		dumpStats("Last 100000 ", now - lastTime, lastCount);
 		dumpStats("Overall                        ", now - startTime, received);
 		
 		lastTime = System.nanoTime();

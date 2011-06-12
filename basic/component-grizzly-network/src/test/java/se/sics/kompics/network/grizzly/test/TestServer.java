@@ -11,10 +11,13 @@ import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.grizzly.GrizzlyNetwork;
 import se.sics.kompics.network.grizzly.GrizzlyNetworkInit;
+import se.sics.kompics.network.grizzly.kryo.KryoMessage;
 
 public class TestServer extends ComponentDefinition {
 
 	public static void main(String[] args) {
+		KryoMessage.register(TestMessage.class);
+
 		Kompics.createAndStart(TestServer.class);
 	}
 

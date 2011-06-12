@@ -43,6 +43,16 @@
 			<artifactId>gmbal</artifactId>
 			<version>3.0.0-b023</version>
 		</dependency>
+		<dependency>
+			<groupId>com.googlecode</groupId>
+			<artifactId>kryo</artifactId>
+			<version>1.04</version>
+		</dependency>
+		<dependency>
+			<groupId>de.javakaffee</groupId>
+			<artifactId>kryo-serializers</artifactId>
+			<version>0.9</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>
