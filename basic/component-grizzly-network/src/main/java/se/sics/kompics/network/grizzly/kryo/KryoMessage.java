@@ -2,7 +2,7 @@ package se.sics.kompics.network.grizzly.kryo;
 
 import java.net.Inet4Address;
 import java.nio.ByteBuffer;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.UUID;
 
 import se.sics.kompics.address.Address;
@@ -16,7 +16,7 @@ import com.esotericsoftware.kryo.serialize.SimpleSerializer;
 public class KryoMessage {
 
 	// registered message types
-	private static HashSet<Class<?>> registeredMessageTypes = new HashSet<Class<?>>();
+	private static LinkedList<Class<?>> registeredMessageTypes = new LinkedList<Class<?>>();
 
 	private static boolean registered = false;
 

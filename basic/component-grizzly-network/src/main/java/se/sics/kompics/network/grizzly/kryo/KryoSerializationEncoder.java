@@ -47,7 +47,7 @@ public class KryoSerializationEncoder extends
 			Buffer header = getMemoryManager().allocate(8192);
 			header.putInt(0);
 
-//			kryo.writeObject(header.toByteBuffer(), input);
+			// kryo.writeObject(header.toByteBuffer(), input);
 
 			BufferOutputStream bos = new BufferOutputStream(getMemoryManager(),
 					header);
@@ -59,12 +59,12 @@ public class KryoSerializationEncoder extends
 
 			header.putInt(0, length);
 
+			// System.out.println("SERIALIZED " + input.getClass() + " object: "
+			// + input.toString() + " into " + length + " bytes.");
+
 			output.flip();
 			output.allowBufferDispose(true);
 			header.allowBufferDispose(true);
-
-//			System.err.println("SERIALIZED " + input.getClass() + " object: "
-//					+ input.toString() + " into " + length + " bytes.");
 
 			return TransformationResult.createCompletedResult(output, null);
 		} catch (Exception e) {

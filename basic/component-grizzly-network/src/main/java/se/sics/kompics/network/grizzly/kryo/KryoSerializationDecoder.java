@@ -61,13 +61,10 @@ public class KryoSerializationDecoder extends
 			ObjectBuffer ob = new ObjectBuffer(kryo);
 			Object output = ob.readClassAndObject(bis, serialLength);
 
-//			System.err.println("DESERIALIZED " + output.getClass() + " object: "
-//					+ output.toString() + " from " + serialLength + " bytes.");
-//			input.flip();
-//			byte[] ggg = new byte[serialLength];
-//			input.get(ggg);
-//			System.err.println("BB: " + new String(ggg));
-			
+			// System.out.println("DESERIALIZED " + output.getClass()
+			// + " object: " + output.toString() + " from " + serialLength
+			// + " bytes.");
+
 			return TransformationResult.createCompletedResult(output, input);
 		} catch (Exception e) {
 			throw new TransformationException("Deserialization exception", e);
