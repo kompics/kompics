@@ -178,6 +178,8 @@ public class GrizzlyNetwork extends ComponentDefinition {
 						message.getDestination(), message.getProtocol() });
 
 		trigger(message, net);
+		
+		GrizzlyListener.delivered(message);
 	}
 
 	private GrizzlySession getTcpSession(Address destination) {
