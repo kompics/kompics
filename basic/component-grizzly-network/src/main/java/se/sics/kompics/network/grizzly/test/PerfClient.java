@@ -21,31 +21,36 @@ public class PerfClient extends ComponentDefinition {
 	static {
 		PropertyConfigurator.configureAndWatch("log4j.properties");
 	}
-	
+
 	public static void main(String[] args) {
 		KryoMessage.register(TestMessage.class);
 
 		Kompics.createAndStart(PerfClient.class);
 	}
 
-	Address c = new Address(InetAddress.getByName(System
-			.getProperty("PERF_CLIENT", "127.0.0.1")), 3333, 0);
-	Address s = new Address(InetAddress.getByName(System
-			.getProperty("PERF_SERVER", "127.0.0.1")), 2222, 0);
+	String server = System.getProperty("PERF_SERVER");
+	String client = System.getProperty("PERF_CLIENT");
+	String serverAddress[] = server.split(":");
+	String clientAddress[] = client.split(":");
 
-//	Address c = new Address(InetAddress.getLocalHost(), 3333, 0);
-//	Address s = new Address(InetAddress.getLocalHost(), 2222, 0);
+	InetAddress sip = InetAddress.getByName(serverAddress[0]);
+	int sport = Integer.parseInt(serverAddress[1]);
+	InetAddress cip = InetAddress.getByName(clientAddress[0]);
+	int cport = Integer.parseInt(clientAddress[1]);
+
+	Address c = new Address(cip, cport, 0);
+	Address s = new Address(sip, sport, 0);
 
 	Component grizzly;
 	long startTime, received = 0, lastTime, lastCount = 0;
 
-	int pipeline = Integer.parseInt(System.getProperty("PIPELINE", "10"));
-	
+	int pipeline = Integer.parseInt(System.getProperty("PIPELINE", "40"));
+
 	public PerfClient() throws UnknownHostException {
-		System.err.println("Server address is " + s.getIp() + ":" + 2222);
-		System.err.println("Client address is " + c.getIp() + ":" + 3333);
+		System.err.println("Server address is " + s.getIp() + ":" + s.getPort());
+		System.err.println("Client address is " + c.getIp() + ":" + c.getPort());
 		System.err.println("Pipeline is " + pipeline);
-		
+
 		grizzly = create(GrizzlyNetwork.class);
 		subscribe(start, control);
 		subscribe(h, grizzly.provided(Network.class));
@@ -55,7 +60,7 @@ public class PerfClient extends ComponentDefinition {
 	Handler<Start> start = new Handler<Start>() {
 		public void handle(Start event) {
 			String message = "Hello!";
-			
+
 			for (int i = 0; i < pipeline; i++) {
 				TestMessage tm = new TestMessage(c, s, message.getBytes());
 				trigger(tm, grizzly.provided(Network.class));
@@ -80,14 +85,14 @@ public class PerfClient extends ComponentDefinition {
 
 	void stats() {
 		long now = System.nanoTime();
-		
+
 		dumpStats("Last 100000 ", now - lastTime, lastCount);
 		dumpStats("Overall                        ", now - startTime, received);
-		
+
 		lastTime = System.nanoTime();
 		lastCount = 0;
 	}
-	
+
 	void dumpStats(String stat, long time, long count) {
 		double tput = (double) count;
 		double seconds = ((double) time) / 1000000000.0;

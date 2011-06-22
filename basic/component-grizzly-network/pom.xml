@@ -53,6 +53,16 @@
 			<artifactId>kryo-serializers</artifactId>
 			<version>0.9</version>
 		</dependency>
+		<dependency>
+			<groupId>com.dyuproject.protostuff</groupId>
+			<artifactId>protostuff-runtime</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.dyuproject.protostuff</groupId>
+			<artifactId>protostuff-core</artifactId>
+			<version>1.0.0</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>
@@ -88,6 +98,11 @@
 			<id>java.net</id>
 			<name>Java.net Repository for Grizzly</name>
 			<url>http://download.java.net/maven/2</url>
+		</repository>
+		<repository>
+			<id>protostuff-repo</id>
+			<name>protostuff-repo</name>
+			<url>http://protostuff.googlecode.com/svn/repos/maven2</url>
 		</repository>
 	</repositories>
 </project>

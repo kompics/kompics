@@ -41,7 +41,7 @@ public class TestClient extends ComponentDefinition {
 	Handler<Start> start = new Handler<Start>() {
 		public void handle(Start event) {
 
-			String message = "Hello!";
+			String message = "Hello!!";
 
 			TestMessage tm = new TestMessage(c, s, message.getBytes());
 

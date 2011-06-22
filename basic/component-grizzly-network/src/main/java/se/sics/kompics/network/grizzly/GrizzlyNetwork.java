@@ -104,19 +104,20 @@ public class GrizzlyNetwork extends ComponentDefinition {
 					init.getSelf().getPort());
 
 			boolean compress = init.getCompressionLevel() != 0;
-			
+
 			filterChainBuilder.add(new TransportFilter());
+			// filterChainBuilder.add(new ProtostuffSerializationFilter());
 			filterChainBuilder.add(new KryoSerializationFilter(compress));
-//			filterChainBuilder.add(new JavaSerializationFilter());
+			// filterChainBuilder.add(new JavaSerializationFilter());
 			filterChainBuilder.add(tcpHandler);
 
 			builder = TCPNIOTransportBuilder.newInstance();
 
 			transport = builder
 					.setIOStrategy(SameThreadIOStrategy.getInstance())
-//					.setIOStrategy(WorkerThreadIOStrategy.getInstance())
-//					.setIOStrategy(SimpleDynamicNIOStrategy.getInstance())
-//					.setIOStrategy(LeaderFollowerNIOStrategy.getInstance())
+					// .setIOStrategy(WorkerThreadIOStrategy.getInstance())
+					// .setIOStrategy(SimpleDynamicNIOStrategy.getInstance())
+					// .setIOStrategy(LeaderFollowerNIOStrategy.getInstance())
 					.setKeepAlive(true).setReuseAddress(true)
 					.setTcpNoDelay(true).build();
 
@@ -126,10 +127,10 @@ public class GrizzlyNetwork extends ComponentDefinition {
 			transport.setKeepAlive(true);
 			transport.setTcpNoDelay(true);
 
-//			final GrizzlyJmxManager manager = GrizzlyJmxManager.instance();
-//			JmxObject jmxTransportObject = transport.getMonitoringConfig()
-//					.createManagementObject();
-//			manager.registerAtRoot(jmxTransportObject, "GrizzlyTransport");
+			// final GrizzlyJmxManager manager = GrizzlyJmxManager.instance();
+			// JmxObject jmxTransportObject = transport.getMonitoringConfig()
+			// .createManagementObject();
+			// manager.registerAtRoot(jmxTransportObject, "GrizzlyTransport");
 
 			try {
 				transport.bind(localSocketAddress);
@@ -178,7 +179,7 @@ public class GrizzlyNetwork extends ComponentDefinition {
 						message.getDestination(), message.getProtocol() });
 
 		trigger(message, net);
-		
+
 		GrizzlyListener.delivered(message);
 	}
 

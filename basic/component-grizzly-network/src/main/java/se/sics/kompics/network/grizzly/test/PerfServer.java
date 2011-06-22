@@ -23,7 +23,7 @@ public class PerfServer extends ComponentDefinition {
 
 	public static void main(String[] args) {
 		KryoMessage.register(TestMessage.class);
-		
+
 		Kompics.createAndStart(PerfServer.class);
 	}
 
@@ -34,15 +34,21 @@ public class PerfServer extends ComponentDefinition {
 		grizzly = create(GrizzlyNetwork.class);
 		subscribe(h, grizzly.provided(Network.class));
 
-		// InetAddress address = InetAddress.getLocalHost();
-		InetAddress address = InetAddress.getByName(System.getProperty(
-				"PERF_SERVER", "127.0.0.1"));
+		try {
+			String server = System.getProperty("PERF_SERVER");
+			String address[] = server.split(":");
 
-		System.err.println("Server listening on " + address + ":" + 2222);
+			InetAddress ip = InetAddress.getByName(address[0]);
+			int port = Integer.parseInt(address[1]);
 
-		self = new Address(address, 2222, 0);
+			System.err.println("Server listening on " + ip + ":" + port);
 
-		trigger(new GrizzlyNetworkInit(self), grizzly.control());
+			self = new Address(ip, port, 0);
+
+			trigger(new GrizzlyNetworkInit(self), grizzly.control());
+		} catch (Exception e) {
+			throw new RuntimeException("Cannot initialize network", e);
+		}
 	}
 
 	Handler<TestMessage> h = new Handler<TestMessage>() {
