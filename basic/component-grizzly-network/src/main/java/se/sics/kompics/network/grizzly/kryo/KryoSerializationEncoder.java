@@ -17,8 +17,12 @@ public class KryoSerializationEncoder extends
 		AbstractTransformer<Object, Buffer> {
 
 	private Kryo kryo;
+	private int initialBufferCapacity, maxBufferCapacity;
 
-	public KryoSerializationEncoder(boolean compress) {
+	public KryoSerializationEncoder(boolean compress,
+			int initialBufferCapacity, int maxBufferCapacity) {
+		this.initialBufferCapacity = initialBufferCapacity;
+		this.maxBufferCapacity = maxBufferCapacity;
 		setMemoryManager(MemoryManager.DEFAULT_MEMORY_MANAGER);
 		kryo = new KryoReflectionFactorySupport();
 		KryoMessage.registerMessages(kryo, compress);
@@ -51,7 +55,8 @@ public class KryoSerializationEncoder extends
 
 			BufferOutputStream bos = new BufferOutputStream(getMemoryManager(),
 					header);
-			ObjectBuffer ob = new ObjectBuffer(kryo);
+			ObjectBuffer ob = new ObjectBuffer(kryo, initialBufferCapacity,
+					maxBufferCapacity);
 			ob.writeClassAndObject(bos, input);
 
 			final Buffer output = bos.getBuffer();

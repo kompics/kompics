@@ -104,10 +104,13 @@ public class GrizzlyNetwork extends ComponentDefinition {
 					init.getSelf().getPort());
 
 			boolean compress = init.getCompressionLevel() != 0;
+			int initialBufferCapacity = init.getInitialBufferCapacity();
+			int maxBufferCapacity = init.getMaxBufferCapacity();
 
 			filterChainBuilder.add(new TransportFilter());
 			// filterChainBuilder.add(new ProtostuffSerializationFilter());
-			filterChainBuilder.add(new KryoSerializationFilter(compress));
+			filterChainBuilder.add(new KryoSerializationFilter(compress,
+					initialBufferCapacity, maxBufferCapacity));
 			// filterChainBuilder.add(new JavaSerializationFilter());
 			filterChainBuilder.add(tcpHandler);
 

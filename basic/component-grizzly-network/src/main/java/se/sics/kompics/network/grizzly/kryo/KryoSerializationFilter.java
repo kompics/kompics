@@ -6,8 +6,10 @@ import org.glassfish.grizzly.filterchain.AbstractCodecFilter;
 public final class KryoSerializationFilter extends
 		AbstractCodecFilter<Buffer, Object> {
 
-	public KryoSerializationFilter(boolean compress) {
-		super(new KryoSerializationDecoder(compress),
-				new KryoSerializationEncoder(compress));
+	public KryoSerializationFilter(boolean compress, int initialBufferCapacity,
+			int maxBufferCapacity) {
+		super(new KryoSerializationDecoder(compress, initialBufferCapacity,
+				maxBufferCapacity), new KryoSerializationEncoder(compress,
+				initialBufferCapacity, maxBufferCapacity));
 	}
 }

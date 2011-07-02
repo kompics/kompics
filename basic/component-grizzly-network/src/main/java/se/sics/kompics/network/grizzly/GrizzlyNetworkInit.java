@@ -39,6 +39,9 @@ public class GrizzlyNetworkInit extends Init {
 
 	private final int compressionLevel;
 
+	private final int initialBufferCapacity;
+	private final int maxBufferCapacity;
+
 	/**
 	 * Instantiates a new Netty network init.
 	 * 
@@ -58,26 +61,30 @@ public class GrizzlyNetworkInit extends Init {
 	 *            the connect retries
 	 */
 	public GrizzlyNetworkInit(Address self, int connectRetries) {
-		super();
-		this.self = self;
-		this.connectRetries = connectRetries;
-		this.compressionLevel = 0; // do not compress by default
+		this(self, connectRetries, 0);
 	}
 
 	/**
 	 * Instantiates a new Netty network init.
 	 * 
 	 * @param self
-	 *            the self
 	 * @param connectRetries
-	 *            the connect retries
+	 * @param compressionLevel
 	 */
 	public GrizzlyNetworkInit(Address self, int connectRetries,
 			int compressionLevel) {
+		this(self, connectRetries, compressionLevel, 2 * 1024, 16 * 1024);
+	}
+
+	public GrizzlyNetworkInit(Address self, int connectRetries,
+			int compressionLevel, int initialBufferCapacity,
+			int maxBufferCapacity) {
 		super();
 		this.self = self;
 		this.connectRetries = connectRetries;
 		this.compressionLevel = compressionLevel;
+		this.initialBufferCapacity = initialBufferCapacity;
+		this.maxBufferCapacity = maxBufferCapacity;
 	}
 
 	/**
@@ -100,5 +107,13 @@ public class GrizzlyNetworkInit extends Init {
 
 	public int getCompressionLevel() {
 		return compressionLevel;
+	}
+
+	public int getInitialBufferCapacity() {
+		return initialBufferCapacity;
+	}
+
+	public int getMaxBufferCapacity() {
+		return maxBufferCapacity;
 	}
 }

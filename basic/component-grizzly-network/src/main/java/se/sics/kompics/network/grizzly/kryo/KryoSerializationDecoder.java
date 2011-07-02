@@ -20,8 +20,12 @@ public class KryoSerializationDecoder extends
 			.createAttribute("KryoSerializationDecoder.SerializedSize");;
 
 	private Kryo kryo;
+	private int initialBufferCapacity, maxBufferCapacity;
 
-	public KryoSerializationDecoder(boolean compress) {
+	public KryoSerializationDecoder(boolean compress,
+			int initialBufferCapacity, int maxBufferCapacity) {
+		this.initialBufferCapacity = initialBufferCapacity;
+		this.maxBufferCapacity = maxBufferCapacity;
 		kryo = new KryoReflectionFactorySupport();
 		KryoMessage.registerMessages(kryo, compress);
 	}
@@ -58,7 +62,8 @@ public class KryoSerializationDecoder extends
 
 		try {
 			BufferInputStream bis = new BufferInputStream(input);
-			ObjectBuffer ob = new ObjectBuffer(kryo);
+			ObjectBuffer ob = new ObjectBuffer(kryo, initialBufferCapacity,
+					maxBufferCapacity);
 			Object output = ob.readClassAndObject(bis, serialLength);
 
 			// System.out.println("DESERIALIZED " + output.getClass()
