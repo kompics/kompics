@@ -85,9 +85,15 @@ public final class JavaTimer extends ComponentDefinition {
 			synchronized (activeTimers) {
 				activeTimers.put(id, timeOutTask);
 			}
-			javaTimer.schedule(timeOutTask, event.getDelay());
-			logger.debug("scheduled timer({}) {}", event.getDelay(),
-					timeOutTask.timeout);
+			try {
+				javaTimer.schedule(timeOutTask, event.getDelay());
+				logger.debug("scheduled timer({}) {}", event.getDelay(),
+						timeOutTask.timeout);
+			} catch (IllegalStateException e) {
+				logger.error("Could not schedule timer {}.", event.getDelay(),
+						timeOutTask.timeout);
+				e.printStackTrace();
+			}
 		}
 	};
 
@@ -101,8 +107,8 @@ public final class JavaTimer extends ComponentDefinition {
 			synchronized (activePeriodicTimers) {
 				activePeriodicTimers.put(id, timeOutTask);
 			}
-			javaTimer.scheduleAtFixedRate(timeOutTask, event.getDelay(), event
-					.getPeriod());
+			javaTimer.scheduleAtFixedRate(timeOutTask, event.getDelay(),
+					event.getPeriod());
 			logger.debug("scheduled periodic timer({}, {}) {}", new Object[] {
 					event.getDelay(), event.getPeriod(), timeOutTask.timeout });
 		}
