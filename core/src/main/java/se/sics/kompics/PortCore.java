@@ -443,8 +443,12 @@ public class PortCore<P extends PortType> implements Positive<P>, Negative<P> {
 	}
 
 	private void doDeliver(Event event, int wid) {
+		owner.eventReceived(this, event, wid, isControlPort
+				&& event instanceof Init);
+	}
+	
+	public void enqueue(Event event) {
 		eventQueue.offer(event);
-		owner.eventReceived(this, wid, isControlPort && event instanceof Init);
 	}
 
 	Event pickFirstEvent() {

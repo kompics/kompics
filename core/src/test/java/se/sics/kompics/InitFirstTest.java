@@ -20,10 +20,17 @@
  */
 package se.sics.kompics;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * The <code>InitFirstTest</code> class tests component creation and start.
@@ -32,7 +39,49 @@ import org.junit.Test;
  * @version $Id: InitFirstTest.java 739 2009-03-28 18:04:55Z Cosmin $
  */
 @SuppressWarnings("unused")
+@RunWith(Parameterized.class)
 public class InitFirstTest {
+
+	private static final int REPETITIONS = 1000;
+
+	private static final int EVENTS = 20;
+
+	@Parameters
+	public static Collection<Object[]> parameters() {
+		ArrayList<Object[]> params = new ArrayList<Object[]>();
+
+		for (int i = 0; i < REPETITIONS; i++) {
+			params.add(new Object[] { 0 });
+		}
+		return params;
+	}
+
+	public InitFirstTest(int param) {
+		synchronized (this) {
+			param = 1;
+		}
+	}
+
+	private static Semaphore semaphore;
+
+	// @Test(timeout = 5000)
+	@Test
+	public void testInitFirst() throws Exception {
+		semaphore = new Semaphore(0);
+
+		Kompics.createAndStart(TestRoot.class, 12);
+
+		Component c3 = c2;
+
+		// semaphore.acquire(EVENTS + 1);
+		boolean ok = semaphore.tryAcquire(EVENTS + 1, 5, TimeUnit.SECONDS);
+		Assert.assertTrue("Scheduling blocked", ok);
+	}
+
+	@After
+	public void tearDown() {
+		Kompics.shutdown();
+	}
 
 	public static class TestEvent extends Event {
 		public int id;
@@ -57,16 +106,31 @@ public class InitFirstTest {
 		}
 	}
 
-	private static final int EVENTS = 1000;
+	public static Component c2;
 
 	private static class TestRoot extends ComponentDefinition {
 		public TestRoot() {
-			Component c = create(TestComponent.class);
+			final Component c = create(TestComponent.class);
+			c2 = c;
 
+			Thread t[] = new Thread[EVENTS], t1;
 			for (int i = 0; i < EVENTS; i++) {
-				trigger(new TestEvent(i), c.getPositive(TestPort.class));
+				final int j = i;
+				t[i] = new Thread() {
+					public void run() {
+						trigger(new TestEvent(j), c.getPositive(TestPort.class));
+					}
+				};
 			}
-			trigger(new TestInit(0), c.getControl());
+			t1 = new Thread() {
+				public void run() {
+					trigger(new TestInit(0), c.getControl());
+				}
+			};
+			for (int i = 0; i < EVENTS; i++) {
+				t[i].start();
+			}
+			t1.start();
 		}
 	}
 
@@ -84,29 +148,21 @@ public class InitFirstTest {
 
 		Handler<TestInit> handleInit = new Handler<TestInit>() {
 			public void handle(TestInit event) {
-				Assert.assertFalse(initDone); // init runs only once
-				initDone = true;
 				semaphore.release();
+
+				// init runs only once
+				Assert.assertFalse("Init already handled.", initDone);
+				initDone = true;
 			}
 		};
 
 		Handler<TestEvent> handleEvent = new Handler<TestEvent>() {
 			public void handle(TestEvent event) {
-				Assert.assertTrue(initDone); // init runs before anything else
 				semaphore.release();
+
+				// init runs before anything else
+				Assert.assertTrue("Init was not first to run.", initDone);
 			}
 		};
-	}
-
-	private static Semaphore semaphore;
-
-	@Test
-	public void testInitFirst() throws Exception {
-		semaphore = new Semaphore(0);
-
-		Kompics.createAndStart(TestRoot.class, 1);
-
-		semaphore.acquire(EVENTS + 1);
-		Kompics.shutdown();
 	}
 }

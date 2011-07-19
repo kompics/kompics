@@ -23,6 +23,7 @@ package se.sics.kompics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import se.sics.kompics.scheduler.ThreadPoolScheduler;
 import se.sics.kompics.scheduler.WorkStealingScheduler;
 
 /**
@@ -78,7 +79,8 @@ public final class Kompics {
 		on = true;
 
 		if (scheduler == null) {
-			scheduler = new WorkStealingScheduler(workers);
+			// scheduler = new WorkStealingScheduler(workers);
+			scheduler = new ThreadPoolScheduler();
 		}
 
 		try {
@@ -88,6 +90,8 @@ public final class Kompics {
 
 			if (!mainCore.initSubscriptionInConstructor) {
 				mainCore.initDone.set(true);
+			} else {
+				mainCore.workCount.incrementAndGet();
 			}
 
 			// start Main

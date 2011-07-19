@@ -74,6 +74,7 @@ public class ComponentCore implements Component {
 		this.initDone = new AtomicBoolean(false);
 		this.initReceived = new AtomicBoolean(false);
 		this.firstInitEvent = new AtomicReference<Event>(null);
+		parentThreadLocal.set(null);
 	}
 
 	/*
@@ -126,10 +127,10 @@ public class ComponentCore implements Component {
 	}
 
 	<P extends PortType> Negative<P> createNegativePort(Class<P> portType) {
-		PortCore<P> negativePort = new PortCore<P>(false, PortType
-				.getPortType(portType), this);
-		PortCore<P> positivePort = new PortCore<P>(true, PortType
-				.getPortType(portType), parent);
+		PortCore<P> negativePort = new PortCore<P>(false,
+				PortType.getPortType(portType), this);
+		PortCore<P> positivePort = new PortCore<P>(true,
+				PortType.getPortType(portType), parent);
 
 		negativePort.setPair(positivePort);
 		positivePort.setPair(negativePort);
@@ -142,10 +143,10 @@ public class ComponentCore implements Component {
 	}
 
 	<P extends PortType> Positive<P> createPositivePort(Class<P> portType) {
-		PortCore<P> negativePort = new PortCore<P>(false, PortType
-				.getPortType(portType), parent);
-		PortCore<P> positivePort = new PortCore<P>(true, PortType
-				.getPortType(portType), this);
+		PortCore<P> negativePort = new PortCore<P>(false,
+				PortType.getPortType(portType), parent);
+		PortCore<P> positivePort = new PortCore<P>(true,
+				PortType.getPortType(portType), this);
 
 		negativePort.setPair(positivePort);
 		positivePort.setPair(negativePort);
@@ -158,10 +159,10 @@ public class ComponentCore implements Component {
 	}
 
 	Negative<ControlPort> createControlPort() {
-		negativeControl = new PortCore<ControlPort>(false, PortType
-				.getPortType(ControlPort.class), this);
-		positiveControl = new PortCore<ControlPort>(true, PortType
-				.getPortType(ControlPort.class), parent);
+		negativeControl = new PortCore<ControlPort>(false,
+				PortType.getPortType(ControlPort.class), this);
+		positiveControl = new PortCore<ControlPort>(true,
+				PortType.getPortType(ControlPort.class), parent);
 
 		positiveControl.setPair(negativeControl);
 		negativeControl.setPair(positiveControl);
@@ -182,6 +183,8 @@ public class ComponentCore implements Component {
 
 			if (!child.initSubscriptionInConstructor) {
 				child.initDone.set(true);
+			} else {
+				child.workCount.incrementAndGet();
 			}
 
 			child.setScheduler(scheduler);
@@ -257,7 +260,7 @@ public class ComponentCore implements Component {
 
 	/* === SCHEDULING === */
 
-	private AtomicInteger workCount = new AtomicInteger(0);
+	AtomicInteger workCount = new AtomicInteger(0);
 
 	private SpinlockQueue<PortCore<?>> readyPorts = new SpinlockQueue<PortCore<?>>();
 
@@ -271,42 +274,36 @@ public class ComponentCore implements Component {
 		this.scheduler = scheduler;
 	}
 
-	void eventReceived(PortCore<?> port, int wid, boolean isInitEvent) {
+	void eventReceived(PortCore<?> port, Event event, int wid,
+			boolean isInitEvent) {
 		// upon the first event received, we schedule the component. However, if
 		// the component needs to execute an Init event first, we don't schedule
 		// the component until it receives and handles an Init event.
-		if (initDone.get()) {
-			// default case
-			readyPorts.offer(port);
-			int wc = workCount.getAndIncrement();
-			if (wc == 0) {
-				if (scheduler == null)
-					scheduler = Kompics.getScheduler();
-				scheduler.schedule(this, wid);
-			}
-		} else {
+		if (!initDone.get()) {
 			// init is not yet done. we only schedule this component for
 			// execution if the received event is an Init event
 			if (isInitEvent) {
-				if (!initReceived.get()) {
-					initReceived.set(true);
-					// for the first Init received
-					// we schedule the component directly
-					if (scheduler == null)
+				if (initReceived.compareAndSet(false, true)) {
+					// for first Init received, schedule component directly
+					firstInitEvent.set(event);
+					if (scheduler == null) {
 						scheduler = Kompics.getScheduler();
-
-					firstInitEvent.set(port.pickFirstEvent());
+					}
 					scheduler.schedule(this, wid);
-				} else {
-					// next Init event we schedule in the regular way
-					readyPorts.offer(port);
-					workCount.incrementAndGet();
+					return;
 				}
-			} else {
-				// we received some other event before Init
-				readyPorts.offer(port);
-				workCount.incrementAndGet();
 			}
+		}
+
+		// default case
+		port.enqueue(event);
+		readyPorts.offer(port);
+		int wc = workCount.getAndIncrement();
+		if (wc == 0) {
+			if (scheduler == null) {
+				scheduler = Kompics.getScheduler();
+			}
+			scheduler.schedule(this, wid);
 		}
 	}
 
@@ -327,7 +324,8 @@ public class ComponentCore implements Component {
 
 			// if other events arrived before the Init we schedule the component
 			// to execute them
-			if (workCount.get() > 0) {
+			int wc = workCount.decrementAndGet();
+			if (wc > 0) {
 				if (scheduler == null)
 					scheduler = Kompics.getScheduler();
 				scheduler.schedule(this, wid);
@@ -342,10 +340,6 @@ public class ComponentCore implements Component {
 		PortCore<?> nextPort = readyPorts.poll();
 
 		Event event = nextPort.pickFirstEvent();
-
-		if (event == null) {
-			System.err.println("TTTTTTTTTTTT " + nextPort + " in " + this);
-		}
 
 		ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
 
