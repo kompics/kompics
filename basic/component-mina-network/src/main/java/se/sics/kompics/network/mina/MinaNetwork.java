@@ -33,6 +33,8 @@ import java.net.MulticastSocket;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.core.session.IoSession;
@@ -57,6 +59,7 @@ import se.sics.kompics.network.ConnectionStatusResponse;
 import se.sics.kompics.network.JoinMulticastGroup;
 import se.sics.kompics.network.LeaveMulticastGroup;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.MessageListener;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.NetworkConnectionRefused;
 import se.sics.kompics.network.NetworkControl;
@@ -120,6 +123,8 @@ public final class MinaNetwork extends ComponentDefinition {
 	private MulticastSocket multicastSocket = null;
 	private DatagramSocket datagramSocket = null;
 
+	ExecutorService sendersPool;
+
 	/**
 	 * Instantiates a new MINA network component.
 	 */
@@ -131,11 +136,13 @@ public final class MinaNetwork extends ComponentDefinition {
 		tcpHandler = new MinaHandler(this, Transport.TCP);
 		udpHandler = new MinaHandler(this, Transport.UDP);
 
+		sendersPool = Executors.newCachedThreadPool(new SenderThreadFactory());
+
 		subscribe(handleInit, control);
 		subscribe(handleMessage, net);
 		subscribe(handleJoinMulticast, net);
 		subscribe(handleLeaveMulticast, net);
-		
+
 		subscribe(handleStatusReq, netControl);
 	}
 
@@ -191,14 +198,14 @@ public final class MinaNetwork extends ComponentDefinition {
 			tcpAcceptor.setHandler(tcpHandler);
 			DefaultIoFilterChainBuilder tcpAcceptorChain = tcpAcceptor
 					.getFilterChain();
-			
+
 			if (compressionLevel != CompressionFilter.COMPRESSION_NONE) {
 				tcpAcceptorChain.addLast("compress", new CompressionFilter(
 						compressionLevel));
 			}
 			tcpAcceptorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
-//			tcpAcceptorChain.addLast("logger", new LoggingFilter("mina"));
+			// tcpAcceptorChain.addLast("logger", new LoggingFilter("mina"));
 
 			tcpAcceptor.getSessionConfig().setTcpNoDelay(true);
 			tcpAcceptor.setReuseAddress(true);
@@ -219,7 +226,7 @@ public final class MinaNetwork extends ComponentDefinition {
 			tcpConnector.getSessionConfig().setKeepAlive(true);
 			tcpConnector.getSessionConfig().setReuseAddress(true);
 			tcpConnector.setConnectTimeoutMillis(5000);
-			
+
 			tcpConnector.setHandler(tcpHandler);
 			DefaultIoFilterChainBuilder tcpConnectorChain = tcpConnector
 					.getFilterChain();
@@ -230,7 +237,7 @@ public final class MinaNetwork extends ComponentDefinition {
 			}
 			tcpConnectorChain.addLast("protocol", new ProtocolCodecFilter(
 					new ObjectSerializationCodecFactory()));
-//			tcpConnectorChain.addLast("logger", new LoggingFilter("mina"));
+			// tcpConnectorChain.addLast("logger", new LoggingFilter("mina"));
 
 			ExceptionMonitor.setInstance(new ExceptionMonitor() {
 				@Override
@@ -246,13 +253,14 @@ public final class MinaNetwork extends ComponentDefinition {
 
 	/** The handle message. */
 	Handler<Message> handleMessage = new Handler<Message>() {
-		public void handle(Message message) {
-			logger.debug("Handling Message {} from {} to {} protocol {}",
+		public void handle(final Message message) {
+			logger.debug(
+					"Handling Message {} from {} to {} protocol {}",
 					new Object[] { message, message.getSource(),
 							message.getDestination(), message.getProtocol() });
 
-			if (message.getDestination().getIp().equals(
-					message.getSource().getIp())
+			if (message.getDestination().getIp()
+					.equals(message.getSource().getIp())
 					&& message.getDestination().getPort() == message
 							.getSource().getPort()) {
 				// deliver locally
@@ -269,7 +277,7 @@ public final class MinaNetwork extends ComponentDefinition {
 				tcpSession.sendMessage(message);
 				break;
 			case UDP:
-				MinaSession udpSession = getUdpSession(destination);
+				final MinaSession udpSession = getUdpSession(destination);
 				udpSession.sendMessage(message);
 				break;
 			case MULTICAST_UDP:
@@ -305,8 +313,8 @@ public final class MinaNetwork extends ComponentDefinition {
 						multicastSocket.receive(packet);
 
 						ByteArrayInputStream bais = new ByteArrayInputStream(
-								packet.getData(), packet.getOffset(), packet
-										.getLength());
+								packet.getData(), packet.getOffset(),
+								packet.getLength());
 						ObjectInputStream ois = new ObjectInputStream(bais);
 
 						Message message = (Message) ois.readObject();
@@ -545,11 +553,14 @@ public final class MinaNetwork extends ComponentDefinition {
 	final void deliverMessage(Message message, Transport protocol,
 			IoSession session) {
 		message.setProtocol(protocol);
-		logger.debug("Delivering message {} from {} to {} protocol {}",
+		logger.debug(
+				"Delivering message {} from {} to {} protocol {}",
 				new Object[] { message.toString(), message.getSource(),
 						message.getDestination(), message.getProtocol() });
 
 		trigger(message, net);
+		
+		MessageListener.delivered(message);
 	}
 
 	/**
@@ -604,7 +615,7 @@ public final class MinaNetwork extends ComponentDefinition {
 			synchronized (udpSession) {
 				udp = new HashSet<InetSocketAddress>(udpSession.keySet());
 			}
-			trigger(new ConnectionStatusResponse(event,	tcp, udp), netControl);
+			trigger(new ConnectionStatusResponse(event, tcp, udp), netControl);
 		}
 	};
 }

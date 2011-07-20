@@ -152,8 +152,9 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 			// send pending messages
 			try {
 				for (Message deliverEvent : pendingMessages) {
-					logger.debug("Sending message {} to {}", deliverEvent
-							.toString(), deliverEvent.getDestination());
+					logger.debug("Sending message {} to {}",
+							deliverEvent.toString(),
+							deliverEvent.getDestination());
 
 					ioSession.write(deliverEvent);
 				}
@@ -182,11 +183,15 @@ public class MinaSession implements IoFutureListener<IoFuture> {
 	 * @param deliverEvent
 	 *            the deliver event
 	 */
-	public void sendMessage(Message deliverEvent) {
+	public void sendMessage(final Message deliverEvent) {
 		lock.lock();
 		try {
 			if (connected) {
-				ioSession.write(deliverEvent);
+				component.sendersPool.execute(new Runnable() {
+					public void run() {
+						ioSession.write(deliverEvent);
+					}
+				});
 			} else {
 				pendingMessages.add(deliverEvent);
 			}
