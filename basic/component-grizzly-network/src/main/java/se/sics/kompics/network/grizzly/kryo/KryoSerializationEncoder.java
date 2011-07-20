@@ -73,6 +73,11 @@ public class KryoSerializationEncoder extends
 
 			return TransformationResult.createCompletedResult(output, null);
 		} catch (Exception e) {
+			System.err.println("Exception: " + e);
+			System.err.println("Exception class: " + e.getClass());
+			System.err.println("Exception message: " + e.getMessage());
+			System.err.println("Exception cause: " + e.getCause());
+			e.printStackTrace();
 			throw new TransformationException("Serialization exception", e);
 		}
 	}
