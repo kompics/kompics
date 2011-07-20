@@ -147,7 +147,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 							self.getId(), peerAddress);
 				}
 			} else {
-				logger.debug("@{}: Peer {} is not currently being probed",
+				logger.debug(
+						"@{}: Peer {} is not currently being probed (STOP)",
 						self.getId(), peerAddress);
 			}
 		}
@@ -160,7 +161,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 			if (prober != null) {
 				prober.ping();
 			} else {
-				logger.debug("@{}: Peer {} is not currently being probed",
+				logger.debug(
+						"@{}: Peer {} is not currently being probed (SEND_PING)",
 						self.getId(), peer);
 			}
 		}
@@ -173,9 +175,12 @@ public final class PingFailureDetector extends ComponentDefinition {
 				PeerProber peerProber = peerProbers.get(peer);
 				outstandingTimeouts.remove(event.getTimeoutId());
 				if (peerProber != null) {
+					logger.debug("SUSPECTED DUE TO TIMEOUT {}", event.getTimeoutId());
+					
 					peerProber.pongTimedOut();
 				} else {
-					logger.debug("@{}: Peer {} is not currently being probed",
+					logger.debug(
+							"@{}: Peer {} is not currently being probed (TIMEOUT)",
 							self.getId(), peer);
 				}
 			}
@@ -193,9 +198,9 @@ public final class PingFailureDetector extends ComponentDefinition {
 
 	private Handler<Pong> handlePong = new Handler<Pong>() {
 		public void handle(Pong event) {
-//			logger.debug("@{}: Received Pong({}, {}) from {}. ",
-//					new Object[] { self.getId(), event.getTs(), event.getId(),
-//							event.getSource() });
+			// logger.debug("@{}: Received Pong({}, {}) from {}. ",
+			// new Object[] { self.getId(), event.getTs(), event.getId(),
+			// event.getSource() });
 			if (outstandingTimeouts.remove(event.getId())) {
 				logger.debug("Canceled timer id {}", event.getId());
 				trigger(new CancelTimeout(event.getId()), timer);
@@ -206,7 +211,8 @@ public final class PingFailureDetector extends ComponentDefinition {
 			if (peerProber != null) {
 				peerProber.pong(event.getId(), event.getTs());
 			} else {
-				logger.debug("@{}: Peer {} is not currently being probed",
+				logger.debug(
+						"@{}: Peer {} is not currently being probed (GOT_PONG)",
 						self.getId(), peer);
 			}
 		}
@@ -242,10 +248,10 @@ public final class PingFailureDetector extends ComponentDefinition {
 
 		trigger(st, timer);
 		trigger(new Ping(pongTimeoutId, ts, self, probedPeer, protocol), net);
-//		logger.debug(
-//				"@{}: Sent Ping({},{},{}) to {}.",
-//				new Object[] { self.getId(), ts, pongTimeoutId,
-//						pongTimeoutId.hashCode(), probedPeer });
+		// logger.debug(
+		// "@{}: Sent Ping({},{},{}) to {}.",
+		// new Object[] { self.getId(), ts, pongTimeoutId,
+		// pongTimeoutId.hashCode(), probedPeer });
 		return pongTimeoutId;
 	}
 
