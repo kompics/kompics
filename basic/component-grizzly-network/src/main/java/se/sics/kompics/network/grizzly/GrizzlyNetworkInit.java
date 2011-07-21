@@ -41,6 +41,8 @@ public class GrizzlyNetworkInit extends Init {
 
 	private final int initialBufferCapacity;
 	private final int maxBufferCapacity;
+	private final int workerCount;
+	private final int selectorCount;
 
 	/**
 	 * Instantiates a new Netty network init.
@@ -79,12 +81,22 @@ public class GrizzlyNetworkInit extends Init {
 	public GrizzlyNetworkInit(Address self, int connectRetries,
 			int compressionLevel, int initialBufferCapacity,
 			int maxBufferCapacity) {
+		this(self, connectRetries, compressionLevel, 2 * 1024, 16 * 1024,
+				Runtime.getRuntime().availableProcessors(), Runtime
+						.getRuntime().availableProcessors());
+	}
+
+	public GrizzlyNetworkInit(Address self, int connectRetries,
+			int compressionLevel, int initialBufferCapacity,
+			int maxBufferCapacity, int workerCount, int selectorCount) {
 		super();
 		this.self = self;
 		this.connectRetries = connectRetries;
 		this.compressionLevel = compressionLevel;
 		this.initialBufferCapacity = initialBufferCapacity;
 		this.maxBufferCapacity = maxBufferCapacity;
+		this.workerCount = workerCount;
+		this.selectorCount = selectorCount;
 	}
 
 	/**
@@ -115,5 +127,13 @@ public class GrizzlyNetworkInit extends Init {
 
 	public int getMaxBufferCapacity() {
 		return maxBufferCapacity;
+	}
+
+	public int getWorkerCount() {
+		return workerCount;
+	}
+
+	public int getSelectorCount() {
+		return selectorCount;
 	}
 }

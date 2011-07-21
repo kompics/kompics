@@ -33,6 +33,7 @@ import org.glassfish.grizzly.filterchain.TransportFilter;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
 import org.glassfish.grizzly.strategies.SameThreadIOStrategy;
+import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,6 +107,7 @@ public class GrizzlyNetwork extends ComponentDefinition {
 			boolean compress = init.getCompressionLevel() != 0;
 			int initialBufferCapacity = init.getInitialBufferCapacity();
 			int maxBufferCapacity = init.getMaxBufferCapacity();
+			int workerCount = init.getWorkerCount();
 
 			filterChainBuilder.add(new TransportFilter());
 			// filterChainBuilder.add(new ProtostuffSerializationFilter());
@@ -116,19 +118,26 @@ public class GrizzlyNetwork extends ComponentDefinition {
 
 			builder = TCPNIOTransportBuilder.newInstance();
 
-			transport = builder
+			final ThreadPoolConfig config = builder
 					.setIOStrategy(SameThreadIOStrategy.getInstance())
 					// .setIOStrategy(WorkerThreadIOStrategy.getInstance())
 					// .setIOStrategy(SimpleDynamicNIOStrategy.getInstance())
 					// .setIOStrategy(LeaderFollowerNIOStrategy.getInstance())
 					.setKeepAlive(true).setReuseAddress(true)
-					.setTcpNoDelay(true).build();
+					.setTcpNoDelay(true).getWorkerThreadPoolConfig();
+
+			config.setCorePoolSize(workerCount).setMaxPoolSize(workerCount)
+					.setQueueLimit(-1);
+
+			transport = builder.build();
 
 			transport.setProcessor(filterChainBuilder.build());
 			transport.setConnectionTimeout(5000);
 			transport.setReuseAddress(true);
 			transport.setKeepAlive(true);
 			transport.setTcpNoDelay(true);
+			
+			transport.setSelectorRunnersCount(init.getSelectorCount());
 
 			// final GrizzlyJmxManager manager = GrizzlyJmxManager.instance();
 			// JmxObject jmxTransportObject = transport.getMonitoringConfig()
