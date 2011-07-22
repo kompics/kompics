@@ -118,16 +118,16 @@ public class GrizzlyNetwork extends ComponentDefinition {
 
 			builder = TCPNIOTransportBuilder.newInstance();
 
-			final ThreadPoolConfig config = builder
-					.setIOStrategy(SameThreadIOStrategy.getInstance())
+			final ThreadPoolConfig config = ThreadPoolConfig.defaultConfig();
+			config.setCorePoolSize(workerCount).setMaxPoolSize(workerCount)
+					.setQueueLimit(-1);
+
+			builder.setIOStrategy(SameThreadIOStrategy.getInstance())
 					// .setIOStrategy(WorkerThreadIOStrategy.getInstance())
 					// .setIOStrategy(SimpleDynamicNIOStrategy.getInstance())
 					// .setIOStrategy(LeaderFollowerNIOStrategy.getInstance())
 					.setKeepAlive(true).setReuseAddress(true)
-					.setTcpNoDelay(true).getWorkerThreadPoolConfig();
-
-			config.setCorePoolSize(workerCount).setMaxPoolSize(workerCount)
-					.setQueueLimit(-1);
+					.setTcpNoDelay(true);
 
 			transport = builder.build();
 
@@ -136,8 +136,9 @@ public class GrizzlyNetwork extends ComponentDefinition {
 			transport.setReuseAddress(true);
 			transport.setKeepAlive(true);
 			transport.setTcpNoDelay(true);
-			
+
 			transport.setSelectorRunnersCount(init.getSelectorCount());
+			transport.setWorkerThreadPoolConfig(config);
 
 			// final GrizzlyJmxManager manager = GrizzlyJmxManager.instance();
 			// JmxObject jmxTransportObject = transport.getMonitoringConfig()
