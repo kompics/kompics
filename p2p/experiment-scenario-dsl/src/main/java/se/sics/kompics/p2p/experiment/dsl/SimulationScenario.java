@@ -1325,6 +1325,8 @@ public abstract class SimulationScenario implements Serializable {
 	private static boolean goodEnv() {
 		if (System.getProperty("java.vendor").startsWith("Sun"))
 			return true;
+		if (System.getProperty("java.vendor").startsWith("Oracle"))
+			return true;
 		// we should change this method to accept more (or less) Java
 		// environments known to be (un)acceptable for our instrumentation
 		return false;
