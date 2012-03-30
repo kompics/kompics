@@ -7,10 +7,8 @@
         <version>0.4.4-SNAPSHOT</version>
     </parent>
 
-	<groupId>se.sics.kompics.basic</groupId>
 	<artifactId>kompics-port-network</artifactId>
 	<packaging>jar</packaging>
-	<version>0.4.4-SNAPSHOT</version>
 	<name>Kompics Network PortType</name>
 
     <dependencies>

@@ -45,6 +45,8 @@ public abstract class Message extends Event implements Serializable {
 	
 	private transient Transport protocol;
 
+	private transient boolean highPriority;
+	
 	/**
 	 * Instantiates a new message.
 	 * 
@@ -68,11 +70,25 @@ public abstract class Message extends Event implements Serializable {
 	 *            the protocol
 	 */
 	protected Message(Address source, Address destination, Transport protocol) {
+		this(source, destination, protocol, true);
+	}
+
+	/**
+	 * Instantiates a new message.
+	 * 
+	 * @param source the source
+	 * @param destination the destination
+	 * @param protocol the protocol
+	 * @param highPriority whether this message is should be sent with high priority 
+	 */
+	protected Message(Address source, Address destination, Transport protocol,
+			boolean highPriority) {
 		this.source = source;
 		this.destination = destination;
 		this.protocol = protocol;
+		this.highPriority = highPriority;
 	}
-
+	
 	/**
 	 * Gets the source.
 	 * 
@@ -112,5 +128,12 @@ public abstract class Message extends Event implements Serializable {
 	 */
 	public final Transport getProtocol() {
 		return protocol;
+	}
+	
+	/**
+	 * @return whether this is a high priority message (default)
+	 */
+	public final boolean isHighPriority() {
+		return highPriority;
 	}
 }
