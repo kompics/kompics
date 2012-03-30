@@ -79,6 +79,7 @@ public class GrizzlyNetwork extends ComponentDefinition {
 	private InetSocketAddress localSocketAddress;
 	int connectRetries;
 	ExecutorService sendersPool;
+	ExecutorService lowPrioritySendersPool;
 
 	/**
 	 * Instantiates a new Netty network component.
@@ -90,6 +91,8 @@ public class GrizzlyNetwork extends ComponentDefinition {
 		tcpHandler = new GrizzlyHandler(this, Transport.TCP);
 
 		sendersPool = Executors.newCachedThreadPool(new SenderThreadFactory());
+		lowPrioritySendersPool = Executors.newSingleThreadExecutor(
+				new SenderThreadFactory());
 
 		subscribe(handleInit, control);
 		subscribe(handleMessage, net);

@@ -23,11 +23,13 @@ package se.sics.kompics.network.grizzly;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.Connection;
+import org.glassfish.grizzly.GrizzlyFuture;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,15 +118,31 @@ public class GrizzlySession {
 		lock.lock();
 		try {
 			if (connected) {
-				component.sendersPool.execute(new Runnable() {
-					public void run() {
-						try {
-							connection.write(message);
-						} catch (IOException e) {
-							throw new RuntimeException("Grizzly exception", e);
+				if (message.isHighPriority()) {
+					component.sendersPool.execute(new Runnable() {
+						public void run() {
+							try {
+								connection.write(message);
+							} catch (IOException e) {
+								throw new RuntimeException("Grizzly exception", e);
+							}
 						}
-					}
-				});
+					});
+				} else {
+					component.lowPrioritySendersPool.execute(new Runnable() {
+						public void run() {
+							try {
+								GrizzlyFuture future = connection.write(message);
+								future.get();
+							} catch (IOException e) {
+								throw new RuntimeException("Grizzly exception", e);
+							} catch (InterruptedException e) {
+							} catch (ExecutionException e) {
+								throw new RuntimeException("Grizzly exception", e);
+							}
+						}
+					});
+				}
 			} else {
 				pendingMessages.add(message);
 			}

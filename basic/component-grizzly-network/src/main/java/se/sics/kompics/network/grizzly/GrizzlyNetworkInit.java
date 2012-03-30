@@ -81,9 +81,9 @@ public class GrizzlyNetworkInit extends Init {
 	public GrizzlyNetworkInit(Address self, int connectRetries,
 			int compressionLevel, int initialBufferCapacity,
 			int maxBufferCapacity) {
-		this(self, connectRetries, compressionLevel, 2 * 1024, 16 * 1024,
-				Runtime.getRuntime().availableProcessors(), Runtime
-						.getRuntime().availableProcessors());
+		this(self, connectRetries, compressionLevel, initialBufferCapacity,
+				maxBufferCapacity, Runtime.getRuntime().availableProcessors(),
+				Runtime.getRuntime().availableProcessors());
 	}
 
 	public GrizzlyNetworkInit(Address self, int connectRetries,

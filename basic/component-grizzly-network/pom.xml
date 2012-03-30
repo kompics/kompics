@@ -8,9 +8,7 @@
 		<version>0.4.4-SNAPSHOT</version>
 	</parent>
 
-	<groupId>se.sics.kompics.basic</groupId>
 	<artifactId>kompics-component-grizzly-network</artifactId>
-	<version>0.4.4-SNAPSHOT</version>
 	<name>GrizzlyNetwork Kompics Component</name>
 	<description>A Kompics Network component using the KryoNet library.</description>
 
