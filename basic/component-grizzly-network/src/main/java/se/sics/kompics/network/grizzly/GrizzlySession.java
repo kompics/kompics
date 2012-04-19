@@ -134,6 +134,7 @@ public class GrizzlySession {
 							try {
 								GrizzlyFuture future = connection.write(message);
 								future.get();
+								Thread.sleep(2);
 							} catch (IOException e) {
 								throw new RuntimeException("Grizzly exception", e);
 							} catch (InterruptedException e) {
