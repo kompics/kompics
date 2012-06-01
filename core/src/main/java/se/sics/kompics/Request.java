@@ -33,12 +33,12 @@ public abstract class Request extends Event {
 
 	ArrayDeque<RequestPathElement> requestPath = new ArrayDeque<RequestPathElement>();
 
-	void pushPathElement(ChannelCore<?> channel) {
+	public void pushPathElement(ChannelCore<?> channel) {
 		RequestPathElement pe = new RequestPathElement(channel);
 		requestPath.push(pe);
 	}
 
-	void pushPathElement(ComponentCore component) {
+	public void pushPathElement(ComponentCore component) {
 		RequestPathElement pe = new RequestPathElement(component);
 		requestPath.push(pe);
 	}

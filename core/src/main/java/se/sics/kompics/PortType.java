@@ -66,6 +66,10 @@ public abstract class PortType {
 		}
 		return portType;
 	}
+	
+	public static void preloadInstance(PortType p) {
+		map.put(p.getClass(), p);
+	}
 
 	/**
 	 * specifies an indication, response, or confirmation event type

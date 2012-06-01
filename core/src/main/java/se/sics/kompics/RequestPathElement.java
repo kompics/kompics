@@ -42,6 +42,6 @@ public final class RequestPathElement {
 			return "Channel: " + channel.get();
 		}
 		ComponentCore c = component.get();
-		return "Component: " + (c == null ? null : c.component);
+		return "Component: " + (c == null ? null : c.getComponent());
 	}
 }

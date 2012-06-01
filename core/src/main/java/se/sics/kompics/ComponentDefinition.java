@@ -81,7 +81,8 @@ public abstract class ComponentDefinition {
 	 *            the port
 	 */
 	protected final <P extends PortType> void trigger(Event event, Port<P> port) {
-		((PortCore<P>) port).doTrigger(event, core.wid, core);
+//		System.out.println(this.getClass()+": "+event+" triggert on "+port);
+		port.doTrigger(event, core.wid, core);
 	}
 
 	/**
@@ -101,10 +102,17 @@ public abstract class ComponentDefinition {
 	 *            the handler
 	 * @param port
 	 *            the port
+	 * @throws ConfigurationException 
 	 */
 	protected final <E extends Event, P extends PortType> void subscribe(
-			Handler<E> handler, Port<P> port) {
-		((PortCore<P>) port).doSubscribe(handler);
+			Handler<E> handler, Port<P> port) throws ConfigurationException {
+		if (port instanceof JavaPort) {
+			JavaPort<P> p = (JavaPort<P>) port;
+			p.doSubscribe(handler);
+		} else {
+			throw new ConfigurationException("Port ("+port.toString()+" is not an instance of JavaPort!" +
+					"Handler subscription only works in Java");
+		}
 	}
 
 	/**
@@ -114,10 +122,17 @@ public abstract class ComponentDefinition {
 	 *            the handler
 	 * @param port
 	 *            the port
+	 * @throws ConfigurationException 
 	 */
 	protected final <E extends Event, P extends PortType> void unsubscribe(
-			Handler<E> handler, Port<P> port) {
-		((PortCore<P>) port).doUnsubscribe(handler);
+			Handler<E> handler, Port<P> port) throws ConfigurationException {
+		if (port instanceof JavaPort) {
+			JavaPort<P> p = (JavaPort<P>) port;
+			p.doUnsubscribe(handler);
+		} else {
+			throw new ConfigurationException("Port ("+port.toString()+" is not an instance of JavaPort!" +
+					"Handler (un)subscription only works in Java");
+		}
 	}
 
 	/**
@@ -189,21 +204,36 @@ public abstract class ComponentDefinition {
 		core.doDisconnect(positive, negative);
 	}
 
-	protected final Negative<ControlPort> control;
+	protected Negative<ControlPort> control;
+	
+	public Negative<ControlPort> getControlPort() {
+		return control;
+	}
 
 	/* === PRIVATE === */
 
-	private final ComponentCore core;
+	private ComponentCore core;
 
 	/**
 	 * Instantiates a new component definition.
 	 */
 	protected ComponentDefinition() {
-		core = new ComponentCore(this);
+		core = new JavaComponent(this);
+		control = core.createControlPort();
+	}
+	
+	protected ComponentDefinition(Class<? extends ComponentCore> coreClass) {
+		try {
+			core = coreClass.newInstance();
+		} catch (Exception e) {
+			//e.printStackTrace();
+			//System.out.println(e + ": " + e.getMessage());
+			throw new ConfigurationException(e.getMessage());
+		}
 		control = core.createControlPort();
 	}
 
-	final ComponentCore getComponentCore() {
+	public ComponentCore getComponentCore() {
 		return core;
 	}
 }

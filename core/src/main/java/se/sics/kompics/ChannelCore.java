@@ -83,11 +83,12 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 
 	private boolean destroyed;
 
-	private PortCore<P> positivePort, negativePort;
+	private Positive<P> positivePort;
+	private Negative<P> negativePort;
 
 	private P portType;
 
-	ChannelCore(PortCore<P> positivePort, PortCore<P> negativePort, P portType) {
+	public ChannelCore(Positive<P> positivePort, Negative<P> negativePort, P portType) {
 		this.positivePort = positivePort;
 		this.negativePort = negativePort;
 		this.portType = portType;
@@ -102,20 +103,20 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 		destroyed = true;
 	}
 
-	PortCore<P> getPositivePort() {
+	public Positive<P> getPositivePort() {
 		return positivePort;
 	}
 
-	PortCore<P> getNegativePort() {
+	public Negative<P> getNegativePort() {
 		return negativePort;
 	}
 
-	void forwardToPositive(Event event, int wid) {
+	public void forwardToPositive(Event event, int wid) {
 		if (!destroyed)
 			positivePort.doTrigger(event, wid, this);
 	}
 
-	void forwardToNegative(Event event, int wid) {
+	public void forwardToNegative(Event event, int wid) {
 		if (!destroyed)
 			negativePort.doTrigger(event, wid, this);
 	}
@@ -127,6 +128,6 @@ public class ChannelCore<P extends PortType> implements Channel<P> {
 
 	@Override
 	public String toString() {
-		return portType.getClass().getCanonicalName();
+		return "Channel<"+portType.getClass().getCanonicalName()+">";
 	}
 }

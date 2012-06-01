@@ -27,7 +27,7 @@ public class ChannelFilterSet {
 	// }
 
 	@SuppressWarnings("unchecked")
-	void addChannelFilter(ChannelCore<?> channel, ChannelFilter<?, ?> filter) {
+	public void addChannelFilter(ChannelCore<?> channel, ChannelFilter<?, ?> filter) {
 		Class<? extends Event> eventType = filter.getEventType();
 		Class<? extends ChannelFilter<?, ?>> filterType = (Class<? extends ChannelFilter<?, ?>>) filter
 				.getClass();
@@ -73,7 +73,7 @@ public class ChannelFilterSet {
 	}
 
 	@SuppressWarnings("unchecked")
-	void removeChannel(ChannelCore<?> channel) {
+	public void removeChannel(ChannelCore<?> channel) {
 		ChannelFilter<?, ?> filter = filtersByChannel.get(channel);
 		if (filter == null) {
 			// not a filtered channel
@@ -127,7 +127,7 @@ public class ChannelFilterSet {
 	}
 
 	@SuppressWarnings("unchecked")
-	ArrayList<ChannelCore<?>> get(Event event) {
+	public ArrayList<ChannelCore<?>> get(Event event) {
 		ArrayList<ChannelCore<?>> result = new ArrayList<ChannelCore<?>>();
 		Class<? extends Event> eventType = event.getClass();
 		ArrayList<Class<? extends ChannelFilter<?, ?>>> filterTypes = filterTypesByEventType

@@ -44,7 +44,7 @@ public abstract class Response extends Event {
 		requestPath = request.requestPath;
 	}
 
-	RequestPathElement getTopPathElement() {
+	public RequestPathElement getTopPathElement() {
 		return requestPath.poll();
 	}
 

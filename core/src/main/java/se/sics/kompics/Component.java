@@ -79,4 +79,8 @@ public interface Component {
 	 * @return the component's control port.
 	 */
 	public Positive<ControlPort> control();
+	
+	public ComponentDefinition getComponent();
+	
+	public void handleFault(Throwable throwable);
 }

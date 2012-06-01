@@ -36,4 +36,50 @@ public interface Port<P extends PortType> {
 	 * @return the port type
 	 */
 	public P getPortType();
+	
+	/**
+	 * trigger event on this port
+	 * 
+	 * @param event to be triggered
+	 * @param wid ?
+	 * @param channel that triggered the event
+	 */
+	public void doTrigger(Event event, int wid, ChannelCore<?> channel);
+	
+	/**
+	 * trigger event on this port
+	 * 
+	 * @param event to be triggered
+	 * @param wid ?
+	 * @param component that triggered the event
+	 */
+	public void doTrigger(Event event, int wid, ComponentCore component);
+	
+	/**
+	 * 
+	 * @return the component the port is part of
+	 */
+	public ComponentCore getOwner();
+	
+	/**
+	 * 
+	 * @return complement port this one is connected to (if any)
+	 */
+	public PortCore<P> getPair();
+	
+	/**
+	 * 
+	 * @param port complement port
+	 */
+	public void setPair(PortCore<P> port);
+	
+	public <E extends Event> void doSubscribe(Handler<E> handler);
+	
+	public void addChannel(ChannelCore<P> channel);
+	
+	public void addChannel(ChannelCore<P> channel, ChannelFilter<?, ?> filter);
+	
+	public void removeChannelTo(PortCore<P> remotePort);
+	
+	public void enqueue(Event event);
 }
