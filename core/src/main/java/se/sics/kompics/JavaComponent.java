@@ -239,29 +239,59 @@ public class JavaComponent extends ComponentCore {
 			}
 			return;
 		}
+		
+//		New scheduling code: Run n and move to end of schedule
+//		
+		int n = Kompics.maxNumOfExecutedEvents.get();
+		int count = 0;
+		int wc = workCount.get();
+		
+		while ((count < n) && wc > 0) {
+			JavaPort<?> nextPort = (JavaPort<?>) readyPorts.poll();
+			
+			Event event = nextPort.pickFirstEvent();
+			
+			ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
 
-		// 1. pick a port with a non-empty event queue
-		// 2. execute the first event
-		// 3. make component ready
-
-		JavaPort<?> nextPort = (JavaPort<?>) readyPorts.poll();
-
-		Event event = nextPort.pickFirstEvent();
-
-		ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
-
-		if (handlers != null) {
-			for (int i = 0; i < handlers.size(); i++) {
-				executeEvent(event, handlers.get(i));
+			if (handlers != null) {
+				for (int i = 0; i < handlers.size(); i++) {
+					executeEvent(event, handlers.get(i));
+				}
 			}
+			wc = workCount.decrementAndGet();
+			count++;
 		}
-
-		int wc = workCount.decrementAndGet();
+		
 		if (wc > 0) {
 			if (scheduler == null)
 				scheduler = Kompics.getScheduler();
 			scheduler.schedule(this, wid);
 		}
+		
+//		Classic scheduling code: Run once and move to end of schedule
+//		
+//		// 1. pick a port with a non-empty event queue
+//		// 2. execute the first event
+//		// 3. make component ready
+//
+//		JavaPort<?> nextPort = (JavaPort<?>) readyPorts.poll();
+//
+//		Event event = nextPort.pickFirstEvent();
+//
+//		ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
+//
+//		if (handlers != null) {
+//			for (int i = 0; i < handlers.size(); i++) {
+//				executeEvent(event, handlers.get(i));
+//			}
+//		}
+//
+//		int wc = workCount.decrementAndGet();
+//		if (wc > 0) {
+//			if (scheduler == null)
+//				scheduler = Kompics.getScheduler();
+//			scheduler.schedule(this, wid);
+//		}
 	}
 
 	@SuppressWarnings("unchecked")

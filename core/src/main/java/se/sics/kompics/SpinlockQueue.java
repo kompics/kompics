@@ -41,6 +41,14 @@ public class SpinlockQueue<E> {
 	public E poll() {
 		return q.poll();
 	}
+	
+	public E peek() {
+		return q.peek();
+	}
+	
+	public boolean isEmpty() {
+		return q.isEmpty();
+	}
 
 //	public static final int FL_SIZE = 1000;
 //

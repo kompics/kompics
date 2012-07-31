@@ -20,6 +20,8 @@
  */
 package se.sics.kompics;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +42,8 @@ public final class Kompics {
 	// TODO BUG in execution PortCore.pickWork() returns null.
 
 	public static Logger logger = LoggerFactory.getLogger("Kompics");
+	
+	public static AtomicInteger maxNumOfExecutedEvents = new AtomicInteger(1);
 
 	private static boolean on = false;
 
@@ -74,6 +78,19 @@ public final class Kompics {
 	 */
 	public static void createAndStart(
 			Class<? extends ComponentDefinition> main, int workers) {
+		createAndStart(main, workers, 1);
+	}
+	
+	/**
+	 * Creates the and start.
+	 * 
+	 * @param main
+	 *            the main
+	 * @param workers
+	 *            the workers
+	 */
+	public static void createAndStart(
+			Class<? extends ComponentDefinition> main, int workers, int maxEventExecuteNumber) {
 		if (on)
 			throw new RuntimeException("Kompics already created");
 		on = true;
@@ -82,6 +99,8 @@ public final class Kompics {
 			// scheduler = new WorkStealingScheduler(workers);
 			scheduler = new ThreadPoolScheduler();
 		}
+		
+		Kompics.maxNumOfExecutedEvents.lazySet(maxEventExecuteNumber);
 
 		try {
 			ComponentDefinition mainComponent = main.newInstance();
