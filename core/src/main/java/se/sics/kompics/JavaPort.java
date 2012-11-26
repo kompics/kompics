@@ -22,7 +22,9 @@ package se.sics.kompics;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -474,14 +476,35 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 			Handler<E> handler) {
 		Class<E> eventType = null;
 		try {
-			Method ms[] = handler.getClass().getDeclaredMethods(), m = null;
-			for (Method m1 : ms) {
-				if (m1.getName().equals("handle")) {
-					m = m1;
-					break;
+			Method declared[] = handler.getClass().getDeclaredMethods();
+			// The JVM in Java 7 wrongly reflects the "handle" methods for some 
+			// handlers: e.g. both `handle(Event e)` and `handle(Message m)` are
+			// reflected as "declared" methods when only the second is actually
+			// declared in the handler. A workaround is to reflect all `handle`
+			// methods and pick the one with the most specific event type.
+			// This sorted set stores the event types of all reflected handler
+			// methods topologically ordered by the event type relationships.
+			TreeSet<Class<? extends Event>> relevant =
+				new TreeSet<Class<? extends Event>>(
+					new Comparator<Class<? extends Event>>() {
+						@Override
+						public int compare(Class<? extends Event> e1,
+										   Class<? extends Event> e2) {
+							if (e1.isAssignableFrom(e2)) {
+								return 1;
+							} else if (e2.isAssignableFrom(e1)) {
+								return -1;
+							}
+							return 0;
+						}
+			});
+			for (Method m : declared) {
+				if (m.getName().equals("handle")) {
+					relevant.add(
+						(Class<? extends Event>) m.getParameterTypes()[0]);
 				}
 			}
-			eventType = (Class<E>) m.getParameterTypes()[0];
+			eventType = (Class<E>) relevant.first();
 		} catch (Exception e) {
 			throw new RuntimeException("Cannot reflect handler event type for "
 					+ "handler " + handler + ". Please specify it "
