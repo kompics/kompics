@@ -56,6 +56,10 @@ public final class Kompics {
 	public static Scheduler getScheduler() {
 		return scheduler;
 	}
+        
+        public static boolean isOn() {
+            return on;
+        }
 
 	/**
 	 * Creates the and start.

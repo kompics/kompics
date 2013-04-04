@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * The <code>PortCore</code> class.
+ * The <code>ComponentCore</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
@@ -59,7 +59,7 @@ public abstract class ComponentCore implements Component {
 			Negative<P> negative) {
 		PortCore<P> positivePort = (PortCore<P>) positive;
 		PortCore<P> negativePort = (PortCore<P>) negative;
-		ChannelCore<P> channel = new ChannelCore<P>(positivePort, negativePort,
+		ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
 				negativePort.getPortType());
 
 		positivePort.addChannel(channel);
@@ -72,7 +72,7 @@ public abstract class ComponentCore implements Component {
 			Negative<P> negative, ChannelFilter<?, ?> filter) {
 		PortCore<P> positivePort = (PortCore<P>) positive;
 		PortCore<P> negativePort = (PortCore<P>) negative;
-		ChannelCore<P> channel = new ChannelCore<P>(positivePort, negativePort,
+		ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
 				negativePort.getPortType());
 
 		Class<? extends Event> eventType = filter.getEventType();

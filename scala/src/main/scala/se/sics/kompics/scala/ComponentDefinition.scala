@@ -47,6 +47,8 @@ abstract class ComponentDefinition extends se.sics.kompics.ComponentDefinition(c
 		case _ => throw new ConfigurationException("Invalid core type");
 	}
 	
+	//private val initList = scala.collection.mutable.Queue.empty[Pair[Component, Event]];
+	
 	localCore.component = this;
 	
 	var faultHandler: (Event) => () => Unit = {case f: Fault => {() => 
@@ -97,6 +99,7 @@ abstract class ComponentDefinition extends se.sics.kompics.ComponentDefinition(c
 	
 	def init[T <: se.sics.kompics.ComponentDefinition](initEvent: Event, c: Class[T]): Component = {
 		val component = create(c);
+		//initList.enqueue((component, initEvent));
 		component match {
 			case comp: ScalaComponent => {
 				comp.ctrl uponEvent faultHandler;
@@ -110,5 +113,12 @@ abstract class ComponentDefinition extends se.sics.kompics.ComponentDefinition(c
 			}
 		}
 	}
+	
+//	def init() = {
+//		while (!initList.isEmpty) {
+//			val (component, initEvent) = initList.dequeue;
+//			trigger(initEvent, component.control());
+//		}
+//	}
 	
 }

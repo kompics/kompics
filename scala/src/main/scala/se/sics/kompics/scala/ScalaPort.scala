@@ -55,7 +55,7 @@ import java.lang.reflect.Method
  * @version $Id: $
  */
 class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCore) extends PortCore[P] with NegativePort[P] with PositivePort[P] {
-	
+
 	isPositive = positive;
 	portType = pType;
 	owner = parent;
@@ -85,20 +85,22 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 			case _ => throw new ConfigurationException("Can only pair up this port with another ScalaPort instance");
 		}
 	}
-	
+
 	override def doSubscribe[E <: Event](handler: Handler[E]): Unit = {
 		var eventType = handler.getEventType();
 		if (eventType == null) {
 			eventType = reflectHandlerEventType(handler);
 			handler.setEventType(eventType);
 		}
-		val closureHandler: (Event) => () => Unit = {e => if (e.getClass().isAssignableFrom(eventType)) () => { handler.asInstanceOf[Handler[Event]].handle(e) } else {
-			throw new MatchError(e.getClass()+ " didn't match "+ eventType);
-		}};
+		val closureHandler: (Event) => () => Unit = { e =>
+			if (e.getClass().isAssignableFrom(eventType)) () => { handler.asInstanceOf[Handler[Event]].handle(e) } else {
+				throw new MatchError(e.getClass() + " didn't match " + eventType);
+			}
+		};
 		doSubscribe(closureHandler);
 	}
-	
-	private def reflectHandlerEventType[E <: Event] (handler: Handler[E]): Class[E] = {
+
+	private def reflectHandlerEventType[E <: Event](handler: Handler[E]): Class[E] = {
 		var eventType: Class[E] = null;
 		try {
 			val ms = handler.getClass().getDeclaredMethods();
@@ -108,17 +110,18 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 					m = m1;
 				}
 			}
-			eventType = m.getParameterTypes()(0) match {case ce: Class[E] => ce};
+			eventType = m.getParameterTypes()(0) match { case ce: Class[E] => ce };
 		} catch {
-			case e => throw new RuntimeException("Cannot reflect handler event type for "
+			case e =>
+				throw new RuntimeException("Cannot reflect handler event type for "
 					+ "handler " + handler + ". Please specify it "
 					+ "as an argument to the handler constructor.", e);
 		} finally {
 			if (eventType == null)
 				throw new RuntimeException(
-						"Cannot reflect handler event type for handler "
-								+ handler + ". Please specify it "
-								+ "as an argument to the handler constructor.");
+					"Cannot reflect handler event type for handler "
+						+ handler + ". Please specify it "
+						+ "as an argument to the handler constructor.");
 		}
 		return eventType;
 	}
@@ -149,19 +152,24 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 	def pickFirstEvent(): Event = {
 		return eventQueue.poll();
 	}
-	
+
 	def pollPreparedHandlers(event: Event): Set[() => Unit] = {
-		if (preparedHandlers contains event) {
-			val ph = preparedHandlers(event);
-			preparedHandlers -= event;
-			return ph;
-		} else {
-			return getMatchingHandlers(event);
+		rwLock.writeLock().lock();
+		try {
+			if (preparedHandlers contains event) {
+				val ph = preparedHandlers(event);
+				preparedHandlers -= event;
+				return ph;
+			} else {
+				return getMatchingHandlers(event);
+			}
+		} finally {
+			rwLock.writeLock().unlock();
 		}
 	}
 
 	override def doTrigger(event: Event, wid: Int, channel: ChannelCore[_]): Unit = {
-//		println(this.getClass()+": "+event+" triggert from "+channel);
+		//		println(this.getClass()+": "+event+" triggert from "+channel);
 		event match {
 			case r: Request => r.pushPathElement(channel);
 			case _ =>
@@ -170,7 +178,7 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 	}
 
 	override def doTrigger(event: Event, wid: Int, component: ComponentCore): Unit = {
-//		println(this.getClass()+": "+event+" triggert from "+component);
+		//		println(this.getClass()+": "+event+" triggert from "+component);
 		event match {
 			case r: Request => r.pushPathElement(component);
 			case _ =>
@@ -182,7 +190,7 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 		val eventType: Class[_ <: Event] = event.getClass();
 		var delivered = false;
 
-		rwLock.readLock().lock();
+		rwLock.writeLock().lock();
 		try {
 			event match {
 				case response: Response => {
@@ -223,7 +231,7 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 				}
 			}
 		} finally {
-			rwLock.readLock().unlock();
+			rwLock.writeLock().unlock();
 		}
 
 		if (!delivered) {
@@ -238,7 +246,7 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 							owner.handleFault(f.getFault());
 						}
 					}
-					case _ => println("Warning: Dropped Event "+event);
+					case _ => //println("Warning: Dropped Event "+event);
 				}
 			} else {
 				// error, event type doesn't flow on this port in this direction
@@ -251,7 +259,7 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 	}
 
 	private def deliverToChannels(event: Event, wid: Int): Boolean = {
-//		print(event+" trying to deliver to channels...");
+		//		print(event+" trying to deliver to channels...");
 		var delivered = false;
 		unfilteredChannels.foreach(cc => {
 			if (isPositive) {
@@ -270,12 +278,12 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 			}
 			delivered = true;
 		})
-//		if (delivered) println("succeeded") else println("failed");
+		//		if (delivered) println("succeeded") else println("failed");
 		return delivered;
 	}
 
 	private def deliverToCaller(event: Event, wid: Int, caller: ChannelCore[_]): Boolean = {
-//		println(event+" forwarding to caller.");
+		//		println(event+" forwarding to caller.");
 		if (isPositive) {
 			caller.forwardToNegative(event, wid);
 		} else {
@@ -285,12 +293,12 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 	}
 
 	private def deliverToSubscribers(event: Event, wid: Int): Boolean = {
-//		print(event+" trying to deliver to subscribers...");
+		//		print(event+" trying to deliver to subscribers...");
 		val isInitEvent = event.isInstanceOf[se.sics.kompics.Init];
 		if (isInitEvent) {
 			// On init events just notify the component. It will find matching handlers itself.
 			owner.eventReceived(this, event, wid, isControlPort);
-//			println("succeded");
+			//			println("succeded");
 			return true;
 		} else {
 			if (!subscriptions.isEmpty) {
@@ -298,12 +306,12 @@ class ScalaPort[P <: PortType](positive: Boolean, pType: P, parent: ComponentCor
 				if (!handlers.isEmpty) {
 					preparedHandlers += (event -> handlers);
 					owner.eventReceived(this, event, wid, false);
-//					println("succeded");
+					//					println("succeded");
 					return true;
 				}
 			}
 		}
-//		println("failed");
+		//		println("failed");
 		return false;
 	}
 

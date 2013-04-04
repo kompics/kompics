@@ -18,25 +18,25 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package se.sics.kompics;
+package se.sics.kompics.network;
+
+import se.sics.kompics.PortType;
 
 /**
- * The <code>ChannelCore</code> class.
+ * The <code>NetworkControl</code> class.
  * 
- * @author Lars Kroll <lkroll@sics.se
- * @version $Id$
+ * @author Cosmin Arad <cosmin@sics.se>
+ * @author Jim Dowling <jdowling@sics.se>
+ * @version $Id: NetworkControl.java 3881 2010-12-17 16:19:47Z Cosmin $
  */
-public interface ChannelCore<P extends PortType> extends Channel<P> {
-	
-	boolean isDestroyed();
-
-	void destroy();
-
-	public Positive<P> getPositivePort();
-
-	public Negative<P> getNegativePort();
-
-	public void forwardToPositive(Event event, int wid);
-
-	public void forwardToNegative(Event event, int wid);
+public final class NetworkControl extends PortType {
+	{
+		positive(NetworkSessionOpened.class);
+		positive(NetworkSessionClosed.class);
+		positive(NetworkException.class);
+		positive(NetworkConnectionRefused.class);
+		
+		request(ConnectionStatusRequest.class);
+		indication(ConnectionStatusResponse.class);
+	}
 }

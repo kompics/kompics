@@ -16,8 +16,10 @@
 
 	<modules>
 		<module>address</module>
+		<module>key-address</module>
 		<module>port-timer</module>
 		<module>port-network</module>
+		<module>port-virtual-rtscts-network</module>
 		<module>port-web</module>
 		<module>component-java-timer</module>
 		<module>component-mina-network</module>
@@ -25,6 +27,7 @@
 		<module>component-netty-network</module>
 		<!--<module>component-kryonet-network</module>-->
 		<module>component-grizzly-network</module>
+		<module>component-rtscts-grizzly-network</module>
 	</modules>
 
 	<repositories>
