@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @author Lars Kroll <lkr@lars-kroll.com>
+ * @author Lars Kroll <lkroll@sics.se>
  * @version $Id: $
  */
 public abstract class ComponentCore implements Component {
@@ -169,5 +169,13 @@ public abstract class ComponentCore implements Component {
 	}
 	
 	public abstract void execute(int wid);
+        
+        /* === LIFECYCLE === */
+        
+        protected Component.State state = Component.State.PASSIVE;
+        
+        public Component.State getState() {
+            return state;
+        }
 
 }

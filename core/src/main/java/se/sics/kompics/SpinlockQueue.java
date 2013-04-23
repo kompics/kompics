@@ -49,6 +49,10 @@ public class SpinlockQueue<E> {
 	public boolean isEmpty() {
 		return q.isEmpty();
 	}
+        
+        public void remove(E e) {
+            q.remove(e);
+        }
 
 //	public static final int FL_SIZE = 1000;
 //

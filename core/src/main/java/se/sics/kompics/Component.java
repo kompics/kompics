@@ -83,4 +83,11 @@ public interface Component {
 	public ComponentDefinition getComponent();
 	
 	public void handleFault(Throwable throwable);
+        
+        public static enum State {
+            PASSIVE,
+            STARTING,
+            ACTIVE,
+            STOPPING;
+        }
 }

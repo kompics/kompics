@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>kompics-content-distribution-networks</artifactId>
 		<groupId>se.sics.kompics.p2p.cdn</groupId>
-		<version>0.4.4-SNAPSHOT</version>
+		<version>0.4.5-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -11,7 +11,7 @@
 	<artifactId>kompics-bittorrent</artifactId>
 	<packaging>pom</packaging>
 	<name>BitTorrent</name>
-	<version>0.4.4-SNAPSHOT</version>
+	<version>0.4.5-SNAPSHOT</version>
 	<description>Kompics implementation of BitTorrent</description>
 	<modules>
 		<module>component-bittorrent-tracker</module>

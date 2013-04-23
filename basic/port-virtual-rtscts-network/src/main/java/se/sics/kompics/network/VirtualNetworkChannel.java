@@ -40,6 +40,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
     private final ReadWriteLock rwlock = new ReentrantReadWriteLock();
     private Negative<Network> decoyPort;
     private Negative<Network> deadLetterBox;
+    private Set<Negative<Network>> hostPorts = new HashSet<Negative<Network>>();
 
     private VirtualNetworkChannel(Positive<Network> sourcePort, Negative<Network> deadLetterBox) {
         this.sourcePort = (PortCore<Network>) sourcePort;
@@ -62,13 +63,17 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
     public void addConnection(byte[] id, Negative<Network> destinationPort) {
         rwlock.writeLock().lock();
         try {
-            Set<Negative<Network>> ports = destinationPorts.get(ByteBuffer.wrap(id));
-            if (ports != null) {
-                ports.add(destinationPort);
+            if (id == null) {
+                hostPorts.add(destinationPort);
             } else {
-                ports = new HashSet<Negative<Network>>();
-                ports.add(destinationPort);
-                destinationPorts.put(ByteBuffer.wrap(id), ports);
+                Set<Negative<Network>> ports = destinationPorts.get(ByteBuffer.wrap(id));
+                if (ports != null) {
+                    ports.add(destinationPort);
+                } else {
+                    ports = new HashSet<Negative<Network>>();
+                    ports.add(destinationPort);
+                    destinationPorts.put(ByteBuffer.wrap(id), ports);
+                }
             }
         } finally {
             rwlock.writeLock().unlock();
@@ -79,16 +84,19 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
     public void removeConnection(byte[] id, Negative<Network> destinationPort) {
         rwlock.writeLock().lock();
         try {
-            Set<Negative<Network>> ports = destinationPorts.get(ByteBuffer.wrap(id));
-            if (ports != null) {
-                ports.remove(destinationPort);
+            if (id == null) {
+                hostPorts.remove(destinationPort);
+            } else {
+                Set<Negative<Network>> ports = destinationPorts.get(ByteBuffer.wrap(id));
+                if (ports != null) {
+                    ports.remove(destinationPort);
+                }
             }
         } finally {
             rwlock.writeLock().unlock();
         }
         destinationPort.removeChannelTo(sourcePort);
     }
-
 
     @Override
     public boolean isDestroyed() {
@@ -121,10 +129,14 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
             ClearToSend msg = (ClearToSend) event;
             id = msg.getDestination().getId();
         }
-
-        if (id != null) {
-            rwlock.readLock().lock();
-            try {
+        rwlock.readLock().lock();
+        try {
+            if (id == null) {
+                for (Negative<Network> port : hostPorts) {
+                    port.doTrigger(event, wid, this);
+                }
+                return;
+            } else {
                 Set<Negative<Network>> ports = destinationPorts.get(ByteBuffer.wrap(id));
                 if (ports != null) {
                     for (Negative<Network> port : ports) {
@@ -134,11 +146,10 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
                 } else {
                     log.debug("No Port for id " + id);
                 }
-            } finally {
-                rwlock.readLock().unlock();
+                //log.debug("Couldn't find routing Id for event: " + id.toString() + " of type " + id.getClass().getSimpleName());
             }
-        } else {
-            log.debug("Couldn't find routing Id for event: " + id.toString() + " of type " + id.getClass().getSimpleName());
+        } finally {
+            rwlock.readLock().unlock();
         }
 
         this.deadLetterBox.doTrigger(event, wid, this);

@@ -59,7 +59,7 @@ public class ChannelRequestResponseTest {
 
 			connect(testPort, child.getPositive(TestPort.class));
 
-			// trigger(new TestRequest(13), child.getPositive(TestPort.class));
+			//trigger(new TestRequest(13), child.getPositive(TestPort.class));
 		}
 	}
 

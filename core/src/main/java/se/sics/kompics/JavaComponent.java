@@ -1,34 +1,36 @@
 /**
  * This file is part of the Kompics component model runtime.
- * 
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
- * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
+ * 2009 Royal Institute of Technology (KTH)
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * The <code>ComponentCore</code> class.
- * 
+ * The
+ * <code>ComponentCore</code> class.
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @author Lars Kroll <lkr@lars-kroll.com>
@@ -36,238 +38,266 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class JavaComponent extends ComponentCore {
 
-	/* outside ports */
-	private HashMap<Class<? extends PortType>, JavaPort<? extends PortType>> positivePorts;
-	private HashMap<Class<? extends PortType>, JavaPort<? extends PortType>> negativePorts;
+    /* outside ports */
+    private HashMap<Class<? extends PortType>, JavaPort<? extends PortType>> positivePorts;
+    private HashMap<Class<? extends PortType>, JavaPort<? extends PortType>> negativePorts;
+    private JavaPort<ControlPort> positiveControl, negativeControl;
+    ComponentDefinition component;
 
-	private JavaPort<ControlPort> positiveControl, negativeControl;
+    /**
+     * Instantiates a new component core.
+     *
+     * @param componentDefinition the component definition
+     */
+    public JavaComponent(ComponentDefinition componentDefinition) {
+        this.positivePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
+        this.negativePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
+        this.parent = parentThreadLocal.get();
+        this.component = componentDefinition;
+        this.initSubscriptionInConstructor = false;
+        this.initDone = new AtomicBoolean(false);
+        this.initReceived = new AtomicBoolean(false);
+        this.firstInitEvent = new AtomicReference<Event>(null);
+        parentThreadLocal.set(null);
+    }
 
-	ComponentDefinition component;
+    public JavaComponent(JavaComponent other) {
+        this.positivePorts = other.positivePorts;
+        this.negativePorts = other.negativePorts;
+        this.parent = other.parent;
+        this.component = other.component;
+        this.initSubscriptionInConstructor = other.initSubscriptionInConstructor;
+        this.initDone = other.initDone;
+        this.initReceived = other.initReceived;
+        this.firstInitEvent = other.firstInitEvent;
+        parentThreadLocal.set(null);
+    }
 
-	
+    /*
+     * (non-Javadoc)
+     * 
+     * @see se.sics.kompics.Component#getControl()
+     */
+    @Override
+    public Positive<ControlPort> getControl() {
+        return positiveControl;
+    }
 
-	/**
-	 * Instantiates a new component core.
-	 * 
-	 * @param componentDefinition
-	 *            the component definition
-	 */
-	public JavaComponent(ComponentDefinition componentDefinition) {
-		this.positivePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
-		this.negativePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
-		this.parent = parentThreadLocal.get();
-		this.component = componentDefinition;
-		this.initSubscriptionInConstructor = false;
-		this.initDone = new AtomicBoolean(false);
-		this.initReceived = new AtomicBoolean(false);
-		this.firstInitEvent = new AtomicReference<Event>(null);
-		parentThreadLocal.set(null);
-	}
-	
-	public JavaComponent(JavaComponent other) {
-		this.positivePorts = other.positivePorts;
-		this.negativePorts = other.negativePorts;
-		this.parent = other.parent;
-		this.component = other.component;
-		this.initSubscriptionInConstructor = other.initSubscriptionInConstructor;
-		this.initDone = other.initDone;
-		this.initReceived = other.initReceived;
-		this.firstInitEvent = other.firstInitEvent;
-		parentThreadLocal.set(null);
-	}
+    @Override
+    public Positive<ControlPort> control() {
+        return positiveControl;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see se.sics.kompics.Component#getControl()
-	 */
-	public Positive<ControlPort> getControl() {
-		return positiveControl;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see se.sics.kompics.Component#getNegative(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <P extends PortType> Negative<P> getNegative(Class<P> portType) {
+        Negative<P> port = (Negative<P>) negativePorts.get(portType);
+        if (port == null) {
+            throw new RuntimeException(component + " has no negative "
+                    + portType.getCanonicalName());
+        }
+        return port;
+    }
 
-	public Positive<ControlPort> control() {
-		return positiveControl;
-	}
+    @Override
+    public <P extends PortType> Negative<P> required(Class<P> portType) {
+        return getNegative(portType);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see se.sics.kompics.Component#getNegative(java.lang.Class)
-	 */
-	@SuppressWarnings("unchecked")
-	public <P extends PortType> Negative<P> getNegative(Class<P> portType) {
-		Negative<P> port = (Negative<P>) negativePorts.get(portType);
-		if (port == null)
-			throw new RuntimeException(component + " has no negative "
-					+ portType.getCanonicalName());
-		return port;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see se.sics.kompics.Component#getPositive(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <P extends PortType> Positive<P> getPositive(Class<P> portType) {
+        Positive<P> port = (Positive<P>) positivePorts.get(portType);
+        if (port == null) {
+            throw new RuntimeException(component + " has no positive "
+                    + portType.getCanonicalName());
+        }
+        return port;
+    }
 
-	public <P extends PortType> Negative<P> required(Class<P> portType) {
-		return getNegative(portType);
-	}
+    @Override
+    public <P extends PortType> Positive<P> provided(Class<P> portType) {
+        return getPositive(portType);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see se.sics.kompics.Component#getPositive(java.lang.Class)
-	 */
-	@SuppressWarnings("unchecked")
-	public <P extends PortType> Positive<P> getPositive(Class<P> portType) {
-		Positive<P> port = (Positive<P>) positivePorts.get(portType);
-		if (port == null)
-			throw new RuntimeException(component + " has no positive "
-					+ portType.getCanonicalName());
-		return port;
-	}
+    @Override
+    public <P extends PortType> Negative<P> createNegativePort(Class<P> portType) {
+        JavaPort<P> negativePort = new JavaPort<P>(false,
+                PortType.getPortType(portType), this);
+        JavaPort<P> positivePort = new JavaPort<P>(true,
+                PortType.getPortType(portType), parent);
 
-	public <P extends PortType> Positive<P> provided(Class<P> portType) {
-		return getPositive(portType);
-	}
+        negativePort.setPair(positivePort);
+        positivePort.setPair(negativePort);
 
-	public <P extends PortType> Negative<P> createNegativePort(Class<P> portType) {
-		JavaPort<P> negativePort = new JavaPort<P>(false,
-				PortType.getPortType(portType), this);
-		JavaPort<P> positivePort = new JavaPort<P>(true,
-				PortType.getPortType(portType), parent);
+        Positive<?> existing = positivePorts.put(portType, positivePort);
+        if (existing != null) {
+            throw new RuntimeException("Cannot create multiple negative "
+                    + portType.getCanonicalName());
+        }
+        return negativePort;
+    }
 
-		negativePort.setPair(positivePort);
-		positivePort.setPair(negativePort);
+    @Override
+    public <P extends PortType> Positive<P> createPositivePort(Class<P> portType) {
+        JavaPort<P> negativePort = new JavaPort<P>(false,
+                PortType.getPortType(portType), parent);
+        JavaPort<P> positivePort = new JavaPort<P>(true,
+                PortType.getPortType(portType), this);
 
-		Positive<?> existing = positivePorts.put(portType, positivePort);
-		if (existing != null)
-			throw new RuntimeException("Cannot create multiple negative "
-					+ portType.getCanonicalName());
-		return negativePort;
-	}
+        negativePort.setPair(positivePort);
+        positivePort.setPair(negativePort);
 
-	public <P extends PortType> Positive<P> createPositivePort(Class<P> portType) {
-		JavaPort<P> negativePort = new JavaPort<P>(false,
-				PortType.getPortType(portType), parent);
-		JavaPort<P> positivePort = new JavaPort<P>(true,
-				PortType.getPortType(portType), this);
+        Negative<?> existing = negativePorts.put(portType, negativePort);
+        if (existing != null) {
+            throw new RuntimeException("Cannot create multiple positive "
+                    + portType.getCanonicalName());
+        }
+        return positivePort;
+    }
 
-		negativePort.setPair(positivePort);
-		positivePort.setPair(negativePort);
+    @Override
+    public Negative<ControlPort> createControlPort() {
+        negativeControl = new JavaPort<ControlPort>(false,
+                PortType.getPortType(ControlPort.class), this);
+        positiveControl = new JavaPort<ControlPort>(true,
+                PortType.getPortType(ControlPort.class), parent);
 
-		Negative<?> existing = negativePorts.put(portType, negativePort);
-		if (existing != null)
-			throw new RuntimeException("Cannot create multiple positive "
-					+ portType.getCanonicalName());
-		return positivePort;
-	}
+        positiveControl.setPair(negativeControl);
+        negativeControl.setPair(positiveControl);
 
-	public Negative<ControlPort> createControlPort() {
-		negativeControl = new JavaPort<ControlPort>(false,
-				PortType.getPortType(ControlPort.class), this);
-		positiveControl = new JavaPort<ControlPort>(true,
-				PortType.getPortType(ControlPort.class), parent);
+        negativeControl.doSubscribe(handleStart);
+        negativeControl.doSubscribe(handleStop);
 
-		positiveControl.setPair(negativeControl);
-		negativeControl.setPair(positiveControl);
+        negativeControl.doSubscribe(handleStarted);
+        negativeControl.doSubscribe(handleStopped);
 
-		negativeControl.doSubscribe(handleStart);
-		negativeControl.doSubscribe(handleStop);
+        return negativeControl;
+    }
 
-		return negativeControl;
-	}
+    @Override
+    public Component doCreate(Class<? extends ComponentDefinition> definition) {
+        // create an instance of the implementing component type
+        ComponentDefinition component;
+        try {
+            parentThreadLocal.set(this);
+            component = definition.newInstance();
+            ComponentCore child = component.getComponentCore();
 
-	public Component doCreate(Class<? extends ComponentDefinition> definition) {
-		// create an instance of the implementing component type
-		ComponentDefinition component;
-		try {
-			parentThreadLocal.set(this);
-			component = definition.newInstance();
-			ComponentCore child = component.getComponentCore();
+            if (!child.initSubscriptionInConstructor) {
+                child.initDone.set(true);
+            } else {
+                child.workCount.incrementAndGet();
+            }
 
-			if (!child.initSubscriptionInConstructor) {
-				child.initDone.set(true);
-			} else {
-				child.workCount.incrementAndGet();
-			}
+            child.setScheduler(scheduler);
+            if (children == null) {
+                children = new LinkedList<ComponentCore>();
+            }
+            children.add(child);
 
-			child.setScheduler(scheduler);
-			if (children == null) {
-				children = new LinkedList<ComponentCore>();
-			}
-			children.add(child);
+            return child;
+        } catch (InstantiationException e) {
+            throw new RuntimeException("Cannot create component "
+                    + definition.getCanonicalName(), e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("Cannot create component "
+                    + definition.getCanonicalName(), e);
+        }
+    }
 
-			return child;
-		} catch (InstantiationException e) {
-			throw new RuntimeException("Cannot create component "
-					+ definition.getCanonicalName(), e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException("Cannot create component "
-					+ definition.getCanonicalName(), e);
-		}
-	}
+    @Override
+    public void execute(int wid) {
+        this.wid = wid;
 
-	
+        // if init is not yet done it means we were scheduled to run the first
+        // Init event. We do not touch readyPorts and workCount.
+        if (!initDone.get()) {
+            ArrayList<Handler<?>> handlers = negativeControl
+                    .getSubscribedHandlers(firstInitEvent.get());
+            if (handlers != null) {
+                for (int i = 0; i < handlers.size(); i++) {
+                    executeEvent(firstInitEvent.get(), handlers.get(i));
+                }
+            }
+            initDone.set(true);
 
-	
+            // if other events arrived before the Init we schedule the component
+            // to execute them
+            int wc = workCount.decrementAndGet();
+            if (wc > 0) {
+                if (scheduler == null) {
+                    scheduler = Kompics.getScheduler();
+                }
+                scheduler.schedule(this, wid);
+            }
+            return;
+        }
 
-	
 
-	
-
-	
-
-	
-
-	public void execute(int wid) {
-		this.wid = wid;
-
-		// if init is not yet done it means we were scheduled to run the first
-		// Init event. We do not touch readyPorts and workCount.
-		if (!initDone.get()) {
-			ArrayList<Handler<?>> handlers = negativeControl
-					.getSubscribedHandlers(firstInitEvent.get());
-			if (handlers != null) {
-				for (int i = 0; i < handlers.size(); i++) {
-					executeEvent(firstInitEvent.get(), handlers.get(i));
-				}
-			}
-			initDone.set(true);
-
-			// if other events arrived before the Init we schedule the component
-			// to execute them
-			int wc = workCount.decrementAndGet();
-			if (wc > 0) {
-				if (scheduler == null)
-					scheduler = Kompics.getScheduler();
-				scheduler.schedule(this, wid);
-			}
-			return;
-		}
-		
 //		New scheduling code: Run n and move to end of schedule
 //		
-		int n = Kompics.maxNumOfExecutedEvents.get();
-		int count = 0;
-		int wc = workCount.get();
-		
-		while ((count < n) && wc > 0) {
-			JavaPort<?> nextPort = (JavaPort<?>) readyPorts.poll();
-			
-			Event event = nextPort.pickFirstEvent();
-			
-			ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
+        int n = Kompics.maxNumOfExecutedEvents.get();
+        int count = 0;
+        int wc = workCount.get();
 
-			if (handlers != null) {
-				for (int i = 0; i < handlers.size(); i++) {
-					executeEvent(event, handlers.get(i));
-				}
-			}
-			wc = workCount.decrementAndGet();
-			count++;
-		}
-		
-		if (wc > 0) {
-			if (scheduler == null)
-				scheduler = Kompics.getScheduler();
-			scheduler.schedule(this, wid);
-		}
-		
+        while ((count < n) && wc > 0) {
+            Event event;
+            JavaPort<?> nextPort;
+            if ((state == State.PASSIVE) || (state == State.STARTING)) {
+
+                event = negativeControl.pickFirstEvent();
+                nextPort = negativeControl;
+
+                if (event == null) {
+                    //System.err.println("Not scheduling component " + component + "/ State is " + state);
+                    // try again
+                    if (wc > 0) {
+                        if (scheduler == null) {
+                            scheduler = Kompics.getScheduler();
+                        }
+                        scheduler.schedule(this, wid);
+                    }
+                    return; // Don't run anything else
+                }
+                readyPorts.remove(nextPort);
+            } else {
+                nextPort = (JavaPort<?>) readyPorts.poll();
+                event = nextPort.pickFirstEvent();
+            }
+
+//            if (event == null) {
+//                System.err.println("Something went wrong: " + component + "/" + state + "/" + wc);
+//            }
+
+            ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
+
+            if (handlers != null) {
+                for (int i = 0; i < handlers.size(); i++) {
+                    executeEvent(event, handlers.get(i));
+                }
+            }
+            wc = workCount.decrementAndGet();
+            count++;
+        }
+
+        if (wc > 0) {
+            if (scheduler == null) {
+                scheduler = Kompics.getScheduler();
+            }
+            scheduler.schedule(this, wid);
+        }
+
 //		Classic scheduling code: Run once and move to end of schedule
 //		
 //		// 1. pick a port with a non-empty event queue
@@ -292,108 +322,182 @@ public class JavaComponent extends ComponentCore {
 //				scheduler = Kompics.getScheduler();
 //			scheduler.schedule(this, wid);
 //		}
-	}
+    }
 
-	@SuppressWarnings("unchecked")
-	private void executeEvent(Event event, Handler<?> handler) {
-		try {
-			((Handler<Event>) handler).handle(event);
-		} catch (Throwable throwable) {
-			handleFault(throwable);
-		}
+    @SuppressWarnings("unchecked")
+    private void executeEvent(Event event, Handler<?> handler) {
+        try {
+            ((Handler<Event>) handler).handle(event);
+        } catch (Throwable throwable) {
+            handleFault(throwable);
+        }
 
-	}
+    }
 
-	public void handleFault(Throwable throwable) {
-		if (parent != null) {
-			negativeControl.doTrigger(new Fault(throwable), wid, this);
-		} else {
-			// StackTraceElement[] stackTrace = throwable.getStackTrace();
-			// System.err.println("Kompics isolated fault: "
-			// + throwable.getMessage());
-			// do {
-			// for (int i = 0; i < stackTrace.length; i++) {
-			// System.err.println("    " + stackTrace[i]);
-			// }
-			// throwable = throwable.getCause();
-			// if (throwable != null) {
-			// stackTrace = throwable.getStackTrace();
-			// System.err.println("Caused by: " + throwable + ": "
-			// + throwable.getMessage());
-			// }
-			// } while (throwable != null);
-			throw new RuntimeException("Kompics isolated fault ", throwable);
-			// System.exit(1);
-		}
-	}
+    @Override
+    public void handleFault(Throwable throwable) {
+        if (parent != null) {
+            negativeControl.doTrigger(new Fault(throwable), wid, this);
+        } else {
+            // StackTraceElement[] stackTrace = throwable.getStackTrace();
+            // System.err.println("Kompics isolated fault: "
+            // + throwable.getMessage());
+            // do {
+            // for (int i = 0; i < stackTrace.length; i++) {
+            // System.err.println("    " + stackTrace[i]);
+            // }
+            // throwable = throwable.getCause();
+            // if (throwable != null) {
+            // stackTrace = throwable.getStackTrace();
+            // System.err.println("Caused by: " + throwable + ": "
+            // + throwable.getMessage());
+            // }
+            // } while (throwable != null);
+            throw new RuntimeException("Kompics isolated fault ", throwable);
+            // System.exit(1);
+        }
+    }
+    // fault handler that swallows exceptions and logs them instead of printing
+    // them to stderr and halting
+    // void handleFault(Throwable throwable) {
+    // if (parent != null) {
+    // negativeControl.doTrigger(new Fault(throwable), wid, this);
+    // } else {
+    // StackTraceElement[] stackTrace = throwable.getStackTrace();
+    // Kompics.logger.error("Kompics isolated fault: {}", throwable
+    // .getMessage());
+    // do {
+    // for (int i = 0; i < stackTrace.length; i++) {
+    // Kompics.logger.error("    {}", stackTrace[i]);
+    // }
+    // throwable = throwable.getCause();
+    // if (throwable != null) {
+    // stackTrace = throwable.getStackTrace();
+    // Kompics.logger.error("Caused by: {}: {}", throwable,
+    // throwable.getMessage());
+    // }
+    // } while (throwable != null);
+    // }
+    // }
 
-	// fault handler that swallows exceptions and logs them instead of printing
-	// them to stderr and halting
+    /* === LIFECYCLE === */
+    private List<Started> startedList = null;
+    private List<Stopped> stoppedList = null;
+    Handler<Start> handleStart = new Handler<Start>() {
+        @Override
+        public void handle(Start event) {
+            if (children != null) {
+                //System.err.println(component + " starting");
+                startedList = new ArrayList<Started>();
+                state = Component.State.STARTING;
+                for (ComponentCore child : children) {
+                    //System.out.println("Sending Start to child: " + child.getComponent());
+                    // start child
+                    ((PortCore<ControlPort>) child.getControl()).doTrigger(
+                            Start.event, wid, component.getComponentCore());
+                }
+            } else {
+                //System.err.println(component + " started");
+                state = Component.State.ACTIVE;
+                if (parent != null) {
+                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(Started.event, wid, component.getComponentCore());
+                }
+            }
+        }
 
-	// void handleFault(Throwable throwable) {
-	// if (parent != null) {
-	// negativeControl.doTrigger(new Fault(throwable), wid, this);
-	// } else {
-	// StackTraceElement[] stackTrace = throwable.getStackTrace();
-	// Kompics.logger.error("Kompics isolated fault: {}", throwable
-	// .getMessage());
-	// do {
-	// for (int i = 0; i < stackTrace.length; i++) {
-	// Kompics.logger.error("    {}", stackTrace[i]);
-	// }
-	// throwable = throwable.getCause();
-	// if (throwable != null) {
-	// stackTrace = throwable.getStackTrace();
-	// Kompics.logger.error("Caused by: {}: {}", throwable,
-	// throwable.getMessage());
-	// }
-	// } while (throwable != null);
-	// }
-	// }
-
-	/* === LIFECYCLE === */
-
-	Handler<Start> handleStart = new Handler<Start>() {
-		public void handle(Start event) {
-			// System.err.println(component + " defaultStart");
-			if (children != null) {
-				for (ComponentCore child : children) {
-					// start child
-					((PortCore<ControlPort>) child.getControl()).doTrigger(
-							Start.event, wid, component.getComponentCore());
-				}
-			}
-		}
-
-		public java.lang.Class<Start> getEventType() {
-			return Start.class;
-		};
-	};
+        @Override
+        public java.lang.Class<Start> getEventType() {
+            return Start.class;
+        }
+    ;
+    };
 
 	Handler<Stop> handleStop = new Handler<Stop>() {
-		public void handle(Stop event) {
-			// System.err.println(component + " defaultStop");
-			if (children != null) {
-				for (ComponentCore child : children) {
-					// stop child
-					((PortCore<ControlPort>) child.getControl()).doTrigger(
-							Stop.event, wid, component.getComponentCore());
-				}
-			}
-		}
+        @Override
+        public void handle(Stop event) {
 
-		public java.lang.Class<Stop> getEventType() {
-			return Stop.class;
-		};
-	};
+            if (children != null) {
+                //System.err.println(component + " stopping");
+                state = Component.State.STOPPING;
+                stoppedList = new ArrayList<Stopped>();
+                for (ComponentCore child : children) {
+                    //System.out.println("Sending Stop to child: " + child.getComponent());
+                    // stop child
+                    ((PortCore<ControlPort>) child.getControl()).doTrigger(
+                            Stop.event, wid, component.getComponentCore());
+                }
+            } else {
+                //System.err.println(component + " stopped");
+                state = Component.State.PASSIVE;
+                if (parent != null) {
+                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(Stopped.event, wid, component.getComponentCore());
+                }
+            }
+        }
 
-	@Override
-	public boolean equals(Object obj) {
-		return this == obj;
-	}
+        @Override
+        public java.lang.Class<Stop> getEventType() {
+            return Stop.class;
+        }
+    ;
+    };
+        
+        Handler<Started> handleStarted = new Handler<Started>() {
+        @Override
+        public void handle(Started event) {
+            //System.err.println(component + " got Started event");
+            if (startedList != null) {
+                startedList.add(event);
+                if (startedList.size() == children.size()) {
+                    //System.err.println(component + " started");
+                    state = Component.State.ACTIVE;
+                    if (parent != null) {
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(Started.event, wid, component.getComponentCore());
+                    }
+                    startedList = null;
+                }
+            }
+        }
 
-	@Override
-	public ComponentDefinition getComponent() {
-		return component;
-	}
+        @Override
+        public java.lang.Class<Started> getEventType() {
+            return Started.class;
+        }
+    ;
+    };
+
+	Handler<Stopped> handleStopped = new Handler<Stopped>() {
+        @Override
+        public void handle(Stopped event) {
+            //System.err.println(component + " got Stopped event");
+            if (stoppedList != null) {
+                stoppedList.add(event);
+                if (stoppedList.size() == children.size()) {
+                    //System.err.println(component + " stopped");
+                    state = Component.State.PASSIVE;
+                    if (parent != null) {
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(Stopped.event, wid, component.getComponentCore());
+                    }
+                    stoppedList = null;
+                }
+            }
+        }
+
+        @Override
+        public java.lang.Class<Stopped> getEventType() {
+            return Stopped.class;
+        }
+    ;
+
+    };
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj;
+    }
+
+    @Override
+    public ComponentDefinition getComponent() {
+        return component;
+    }
 }
