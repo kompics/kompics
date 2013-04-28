@@ -209,6 +209,20 @@ public abstract class ComponentDefinition {
 	public Negative<ControlPort> getControlPort() {
 		return control;
 	}
+        
+        public ComponentCore getComponentCore() {
+		return core;
+	}
+        
+        /**
+         * Use for custom cleanup.
+         * Will be called after all child components have stopped,
+         * but before sending a Stopped message to the parent.
+         * 
+         */
+        public void tearDown() {
+            // Do nothing normally
+        }
 
 	/* === PRIVATE === */
 
@@ -233,7 +247,4 @@ public abstract class ComponentDefinition {
 		control = core.createControlPort();
 	}
 
-	public ComponentCore getComponentCore() {
-		return core;
-	}
 }

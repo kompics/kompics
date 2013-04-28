@@ -25,11 +25,13 @@ package se.sics.kompics;
  * @author Lars Kroll <lkroll@sics.se>
  */
 public final class Started extends Event {
-    public static Started event = new Started();
+    
+    public final Component component;
 
     /**
      * Instantiates a new start event.
      */
-    public Started() {
+    public Started(Component c) {
+        component = c;
     }
 }

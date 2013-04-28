@@ -22,8 +22,10 @@ package se.sics.kompics;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -381,14 +383,12 @@ public class JavaComponent extends ComponentCore {
     // }
 
     /* === LIFECYCLE === */
-    private List<Started> startedList = null;
-    private List<Stopped> stoppedList = null;
+    private Set<Component> activeSet = new HashSet<Component>();
     Handler<Start> handleStart = new Handler<Start>() {
         @Override
         public void handle(Start event) {
             if (children != null) {
                 //System.err.println(component + " starting");
-                startedList = new ArrayList<Started>();
                 state = Component.State.STARTING;
                 for (ComponentCore child : children) {
                     //System.out.println("Sending Start to child: " + child.getComponent());
@@ -400,7 +400,7 @@ public class JavaComponent extends ComponentCore {
                 //System.err.println(component + " started");
                 state = Component.State.ACTIVE;
                 if (parent != null) {
-                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(Started.event, wid, component.getComponentCore());
+                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
                 }
             }
         }
@@ -411,6 +411,7 @@ public class JavaComponent extends ComponentCore {
         }
     ;
     };
+    
 
 	Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
@@ -419,7 +420,6 @@ public class JavaComponent extends ComponentCore {
             if (children != null) {
                 //System.err.println(component + " stopping");
                 state = Component.State.STOPPING;
-                stoppedList = new ArrayList<Stopped>();
                 for (ComponentCore child : children) {
                     //System.out.println("Sending Stop to child: " + child.getComponent());
                     // stop child
@@ -429,8 +429,13 @@ public class JavaComponent extends ComponentCore {
             } else {
                 //System.err.println(component + " stopped");
                 state = Component.State.PASSIVE;
+                component.tearDown();
                 if (parent != null) {
-                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(Stopped.event, wid, component.getComponentCore());
+                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Stopped(component.getComponentCore()), wid, component.getComponentCore());
+                } else {
+                    synchronized (component.getComponentCore()) {
+                        component.getComponentCore().notifyAll();
+                    }
                 }
             }
         }
@@ -445,18 +450,17 @@ public class JavaComponent extends ComponentCore {
         Handler<Started> handleStarted = new Handler<Started>() {
         @Override
         public void handle(Started event) {
-            //System.err.println(component + " got Started event");
-            if (startedList != null) {
-                startedList.add(event);
-                if (startedList.size() == children.size()) {
-                    //System.err.println(component + " started");
-                    state = Component.State.ACTIVE;
-                    if (parent != null) {
-                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(Started.event, wid, component.getComponentCore());
-                    }
-                    startedList = null;
+            //System.err.println(component + " got Started event from " + event.component.getComponent());
+            activeSet.add(event.component);
+            //System.err.println(component + " active set has " + activeSet.size() + " members");
+            if (activeSet.size() == children.size()) {
+                //System.err.println(component + " started");
+                state = Component.State.ACTIVE;
+                if (parent != null) {
+                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
                 }
             }
+
         }
 
         @Override
@@ -469,18 +473,23 @@ public class JavaComponent extends ComponentCore {
 	Handler<Stopped> handleStopped = new Handler<Stopped>() {
         @Override
         public void handle(Stopped event) {
-            //System.err.println(component + " got Stopped event");
-            if (stoppedList != null) {
-                stoppedList.add(event);
-                if (stoppedList.size() == children.size()) {
-                    //System.err.println(component + " stopped");
-                    state = Component.State.PASSIVE;
-                    if (parent != null) {
-                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(Stopped.event, wid, component.getComponentCore());
+            //System.err.println(component + " got Stopped event from " + event.component.getComponent());
+
+            activeSet.remove(event.component);
+            //System.err.println(component + " active set has " + activeSet.size() + " members");
+            if (activeSet.isEmpty()) {
+                //System.err.println(component + " stopped");
+                state = Component.State.PASSIVE;
+                component.tearDown();
+                if (parent != null) {
+                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Stopped(component.getComponentCore()), wid, component.getComponentCore());
+                } else {
+                    synchronized (component.getComponentCore()) {
+                        component.getComponentCore().notifyAll();
                     }
-                    stoppedList = null;
                 }
             }
+
         }
 
         @Override

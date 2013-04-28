@@ -178,12 +178,12 @@ public final class Address implements Serializable, Comparable<Address> {
     }
     private static Comparator<byte[]> byteLexComp = UnsignedBytes.lexicographicalComparator();
     
-    public Address newVirtual(byte[] id) throws UnknownHostException {
-        return new Address(InetAddress.getByAddress(this.ip.getAddress()), this.port, id); //Should be safe to reuse InetAddress object
+    public Address newVirtual(byte[] id) {
+        return new Address(this.ip, this.port, id); //Should be safe to reuse InetAddress object
     }
     
-    public Address newVirtual(byte id) throws UnknownHostException {
-        return new Address(InetAddress.getByAddress(this.ip.getAddress()), this.port, id); //Should be safe to reuse InetAddress object
+    public Address newVirtual(byte id) {
+        return new Address(this.ip, this.port, id); //Should be safe to reuse InetAddress object
     }
     
     public boolean sameHostAs(Address other) {

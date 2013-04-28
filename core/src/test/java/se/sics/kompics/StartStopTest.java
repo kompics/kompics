@@ -89,7 +89,11 @@ public class StartStopTest {
                 public void handle(TestReply event) {
                     try {
                         queue.put(event);
-                        trigger(Stop.event, child.control());
+                        if (first) {
+                            trigger(Stop.event, child.control());
+                        } else {
+                            trigger(Stop.event, child2.control());
+                        }
                     } catch (InterruptedException ex) {
                         System.err.println(ex.getMessage());
                     }

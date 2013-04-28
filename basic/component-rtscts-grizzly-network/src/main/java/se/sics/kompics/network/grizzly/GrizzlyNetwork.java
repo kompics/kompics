@@ -56,6 +56,8 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
+import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.ClearToSend;
 import se.sics.kompics.network.ConnectionStatusRequest;
@@ -206,6 +208,13 @@ public class GrizzlyNetwork extends ComponentDefinition {
             // .createManagementObject();
             // manager.registerAtRoot(jmxTransportObject, "GrizzlyTransport");
 
+            
+        }
+    };
+    Handler<Start> startHandler = new Handler<Start>() {
+
+        @Override
+        public void handle(Start event) {
             try {
                 transport.bind(localSocketAddress);
                 transport.start();
@@ -214,6 +223,21 @@ public class GrizzlyNetwork extends ComponentDefinition {
             }
         }
     };
+    
+    Handler<Stop> stopHandler = new Handler<Stop>() {
+
+        @Override
+        public void handle(Stop event) {
+            try {
+                transport.stop();
+                transport.unbindAll();
+            } catch (IOException e) {
+                throw new RuntimeException("Grizzly cannot bind/start port", e);
+            }
+        }
+        
+    };
+    
     /**
      * The handle message.
      */
