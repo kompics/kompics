@@ -230,6 +230,12 @@ public final class P2pOrchestrator extends ComponentDefinition {
         }
         return true;
     }
+    
+    /**
+     * This init handler should be called after all other init handlers have been
+     * called, as it may immediately start generating events that would otherwise
+     * just get dropped.
+     */
     Handler<P2pOrchestratorInit> handleInit = new Handler<P2pOrchestratorInit>() {
         public void handle(P2pOrchestratorInit init) {
             logger.info("Orchestration started");
@@ -240,15 +246,13 @@ public final class P2pOrchestrator extends ComponentDefinition {
             LinkedList<SimulatorEvent> events = scenario.generateEventList();
             for (SimulatorEvent simulatorEvent : events) {
                 long time = simulatorEvent.getTime();
-                // Cannot schedule the event just now, as we are still in the
-                // init handler and events will only be executed after this handler
-                // has completed.
                 if (time == 0) {
-                    time = 1;
+                    handleSimulatorEvent(simulatorEvent);
+                } else {
+                    SimulatorEventTask task = new SimulatorEventTask(
+                            thisOrchestrator, simulatorEvent);
+                    javaTimer.schedule(task, time);
                 }
-                SimulatorEventTask task = new SimulatorEventTask(
-                        thisOrchestrator, simulatorEvent);
-                javaTimer.schedule(task, time);
             }
         }
     };
