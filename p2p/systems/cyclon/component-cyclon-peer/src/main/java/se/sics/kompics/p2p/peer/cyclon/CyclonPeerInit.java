@@ -33,7 +33,7 @@ import se.sics.kompics.p2p.overlay.cyclon.CyclonConfiguration;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class CyclonPeerInit extends Init {
+public final class CyclonPeerInit extends Init<CyclonPeer> {
 
 	private final Address self;
 	private final BootstrapConfiguration bootstrapConfiguration;

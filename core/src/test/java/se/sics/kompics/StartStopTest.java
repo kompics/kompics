@@ -79,8 +79,8 @@ public class StartStopTest {
         {
             final Positive<TestPort> port = requires(TestPort.class);
 
-            final Component child = create(ForwarderComponent.class);
-            final Component child2 = create(ForwarderComponent.class);
+            final Component child = create(ForwarderComponent.class, Init.NONE);
+            final Component child2 = create(ForwarderComponent.class, Init.NONE);
 
             connect(port.getPair(), child.getPositive(TestPort.class));
 
@@ -134,7 +134,7 @@ public class StartStopTest {
             final Positive<TestPort> down = requires(TestPort.class);
             final Negative<TestPort> up = provides(TestPort.class);
 
-            Component child = create(ResponderComponent.class);
+            Component child = create(ResponderComponent.class, Init.NONE);
 
             connect(down.getPair(), child.getPositive(TestPort.class));
 

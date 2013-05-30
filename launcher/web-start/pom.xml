@@ -3,14 +3,14 @@
 	<parent>
 		<artifactId>kompics-launchers</artifactId>
 		<groupId>se.sics.kompics.launcher</groupId>
-		<version>0.4.5-SNAPSHOT</version>
+		<version>0.5.0-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.launcher</groupId>
 	<artifactId>kompics-web-start</artifactId>
 	<name>Kompics Web Start</name>
-	<version>0.4.5-SNAPSHOT</version>
+	<version>0.5.0-SNAPSHOT</version>
 	<description>Kompics Web Start</description>
 
 	<repositories>

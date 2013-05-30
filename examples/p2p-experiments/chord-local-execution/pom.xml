@@ -3,21 +3,21 @@
 	<parent>
 		<artifactId>kompics-p2p-experiment-examples</artifactId>
 		<groupId>se.sics.kompics.examples.p2p-experiments</groupId>
-		<version>0.4.5-SNAPSHOT</version>
+		<version>0.5.0-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.examples.p2p-experiments</groupId>
 	<artifactId>kompics-example-chord-local-execution</artifactId>
 	<name>Chord Local Execution Kompics Example</name>
-	<version>0.4.5-SNAPSHOT</version>
+	<version>0.5.0-SNAPSHOT</version>
 	<description>Chord Local Execution Kompics Example</description>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.experiments.chord</groupId>
 			<artifactId>kompics-component-chord-execution-main</artifactId>
-			<version>0.4.5-SNAPSHOT</version>
+			<version>0.5.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

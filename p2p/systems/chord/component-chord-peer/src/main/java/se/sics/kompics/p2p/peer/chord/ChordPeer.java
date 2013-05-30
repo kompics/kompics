@@ -1,22 +1,22 @@
 /**
  * This file is part of the Kompics P2P Framework.
- * 
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
- * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
+ * 2009 Royal Institute of Technology (KTH)
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics.p2p.peer.chord;
 
@@ -68,205 +68,189 @@ import se.sics.kompics.timer.Timer;
 import se.sics.kompics.web.Web;
 
 /**
- * The <code>ChordPeer</code> class.
- * 
+ * The
+ * <code>ChordPeer</code> class.
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
 public final class ChordPeer extends ComponentDefinition {
 
-	Negative<ChordPeerPort> chordPeer = negative(ChordPeerPort.class);
+    Negative<ChordPeerPort> chordPeer = negative(ChordPeerPort.class);
+    Positive<Network> network = positive(Network.class);
+    Positive<Timer> timer = positive(Timer.class);
+    Negative<Web> web = negative(Web.class);
+    private Component chord, fd, bootstrap, monitor, webapp;
+    private Address self;
+    private ChordAddress chordSelf;
+    private int bootstrapRequestPeerCount;
+    private boolean bootstrapped;
+    private Logger logger;
+    private BootstrapConfiguration bootstrapConfiguration;
+    private ChordMonitorConfiguration monitorConfiguration;
 
-	Positive<Network> network = positive(Network.class);
-	Positive<Timer> timer = positive(Timer.class);
-	Negative<Web> web = negative(Web.class);
+    public ChordPeer(ChordPeerInit init) {
+        // INIT
+        self = init.getSelf();
 
-	private Component chord, fd, bootstrap, monitor, webapp;
-	private Address self;
-	private ChordAddress chordSelf;
+        logger = LoggerFactory.getLogger(getClass().getName() + "@"
+                + self.getId());
 
-	private int bootstrapRequestPeerCount;
-	private boolean bootstrapped;
-	private Logger logger;
+        bootstrapRequestPeerCount = init.getChordConfiguration()
+                .getBootstrapRequestPeerCount();
+        bootstrapConfiguration = init.getBootstrapConfiguration();
+        monitorConfiguration = init.getMonitorConfiguration();
 
-	private BootstrapConfiguration bootstrapConfiguration;
-	private ChordMonitorConfiguration monitorConfiguration;
+        chord = create(Chord.class, new ChordInit(init.getChordConfiguration()
+                .getLog2RingSize(), init.getChordConfiguration()
+                .getSuccessorListLength(), init.getChordConfiguration()
+                .getSuccessorStabilizationPeriod(), init
+                .getChordConfiguration().getFingerStabilizationPeriod(),
+                init.getChordConfiguration().getRpcTimeout()));
+        fd = create(PingFailureDetector.class, new PingFailureDetectorInit(self, init.getFdConfiguration()));
+        bootstrap = create(BootstrapClient.class, new BootstrapClientInit(self, init
+                .getBootstrapConfiguration()));
+        monitor = create(ChordMonitorClient.class, new ChordMonitorClientInit(init.getMonitorConfiguration(),
+                self));
 
-	public ChordPeer() {
-		chord = create(Chord.class);
-		fd = create(PingFailureDetector.class);
-		bootstrap = create(BootstrapClient.class);
-		monitor = create(ChordMonitorClient.class);
-		webapp = create(ChordWebApplication.class);
 
-		connect(network, chord.getNegative(Network.class));
-		connect(network, fd.getNegative(Network.class));
-		connect(network, bootstrap.getNegative(Network.class));
-		connect(network, monitor.getNegative(Network.class));
+        connect(network, chord.getNegative(Network.class));
+        connect(network, fd.getNegative(Network.class));
+        connect(network, bootstrap.getNegative(Network.class));
+        connect(network, monitor.getNegative(Network.class));
 
-		connect(timer, chord.getNegative(Timer.class));
-		connect(timer, fd.getNegative(Timer.class));
-		connect(timer, bootstrap.getNegative(Timer.class));
-		connect(timer, monitor.getNegative(Timer.class));
+        connect(timer, chord.getNegative(Timer.class));
+        connect(timer, fd.getNegative(Timer.class));
+        connect(timer, bootstrap.getNegative(Timer.class));
+        connect(timer, monitor.getNegative(Timer.class));
 
-		connect(web, webapp.getPositive(Web.class));
 
-		connect(chord.getNegative(FailureDetector.class), fd
-				.getPositive(FailureDetector.class));
 
-		connect(chord.getPositive(ChordStatus.class), webapp
-				.getNegative(ChordStatus.class));
-		connect(chord.getPositive(ChordStructuredOverlay.class), webapp
-				.getNegative(ChordStructuredOverlay.class));
+        connect(chord.getNegative(FailureDetector.class), fd
+                .getPositive(FailureDetector.class));
 
-		connect(fd.getPositive(FailureDetectorStatus.class), webapp
-				.getNegative(FailureDetectorStatus.class));
 
-		connect(chord.getPositive(ChordStatus.class), monitor
-				.getNegative(ChordStatus.class));
 
-		subscribe(handleInit, control);
+        connect(chord.getPositive(ChordStatus.class), monitor
+                .getNegative(ChordStatus.class));
 
-		subscribe(handleJoin, chordPeer);
-		subscribe(handleJoinRingCompleted, chord
-				.getPositive(ChordStructuredOverlay.class));
-		subscribe(handleBootstrapResponse, bootstrap
-				.getPositive(P2pBootstrap.class));
-		subscribe(handleLeave, chordPeer);
-		subscribe(handleLeaveDone, chord
-				.getPositive(ChordStructuredOverlay.class));
-		subscribe(handleLookupRequest, chordPeer);
-		subscribe(handleLookupResponse, chord
-				.getPositive(ChordStructuredOverlay.class));
-		subscribe(handleNeighborsRequest, chordPeer);
-		subscribe(handleNeighborsResponse, chord.getPositive(ChordStatus.class));
-	}
 
-	Handler<ChordPeerInit> handleInit = new Handler<ChordPeerInit>() {
-		public void handle(ChordPeerInit init) {
-			self = init.getSelf();
 
-			logger = LoggerFactory.getLogger(getClass().getName() + "@"
-					+ self.getId());
+        subscribe(handleJoin, chordPeer);
+        subscribe(handleJoinRingCompleted, chord
+                .getPositive(ChordStructuredOverlay.class));
+        subscribe(handleBootstrapResponse, bootstrap
+                .getPositive(P2pBootstrap.class));
+        subscribe(handleLeave, chordPeer);
+        subscribe(handleLeaveDone, chord
+                .getPositive(ChordStructuredOverlay.class));
+        subscribe(handleLookupRequest, chordPeer);
+        subscribe(handleLookupResponse, chord
+                .getPositive(ChordStructuredOverlay.class));
+        subscribe(handleNeighborsRequest, chordPeer);
+        subscribe(handleNeighborsResponse, chord.getPositive(ChordStatus.class));
 
-			bootstrapRequestPeerCount = init.getChordConfiguration()
-					.getBootstrapRequestPeerCount();
-			bootstrapConfiguration = init.getBootstrapConfiguration();
-			monitorConfiguration = init.getMonitorConfiguration();
 
-			trigger(new ChordInit(init.getChordConfiguration()
-					.getLog2RingSize(), init.getChordConfiguration()
-					.getSuccessorListLength(), init.getChordConfiguration()
-					.getSuccessorStabilizationPeriod(), init
-					.getChordConfiguration().getFingerStabilizationPeriod(),
-					init.getChordConfiguration().getRpcTimeout()), chord
-					.getControl());
-			trigger(
-					new PingFailureDetectorInit(self, init.getFdConfiguration()),
-					fd.getControl());
-			trigger(new BootstrapClientInit(self, init
-					.getBootstrapConfiguration()), bootstrap.getControl());
-			trigger(new ChordMonitorClientInit(init.getMonitorConfiguration(),
-					self), monitor.getControl());
-		}
-	};
 
-	Handler<JoinChordRing> handleJoin = new Handler<JoinChordRing>() {
-		public void handle(JoinChordRing event) {
-			// logger.debug("JOIN CHORD RING");
+    }
+    Handler<JoinChordRing> handleJoin = new Handler<JoinChordRing>() {
+        public void handle(JoinChordRing event) {
+            // logger.debug("JOIN CHORD RING");
 
-			chordSelf = new ChordAddress(self, event.getNodeKey());
+            chordSelf = new ChordAddress(self, event.getNodeKey());
 
-			trigger(new ChordWebApplicationInit(chordSelf,
-					monitorConfiguration.getMonitorServerAddress(),
-					bootstrapConfiguration.getBootstrapServerAddress(),
-					monitorConfiguration.getClientWebPort()), webapp
-					.getControl());
+            webapp = create(ChordWebApplication.class, new ChordWebApplicationInit(chordSelf,
+                    monitorConfiguration.getMonitorServerAddress(),
+                    bootstrapConfiguration.getBootstrapServerAddress(),
+                    monitorConfiguration.getClientWebPort()));
 
-			BootstrapRequest request = new BootstrapRequest("Chord",
-					bootstrapRequestPeerCount);
-			trigger(request, bootstrap.getPositive(P2pBootstrap.class));
+            connect(web, webapp.getPositive(Web.class));
 
-			// Join or create are triggered on BootstrapResponse
-		}
-	};
+            connect(chord.getPositive(ChordStatus.class), webapp
+                    .getNegative(ChordStatus.class));
+            connect(chord.getPositive(ChordStructuredOverlay.class), webapp
+                    .getNegative(ChordStructuredOverlay.class));
 
-	Handler<BootstrapResponse> handleBootstrapResponse = new Handler<BootstrapResponse>() {
-		public void handle(BootstrapResponse event) {
-			if (!bootstrapped) {
-				logger.debug("Got BoostrapResponse {}, Bootstrap complete",
-						event.getPeers().size());
+            connect(fd.getPositive(FailureDetectorStatus.class), webapp
+                    .getNegative(FailureDetectorStatus.class));
 
-				Set<PeerEntry> somePeers = event.getPeers();
+            BootstrapRequest request = new BootstrapRequest("Chord",
+                    bootstrapRequestPeerCount);
+            trigger(request, bootstrap.getPositive(P2pBootstrap.class));
 
-				if (somePeers.size() > 0) {
-					LinkedList<ChordAddress> chordInsiders = new LinkedList<ChordAddress>();
-					for (PeerEntry peerEntry : somePeers) {
-						chordInsiders.add((ChordAddress) peerEntry
-								.getOverlayAddress());
-					}
-					trigger(new JoinRing(chordSelf, chordInsiders), chord
-							.getPositive(ChordStructuredOverlay.class));
-				} else {
-					// we create a new ring
-					trigger(new CreateRing(chordSelf), chord
-							.getPositive(ChordStructuredOverlay.class));
-				}
-				bootstrapped = true;
-			}
-		}
-	};
+            // Join or create are triggered on BootstrapResponse
+        }
+    };
+    Handler<BootstrapResponse> handleBootstrapResponse = new Handler<BootstrapResponse>() {
+        public void handle(BootstrapResponse event) {
+            if (!bootstrapped) {
+                logger.debug("Got BoostrapResponse {}, Bootstrap complete",
+                        event.getPeers().size());
 
-	Handler<JoinRingCompleted> handleJoinRingCompleted = new Handler<JoinRingCompleted>() {
-		public void handle(JoinRingCompleted event) {
-			logger.debug("JoinRing completed");
+                Set<PeerEntry> somePeers = event.getPeers();
 
-			// bootstrap completed
-			trigger(new BootstrapCompleted("Chord", chordSelf), bootstrap
-					.getPositive(P2pBootstrap.class));
-		}
-	};
+                if (somePeers.size() > 0) {
+                    LinkedList<ChordAddress> chordInsiders = new LinkedList<ChordAddress>();
+                    for (PeerEntry peerEntry : somePeers) {
+                        chordInsiders.add((ChordAddress) peerEntry
+                                .getOverlayAddress());
+                    }
+                    trigger(new JoinRing(chordSelf, chordInsiders), chord
+                            .getPositive(ChordStructuredOverlay.class));
+                } else {
+                    // we create a new ring
+                    trigger(new CreateRing(chordSelf), chord
+                            .getPositive(ChordStructuredOverlay.class));
+                }
+                bootstrapped = true;
+            }
+        }
+    };
+    Handler<JoinRingCompleted> handleJoinRingCompleted = new Handler<JoinRingCompleted>() {
+        public void handle(JoinRingCompleted event) {
+            logger.debug("JoinRing completed");
 
-	Handler<LeaveChordRing> handleLeave = new Handler<LeaveChordRing>() {
-		public void handle(LeaveChordRing event) {
-			// System.err.println("LEAVE CHORD RING @ " + self);
-			trigger(new LeaveRing(), chord
-					.getPositive(ChordStructuredOverlay.class));
-		}
-	};
-	Handler<LeaveRingCompleted> handleLeaveDone = new Handler<LeaveRingCompleted>() {
-		public void handle(LeaveRingCompleted event) {
-			// System.err.println("CHORD LEAVE DONE @ " + self);
-			// trigger(new LeaveRing(),
-			// chord.getPositive(ChordStructuredOverlay.class));
-		}
-	};
-
-	Handler<ChordLookupRequest> handleLookupRequest = new Handler<ChordLookupRequest>() {
-		public void handle(ChordLookupRequest event) {
-			// System.err.println("LOOKUP_REQUEST");
-			trigger(event, chord.getPositive(ChordStructuredOverlay.class));
-		}
-	};
-
-	Handler<ChordLookupResponse> handleLookupResponse = new Handler<ChordLookupResponse>() {
-		public void handle(ChordLookupResponse event) {
-			// System.err.println("LOOKUP_RESPONSE");
-			trigger(event, chordPeer);
-		}
-	};
-
-	Handler<ChordNeighborsRequest> handleNeighborsRequest = new Handler<ChordNeighborsRequest>() {
-		public void handle(ChordNeighborsRequest event) {
-			// System.err.println("NEIGHBORS_REQUEST");
-			trigger(event, chord.getPositive(ChordStatus.class));
-		}
-	};
-
-	Handler<ChordNeighborsResponse> handleNeighborsResponse = new Handler<ChordNeighborsResponse>() {
-		public void handle(ChordNeighborsResponse event) {
-			// System.err.println("LOOKUP_RESPONSE");
-			trigger(event, chordPeer);
-		}
-	};
+            // bootstrap completed
+            trigger(new BootstrapCompleted("Chord", chordSelf), bootstrap
+                    .getPositive(P2pBootstrap.class));
+        }
+    };
+    Handler<LeaveChordRing> handleLeave = new Handler<LeaveChordRing>() {
+        public void handle(LeaveChordRing event) {
+            // System.err.println("LEAVE CHORD RING @ " + self);
+            trigger(new LeaveRing(), chord
+                    .getPositive(ChordStructuredOverlay.class));
+        }
+    };
+    Handler<LeaveRingCompleted> handleLeaveDone = new Handler<LeaveRingCompleted>() {
+        public void handle(LeaveRingCompleted event) {
+            // System.err.println("CHORD LEAVE DONE @ " + self);
+            // trigger(new LeaveRing(),
+            // chord.getPositive(ChordStructuredOverlay.class));
+        }
+    };
+    Handler<ChordLookupRequest> handleLookupRequest = new Handler<ChordLookupRequest>() {
+        public void handle(ChordLookupRequest event) {
+            // System.err.println("LOOKUP_REQUEST");
+            trigger(event, chord.getPositive(ChordStructuredOverlay.class));
+        }
+    };
+    Handler<ChordLookupResponse> handleLookupResponse = new Handler<ChordLookupResponse>() {
+        public void handle(ChordLookupResponse event) {
+            // System.err.println("LOOKUP_RESPONSE");
+            trigger(event, chordPeer);
+        }
+    };
+    Handler<ChordNeighborsRequest> handleNeighborsRequest = new Handler<ChordNeighborsRequest>() {
+        public void handle(ChordNeighborsRequest event) {
+            // System.err.println("NEIGHBORS_REQUEST");
+            trigger(event, chord.getPositive(ChordStatus.class));
+        }
+    };
+    Handler<ChordNeighborsResponse> handleNeighborsResponse = new Handler<ChordNeighborsResponse>() {
+        public void handle(ChordNeighborsResponse event) {
+            // System.err.println("LOOKUP_RESPONSE");
+            trigger(event, chordPeer);
+        }
+    };
 }

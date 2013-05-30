@@ -1,22 +1,22 @@
 /**
  * This file is part of the Kompics P2P Framework.
- * 
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
- * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
+ * 2009 Royal Institute of Technology (KTH)
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics.p2p.fd.ping;
 
@@ -48,232 +48,214 @@ import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
 /**
- * The <code>PingFailureDetector</code> class.
- * 
+ * The
+ * <code>PingFailureDetector</code> class.
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
 public final class PingFailureDetector extends ComponentDefinition {
 
-	Negative<FailureDetector> fd = negative(FailureDetector.class);
-	Negative<FailureDetectorStatus> fdControl = negative(FailureDetectorStatus.class);
+    Negative<FailureDetector> fd = negative(FailureDetector.class);
+    Negative<FailureDetectorStatus> fdControl = negative(FailureDetectorStatus.class);
+    Positive<Timer> timer = positive(Timer.class);
+    Positive<Network> net = positive(Network.class);
+    private static Logger logger = LoggerFactory
+            .getLogger(PingFailureDetector.class);
+    private final HashSet<UUID> outstandingTimeouts;
+    private HashMap<Address, PeerProber> peerProbers;
+    long minRto, livePingInterval, deadPingInterval, pongTimeoutIncrement;
+    private Address self;
+    private final PingFailureDetector thisFd;
+    private Transport protocol;
 
-	Positive<Timer> timer = positive(Timer.class);
-	Positive<Network> net = positive(Network.class);
+    public PingFailureDetector(PingFailureDetectorInit init) {
+        peerProbers = new HashMap<Address, PeerProber>();
+        this.outstandingTimeouts = new HashSet<UUID>();
+        this.thisFd = this;
 
-	private static Logger logger = LoggerFactory
-			.getLogger(PingFailureDetector.class);
 
-	private final HashSet<UUID> outstandingTimeouts;
+        subscribe(handleSendPing, timer);
+        subscribe(handlePongTimedOut, timer);
 
-	private HashMap<Address, PeerProber> peerProbers;
+        subscribe(handlePing, net);
+        subscribe(handlePong, net);
 
-	long minRto, livePingInterval, deadPingInterval, pongTimeoutIncrement;
+        subscribe(handleStartProbingPeer, fd);
+        subscribe(handleStopProbingPeer, fd);
 
-	private Address self;
+        subscribe(handleStatusRequest, fdControl);
 
-	private final PingFailureDetector thisFd;
+        // INIT
+        minRto = init.getConfiguration().getMinRto();
+        livePingInterval = init.getConfiguration().getLivePeriod();
+        deadPingInterval = init.getConfiguration().getSuspectedPeriod();
+        pongTimeoutIncrement = init.getConfiguration()
+                .getTimeoutPeriodIncrement();
+        protocol = init.getConfiguration().getProtocol();
 
-	private Transport protocol;
+        self = init.getSelf();
+    }
+    private Handler<StartProbingPeer> handleStartProbingPeer = new Handler<StartProbingPeer>() {
+        public void handle(StartProbingPeer event) {
+            Address peerAddress = event.getPeerAddress();
+            PeerProber peerProber = peerProbers.get(peerAddress);
+            if (peerProber == null) {
+                peerProber = new PeerProber(peerAddress, thisFd);
+                peerProber.addRequest(event);
+                peerProbers.put(peerAddress, peerProber);
+                peerProber.start();
+                logger.debug("@{}: Started probing peer {}", self.getId(),
+                        peerAddress);
+            } else {
+                peerProber.addRequest(event);
+                logger.debug("@{}: Peer {} is already being probed",
+                        self.getId(), peerAddress);
+            }
+        }
+    };
+    private Handler<StopProbingPeer> handleStopProbingPeer = new Handler<StopProbingPeer>() {
+        public void handle(StopProbingPeer event) {
+            Address peerAddress = event.getPeerAddress();
+            PeerProber prober = peerProbers.get(peerAddress);
+            if (prober != null) {
+                UUID requestId = event.getRequestId();
+                if (prober.hasRequest(requestId)) {
+                    boolean last = prober.removeRequest(requestId);
+                    if (last) {
+                        peerProbers.remove(peerAddress);
+                        prober.stop();
+                        logger.debug("@{}: Stoped probing peer {}",
+                                self.getId(), peerAddress);
+                    }
+                } else {
+                    logger.debug(
+                            "@{}: I have no request for the probing of peer {}",
+                            self.getId(), peerAddress);
+                }
+            } else {
+                logger.debug(
+                        "@{}: Peer {} is not currently being probed (STOP)",
+                        self.getId(), peerAddress);
+            }
+        }
+    };
+    private Handler<SendPing> handleSendPing = new Handler<SendPing>() {
+        public void handle(SendPing event) {
+            Address peer = event.getPeer();
+            PeerProber prober = peerProbers.get(peer);
+            if (prober != null) {
+                prober.ping();
+            } else {
+                logger.debug(
+                        "@{}: Peer {} is not currently being probed (SEND_PING)",
+                        self.getId(), peer);
+            }
+        }
+    };
+    private Handler<PongTimedOut> handlePongTimedOut = new Handler<PongTimedOut>() {
+        public void handle(PongTimedOut event) {
+            if (outstandingTimeouts.contains(event.getTimeoutId())) {
+                Address peer = event.getPeer();
+                PeerProber peerProber = peerProbers.get(peer);
+                outstandingTimeouts.remove(event.getTimeoutId());
+                if (peerProber != null) {
+                    logger.debug("SUSPECTED DUE TO TIMEOUT {}", event.getTimeoutId());
 
-	public PingFailureDetector() {
-		peerProbers = new HashMap<Address, PeerProber>();
-		this.outstandingTimeouts = new HashSet<UUID>();
-		this.thisFd = this;
+                    peerProber.pongTimedOut();
+                } else {
+                    logger.debug(
+                            "@{}: Peer {} is not currently being probed (TIMEOUT)",
+                            self.getId(), peer);
+                }
+            }
+        }
+    };
+    private Handler<Ping> handlePing = new Handler<Ping>() {
+        public void handle(Ping event) {
+            logger.debug("@{}: Received Ping from {}. Sending Pong. ",
+                    self.getId(), event.getSource());
+            trigger(new Pong(event.getId(), event.getTs(), self,
+                    event.getSource(), protocol), net);
+        }
+    };
+    private Handler<Pong> handlePong = new Handler<Pong>() {
+        public void handle(Pong event) {
+            // logger.debug("@{}: Received Pong({}, {}) from {}. ",
+            // new Object[] { self.getId(), event.getTs(), event.getId(),
+            // event.getSource() });
+            if (outstandingTimeouts.remove(event.getId())) {
+                logger.debug("Canceled timer id {}", event.getId());
+                trigger(new CancelTimeout(event.getId()), timer);
+            }
+            Address peer = event.getSource();
+            PeerProber peerProber = peerProbers.get(peer);
 
-		subscribe(handleInit, control);
+            if (peerProber != null) {
+                peerProber.pong(event.getId(), event.getTs());
+            } else {
+                logger.debug(
+                        "@{}: Peer {} is not currently being probed (GOT_PONG)",
+                        self.getId(), peer);
+            }
+        }
+    };
+    private Handler<StatusRequest> handleStatusRequest = new Handler<StatusRequest>() {
+        public void handle(StatusRequest request) {
+            Map<Address, ProbedPeerData> probedPeers = new HashMap<Address, ProbedPeerData>();
+            for (Map.Entry<Address, PeerProber> entry : peerProbers.entrySet()) {
+                probedPeers.put(entry.getKey(), entry.getValue()
+                        .getProbedPeerData());
+            }
+            trigger(new StatusResponse(request, probedPeers), fd);
+        }
+    };
 
-		subscribe(handleSendPing, timer);
-		subscribe(handlePongTimedOut, timer);
+    void stop(UUID intervalPingTimerId, UUID pongTimeoutId) {
+        if (outstandingTimeouts.remove(intervalPingTimerId)) {
+            trigger(new CancelTimeout(intervalPingTimerId), timer);
+        }
+        if (outstandingTimeouts.remove(pongTimeoutId)) {
+            trigger(new CancelTimeout(pongTimeoutId), timer);
+        }
+    }
 
-		subscribe(handlePing, net);
-		subscribe(handlePong, net);
+    UUID sendPing(long ts, Address probedPeer, long expectedRtt) {
+        // Setting timer for the receiving the Pong packet
+        ScheduleTimeout st = new ScheduleTimeout(expectedRtt
+                + pongTimeoutIncrement);
+        st.setTimeoutEvent(new PongTimedOut(st, probedPeer));
+        UUID pongTimeoutId = st.getTimeoutEvent().getTimeoutId();
+        outstandingTimeouts.add(pongTimeoutId);
 
-		subscribe(handleStartProbingPeer, fd);
-		subscribe(handleStopProbingPeer, fd);
+        trigger(st, timer);
+        trigger(new Ping(pongTimeoutId, ts, self, probedPeer, protocol), net);
+        // logger.debug(
+        // "@{}: Sent Ping({},{},{}) to {}.",
+        // new Object[] { self.getId(), ts, pongTimeoutId,
+        // pongTimeoutId.hashCode(), probedPeer });
+        return pongTimeoutId;
+    }
 
-		subscribe(handleStatusRequest, fdControl);
-	}
+    UUID setPingTimer(boolean suspected, Address probedPeer) {
+        long interval = suspected ? deadPingInterval : livePingInterval;
+        ScheduleTimeout st = new ScheduleTimeout(interval);
+        st.setTimeoutEvent(new SendPing(st, probedPeer));
+        UUID intervalPingTimeoutId = st.getTimeoutEvent().getTimeoutId();
 
-	private Handler<PingFailureDetectorInit> handleInit = new Handler<PingFailureDetectorInit>() {
-		public void handle(PingFailureDetectorInit event) {
-			minRto = event.getConfiguration().getMinRto();
-			livePingInterval = event.getConfiguration().getLivePeriod();
-			deadPingInterval = event.getConfiguration().getSuspectedPeriod();
-			pongTimeoutIncrement = event.getConfiguration()
-					.getTimeoutPeriodIncrement();
-			protocol = event.getConfiguration().getProtocol();
+        // we must not add this timeout id to outstandingTimeout!
 
-			self = event.getSelf();
-		};
-	};
+        trigger(st, timer);
+        return intervalPingTimeoutId;
+    }
 
-	private Handler<StartProbingPeer> handleStartProbingPeer = new Handler<StartProbingPeer>() {
-		public void handle(StartProbingPeer event) {
-			Address peerAddress = event.getPeerAddress();
-			PeerProber peerProber = peerProbers.get(peerAddress);
-			if (peerProber == null) {
-				peerProber = new PeerProber(peerAddress, thisFd);
-				peerProber.addRequest(event);
-				peerProbers.put(peerAddress, peerProber);
-				peerProber.start();
-				logger.debug("@{}: Started probing peer {}", self.getId(),
-						peerAddress);
-			} else {
-				peerProber.addRequest(event);
-				logger.debug("@{}: Peer {} is already being probed",
-						self.getId(), peerAddress);
-			}
-		}
-	};
+    void suspect(PeerFailureSuspicion suspectEvent) {
+        trigger(suspectEvent, fd);
+        logger.debug("Peer {} is suspected", suspectEvent.getPeerAddress());
+    }
 
-	private Handler<StopProbingPeer> handleStopProbingPeer = new Handler<StopProbingPeer>() {
-		public void handle(StopProbingPeer event) {
-			Address peerAddress = event.getPeerAddress();
-			PeerProber prober = peerProbers.get(peerAddress);
-			if (prober != null) {
-				UUID requestId = event.getRequestId();
-				if (prober.hasRequest(requestId)) {
-					boolean last = prober.removeRequest(requestId);
-					if (last) {
-						peerProbers.remove(peerAddress);
-						prober.stop();
-						logger.debug("@{}: Stoped probing peer {}",
-								self.getId(), peerAddress);
-					}
-				} else {
-					logger.debug(
-							"@{}: I have no request for the probing of peer {}",
-							self.getId(), peerAddress);
-				}
-			} else {
-				logger.debug(
-						"@{}: Peer {} is not currently being probed (STOP)",
-						self.getId(), peerAddress);
-			}
-		}
-	};
-
-	private Handler<SendPing> handleSendPing = new Handler<SendPing>() {
-		public void handle(SendPing event) {
-			Address peer = event.getPeer();
-			PeerProber prober = peerProbers.get(peer);
-			if (prober != null) {
-				prober.ping();
-			} else {
-				logger.debug(
-						"@{}: Peer {} is not currently being probed (SEND_PING)",
-						self.getId(), peer);
-			}
-		}
-	};
-
-	private Handler<PongTimedOut> handlePongTimedOut = new Handler<PongTimedOut>() {
-		public void handle(PongTimedOut event) {
-			if (outstandingTimeouts.contains(event.getTimeoutId())) {
-				Address peer = event.getPeer();
-				PeerProber peerProber = peerProbers.get(peer);
-				outstandingTimeouts.remove(event.getTimeoutId());
-				if (peerProber != null) {
-					logger.debug("SUSPECTED DUE TO TIMEOUT {}", event.getTimeoutId());
-					
-					peerProber.pongTimedOut();
-				} else {
-					logger.debug(
-							"@{}: Peer {} is not currently being probed (TIMEOUT)",
-							self.getId(), peer);
-				}
-			}
-		}
-	};
-
-	private Handler<Ping> handlePing = new Handler<Ping>() {
-		public void handle(Ping event) {
-			logger.debug("@{}: Received Ping from {}. Sending Pong. ",
-					self.getId(), event.getSource());
-			trigger(new Pong(event.getId(), event.getTs(), self,
-					event.getSource(), protocol), net);
-		}
-	};
-
-	private Handler<Pong> handlePong = new Handler<Pong>() {
-		public void handle(Pong event) {
-			// logger.debug("@{}: Received Pong({}, {}) from {}. ",
-			// new Object[] { self.getId(), event.getTs(), event.getId(),
-			// event.getSource() });
-			if (outstandingTimeouts.remove(event.getId())) {
-				logger.debug("Canceled timer id {}", event.getId());
-				trigger(new CancelTimeout(event.getId()), timer);
-			}
-			Address peer = event.getSource();
-			PeerProber peerProber = peerProbers.get(peer);
-
-			if (peerProber != null) {
-				peerProber.pong(event.getId(), event.getTs());
-			} else {
-				logger.debug(
-						"@{}: Peer {} is not currently being probed (GOT_PONG)",
-						self.getId(), peer);
-			}
-		}
-	};
-
-	private Handler<StatusRequest> handleStatusRequest = new Handler<StatusRequest>() {
-		public void handle(StatusRequest request) {
-			Map<Address, ProbedPeerData> probedPeers = new HashMap<Address, ProbedPeerData>();
-			for (Map.Entry<Address, PeerProber> entry : peerProbers.entrySet()) {
-				probedPeers.put(entry.getKey(), entry.getValue()
-						.getProbedPeerData());
-			}
-			trigger(new StatusResponse(request, probedPeers), fd);
-		}
-	};
-
-	void stop(UUID intervalPingTimerId, UUID pongTimeoutId) {
-		if (outstandingTimeouts.remove(intervalPingTimerId)) {
-			trigger(new CancelTimeout(intervalPingTimerId), timer);
-		}
-		if (outstandingTimeouts.remove(pongTimeoutId)) {
-			trigger(new CancelTimeout(pongTimeoutId), timer);
-		}
-	}
-
-	UUID sendPing(long ts, Address probedPeer, long expectedRtt) {
-		// Setting timer for the receiving the Pong packet
-		ScheduleTimeout st = new ScheduleTimeout(expectedRtt
-				+ pongTimeoutIncrement);
-		st.setTimeoutEvent(new PongTimedOut(st, probedPeer));
-		UUID pongTimeoutId = st.getTimeoutEvent().getTimeoutId();
-		outstandingTimeouts.add(pongTimeoutId);
-
-		trigger(st, timer);
-		trigger(new Ping(pongTimeoutId, ts, self, probedPeer, protocol), net);
-		// logger.debug(
-		// "@{}: Sent Ping({},{},{}) to {}.",
-		// new Object[] { self.getId(), ts, pongTimeoutId,
-		// pongTimeoutId.hashCode(), probedPeer });
-		return pongTimeoutId;
-	}
-
-	UUID setPingTimer(boolean suspected, Address probedPeer) {
-		long interval = suspected ? deadPingInterval : livePingInterval;
-		ScheduleTimeout st = new ScheduleTimeout(interval);
-		st.setTimeoutEvent(new SendPing(st, probedPeer));
-		UUID intervalPingTimeoutId = st.getTimeoutEvent().getTimeoutId();
-
-		// we must not add this timeout id to outstandingTimeout!
-
-		trigger(st, timer);
-		return intervalPingTimeoutId;
-	}
-
-	void suspect(PeerFailureSuspicion suspectEvent) {
-		trigger(suspectEvent, fd);
-		logger.debug("Peer {} is suspected", suspectEvent.getPeerAddress());
-	}
-
-	void revise(PeerFailureSuspicion reviseEvent) {
-		trigger(reviseEvent, fd);
-		logger.debug("Peer {} is revised", reviseEvent.getPeerAddress());
-	}
+    void revise(PeerFailureSuspicion reviseEvent) {
+        trigger(reviseEvent, fd);
+        logger.debug("Peer {} is revised", reviseEvent.getPeerAddress());
+    }
 }

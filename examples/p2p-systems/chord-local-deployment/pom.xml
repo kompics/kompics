@@ -2,35 +2,35 @@
 	<parent>
 		<artifactId>kompics-p2p-system-examples</artifactId>
 		<groupId>se.sics.kompics.examples.p2p-systems</groupId>
-		<version>0.4.5-SNAPSHOT</version>
+		<version>0.5.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.examples.p2p-systems</groupId>
 	<artifactId>kompics-example-chord-local-deployment</artifactId>
 	<name>Chord Local Deployment P2P System Example</name>
-	<version>0.4.5-SNAPSHOT</version>
+	<version>0.5.0-SNAPSHOT</version>
 	<description>Chord Local Deployment P2P System Example</description>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 			<artifactId>kompics-component-chord-peer-main</artifactId>
-			<version>0.4.5-SNAPSHOT</version>
+			<version>0.5.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.launcher</groupId>
 			<artifactId>kompics-local-process-launcher</artifactId>
-			<version>0.4.5-SNAPSHOT</version>
+			<version>0.5.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems</groupId>
 			<artifactId>kompics-component-bootstrap-server-main</artifactId>
-			<version>0.4.5-SNAPSHOT</version>
+			<version>0.5.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.chord</groupId>
 			<artifactId>kompics-component-chord-monitor-server-main</artifactId>
-			<version>0.4.5-SNAPSHOT</version>
+			<version>0.5.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

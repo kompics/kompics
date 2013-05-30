@@ -1,22 +1,22 @@
 /**
  * This file is part of the Kompics P2P Framework.
- * 
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
- * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
+ * 2009 Royal Institute of Technology (KTH)
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics.web.jetty;
 
@@ -42,202 +42,192 @@ import se.sics.kompics.web.WebRequest;
 import se.sics.kompics.web.WebResponse;
 
 /**
- * The <code>JettyWebServer</code> class.
- * 
+ * The
+ * <code>JettyWebServer</code> class.
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
 public final class JettyWebServer extends ComponentDefinition {
 
-	Positive<Web> web = positive(Web.class);
+    Positive<Web> web = positive(Web.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(JettyWebServer.class);
+    private final HashMap<WebRequest, LinkedBlockingQueue<WebResponse>> activeRequests;
+    private long requestTimeout;
+    private long requestId;
+    private final JettyWebServer thisWS = this;
+    private String homePage;
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(JettyWebServer.class);
+    public JettyWebServer(JettyWebServerInit init) {
+        activeRequests = new HashMap<WebRequest, LinkedBlockingQueue<WebResponse>>();
 
-	private final HashMap<WebRequest, LinkedBlockingQueue<WebResponse>> activeRequests;
+        subscribe(handleWebResponse, web);
 
-	private long requestTimeout;
+        // INIT
+        logger.debug("Handling init in thread {}", Thread.currentThread());
 
-	private long requestId;
+        JettyWebServerConfiguration config = init.getConfiguration();
 
-	private final JettyWebServer thisWS = this;
+        requestTimeout = config.getRequestTimeout();
+        homePage = config.getHomePage();
+        if (homePage == null) {
+            homePage = "<h1>Welcome!</h1>"
+                    + "This is the JettyWebServer Kompics component.<br>"
+                    + "Please initialize me with a proper home page.";
+        }
 
-	private String homePage;
+        Server server = new Server(config.getPort());
+        // server.setStopAtShutdown(true);
+        QueuedThreadPool qtp = new QueuedThreadPool();
+        qtp.setMinThreads(1);
+        qtp.setMaxThreads(config.getMaxThreads());
+        qtp.setDaemon(true);
+        server.setThreadPool(qtp);
 
-	public JettyWebServer() {
-		activeRequests = new HashMap<WebRequest, LinkedBlockingQueue<WebResponse>>();
+        Connector connector = new SelectChannelConnector();
+        connector.setHost(config.getIp().getCanonicalHostName());
+        connector.setPort(config.getPort());
+        server.setConnectors(new Connector[]{connector});
 
-		subscribe(handleInit, control);
-		subscribe(handleWebResponse, web);
-	}
+        try {
+            org.mortbay.jetty.Handler webHandler = new JettyHandler(thisWS);
+            server.setHandler(webHandler);
+            server.start();
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Cannot initialize the Jetty web server", e);
+        }
+    }
+    private Handler<WebResponse> handleWebResponse = new Handler<WebResponse>() {
+        public void handle(WebResponse event) {
+            logger.debug("Handling web response {}", event);
 
-	private Handler<JettyWebServerInit> handleInit = new Handler<JettyWebServerInit>() {
-		public void handle(JettyWebServerInit init) {
-			logger.debug("Handling init in thread {}", Thread.currentThread());
+            WebRequest requestEvent = event.getRequestEvent();
 
-			JettyWebServerConfiguration config = init.getConfiguration();
-			
-			requestTimeout = config.getRequestTimeout();
-			homePage = config.getHomePage();
-			if (homePage == null) {
-				homePage = "<h1>Welcome!</h1>"
-						+ "This is the JettyWebServer Kompics component.<br>"
-						+ "Please initialize me with a proper home page.";
-			}
+            LinkedBlockingQueue<WebResponse> queue;
 
-			Server server = new Server(config.getPort());
-			// server.setStopAtShutdown(true);
-			QueuedThreadPool qtp = new QueuedThreadPool();
-			qtp.setMinThreads(1);
-			qtp.setMaxThreads(config.getMaxThreads());
-			qtp.setDaemon(true);
-			server.setThreadPool(qtp);
+            synchronized (activeRequests) {
+                queue = activeRequests.get(requestEvent);
+                if (queue != null) {
+                    queue.offer(event);
+                } else {
+                    // request expired
+                    return;
+                }
+            }
+        }
+    };
 
-			Connector connector = new SelectChannelConnector();
-			connector.setHost(config.getIp().getCanonicalHostName());
-			connector.setPort(config.getPort());
-			server.setConnectors(new Connector[] { connector });
+    void handleRequest(String target, org.mortbay.jetty.Request request,
+            HttpServletResponse response) throws IOException {
+        logger.debug("Handling request {} in thread {}", target, Thread
+                .currentThread());
 
-			try {
-				org.mortbay.jetty.Handler webHandler = new JettyHandler(thisWS);
-				server.setHandler(webHandler);
-				server.start();
-			} catch (Exception e) {
-				throw new RuntimeException(
-						"Cannot initialize the Jetty web server", e);
-			}
-		}
-	};
+        String[] args = target.split("/");
 
-	private Handler<WebResponse> handleWebResponse = new Handler<WebResponse>() {
-		public void handle(WebResponse event) {
-			logger.debug("Handling web response {}", event);
+        int destination = -1;
+        String command = "";
+        if (args.length >= 2) {
+            try {
+                destination = Integer.parseInt(args[1]);
+            } catch (NumberFormatException e) {
+                destination = -1;
+            }
+        }
+        if (args.length >= 3) {
+            command = args[2];
+        }
+        // System.err.println("TAGET:\"" + target + "\", COM=" + command +
+        // "DEST="
+        // + destination + " PARAMS " + request.getParameterMap().keySet()
+        // + " VALS " + request.getParameter("kadLookup"));
 
-			WebRequest requestEvent = event.getRequestEvent();
+        if (destination == -1) {
+            // render home page
+            response.getWriter().println(homePage);
+            response.flushBuffer();
+            return;
+        }
 
-			LinkedBlockingQueue<WebResponse> queue;
+        WebRequest requestEvent = new WebRequest(destination, requestId++,
+                command, request);
 
-			synchronized (activeRequests) {
-				queue = activeRequests.get(requestEvent);
-				if (queue != null) {
-					queue.offer(event);
-				} else {
-					// request expired
-					return;
-				}
-			}
-		}
-	};
+        LinkedBlockingQueue<WebResponse> queue = new LinkedBlockingQueue<WebResponse>();
 
-	void handleRequest(String target, org.mortbay.jetty.Request request,
-			HttpServletResponse response) throws IOException {
-		logger.debug("Handling request {} in thread {}", target, Thread
-				.currentThread());
+        synchronized (activeRequests) {
+            activeRequests.put(requestEvent, queue);
+        }
 
-		String[] args = target.split("/");
+        logger.debug("Triggering request {}", target);
+        trigger(requestEvent, web);
 
-		int destination = -1;
-		String command = "";
-		if (args.length >= 2) {
-			try {
-				destination = Integer.parseInt(args[1]);
-			} catch (NumberFormatException e) {
-				destination = -1;
-			}
-		}
-		if (args.length >= 3) {
-			command = args[2];
-		}
-		// System.err.println("TAGET:\"" + target + "\", COM=" + command +
-		// "DEST="
-		// + destination + " PARAMS " + request.getParameterMap().keySet()
-		// + " VALS " + request.getParameter("kadLookup"));
+        int expectedPart = 1;
+        HashMap<Integer, WebResponse> earlyResponses = new HashMap<Integer, WebResponse>();
+        do {
+            WebResponse responseEvent;
+            while (true) {
+                try {
+                    // wait for response event
+                    responseEvent = queue.poll(requestTimeout,
+                            TimeUnit.MILLISECONDS);
+                    break; // waiting
+                } catch (InterruptedException e) {
+                    continue; // waiting
+                }
+            }
 
-		if (destination == -1) {
-			// render home page
-			response.getWriter().println(homePage);
-			response.flushBuffer();
-			return;
-		}
+            if (responseEvent != null) {
+                logger.debug("I got response({}), part {}/{}", new Object[]{
+                            target, responseEvent.getPartIndex(),
+                            responseEvent.getPartsTotal()});
+                // got a response event
+                if (responseEvent.getPartIndex() == expectedPart) {
+                    // got expected part
+                    logger.debug("Writing response({}), part {}/{}",
+                            new Object[]{target, expectedPart,
+                                responseEvent.getPartsTotal()});
+                    response.getWriter().println(responseEvent.getHtml());
+                    response.flushBuffer();
 
-		WebRequest requestEvent = new WebRequest(destination, requestId++,
-				command, request);
+                    if (expectedPart == responseEvent.getPartsTotal()) {
+                        // got all parts
+                        break;
+                    } else {
+                        // more parts expected
+                        expectedPart++;
+                        // maybe got here before
+                        while (earlyResponses.containsKey(expectedPart)) {
+                            logger.debug("Writing response({}), part {}/{}",
+                                    new Object[]{target, expectedPart,
+                                        responseEvent.getPartsTotal()});
+                            response.getWriter().println(
+                                    earlyResponses.get(expectedPart).getHtml());
+                            response.flushBuffer();
+                            expectedPart++;
+                        }
 
-		LinkedBlockingQueue<WebResponse> queue = new LinkedBlockingQueue<WebResponse>();
+                        if (expectedPart > responseEvent.getPartsTotal()) {
+                            // got all parts now
+                            break;
+                        }
+                    }
+                } else {
+                    // got a future part
+                    earlyResponses.put(responseEvent.getPartIndex(),
+                            responseEvent);
+                }
+            } else {
+                // request expired
+                response.getWriter().println("Request expired! <br>");
+                response.flushBuffer();
+                logger.debug("Request expired: {}", target);
+                break;
+            }
+        } while (true);
 
-		synchronized (activeRequests) {
-			activeRequests.put(requestEvent, queue);
-		}
-
-		logger.debug("Triggering request {}", target);
-		trigger(requestEvent, web);
-
-		int expectedPart = 1;
-		HashMap<Integer, WebResponse> earlyResponses = new HashMap<Integer, WebResponse>();
-		do {
-			WebResponse responseEvent;
-			while (true) {
-				try {
-					// wait for response event
-					responseEvent = queue.poll(requestTimeout,
-							TimeUnit.MILLISECONDS);
-					break; // waiting
-				} catch (InterruptedException e) {
-					continue; // waiting
-				}
-			}
-
-			if (responseEvent != null) {
-				logger.debug("I got response({}), part {}/{}", new Object[] {
-						target, responseEvent.getPartIndex(),
-						responseEvent.getPartsTotal() });
-				// got a response event
-				if (responseEvent.getPartIndex() == expectedPart) {
-					// got expected part
-					logger.debug("Writing response({}), part {}/{}",
-							new Object[] { target, expectedPart,
-									responseEvent.getPartsTotal() });
-					response.getWriter().println(responseEvent.getHtml());
-					response.flushBuffer();
-
-					if (expectedPart == responseEvent.getPartsTotal()) {
-						// got all parts
-						break;
-					} else {
-						// more parts expected
-						expectedPart++;
-						// maybe got here before
-						while (earlyResponses.containsKey(expectedPart)) {
-							logger.debug("Writing response({}), part {}/{}",
-									new Object[] { target, expectedPart,
-											responseEvent.getPartsTotal() });
-							response.getWriter().println(
-									earlyResponses.get(expectedPart).getHtml());
-							response.flushBuffer();
-							expectedPart++;
-						}
-
-						if (expectedPart > responseEvent.getPartsTotal()) {
-							// got all parts now
-							break;
-						}
-					}
-				} else {
-					// got a future part
-					earlyResponses.put(responseEvent.getPartIndex(),
-							responseEvent);
-				}
-			} else {
-				// request expired
-				response.getWriter().println("Request expired! <br>");
-				response.flushBuffer();
-				logger.debug("Request expired: {}", target);
-				break;
-			}
-		} while (true);
-
-		synchronized (activeRequests) {
-			activeRequests.remove(requestEvent);
-		}
-	}
+        synchronized (activeRequests) {
+            activeRequests.remove(requestEvent);
+        }
+    }
 }

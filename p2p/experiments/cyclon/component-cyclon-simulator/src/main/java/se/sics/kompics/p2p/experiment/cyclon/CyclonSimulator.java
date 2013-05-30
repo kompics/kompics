@@ -83,20 +83,18 @@ public final class CyclonSimulator extends ComponentDefinition {
 	private BigInteger cyclonIdentifierSpaceSize;
 	private ConsistentHashtable<BigInteger> cyclonView;
 
-	public CyclonSimulator() {
+	public CyclonSimulator(CyclonSimulatorInit init) {
 		peers = new HashMap<BigInteger, Component>();
 		cyclonView = new ConsistentHashtable<BigInteger>();
 
-		subscribe(handleInit, control);
 
 		subscribe(handleJoin, simulator);
 		subscribe(handleFail, simulator);
 		subscribe(handleCollectData, simulator);
-	}
-
-	Handler<CyclonSimulatorInit> handleInit = new Handler<CyclonSimulatorInit>() {
-		public void handle(CyclonSimulatorInit init) {
-			peers.clear();
+                
+                // INIT
+                
+                peers.clear();
 			peerIdSequence = 0;
 
 			peer0Address = init.getPeer0Address();
@@ -106,8 +104,9 @@ public final class CyclonSimulator extends ComponentDefinition {
 
 			cyclonIdentifierSpaceSize = cyclonConfiguration
 					.getIdentifierSpaceSize();
-		}
-	};
+	}
+
+
 
 	Handler<CyclonPeerJoin> handleJoin = new Handler<CyclonPeerJoin>() {
 		public void handle(CyclonPeerJoin event) {
@@ -231,11 +230,13 @@ public final class CyclonSimulator extends ComponentDefinition {
 	 * @return
 	 */
 	private final Component createAndStartNewPeer(BigInteger id) {
-		Component peer = create(CyclonPeer.class);
-		// Component peer = create(TChordPeer.class);
-		int peerId = ++peerIdSequence;
+            int peerId = ++peerIdSequence;
 		Address peerAddress = new Address(peer0Address.getIp(), peer0Address
 				.getPort(), peerId);
+		Component peer = create(CyclonPeer.class, new CyclonPeerInit(peerAddress, bootstrapConfiguration,
+				monitorConfiguration, cyclonConfiguration));
+		
+		
 
 		connect(network, peer.getNegative(Network.class),
 				new MessageDestinationFilter(peerAddress));
@@ -244,9 +245,6 @@ public final class CyclonSimulator extends ComponentDefinition {
 				new WebRequestDestinationFilter(peerId));
 
 		subscribe(handleNeighbors, peer.getPositive(CyclonPeerPort.class));
-
-		trigger(new CyclonPeerInit(peerAddress, bootstrapConfiguration,
-				monitorConfiguration, cyclonConfiguration), peer.getControl());
 
 		trigger(new Start(), peer.getControl());
 		peers.put(id, peer);

@@ -39,7 +39,7 @@ import se.sics.kompics.scheduler.WorkStealingScheduler;
  */
 public final class Kompics {
 
-    private static final long SHUTDOWN_TIMEOUT = 5000;
+    public static final long SHUTDOWN_TIMEOUT = 5000;
     // TODO Deal with unneeded drop warning/implement needSet.
     // TODO port scheduler including Free List and spin-lock queue.
     // TODO BUG in execution PortCore.pickWork() returns null.
@@ -107,11 +107,9 @@ public final class Kompics {
             mainCore = mainComponent.getComponentCore();
             mainCore.setScheduler(scheduler);
 
-            if (!mainCore.initSubscriptionInConstructor) {
-                mainCore.initDone.set(true);
-            } else {
-                mainCore.workCount.incrementAndGet();
-            }
+
+            //mainCore.workCount.incrementAndGet();
+
 
             // start Main
             ((PortCore<ControlPort>) mainCore.getControl()).doTrigger(
@@ -131,22 +129,26 @@ public final class Kompics {
     }
 
     public static void shutdown() {
-        mainCore.control().doTrigger(Stop.event, mainCore.wid, mainCore);
-        synchronized (mainCore) {
-            long start = System.currentTimeMillis();
-            while (mainCore.state != Component.State.PASSIVE) {                
-                try {
-                    mainCore.wait(SHUTDOWN_TIMEOUT);
-                } catch (InterruptedException ex) {
-                    logger.warn("Failed orderly Kompics shutdown", ex);
-                }
-                if ((System.currentTimeMillis() - start) > SHUTDOWN_TIMEOUT) {
-                    logger.warn("Failed to shutdown Kompics in time. Forcing shutdown.");
-                    break;
+        if (mainCore != null) {
+            mainCore.control().doTrigger(Stop.event, mainCore.wid, mainCore);
+            synchronized (mainCore) {
+                long start = System.currentTimeMillis();
+                while (mainCore.state != Component.State.PASSIVE) {
+                    try {
+                        mainCore.wait(SHUTDOWN_TIMEOUT);
+                    } catch (InterruptedException ex) {
+                        logger.warn("Failed orderly Kompics shutdown", ex);
+                    }
+                    if ((System.currentTimeMillis() - start) > SHUTDOWN_TIMEOUT) {
+                        logger.warn("Failed to shutdown Kompics in time. Forcing shutdown.");
+                        break;
+                    }
                 }
             }
         }
-        scheduler.shutdown();
+        if (scheduler != null) {
+            scheduler.shutdown();
+        }
         on = false;
         scheduler = null;
     }

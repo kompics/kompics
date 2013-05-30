@@ -72,12 +72,7 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 
 	public CyclonExecutionMain() throws InterruptedException, IOException {
 		P2pOrchestrator.setSimulationPortType(CyclonExperiment.class);
-		// create
-		Component p2pOrchestrator = create(P2pOrchestrator.class);
-		Component jettyWebServer = create(JettyWebServer.class);
-		Component bootstrapServer = create(BootstrapServer.class);
-		Component monitorServer = create(CyclonMonitorServer.class);
-		Component cyclonSimulator = create(CyclonSimulator.class);
+		
 
 		// loading component configurations
 		final BootstrapConfiguration bootConfiguration = BootstrapConfiguration
@@ -91,23 +86,23 @@ public final class CyclonExecutionMain extends ComponentDefinition {
 		final NetworkConfiguration networkConfiguration = NetworkConfiguration
 				.load(System.getProperty("network.configuration"));
 
-		System.out.println("For web access please go to " + "http://"
+		
+                
+                // create
+		Component p2pOrchestrator = create(P2pOrchestrator.class, new P2pOrchestratorInit(scenario, new KingLatencyMap()));
+		Component jettyWebServer = create(JettyWebServer.class, new JettyWebServerInit(webConfiguration));
+		Component bootstrapServer = create(BootstrapServer.class, new BootstrapServerInit(bootConfiguration));
+		Component monitorServer = create(CyclonMonitorServer.class, new CyclonMonitorServerInit(monitorConfiguration));
+		Component cyclonSimulator = create(CyclonSimulator.class, new CyclonSimulatorInit(bootConfiguration,
+				monitorConfiguration, cyclonConfiguration, networkConfiguration
+						.getAddress()));
+
+
+                System.out.println("For web access please go to " + "http://"
 				+ webConfiguration.getIp().getHostAddress() + ":"
 				+ webConfiguration.getPort() + "/");
 		Thread.sleep(2000);
-
-		trigger(new P2pOrchestratorInit(scenario, new KingLatencyMap()),
-				p2pOrchestrator.getControl());
-		trigger(new JettyWebServerInit(webConfiguration), jettyWebServer
-				.getControl());
-		trigger(new BootstrapServerInit(bootConfiguration), bootstrapServer
-				.getControl());
-		trigger(new CyclonMonitorServerInit(monitorConfiguration),
-				monitorServer.getControl());
-		trigger(new CyclonSimulatorInit(bootConfiguration,
-				monitorConfiguration, cyclonConfiguration, networkConfiguration
-						.getAddress()), cyclonSimulator.getControl());
-
+                
 		final class MessageDestinationFilter extends
 				ChannelFilter<Message, Address> {
 			public MessageDestinationFilter(Address address) {

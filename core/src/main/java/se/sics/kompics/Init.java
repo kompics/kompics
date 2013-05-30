@@ -25,8 +25,18 @@ package se.sics.kompics;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
+ * @author Lars Kroll <lkroll@sics.se>
  * @version $Id$
  */
-public abstract class Init extends Event {
+public abstract class Init<T extends ComponentDefinition> {
+    
+    public static final None NONE = new None();
+    
+    
+    public static final class None extends Init<ComponentDefinition>{
+        private None()  {
+            
+        }
+    }
 
 }

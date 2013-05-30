@@ -18,58 +18,52 @@ import se.sics.kompics.network.netty.NettyNetworkInit;
 
 public class TestClient extends ComponentDefinition {
 
-	public static void main(String[] args) {
-		Kompics.createAndStart(TestClient.class);
-	}
+    public static void main(String[] args) {
+        Kompics.createAndStart(TestClient.class);
+    }
+    Address c = new Address(InetAddress.getLocalHost(), 3333, 0);
+    Address s = new Address(InetAddress.getLocalHost(), 2222, 0);
+    Address mcast;
+    Component netty;
 
-	Address c = new Address(InetAddress.getLocalHost(), 3333, 0);
-	Address s = new Address(InetAddress.getLocalHost(), 2222, 0);
-	Address mcast;
+    public TestClient() throws UnknownHostException {
+        netty = create(NettyNetwork.class, new NettyNetworkInit(c));
+        subscribe(start, control);
+        subscribe(h, netty.provided(Network.class));
+    }
+    Handler<Start> start = new Handler<Start>() {
+        public void handle(Start event) {
 
-	Component netty;
+            String message = "Hello!";
 
-	public TestClient() throws UnknownHostException {
-		netty = create(NettyNetwork.class);
-		subscribe(start, control);
-		subscribe(h, netty.provided(Network.class));
-		trigger(new NettyNetworkInit(c), netty.control());
-	}
+            TestMessage tm = new TestMessage(c, s, message.getBytes());
 
-	Handler<Start> start = new Handler<Start>() {
-		public void handle(Start event) {
+            trigger(tm, netty.provided(Network.class));
 
-			String message = "Hello!";
+            try {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ObjectOutputStream oos;
+                oos = new ObjectOutputStream(baos);
+                oos.writeObject(tm);
+                oos.flush();
+                oos.close();
 
-			TestMessage tm = new TestMessage(c, s, message.getBytes());
+                byte[] buf = baos.toByteArray();
 
-			trigger(tm, netty.provided(Network.class));
-
-			try {
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ObjectOutputStream oos;
-				oos = new ObjectOutputStream(baos);
-				oos.writeObject(tm);
-				oos.flush();
-				oos.close();
-
-				byte[] buf = baos.toByteArray();
-
-				System.err.println("Sent " + tm + " in " + buf.length
-						+ " bytes [" + new String(buf) + "]");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	};
-
-	Handler<TestMessage> h = new Handler<TestMessage>() {
-		public void handle(TestMessage event) {
-			System.err.println("Received " + event.getPayload().length
-					+ " bytes " + new String(event.getPayload()));
+                System.err.println("Sent " + tm + " in " + buf.length
+                        + " bytes [" + new String(buf) + "]");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    Handler<TestMessage> h = new Handler<TestMessage>() {
+        public void handle(TestMessage event) {
+            System.err.println("Received " + event.getPayload().length
+                    + " bytes " + new String(event.getPayload()));
 
 //			trigger(new TestMessage(event.getDestination(), event.getSource(),
 //					"Hello".getBytes()), netty.provided(Network.class));
-		}
-	};
-
+        }
+    };
 }

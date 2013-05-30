@@ -20,6 +20,8 @@
  */
 package se.sics.kompics;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,10 +58,6 @@ public class JavaComponent extends ComponentCore {
         this.negativePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
         this.parent = parentThreadLocal.get();
         this.component = componentDefinition;
-        this.initSubscriptionInConstructor = false;
-        this.initDone = new AtomicBoolean(false);
-        this.initReceived = new AtomicBoolean(false);
-        this.firstInitEvent = new AtomicReference<Event>(null);
         parentThreadLocal.set(null);
     }
 
@@ -68,10 +66,6 @@ public class JavaComponent extends ComponentCore {
         this.negativePorts = other.negativePorts;
         this.parent = other.parent;
         this.component = other.component;
-        this.initSubscriptionInConstructor = other.initSubscriptionInConstructor;
-        this.initDone = other.initDone;
-        this.initReceived = other.initReceived;
-        this.firstInitEvent = other.firstInitEvent;
         parentThreadLocal.set(null);
     }
 
@@ -188,19 +182,17 @@ public class JavaComponent extends ComponentCore {
     }
 
     @Override
-    public Component doCreate(Class<? extends ComponentDefinition> definition) {
+    public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent) {
         // create an instance of the implementing component type
         ComponentDefinition component;
         try {
             parentThreadLocal.set(this);
-            component = definition.newInstance();
+            component = createInstance(definition, initEvent);
             ComponentCore child = component.getComponentCore();
 
-            if (!child.initSubscriptionInConstructor) {
-                child.initDone.set(true);
-            } else {
-                child.workCount.incrementAndGet();
-            }
+
+            //child.workCount.incrementAndGet();
+
 
             child.setScheduler(scheduler);
             if (children == null) {
@@ -215,36 +207,39 @@ public class JavaComponent extends ComponentCore {
         } catch (IllegalAccessException e) {
             throw new RuntimeException("Cannot create component "
                     + definition.getCanonicalName(), e);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("Cannot create component "
+                    + definition.getCanonicalName(), e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException("Cannot create component "
+                    + definition.getCanonicalName(), e);
         }
+    }
+
+    private <T extends ComponentDefinition> T createInstance(Class<T> definition, Init<T> initEvent) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        if (initEvent == null) {
+            return definition.newInstance();
+        }
+        // look for a constructor that takes a single parameter
+        // and is assigment compatible with the given init event
+        Constructor<T> constr = definition.getConstructor(initEvent.getClass());
+        return constr.newInstance(initEvent);
+//        Constructor[] constructors = definition.getConstructors();
+//        for (Constructor constr : constructors) {
+//            Class[] types = constr.getParameterTypes();
+//            if (types.length == 1) {
+//                Class type = types[0];
+//                if (type.isInstance(initEvent)) {
+//                    return constr.newInstance(initEvent);
+//                }
+//            }
+//        }
     }
 
     @Override
     public void execute(int wid) {
         this.wid = wid;
-
-        // if init is not yet done it means we were scheduled to run the first
-        // Init event. We do not touch readyPorts and workCount.
-        if (!initDone.get()) {
-            ArrayList<Handler<?>> handlers = negativeControl
-                    .getSubscribedHandlers(firstInitEvent.get());
-            if (handlers != null) {
-                for (int i = 0; i < handlers.size(); i++) {
-                    executeEvent(firstInitEvent.get(), handlers.get(i));
-                }
-            }
-            initDone.set(true);
-
-            // if other events arrived before the Init we schedule the component
-            // to execute them
-            int wc = workCount.decrementAndGet();
-            if (wc > 0) {
-                if (scheduler == null) {
-                    scheduler = Kompics.getScheduler();
-                }
-                scheduler.schedule(this, wid);
-            }
-            return;
-        }
+        //System.err.println("Executing " + wid);
 
 
 //		New scheduling code: Run n and move to end of schedule
@@ -257,7 +252,8 @@ public class JavaComponent extends ComponentCore {
             Event event;
             JavaPort<?> nextPort;
             if ((state == State.PASSIVE) || (state == State.STARTING)) {
-
+                //System.err.println("non-active state " + wid);
+                
                 event = negativeControl.pickFirstEvent();
                 nextPort = negativeControl;
 
@@ -274,13 +270,14 @@ public class JavaComponent extends ComponentCore {
                 }
                 readyPorts.remove(nextPort);
             } else {
+                //System.err.println("active state " + wid);
                 nextPort = (JavaPort<?>) readyPorts.poll();
                 event = nextPort.pickFirstEvent();
             }
 
-//            if (event == null) {
-//                System.err.println("Something went wrong: " + component + "/" + state + "/" + wc);
-//            }
+            if (event == null) {
+                Kompics.logger.debug("Couldn't fine event to schedule: {} / {} / {}", new Object[] {component, state, wc});
+            }
 
             ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
 
@@ -388,16 +385,16 @@ public class JavaComponent extends ComponentCore {
         @Override
         public void handle(Start event) {
             if (children != null) {
-                //System.err.println(component + " starting");
+                Kompics.logger.debug(component + " starting");
                 state = Component.State.STARTING;
                 for (ComponentCore child : children) {
-                    //System.out.println("Sending Start to child: " + child.getComponent());
+                    Kompics.logger.debug("Sending Start to child: " + child.getComponent());
                     // start child
                     ((PortCore<ControlPort>) child.getControl()).doTrigger(
                             Start.event, wid, component.getComponentCore());
                 }
             } else {
-                //System.err.println(component + " started");
+                Kompics.logger.debug(component + " started");
                 state = Component.State.ACTIVE;
                 if (parent != null) {
                     ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
@@ -418,16 +415,16 @@ public class JavaComponent extends ComponentCore {
         public void handle(Stop event) {
 
             if (children != null) {
-                //System.err.println(component + " stopping");
+                Kompics.logger.debug(component + " stopping");
                 state = Component.State.STOPPING;
                 for (ComponentCore child : children) {
-                    //System.out.println("Sending Stop to child: " + child.getComponent());
+                    Kompics.logger.debug("Sending Stop to child: " + child.getComponent());
                     // stop child
                     ((PortCore<ControlPort>) child.getControl()).doTrigger(
                             Stop.event, wid, component.getComponentCore());
                 }
             } else {
-                //System.err.println(component + " stopped");
+                Kompics.logger.debug(component + " stopped");
                 state = Component.State.PASSIVE;
                 component.tearDown();
                 if (parent != null) {
@@ -450,11 +447,11 @@ public class JavaComponent extends ComponentCore {
         Handler<Started> handleStarted = new Handler<Started>() {
         @Override
         public void handle(Started event) {
-            //System.err.println(component + " got Started event from " + event.component.getComponent());
+            Kompics.logger.debug(component + " got Started event from " + event.component.getComponent());
             activeSet.add(event.component);
-            //System.err.println(component + " active set has " + activeSet.size() + " members");
+            Kompics.logger.debug(component + " active set has " + activeSet.size() + " members");
             if (activeSet.size() == children.size()) {
-                //System.err.println(component + " started");
+                Kompics.logger.debug(component + " started");
                 state = Component.State.ACTIVE;
                 if (parent != null) {
                     ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
@@ -473,12 +470,12 @@ public class JavaComponent extends ComponentCore {
 	Handler<Stopped> handleStopped = new Handler<Stopped>() {
         @Override
         public void handle(Stopped event) {
-            //System.err.println(component + " got Stopped event from " + event.component.getComponent());
+            Kompics.logger.debug(component + " got Stopped event from " + event.component.getComponent());
 
             activeSet.remove(event.component);
-            //System.err.println(component + " active set has " + activeSet.size() + " members");
+            Kompics.logger.debug(component + " active set has " + activeSet.size() + " members");
             if (activeSet.isEmpty()) {
-                //System.err.println(component + " stopped");
+                Kompics.logger.debug(component + " stopped");
                 state = Component.State.PASSIVE;
                 component.tearDown();
                 if (parent != null) {

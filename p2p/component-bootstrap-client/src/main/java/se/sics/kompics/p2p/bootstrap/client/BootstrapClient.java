@@ -1,22 +1,22 @@
 /**
  * This file is part of the Kompics P2P Framework.
- * 
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
- * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
+ * 2009 Royal Institute of Technology (KTH)
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics.p2p.bootstrap.client;
 
@@ -48,180 +48,167 @@ import se.sics.kompics.timer.ScheduleTimeout;
 import se.sics.kompics.timer.Timer;
 
 /**
- * The <code>BootstrapClient</code> class.
- * 
+ * The
+ * <code>BootstrapClient</code> class.
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
 public class BootstrapClient extends ComponentDefinition {
 
-	Negative<P2pBootstrap> bootstrap = negative(P2pBootstrap.class);
+    Negative<P2pBootstrap> bootstrap = negative(P2pBootstrap.class);
+    Positive<Network> network = positive(Network.class);
+    Positive<Timer> timer = positive(Timer.class);
+    private static Logger logger = LoggerFactory
+            .getLogger(BootstrapClient.class);
+    private final HashSet<UUID> outstandingTimeouts;
+    private BootstrapRequest activeBootstrapRequest;
+    private HashSet<PeerEntry> overlays;
+    private Address bootstrapServerAddress;
+    private Address self;
+    private int clientWebPort;
+    private long refreshPeriod;
+    private long retryPeriod;
+    private int retriesCount;
 
-	Positive<Network> network = positive(Network.class);
-	Positive<Timer> timer = positive(Timer.class);
+    public BootstrapClient(BootstrapClientInit init) {
+        outstandingTimeouts = new HashSet<UUID>();
+        overlays = new HashSet<PeerEntry>();
 
-	private static Logger logger = LoggerFactory
-			.getLogger(BootstrapClient.class);
 
-	private final HashSet<UUID> outstandingTimeouts;
-	private BootstrapRequest activeBootstrapRequest;
+        subscribe(handleBootstrapRequest, bootstrap);
+        subscribe(handleBootstrapCompleted, bootstrap);
+        subscribe(handleBootstrapCacheReset, bootstrap);
+        subscribe(handleCacheGetPeersResponse, network);
+        subscribe(handleClientRefreshPeer, timer);
+        subscribe(handleClientRetryRequest, timer);
 
-	private HashSet<PeerEntry> overlays;
+        // INIT
 
-	private Address bootstrapServerAddress;
-	private Address self;
-	private int clientWebPort;
-	private long refreshPeriod;
-	private long retryPeriod;
-	private int retriesCount;
+        refreshPeriod = init.getBootstrapConfiguration()
+                .getClientKeepAlivePeriod();
+        retryPeriod = init.getBootstrapConfiguration()
+                .getClientRetryPeriod();
+        retriesCount = init.getBootstrapConfiguration()
+                .getClientRetryCount();
+        bootstrapServerAddress = init.getBootstrapConfiguration()
+                .getBootstrapServerAddress();
+        clientWebPort = init.getBootstrapConfiguration().getClientWebPort();
+        self = init.getSelf();
+    }
+    private Handler<BootstrapRequest> handleBootstrapRequest = new Handler<BootstrapRequest>() {
+        public void handle(BootstrapRequest event) {
+            // set an alarm to retry the request if no response
+            ScheduleTimeout st = new ScheduleTimeout(retryPeriod);
+            ClientRetryRequest retryRequest = new ClientRetryRequest(st,
+                    retriesCount, event);
+            st.setTimeoutEvent(retryRequest);
+            UUID timerId = retryRequest.getTimeoutId();
+            CacheGetPeersRequest request = new CacheGetPeersRequest(event
+                    .getOverlay(), event.getPeersMax(), timerId, self,
+                    bootstrapServerAddress);
 
-	public BootstrapClient() {
-		outstandingTimeouts = new HashSet<UUID>();
-		overlays = new HashSet<PeerEntry>();
+            outstandingTimeouts.add(timerId);
 
-		subscribe(handleInit, control);
+            activeBootstrapRequest = event;
 
-		subscribe(handleBootstrapRequest, bootstrap);
-		subscribe(handleBootstrapCompleted, bootstrap);
-		subscribe(handleBootstrapCacheReset, bootstrap);
-		subscribe(handleCacheGetPeersResponse, network);
-		subscribe(handleClientRefreshPeer, timer);
-		subscribe(handleClientRetryRequest, timer);
-	}
+            trigger(request, network);
+            trigger(st, timer);
 
-	Handler<BootstrapClientInit> handleInit = new Handler<BootstrapClientInit>() {
-		public void handle(BootstrapClientInit init) {
-			refreshPeriod = init.getBootstrapConfiguration()
-					.getClientKeepAlivePeriod();
-			retryPeriod = init.getBootstrapConfiguration()
-					.getClientRetryPeriod();
-			retriesCount = init.getBootstrapConfiguration()
-					.getClientRetryCount();
-			bootstrapServerAddress = init.getBootstrapConfiguration()
-					.getBootstrapServerAddress();
-			clientWebPort = init.getBootstrapConfiguration().getClientWebPort();
-			self = init.getSelf();
-		}
-	};
+            logger.debug("@{}: Sending GetPeersRequest to ", self.getId(),
+                    bootstrapServerAddress);
+        }
+    };
+    private Handler<ClientRetryRequest> handleClientRetryRequest = new Handler<ClientRetryRequest>() {
+        public void handle(ClientRetryRequest event) {
+            if (!outstandingTimeouts.contains(event.getTimeoutId())) {
+                return;
+            }
+            outstandingTimeouts.remove(event.getTimeoutId());
 
-	private Handler<BootstrapRequest> handleBootstrapRequest = new Handler<BootstrapRequest>() {
-		public void handle(BootstrapRequest event) {
-			// set an alarm to retry the request if no response
-			ScheduleTimeout st = new ScheduleTimeout(retryPeriod);
-			ClientRetryRequest retryRequest = new ClientRetryRequest(st,
-					retriesCount, event);
-			st.setTimeoutEvent(retryRequest);
-			UUID timerId = retryRequest.getTimeoutId();
-			CacheGetPeersRequest request = new CacheGetPeersRequest(event
-					.getOverlay(), event.getPeersMax(), timerId, self,
-					bootstrapServerAddress);
+            if (event.getRetriesLeft() > 0) {
+                // set an alarm to retry the request if no response
+                ScheduleTimeout st = new ScheduleTimeout(retryPeriod);
+                ClientRetryRequest retryRequest = new ClientRetryRequest(st,
+                        event.getRetriesLeft() - 1, event.getRequest());
+                st.setTimeoutEvent(retryRequest);
+                UUID timerId = retryRequest.getTimeoutId();
+                CacheGetPeersRequest request = new CacheGetPeersRequest(event
+                        .getRequest().getOverlay(), event.getRequest()
+                        .getPeersMax(), timerId, self, bootstrapServerAddress);
 
-			outstandingTimeouts.add(timerId);
+                outstandingTimeouts.add(timerId);
 
-			activeBootstrapRequest = event;
+                activeBootstrapRequest = event.getRequest();
 
-			trigger(request, network);
-			trigger(st, timer);
+                trigger(request, network);
+                trigger(st, timer);
 
-			logger.debug("@{}: Sending GetPeersRequest to ", self.getId(),
-					bootstrapServerAddress);
-		}
-	};
+                logger.debug("@{}: Sending GetPeersRequest to  ", self.getId(),
+                        bootstrapServerAddress);
+            } else {
+                BootstrapResponse response = new BootstrapResponse(
+                        activeBootstrapRequest, false, activeBootstrapRequest
+                        .getOverlay(), null);
+                trigger(response, bootstrap);
+            }
+        }
+    };
+    private Handler<CacheGetPeersResponse> handleCacheGetPeersResponse = new Handler<CacheGetPeersResponse>() {
+        public void handle(CacheGetPeersResponse event) {
+            if (outstandingTimeouts.contains(event.getRequestId())) {
+                CancelTimeout ct = new CancelTimeout(event.getRequestId());
+                trigger(ct, timer);
+                outstandingTimeouts.remove(event.getRequestId());
+            } else {
+                // request was retried. we ignore this first slow response.
+                // (to avoid double response;TODO add a local BOOTSTRAPPED flag
+                // per overlay)
+                return;
+            }
 
-	private Handler<ClientRetryRequest> handleClientRetryRequest = new Handler<ClientRetryRequest>() {
-		public void handle(ClientRetryRequest event) {
-			if (!outstandingTimeouts.contains(event.getTimeoutId())) {
-				return;
-			}
-			outstandingTimeouts.remove(event.getTimeoutId());
+            // TODO request map for MULTIPLE overlays
+            BootstrapResponse response = new BootstrapResponse(
+                    activeBootstrapRequest, true, activeBootstrapRequest
+                    .getOverlay(), event.getPeers());
 
-			if (event.getRetriesLeft() > 0) {
-				// set an alarm to retry the request if no response
-				ScheduleTimeout st = new ScheduleTimeout(retryPeriod);
-				ClientRetryRequest retryRequest = new ClientRetryRequest(st,
-						event.getRetriesLeft() - 1, event.getRequest());
-				st.setTimeoutEvent(retryRequest);
-				UUID timerId = retryRequest.getTimeoutId();
-				CacheGetPeersRequest request = new CacheGetPeersRequest(event
-						.getRequest().getOverlay(), event.getRequest()
-						.getPeersMax(), timerId, self, bootstrapServerAddress);
+            logger.debug("@{}: Received GetPeersResponse {}", self.getId(),
+                    event.getPeers());
+            trigger(response, bootstrap);
+        }
+    };
+    @SuppressWarnings("unchecked")
+    private Handler<BootstrapCompleted> handleBootstrapCompleted = new Handler<BootstrapCompleted>() {
+        public void handle(BootstrapCompleted event) {
+            PeerEntry peerEntry = new PeerEntry(event.getOverlay(), event
+                    .getOverlayAddress(), clientWebPort, self, 0, 0);
 
-				outstandingTimeouts.add(timerId);
+            overlays.add(peerEntry);
 
-				activeBootstrapRequest = event.getRequest();
+            CacheAddPeerRequest request = new CacheAddPeerRequest(self,
+                    bootstrapServerAddress, (Set<PeerEntry>) overlays.clone());
 
-				trigger(request, network);
-				trigger(st, timer);
+            trigger(request, network);
 
-				logger.debug("@{}: Sending GetPeersRequest to  ", self.getId(),
-						bootstrapServerAddress);
-			} else {
-				BootstrapResponse response = new BootstrapResponse(
-						activeBootstrapRequest, false, activeBootstrapRequest
-								.getOverlay(), null);
-				trigger(response, bootstrap);
-			}
-		}
-	};
-
-	private Handler<CacheGetPeersResponse> handleCacheGetPeersResponse = new Handler<CacheGetPeersResponse>() {
-		public void handle(CacheGetPeersResponse event) {
-			if (outstandingTimeouts.contains(event.getRequestId())) {
-				CancelTimeout ct = new CancelTimeout(event.getRequestId());
-				trigger(ct, timer);
-				outstandingTimeouts.remove(event.getRequestId());
-			} else {
-				// request was retried. we ignore this first slow response.
-				// (to avoid double response;TODO add a local BOOTSTRAPPED flag
-				// per overlay)
-				return;
-			}
-
-			// TODO request map for MULTIPLE overlays
-			BootstrapResponse response = new BootstrapResponse(
-					activeBootstrapRequest, true, activeBootstrapRequest
-							.getOverlay(), event.getPeers());
-
-			logger.debug("@{}: Received GetPeersResponse {}", self.getId(),
-					event.getPeers());
-			trigger(response, bootstrap);
-		}
-	};
-
-	@SuppressWarnings("unchecked")
-	private Handler<BootstrapCompleted> handleBootstrapCompleted = new Handler<BootstrapCompleted>() {
-		public void handle(BootstrapCompleted event) {
-			PeerEntry peerEntry = new PeerEntry(event.getOverlay(), event
-					.getOverlayAddress(), clientWebPort, self, 0, 0);
-
-			overlays.add(peerEntry);
-
-			CacheAddPeerRequest request = new CacheAddPeerRequest(self,
-					bootstrapServerAddress, (Set<PeerEntry>) overlays.clone());
-
-			trigger(request, network);
-
-			// set refresh periodic timer
-			ScheduleTimeout st = new ScheduleTimeout(refreshPeriod);
-			st.setTimeoutEvent(new ClientRefreshPeer(st));
-			trigger(st, timer);
-		}
-	};
-
-	@SuppressWarnings("unchecked")
-	private Handler<ClientRefreshPeer> handleClientRefreshPeer = new Handler<ClientRefreshPeer>() {
-		public void handle(ClientRefreshPeer event) {
-			CacheAddPeerRequest request = new CacheAddPeerRequest(self,
-					bootstrapServerAddress, (Set<PeerEntry>) overlays.clone());
-			trigger(request, network);
-		}
-	};
-
-	private Handler<BootstrapCacheReset> handleBootstrapCacheReset = new Handler<BootstrapCacheReset>() {
-		public void handle(BootstrapCacheReset event) {
-			CacheResetRequest request = new CacheResetRequest(self,
-					bootstrapServerAddress, event.getOverlay());
-			trigger(request, network);
-		}
-	};
+            // set refresh periodic timer
+            ScheduleTimeout st = new ScheduleTimeout(refreshPeriod);
+            st.setTimeoutEvent(new ClientRefreshPeer(st));
+            trigger(st, timer);
+        }
+    };
+    @SuppressWarnings("unchecked")
+    private Handler<ClientRefreshPeer> handleClientRefreshPeer = new Handler<ClientRefreshPeer>() {
+        public void handle(ClientRefreshPeer event) {
+            CacheAddPeerRequest request = new CacheAddPeerRequest(self,
+                    bootstrapServerAddress, (Set<PeerEntry>) overlays.clone());
+            trigger(request, network);
+        }
+    };
+    private Handler<BootstrapCacheReset> handleBootstrapCacheReset = new Handler<BootstrapCacheReset>() {
+        public void handle(BootstrapCacheReset event) {
+            CacheResetRequest request = new CacheResetRequest(self,
+                    bootstrapServerAddress, event.getOverlay());
+            trigger(request, network);
+        }
+    };
 }

@@ -41,20 +41,21 @@ public class TestServer extends ComponentDefinition {
         Component grizzly;
 
         public MainComponent() throws UnknownHostException {
-            grizzly = create(GrizzlyNetwork.class);
+
             Address netSelf = new Address(InetAddress.getByName("127.0.0.1"), 22333, null);
-            trigger(new GrizzlyNetworkInit(netSelf, 8, 0, 0, 2 * 1024, 16 * 1024,
+            GrizzlyNetworkInit init = new GrizzlyNetworkInit(netSelf, 8, 0, 0, 2 * 1024, 16 * 1024,
                     Runtime.getRuntime().availableProcessors(),
                     Runtime.getRuntime().availableProcessors(),
-                    new ConstantQuotaAllocator(5)), grizzly.control());
+                    new ConstantQuotaAllocator(5));
+            grizzly = create(GrizzlyNetwork.class, init);
 
             VirtualNetworkChannel vnc = VirtualNetworkChannel.connect(grizzly.getPositive(Network.class));
 
             for (byte i = 0; i < NUM_SERVERS; i++) {
-                Component server = create(TestServer.class);
                 Address addr = netSelf.newVirtual(i);
+                Component server = create(TestServer.class, new TSInit(addr));
+
                 vnc.addConnection(addr.getId(), server.getNegative(Network.class));
-                trigger(new TSInit(addr), server.control());
             }
         }
     }
@@ -63,18 +64,14 @@ public class TestServer extends ComponentDefinition {
     private int dataCount = 0;
     private boolean firstMessage = true;
 
-    public TestServer() {
+    public TestServer(TSInit event) {
         subscribe(h, net);
         subscribe(sh, control);
-        subscribe(initH, control);
         subscribe(ctsh, net);
+
+        // INIT
+        self = event.addr;
     }
-    Handler<TSInit> initH = new Handler<TSInit>() {
-        @Override
-        public void handle(TSInit event) {
-            self = event.addr;
-        }
-    };
     Handler<Start> sh = new Handler<Start>() {
         @Override
         public void handle(Start event) {
@@ -119,20 +116,20 @@ public class TestServer extends ComponentDefinition {
                 byte[] data = new byte[DATA_SIZE];
                 RAND.nextBytes(data);
                 TestMessage msg = new TestMessage(self, event.getSource(), data, new byte[0], dataCount);
-                DataMessage dmsg = new DataMessage(event.getFlowId(), event.getRequestId(), msg);               
-                
+                DataMessage dmsg = new DataMessage(event.getFlowId(), event.getRequestId(), msg);
+
                 if (dataCount == DATA_NUM) {
                     dmsg.setFinal();
                     trigger(dmsg, net);
                     break;
                 }
                 trigger(dmsg, net);
-                
+
             }
             if (dataCount == DATA_NUM) {
-                log.info("##################################### \n" + 
-                        self + " finished sending data. \n" +
-                        "##################################### \n");
+                log.info("##################################### \n"
+                        + self + " finished sending data. \n"
+                        + "##################################### \n");
             }
         }
     };

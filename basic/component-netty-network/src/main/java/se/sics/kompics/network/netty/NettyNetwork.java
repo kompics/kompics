@@ -1,22 +1,22 @@
 /**
  * This file is part of the Kompics component model runtime.
- * 
+ *
  * Copyright (C) 2009-2011 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009-2011 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics.network.netty;
 
@@ -56,209 +56,206 @@ import se.sics.kompics.network.NetworkSessionOpened;
 import se.sics.kompics.network.Transport;
 
 /**
- * The <code>NettyNetwork</code> class.
- * 
+ * The
+ * <code>NettyNetwork</code> class.
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
 public class NettyNetwork extends ComponentDefinition {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(NettyNetwork.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(NettyNetwork.class);
+    /**
+     * The "implemented" Network port.
+     */
+    Negative<Network> net = negative(Network.class);
+    /**
+     * The "implemented" NetworkControl port.
+     */
+    Negative<NetworkControl> netControl = negative(NetworkControl.class);
+    ServerBootstrap serverBootstrap;
+    ClientBootstrap clientBootstrap;
+    private HashMap<InetSocketAddress, NettySession> tcpSession;
+    private NettyHandler tcpHandler;
+    private InetSocketAddress localSocketAddress;
+    int connectRetries;
 
-	/** The "implemented" Network port. */
-	Negative<Network> net = negative(Network.class);
+    /**
+     * Instantiates a new Netty network component.
+     */
+    public NettyNetwork(NettyNetworkInit init) {
+        serverBootstrap = new ServerBootstrap(
+                new NioServerSocketChannelFactory(
+                Executors.newCachedThreadPool(),
+                Executors.newCachedThreadPool()));
+        clientBootstrap = new ClientBootstrap(
+                new NioClientSocketChannelFactory(
+                Executors.newCachedThreadPool(),
+                Executors.newCachedThreadPool()));
 
-	/** The "implemented" NetworkControl port. */
-	Negative<NetworkControl> netControl = negative(NetworkControl.class);
+        tcpSession = new HashMap<InetSocketAddress, NettySession>();
+        tcpHandler = new NettyHandler(this, Transport.TCP);
 
-	ServerBootstrap serverBootstrap;
-	ClientBootstrap clientBootstrap;
-	private HashMap<InetSocketAddress, NettySession> tcpSession;
-	private NettyHandler tcpHandler;
-	private InetSocketAddress localSocketAddress;
-	int connectRetries;
+        subscribe(handleMessage, net);
 
-	/**
-	 * Instantiates a new Netty network component.
-	 */
-	public NettyNetwork() {
-		serverBootstrap = new ServerBootstrap(
-				new NioServerSocketChannelFactory(
-						Executors.newCachedThreadPool(),
-						Executors.newCachedThreadPool()));
-		clientBootstrap = new ClientBootstrap(
-				new NioClientSocketChannelFactory(
-						Executors.newCachedThreadPool(),
-						Executors.newCachedThreadPool()));
+        subscribe(handleStatusReq, netControl);
 
-		tcpSession = new HashMap<InetSocketAddress, NettySession>();
-		tcpHandler = new NettyHandler(this, Transport.TCP);
+        // INIT
+        connectRetries = init.getConnectRetries();
+        localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
+                init.getSelf().getPort());
 
-		subscribe(handleInit, control);
-		subscribe(handleMessage, net);
+        final int compressionLevel = init.getCompressionLevel();
 
-		subscribe(handleStatusReq, netControl);
-	}
+        serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+            @Override
+            public ChannelPipeline getPipeline() throws Exception {
+                ChannelPipeline pipeline = Channels.pipeline();
 
-	/** The handle init. */
-	Handler<NettyNetworkInit> handleInit = new Handler<NettyNetworkInit>() {
-		public void handle(final NettyNetworkInit init) {
-			connectRetries = init.getConnectRetries();
-			localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
-					init.getSelf().getPort());
+                if (compressionLevel > 0) {
+                    pipeline.addLast("deflater", new ZlibEncoder(
+                            compressionLevel));
+                    pipeline.addLast("inflater", new ZlibDecoder());
+                }
 
-			final int compressionLevel = init.getCompressionLevel();
+                pipeline.addLast("decoder", new ObjectDecoder());
+                pipeline.addLast("encoder", new ObjectEncoder());
 
-			serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-				@Override
-				public ChannelPipeline getPipeline() throws Exception {
-					ChannelPipeline pipeline = Channels.pipeline();
+                // pipeline.addLast("logger", new LoggingHandler("Netty"));
 
-					if (compressionLevel > 0) {
-						pipeline.addLast("deflater", new ZlibEncoder(
-								compressionLevel));
-						pipeline.addLast("inflater", new ZlibDecoder());
-					}
+                pipeline.addLast("handler", tcpHandler);
+                return pipeline;
+            }
+        });
+        serverBootstrap.setOption("child.tcpNoDelay", true);
+        serverBootstrap.setOption("child.keepAlive", true);
+        serverBootstrap.setOption("child.reuseAddress", true);
+        serverBootstrap.setOption("child.connectTimeoutMillis", 5000);
 
-					pipeline.addLast("decoder", new ObjectDecoder());
-					pipeline.addLast("encoder", new ObjectEncoder());
+        serverBootstrap.bind(localSocketAddress);
 
-					// pipeline.addLast("logger", new LoggingHandler("Netty"));
+        clientBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+            public ChannelPipeline getPipeline() throws Exception {
+                ChannelPipeline pipeline = Channels.pipeline();
 
-					pipeline.addLast("handler", tcpHandler);
-					return pipeline;
-				}
-			});
-			serverBootstrap.setOption("child.tcpNoDelay", true);
-			serverBootstrap.setOption("child.keepAlive", true);
-			serverBootstrap.setOption("child.reuseAddress", true);
-			serverBootstrap.setOption("child.connectTimeoutMillis", 5000);
+                if (compressionLevel > 0) {
+                    pipeline.addLast("deflater", new ZlibEncoder(
+                            compressionLevel));
+                    pipeline.addLast("inflater", new ZlibDecoder());
+                }
 
-			serverBootstrap.bind(localSocketAddress);
+                pipeline.addLast("decoder", new ObjectDecoder());
+                pipeline.addLast("encoder", new ObjectEncoder());
 
-			clientBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-				public ChannelPipeline getPipeline() throws Exception {
-					ChannelPipeline pipeline = Channels.pipeline();
+                // pipeline.addLast("logger", new LoggingHandler("Netty"));
 
-					if (compressionLevel > 0) {
-						pipeline.addLast("deflater", new ZlibEncoder(
-								compressionLevel));
-						pipeline.addLast("inflater", new ZlibDecoder());
-					}
+                pipeline.addLast("handler", tcpHandler);
+                return pipeline;
+            }
+        });
+        clientBootstrap.setOption("tcpNoDelay", true);
+        clientBootstrap.setOption("keepAlive", true);
+        clientBootstrap.setOption("reuseAddress", true);
+        clientBootstrap.setOption("connectTimeoutMillis", 5000);
+    }
+    /**
+     * The handle message.
+     */
+    Handler<Message> handleMessage = new Handler<Message>() {
+        public void handle(Message message) {
+            logger.debug(
+                    "Handling Message {} from {} to {} protocol {}",
+                    new Object[]{message, message.getSource(),
+                        message.getDestination(), message.getProtocol()});
 
-					pipeline.addLast("decoder", new ObjectDecoder());
-					pipeline.addLast("encoder", new ObjectEncoder());
+            if (message.getDestination().getIp()
+                    .equals(message.getSource().getIp())
+                    && message.getDestination().getPort() == message
+                    .getSource().getPort()) {
+                // deliver locally
+                trigger(message, net);
+                return;
+            }
 
-					// pipeline.addLast("logger", new LoggingHandler("Netty"));
+            Transport protocol = message.getProtocol();
+            Address destination = message.getDestination();
 
-					pipeline.addLast("handler", tcpHandler);
-					return pipeline;
-				}
-			});
-			clientBootstrap.setOption("tcpNoDelay", true);
-			clientBootstrap.setOption("keepAlive", true);
-			clientBootstrap.setOption("reuseAddress", true);
-			clientBootstrap.setOption("connectTimeoutMillis", 5000);
-		}
-	};
+            switch (protocol) {
+                case TCP:
+                case UDP:
+                    NettySession tcpSession = getTcpSession(destination);
+                    tcpSession.sendMessage(message);
+                    break;
+            }
+        }
+    };
 
-	/** The handle message. */
-	Handler<Message> handleMessage = new Handler<Message>() {
-		public void handle(Message message) {
-			logger.debug(
-					"Handling Message {} from {} to {} protocol {}",
-					new Object[] { message, message.getSource(),
-							message.getDestination(), message.getProtocol() });
+    final void deliverMessage(Message message, Transport protocol) {
+        message.setProtocol(protocol);
+        logger.debug(
+                "Delivering message {} from {} to {} protocol {}",
+                new Object[]{message.toString(), message.getSource(),
+                    message.getDestination(), message.getProtocol()});
 
-			if (message.getDestination().getIp()
-					.equals(message.getSource().getIp())
-					&& message.getDestination().getPort() == message
-							.getSource().getPort()) {
-				// deliver locally
-				trigger(message, net);
-				return;
-			}
+        trigger(message, net);
+    }
 
-			Transport protocol = message.getProtocol();
-			Address destination = message.getDestination();
+    private NettySession getTcpSession(Address destination) {
+        InetSocketAddress socketAddress = address2SocketAddress(destination);
+        synchronized (tcpSession) {
+            NettySession session = tcpSession.get(socketAddress);
+            if (session == null) {
+                session = new NettySession(clientBootstrap, Transport.TCP,
+                        address2SocketAddress(destination), this);
+                session.connectInit();
+                tcpSession.put(socketAddress, session);
+            }
+            return session;
+        }
+    }
 
-			switch (protocol) {
-			case TCP:
-			case UDP:
-				NettySession tcpSession = getTcpSession(destination);
-				tcpSession.sendMessage(message);
-				break;
-			}
-		}
-	};
+    final void dropSession(NettySession s) {
+        synchronized (tcpSession) {
+            tcpSession.remove(s.getRemoteAddress());
+        }
+        trigger(new NetworkConnectionRefused(s.getRemoteAddress(),
+                Transport.TCP), netControl);
+    }
 
-	final void deliverMessage(Message message, Transport protocol) {
-		message.setProtocol(protocol);
-		logger.debug(
-				"Delivering message {} from {} to {} protocol {}",
-				new Object[] { message.toString(), message.getSource(),
-						message.getDestination(), message.getProtocol() });
+    final void networkException(NetworkException event) {
+        trigger(event, netControl);
+    }
 
-		trigger(message, net);
-	}
+    final void networkSessionClosed(Channel channel) {
+        InetSocketAddress clientSocketAddress = (InetSocketAddress) channel
+                .getRemoteAddress();
+        synchronized (tcpSession) {
+            tcpSession.remove(clientSocketAddress);
+        }
 
-	private NettySession getTcpSession(Address destination) {
-		InetSocketAddress socketAddress = address2SocketAddress(destination);
-		synchronized (tcpSession) {
-			NettySession session = tcpSession.get(socketAddress);
-			if (session == null) {
-				session = new NettySession(clientBootstrap, Transport.TCP,
-						address2SocketAddress(destination), this);
-				session.connectInit();
-				tcpSession.put(socketAddress, session);
-			}
-			return session;
-		}
-	}
+        trigger(new NetworkSessionClosed(clientSocketAddress, Transport.TCP),
+                netControl);
+    }
 
-	final void dropSession(NettySession s) {
-		synchronized (tcpSession) {
-			tcpSession.remove(s.getRemoteAddress());
-		}
-		trigger(new NetworkConnectionRefused(s.getRemoteAddress(),
-				Transport.TCP), netControl);
-	}
+    final void networkSessionOpened(Channel session) {
+        InetSocketAddress clientSocketAddress = (InetSocketAddress) session
+                .getRemoteAddress();
+        trigger(new NetworkSessionOpened(clientSocketAddress, Transport.TCP),
+                netControl);
+    }
 
-	final void networkException(NetworkException event) {
-		trigger(event, netControl);
-	}
-
-	final void networkSessionClosed(Channel channel) {
-		InetSocketAddress clientSocketAddress = (InetSocketAddress) channel
-				.getRemoteAddress();
-		synchronized (tcpSession) {
-			tcpSession.remove(clientSocketAddress);
-		}
-
-		trigger(new NetworkSessionClosed(clientSocketAddress, Transport.TCP),
-				netControl);
-	}
-
-	final void networkSessionOpened(Channel session) {
-		InetSocketAddress clientSocketAddress = (InetSocketAddress) session
-				.getRemoteAddress();
-		trigger(new NetworkSessionOpened(clientSocketAddress, Transport.TCP),
-				netControl);
-	}
-
-	private final InetSocketAddress address2SocketAddress(Address address) {
-		return new InetSocketAddress(address.getIp(), address.getPort());
-	}
-
-	Handler<ConnectionStatusRequest> handleStatusReq = new Handler<ConnectionStatusRequest>() {
-		public void handle(ConnectionStatusRequest event) {
-			HashSet<InetSocketAddress> tcp = null;
-			synchronized (tcpSession) {
-				tcp = new HashSet<InetSocketAddress>(tcpSession.keySet());
-			}
-			trigger(new ConnectionStatusResponse(event, tcp,
-					new HashSet<InetSocketAddress>()), netControl);
-		}
-	};
+    private final InetSocketAddress address2SocketAddress(Address address) {
+        return new InetSocketAddress(address.getIp(), address.getPort());
+    }
+    Handler<ConnectionStatusRequest> handleStatusReq = new Handler<ConnectionStatusRequest>() {
+        public void handle(ConnectionStatusRequest event) {
+            HashSet<InetSocketAddress> tcp = null;
+            synchronized (tcpSession) {
+                tcp = new HashSet<InetSocketAddress>(tcpSession.keySet());
+            }
+            trigger(new ConnectionStatusResponse(event, tcp,
+                    new HashSet<InetSocketAddress>()), netControl);
+        }
+    };
 }

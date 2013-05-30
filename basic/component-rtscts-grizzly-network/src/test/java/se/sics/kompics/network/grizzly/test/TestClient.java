@@ -35,7 +35,6 @@ public class TestClient extends ComponentDefinition {
     Address[] servers;
     Address mcast;
     Component grizzly;
-    
     private int[] dataCounter;
 
     public TestClient() throws UnknownHostException {
@@ -45,18 +44,20 @@ public class TestClient extends ComponentDefinition {
             servers[i] = base.newVirtual(i);
         }
 
-        grizzly = create(GrizzlyNetwork.class);
+
+        GrizzlyNetworkInit init = new GrizzlyNetworkInit(c, 2, 0, 0, 2 * 1024, 16 * 1024,
+                Runtime.getRuntime().availableProcessors(),
+                Runtime.getRuntime().availableProcessors(),
+                new ConstantQuotaAllocator(50));
+        grizzly = create(GrizzlyNetwork.class, init);
+        
         subscribe(start, control);
         subscribe(h, grizzly.provided(Network.class));
-        trigger(new GrizzlyNetworkInit(c, 2, 0, 0, 2 * 1024, 16 * 1024,
-                Runtime.getRuntime().availableProcessors(),
-                Runtime.getRuntime().availableProcessors(),
-                new ConstantQuotaAllocator(50)), grizzly.control());
     }
     Handler<Start> start = new Handler<Start>() {
         @Override
         public void handle(Start event) {
-            
+
             dataCounter = new int[servers.length];
             Arrays.fill(dataCounter, 0);
 
@@ -96,18 +97,18 @@ public class TestClient extends ComponentDefinition {
             if (event.getPayload().length > 20) {
                 log.info("Received data #" + event.getSeq() + " with " + event.getPayload().length
                         + " bytes from " + event.getSource());
-                
+
                 byte serverId = event.getSource().getId()[0];
-                dataCounter[serverId] = dataCounter[serverId]+1;
-                
-                if(dataCounter[serverId] == TestServer.DATA_NUM) {
+                dataCounter[serverId] = dataCounter[serverId] + 1;
+
+                if (dataCounter[serverId] == TestServer.DATA_NUM) {
                     log.info("%%%%%%%%%%%%%%%%%%%%%%% \n"
                             + "Got all data from server " + event.getSource() + "\n"
                             + " %%%%%%%%%%%%%%%%%%%%%%% \n");
                 }
-                
+
                 log.info(Arrays.toString(dataCounter));
-                
+
             } else {
                 log.info("Received #" + event.getSeq() + " with " + event.getPayload().length
                         + " bytes: " + new String(event.getPayload()));

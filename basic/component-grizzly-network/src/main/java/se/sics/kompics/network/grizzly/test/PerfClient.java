@@ -51,10 +51,9 @@ public class PerfClient extends ComponentDefinition {
 		System.err.println("Client address is " + c.getIp() + ":" + c.getPort());
 		System.err.println("Pipeline is " + pipeline);
 
-		grizzly = create(GrizzlyNetwork.class);
+		grizzly = create(GrizzlyNetwork.class, new GrizzlyNetworkInit(c));
 		subscribe(start, control);
 		subscribe(h, grizzly.provided(Network.class));
-		trigger(new GrizzlyNetworkInit(c), grizzly.control());
 	}
 
 	Handler<Start> start = new Handler<Start>() {

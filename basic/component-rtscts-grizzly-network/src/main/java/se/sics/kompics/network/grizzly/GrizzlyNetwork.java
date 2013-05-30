@@ -85,8 +85,7 @@ public class GrizzlyNetwork extends ComponentDefinition {
 
     private static final Logger logger = LoggerFactory
             .getLogger(GrizzlyNetwork.class);
-    private static final long FLOW_TIMEOUT = 10*1000; // 10s
-    
+    private static final long FLOW_TIMEOUT = 10 * 1000; // 10s
     /**
      * The "implemented" Network port.
      */
@@ -116,14 +115,13 @@ public class GrizzlyNetwork extends ComponentDefinition {
     private final Queue<RTSMessage> requestQueue = new ConcurrentLinkedQueue<RTSMessage>();
     private final SortedSet<Integer> flowIdPool = new TreeSet<Integer>(); // free flowIds
 //    private final ConcurrentMap<Integer, Long> lastMessage = new ConcurrentSkipListMap<Integer, Long>(); // flowId to ms timestamp
-
     private AtomicIntegerArray flowCounter;
     private AtomicLongArray lastMessage;
-    
+
     /**
      * Instantiates a new Netty network component.
      */
-    public GrizzlyNetwork() {
+    public GrizzlyNetwork(GrizzlyNetworkInit init) {
         filterChainBuilder = FilterChainBuilder.stateless();
 
         tcpSession = new HashMap<InetSocketAddress, GrizzlySession>();
@@ -133,111 +131,100 @@ public class GrizzlyNetwork extends ComponentDefinition {
         lowPrioritySendersPool = Executors.newSingleThreadExecutor(
                 new SenderThreadFactory());
 
-        subscribe(handleInit, control);
+
         subscribe(handleMessage, net);
         subscribe(handleData, net);
         subscribe(handleRTS, net);
 
         subscribe(handleStatusReq, netControl);
-    }
-    /**
-     * The handle init.
-     */
-    Handler<GrizzlyNetworkInit> handleInit = new Handler<GrizzlyNetworkInit>() {
-        @Override
-        public void handle(final GrizzlyNetworkInit init) {
 
-            self = init.getSelf();
+        subscribe(startHandler, control);
+        subscribe(stopHandler, control);
+        
+        // INIT
 
-            connectRetries = init.getConnectRetries();
-            localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
-                    init.getSelf().getPort());
+        self = init.getSelf();
 
-            //incomingFlows = new Address[init.getNumberOfChannels()];
-            for (int i = 0; i < init.getNumberOfChannels(); i++) {
-                flowIdPool.add(i);
-            }
-            qAlloc = init.getAllocator();
-            
-            
-            int[] ints = new int[init.getNumberOfChannels()];
-            Arrays.fill(ints, 0);
-            long[] longs = new long[init.getNumberOfChannels()];
-            Arrays.fill(ints, -1);
-            flowCounter = new AtomicIntegerArray(ints);
-            lastMessage = new AtomicLongArray(longs);
+        connectRetries = init.getConnectRetries();
+        localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
+                init.getSelf().getPort());
 
-            boolean compress = init.getCompressionLevel() != 0;
-            int initialBufferCapacity = init.getInitialBufferCapacity();
-            int maxBufferCapacity = init.getMaxBufferCapacity();
-            int workerCount = init.getWorkerCount();
-
-            filterChainBuilder.add(new TransportFilter());
-            // filterChainBuilder.add(new ProtostuffSerializationFilter());
-            filterChainBuilder.add(new KryoSerializationFilter(compress,
-                    initialBufferCapacity, maxBufferCapacity));
-            // filterChainBuilder.add(new JavaSerializationFilter());
-            filterChainBuilder.add(tcpHandler);
-
-            builder = TCPNIOTransportBuilder.newInstance();
-
-            final ThreadPoolConfig config = ThreadPoolConfig.defaultConfig();
-            config.setCorePoolSize(workerCount).setMaxPoolSize(workerCount)
-                    .setQueueLimit(-1);
-
-            builder.setIOStrategy(SameThreadIOStrategy.getInstance())
-                    // .setIOStrategy(WorkerThreadIOStrategy.getInstance())
-                    // .setIOStrategy(SimpleDynamicNIOStrategy.getInstance())
-                    // .setIOStrategy(LeaderFollowerNIOStrategy.getInstance())
-                    .setKeepAlive(true).setReuseAddress(true)
-                    .setTcpNoDelay(true);
-
-            transport = builder.build();
-
-            transport.setProcessor(filterChainBuilder.build());
-            transport.setConnectionTimeout(5000);
-            transport.setReuseAddress(true);
-            transport.setKeepAlive(true);
-            transport.setTcpNoDelay(true);
-
-            transport.setSelectorRunnersCount(init.getSelectorCount());
-            transport.setWorkerThreadPoolConfig(config);
-
-            // final GrizzlyJmxManager manager = GrizzlyJmxManager.instance();
-            // JmxObject jmxTransportObject = transport.getMonitoringConfig()
-            // .createManagementObject();
-            // manager.registerAtRoot(jmxTransportObject, "GrizzlyTransport");
-
-            
+        //incomingFlows = new Address[init.getNumberOfChannels()];
+        for (int i = 0; i < init.getNumberOfChannels(); i++) {
+            flowIdPool.add(i);
         }
-    };
-    Handler<Start> startHandler = new Handler<Start>() {
+        qAlloc = init.getAllocator();
 
+
+        int[] ints = new int[init.getNumberOfChannels()];
+        Arrays.fill(ints, 0);
+        long[] longs = new long[init.getNumberOfChannels()];
+        Arrays.fill(ints, -1);
+        flowCounter = new AtomicIntegerArray(ints);
+        lastMessage = new AtomicLongArray(longs);
+
+        boolean compress = init.getCompressionLevel() != 0;
+        int initialBufferCapacity = init.getInitialBufferCapacity();
+        int maxBufferCapacity = init.getMaxBufferCapacity();
+        int workerCount = init.getWorkerCount();
+
+        filterChainBuilder.add(new TransportFilter());
+        // filterChainBuilder.add(new ProtostuffSerializationFilter());
+        filterChainBuilder.add(new KryoSerializationFilter(compress,
+                initialBufferCapacity, maxBufferCapacity));
+        // filterChainBuilder.add(new JavaSerializationFilter());
+        filterChainBuilder.add(tcpHandler);
+
+        builder = TCPNIOTransportBuilder.newInstance();
+
+        final ThreadPoolConfig config = ThreadPoolConfig.defaultConfig();
+        config.setCorePoolSize(workerCount).setMaxPoolSize(workerCount)
+                .setQueueLimit(-1);
+
+        builder.setIOStrategy(SameThreadIOStrategy.getInstance())
+                // .setIOStrategy(WorkerThreadIOStrategy.getInstance())
+                // .setIOStrategy(SimpleDynamicNIOStrategy.getInstance())
+                // .setIOStrategy(LeaderFollowerNIOStrategy.getInstance())
+                .setKeepAlive(true).setReuseAddress(true)
+                .setTcpNoDelay(true);
+
+        transport = builder.build();
+
+        transport.setProcessor(filterChainBuilder.build());
+        transport.setConnectionTimeout(5000);
+        transport.setReuseAddress(true);
+        transport.setKeepAlive(true);
+        transport.setTcpNoDelay(true);
+
+        transport.setSelectorRunnersCount(init.getSelectorCount());
+        transport.setWorkerThreadPoolConfig(config);
+    }
+    Handler<Start> startHandler = new Handler<Start>() {
         @Override
         public void handle(Start event) {
             try {
                 transport.bind(localSocketAddress);
                 transport.start();
+                logger.debug("Bound to port {}", localSocketAddress.toString());
             } catch (IOException e) {
                 throw new RuntimeException("Grizzly cannot bind/start port", e);
             }
         }
     };
-    
     Handler<Stop> stopHandler = new Handler<Stop>() {
-
         @Override
         public void handle(Stop event) {
             try {
+                
                 transport.stop();
                 transport.unbindAll();
+                transport = null;
+                logger.debug("All ports unbound.");
             } catch (IOException e) {
-                throw new RuntimeException("Grizzly cannot bind/start port", e);
+                throw new RuntimeException("Grizzly cannot stop port", e);
             }
         }
-        
     };
-    
     /**
      * The handle message.
      */
@@ -265,7 +252,7 @@ public class GrizzlyNetwork extends ComponentDefinition {
             int reqId = event.getRequestId();
             boolean send = false;
             boolean extend = false;
-            
+
             outgoingLock.writeLock().lock();
             try {
                 int remQuota = outgoingRemainingQuota.get(reqId);
@@ -372,7 +359,7 @@ public class GrizzlyNetwork extends ComponentDefinition {
             GrizzlyListener.delivered(message);
             return;
         }
-        
+
         if (message instanceof FinalMessage) {
             handleFinal((FinalMessage) message);
             GrizzlyListener.delivered(message);
@@ -386,7 +373,7 @@ public class GrizzlyNetwork extends ComponentDefinition {
         trigger(message, net);
 
         GrizzlyListener.delivered(message);
-        
+
         int flowId = message.getFlowId();
         if (flowId >= 0) {
             lastMessage.set(flowId, System.currentTimeMillis());
@@ -394,27 +381,27 @@ public class GrizzlyNetwork extends ComponentDefinition {
             if (rem <= 0) {
                 logger.debug("Flow {} exhausted quota. Reallocating.", flowId);
                 lastMessage.set(flowId, -1);
-                synchronized(flowIdPool) {
+                synchronized (flowIdPool) {
                     flowIdPool.add(flowId);
                     checkFlowPool(); // Don't acquire lock twice
                 }
             }
         }
     }
-    
+
     private void handleFinal(FinalMessage message) {
         logger.debug(
                 "Handling FinalMessage from {} to {} reqId={}.",
                 new Object[]{message.toString(), message.getSource(),
                     message.getDestination(), message.requestId});
-        
+
         lastMessage.set(message.flowId, -1);
-        synchronized(flowIdPool) {
-            flowIdPool.add(message.flowId); 
+        synchronized (flowIdPool) {
+            flowIdPool.add(message.flowId);
             // Maybe add some sanity checking if misbehaving nodes are expected
             checkFlowPool();
         }
-        
+
         qAlloc.endFlow(message.requestId, message.getSource());
     }
 
@@ -473,10 +460,10 @@ public class GrizzlyNetwork extends ComponentDefinition {
                 lastMessage.set(i, -1);
             }
         }
-        
+
         synchronized (flowIdPool) {
             flowIdPool.addAll(timeoutedIds);
-            
+
             // ASSIGNMENT
             while (!flowIdPool.isEmpty()) {
                 RTSMessage rtsm = requestQueue.poll(); // This doesn't use locking so no deadlock possibility

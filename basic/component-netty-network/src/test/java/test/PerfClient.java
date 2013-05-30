@@ -29,10 +29,9 @@ public class PerfClient extends ComponentDefinition {
 	int pipeline = 20;
 	
 	public PerfClient() throws UnknownHostException {
-		grizzly = create(NettyNetwork.class);
+		grizzly = create(NettyNetwork.class, new NettyNetworkInit(c, 3, 0));
 		subscribe(start, control);
 		subscribe(h, grizzly.provided(Network.class));
-		trigger(new NettyNetworkInit(c, 3, 0), grizzly.control());
 	}
 
 	Handler<Start> start = new Handler<Start>() {

@@ -15,30 +15,28 @@ import se.sics.kompics.network.mina.MinaNetworkInit;
 
 public class KompicsMulticastServer extends ComponentDefinition {
 
-	public static void main(String[] args) {
-		Kompics.createAndStart(KompicsMulticastServer.class);
-	}
+    public static void main(String[] args) {
+        Kompics.createAndStart(KompicsMulticastServer.class);
+    }
+    Component mina;
 
-	Component mina;
+    public KompicsMulticastServer() throws UnknownHostException {
+        Address self = new Address(InetAddress.getLocalHost(), 2222, 0);
+        
+        mina = create(MinaNetwork.class, new MinaNetworkInit(self, 1, 3344));
+        subscribe(h, mina.provided(Network.class));
 
-	public KompicsMulticastServer() throws UnknownHostException {
-		mina = create(MinaNetwork.class);
-		subscribe(h, mina.provided(Network.class));
 
-		Address self = new Address(InetAddress.getLocalHost(), 2222, 0);
-		trigger(new MinaNetworkInit(self, 1, 3344), mina.control());
+        InetAddress multicastGroup = InetAddress.getByName("239.240.241.242");
+        trigger(new JoinMulticastGroup(self, multicastGroup), mina
+                .provided(Network.class));
 
-		InetAddress multicastGroup = InetAddress.getByName("239.240.241.242");
-		trigger(new JoinMulticastGroup(self, multicastGroup), mina
-				.provided(Network.class));
-		
-		System.out.println("Joined...");
-	}
-
-	Handler<TestMulticastMessage> h = new Handler<TestMulticastMessage>() {
-		public void handle(TestMulticastMessage event) {
-			System.err.println("Received " + event.getPayload().length
-					+ " bytes " + new String(event.getPayload()));
-		}
-	};
+        System.out.println("Joined...");
+    }
+    Handler<TestMulticastMessage> h = new Handler<TestMulticastMessage>() {
+        public void handle(TestMulticastMessage event) {
+            System.err.println("Received " + event.getPayload().length
+                    + " bytes " + new String(event.getPayload()));
+        }
+    };
 }

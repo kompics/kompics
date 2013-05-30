@@ -29,7 +29,7 @@ import se.sics.kompics.address.Address;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public class GrizzlyNetworkInit extends Init {
+public class GrizzlyNetworkInit extends Init<GrizzlyNetwork> {
 
 	/** The self. */
 	private final Address self;

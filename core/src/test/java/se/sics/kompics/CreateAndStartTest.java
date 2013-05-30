@@ -67,7 +67,7 @@ public class CreateAndStartTest {
 	private static class TestRoot1 extends ComponentDefinition {
 		public TestRoot1() {
 			root1Created = true;
-			create(TestComponent1.class);
+			create(TestComponent1.class, Init.NONE);
 		}
 	}
 
@@ -146,7 +146,7 @@ public class CreateAndStartTest {
 		public TestRoot3() {
 			root3Created = true;
 
-			create(TestComponent3.class);
+			create(TestComponent3.class, Init.NONE);
 
 			subscribe(startHandler, control);
 		}

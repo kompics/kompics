@@ -33,6 +33,7 @@ import se.sics.kompics.Event;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.PortType;
+import se.sics.kompics.Start;
 import se.sics.kompics.network.Message;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.model.common.NetworkModel;
@@ -81,19 +82,24 @@ public final class P2pOrchestrator extends ComponentDefinition {
     private final HashMap<UUID, PeriodicTimerSignalTask> activePeriodicTimers;
     private final java.util.Timer javaTimer;
 
-    public P2pOrchestrator() {
+    public P2pOrchestrator(P2pOrchestratorInit init) {
         activeTimers = new HashMap<UUID, TimerSignalTask>();
         activePeriodicTimers = new HashMap<UUID, PeriodicTimerSignalTask>();
         javaTimer = new java.util.Timer("JavaTimer@"
                 + Integer.toHexString(this.hashCode()));
         thisOrchestrator = this;
 
-        subscribe(handleInit, control);
+        subscribe(handleStart, control);
         subscribe(handleMessage, network);
         subscribe(handleST, timer);
         subscribe(handleSPT, timer);
         subscribe(handleCT, timer);
         subscribe(handleCPT, timer);
+
+        // INIT
+        scenario = init.getScenario();
+        random = scenario.getRandom();
+        networkModel = init.getNetworkModel();
     }
 
     private String pName(SimulatorEvent event) {
@@ -236,12 +242,10 @@ public final class P2pOrchestrator extends ComponentDefinition {
      * called, as it may immediately start generating events that would otherwise
      * just get dropped.
      */
-    Handler<P2pOrchestratorInit> handleInit = new Handler<P2pOrchestratorInit>() {
-        public void handle(P2pOrchestratorInit init) {
+    Handler<Start> handleStart = new Handler<Start>() {
+        public void handle(Start init) {
             logger.info("Orchestration started");
-            scenario = init.getScenario();
-            random = scenario.getRandom();
-            networkModel = init.getNetworkModel();
+
             // generate initial future events from the scenario
             LinkedList<SimulatorEvent> events = scenario.generateEventList();
             for (SimulatorEvent simulatorEvent : events) {

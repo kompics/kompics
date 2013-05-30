@@ -233,12 +233,6 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
                     + eventType.getCanonicalName() + " events.");
         }
 
-        if (isControlPort && Init.class.isAssignableFrom(eventType)) {
-            // we are dealing with a subscription for an Init event on a control
-            // port. Mark that the owner component needs to handle Init first.
-            owner.initSubscriptionInConstructor = true;
-        }
-
         rwLock.writeLock().lock();
         try {
             if (subs == null) {
@@ -322,7 +316,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     // TODO optimize trigger/subscribe
     @Override
     public void doTrigger(Event event, int wid, ChannelCore<?> channel) {
-//		System.out.println(this.getClass()+": "+event+" triggert from "+channel);
+		//System.out.println(this.getClass()+": "+event+" triggert from "+channel);
         if (event instanceof Request) {
             Request request = (Request) event;
             request.pushPathElement(channel);
@@ -332,7 +326,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     @Override
     public void doTrigger(Event event, int wid, ComponentCore component) {
-//		System.out.println(this.getClass()+": "+event+" triggert from "+component);
+		//System.out.println(this.getClass()+": "+event+" triggert from "+component);
         if (event instanceof Request) {
             Request request = (Request) event;
             request.pushPathElement(component);
@@ -440,26 +434,25 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     // deliver event to the local component (called holding read lock)
     private boolean deliverToSubscribers(Event event, int wid,
             Class<? extends Event> eventType) {
-//		System.out.print(event+" trying to deliver to subscribers...");
+		//System.out.print(event+" trying to deliver to subscribers...");
         if (subs == null) {
-//			System.out.println("failed");
+			//System.out.println("failed");
             return false;
         }
         for (Class<? extends Event> eType : subs.keySet()) {
             if (eType.isAssignableFrom(eventType)) {
                 // there is at least one subscription
                 doDeliver(event, wid);
-//				System.out.println("succeeded");
+				//System.out.println("succeeded");
                 return true;
             }
         }
-//		System.out.println("failed");
+		//System.out.println("failed");
         return false;
     }
 
     private void doDeliver(Event event, int wid) {
-        owner.eventReceived(this, event, wid, isControlPort
-                && event instanceof Init);
+        owner.eventReceived(this, event, wid);
     }
 
     @Override

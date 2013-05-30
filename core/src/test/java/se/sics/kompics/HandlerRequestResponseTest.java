@@ -32,7 +32,7 @@ public class HandlerRequestResponseTest {
 
 	static class TestRoot1 extends ComponentDefinition {
 		public TestRoot1() {
-			Component component1 = create(TestComponent1.class);
+			Component component1 = create(TestComponent1.class, Init.NONE);
 
 			subscribe(testResponse, component1.getPositive(TestPort.class));
 
@@ -55,7 +55,7 @@ public class HandlerRequestResponseTest {
 		Component child;
 
 		public TestComponent1() {
-			child = create(TestComponent2.class);
+			child = create(TestComponent2.class, Init.NONE);
 
 			subscribe(testRequest, testPort);
 			subscribe(testResponse, child.getPositive(TestPort.class));

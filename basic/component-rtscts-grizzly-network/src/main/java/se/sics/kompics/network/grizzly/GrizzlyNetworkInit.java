@@ -30,7 +30,7 @@ import se.sics.kompics.address.Address;
  * @author Lars Kroll <lkroll@sics.se>
  * @version $Id: GrizzlyNetworkInit.java 4050 2012-03-30 14:32:18Z Cosmin $
  */
-public class GrizzlyNetworkInit extends Init {
+public class GrizzlyNetworkInit extends Init<GrizzlyNetwork> {
 
 	/** The self. */
 	private final Address self;

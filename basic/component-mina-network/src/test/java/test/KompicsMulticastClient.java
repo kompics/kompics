@@ -26,11 +26,9 @@ public class KompicsMulticastClient extends ComponentDefinition {
 	Component mina;
 
 	public KompicsMulticastClient() throws UnknownHostException {
-		mina = create(MinaNetwork.class);
+		mina = create(MinaNetwork.class, new MinaNetworkInit(client));
 
 		subscribe(start, control);
-
-		trigger(new MinaNetworkInit(client), mina.control());
 	}
 
 	Handler<Start> start = new Handler<Start>() {

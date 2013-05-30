@@ -72,11 +72,7 @@ public final class ChordSimulationMain extends ComponentDefinition {
 	public ChordSimulationMain() throws IOException {
 		P2pSimulator.setSimulationPortType(ChordExperiment.class);
 
-		// create
-		Component p2pSimulator = create(P2pSimulator.class);
-		Component bootstrapServer = create(BootstrapServer.class);
-		Component monitorServer = create(ChordMonitorServer.class);
-		Component chordSimulator = create(ChordSimulator.class);
+		
 
 		// loading component configurations
 		final BootstrapConfiguration bootConfiguration = BootstrapConfiguration
@@ -90,15 +86,14 @@ public final class ChordSimulationMain extends ComponentDefinition {
 		final NetworkConfiguration networkConfiguration = NetworkConfiguration
 				.load(System.getProperty("network.configuration"));
 
-		trigger(new P2pSimulatorInit(simulatorScheduler, scenario,
-				new KingLatencyMap()), p2pSimulator.getControl());
-		trigger(new BootstrapServerInit(bootConfiguration), bootstrapServer
-				.getControl());
-		trigger(new ChordMonitorServerInit(monitorConfiguration), monitorServer
-				.getControl());
-		trigger(new ChordSimulatorInit(bootConfiguration, monitorConfiguration,
+				// create
+		Component p2pSimulator = create(P2pSimulator.class, new P2pSimulatorInit(simulatorScheduler, scenario,
+				new KingLatencyMap()));
+		Component bootstrapServer = create(BootstrapServer.class, new BootstrapServerInit(bootConfiguration));
+		Component monitorServer = create(ChordMonitorServer.class, new ChordMonitorServerInit(monitorConfiguration));
+		Component chordSimulator = create(ChordSimulator.class, new ChordSimulatorInit(bootConfiguration, monitorConfiguration,
 				chordConfiguration, fdConfiguration, networkConfiguration
-						.getAddress()), chordSimulator.getControl());
+						.getAddress()));
 
 		final class MessageDestinationFilter extends
 				ChannelFilter<Message, Address> {

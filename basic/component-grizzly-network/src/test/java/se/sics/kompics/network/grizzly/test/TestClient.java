@@ -19,60 +19,54 @@ import se.sics.kompics.network.grizzly.kryo.KryoMessage;
 
 public class TestClient extends ComponentDefinition {
 
-	public static void main(String[] args) {
-		KryoMessage.register(TestMessage.class);
-		
-		Kompics.createAndStart(TestClient.class);
-	}
+    public static void main(String[] args) {
+        KryoMessage.register(TestMessage.class);
 
-	Address c = new Address(InetAddress.getLocalHost(), 3333, 0);
-	Address s = new Address(InetAddress.getLocalHost(), 2222, 0);
-	Address mcast;
+        Kompics.createAndStart(TestClient.class);
+    }
+    Address c = new Address(InetAddress.getLocalHost(), 3333, 0);
+    Address s = new Address(InetAddress.getLocalHost(), 2222, 0);
+    Address mcast;
+    Component grizzly;
 
-	Component grizzly;
+    public TestClient() throws UnknownHostException {
+        grizzly = create(GrizzlyNetwork.class, new GrizzlyNetworkInit(c));
+        subscribe(start, control);
+        subscribe(h, grizzly.provided(Network.class));
+    }
+    Handler<Start> start = new Handler<Start>() {
+        public void handle(Start event) {
 
-	public TestClient() throws UnknownHostException {
-		grizzly = create(GrizzlyNetwork.class);
-		subscribe(start, control);
-		subscribe(h, grizzly.provided(Network.class));
-		trigger(new GrizzlyNetworkInit(c), grizzly.control());
-	}
+            String message = "Hello!!";
 
-	Handler<Start> start = new Handler<Start>() {
-		public void handle(Start event) {
+            TestMessage tm = new TestMessage(c, s, message.getBytes());
 
-			String message = "Hello!!";
+            trigger(tm, grizzly.provided(Network.class));
 
-			TestMessage tm = new TestMessage(c, s, message.getBytes());
+            try {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ObjectOutputStream oos;
+                oos = new ObjectOutputStream(baos);
+                oos.writeObject(tm);
+                oos.flush();
+                oos.close();
 
-			trigger(tm, grizzly.provided(Network.class));
+                byte[] buf = baos.toByteArray();
 
-			try {
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				ObjectOutputStream oos;
-				oos = new ObjectOutputStream(baos);
-				oos.writeObject(tm);
-				oos.flush();
-				oos.close();
+                System.err.println("Sent " + tm + " in " + buf.length
+                        + " bytes [" + new String(buf) + "]");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    Handler<TestMessage> h = new Handler<TestMessage>() {
+        public void handle(TestMessage event) {
+            System.err.println("Received " + event.getPayload().length
+                    + " bytes " + new String(event.getPayload()));
 
-				byte[] buf = baos.toByteArray();
-
-				System.err.println("Sent " + tm + " in " + buf.length
-						+ " bytes [" + new String(buf) + "]");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	};
-
-	Handler<TestMessage> h = new Handler<TestMessage>() {
-		public void handle(TestMessage event) {
-			System.err.println("Received " + event.getPayload().length
-					+ " bytes " + new String(event.getPayload()));
-
-			trigger(new TestMessage(event.getDestination(), event.getSource(),
-					"Hello".getBytes()), grizzly.provided(Network.class));
-		}
-	};
-
+            trigger(new TestMessage(event.getDestination(), event.getSource(),
+                    "Hello".getBytes()), grizzly.provided(Network.class));
+        }
+    };
 }

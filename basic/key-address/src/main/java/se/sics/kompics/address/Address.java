@@ -120,9 +120,18 @@ public final class Address implements Serializable, Comparable<Address> {
     public final int hashCode() {
         final int prime = 31;
         int result;
-        result = prime + id.hashCode();
-        result = prime * result + ((ip == null) ? 0 : ip.hashCode());
+        result = prime + ((id == null) ? 0 : byteHashCode(id));
+        result = prime * result + ((ip == null) ? 0 : byteHashCode(ip.getAddress()));
         result = prime * result + port;
+        return result;
+    }
+    
+    private int byteHashCode(byte[] bytes) {
+        final int prime = 47;
+        int result = prime;
+        for (int i = 0; i < bytes.length; i++) {
+            result = prime*result + bytes[i];
+        }
         return result;
     }
 
@@ -174,6 +183,18 @@ public final class Address implements Serializable, Comparable<Address> {
             return this.port - that.port;
         }
 
+        if ((this.id == null) && (that.id == null)) {
+            return 0;
+        }
+        
+        if (this.id == null) {
+            return -1;
+        }
+        
+        if (that.id == null) {
+            return 1;
+        }
+        
         return byteLexComp.compare(id, that.id);
     }
     private static Comparator<byte[]> byteLexComp = UnsignedBytes.lexicographicalComparator();

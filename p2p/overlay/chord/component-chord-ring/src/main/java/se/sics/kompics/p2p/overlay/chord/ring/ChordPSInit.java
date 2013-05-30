@@ -29,7 +29,7 @@ import se.sics.kompics.p2p.overlay.chord.ChordAddress;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public final class ChordPSInit extends Init {
+public final class ChordPSInit extends Init<ChordPS> {
 
 	private final int successorListLength;
 	private final int log2RingSize;

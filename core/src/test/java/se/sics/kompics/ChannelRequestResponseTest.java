@@ -6,92 +6,96 @@ import org.junit.Test;
 
 public class ChannelRequestResponseTest {
 
-	static class TestRequest extends Request {
-		final int id;
+    static class TestRequest extends Request {
 
-		public TestRequest(int id) {
-			this.id = id;
-		}
-	}
+        final int id;
 
-	static class TestResponse extends Response {
-		final int id;
+        public TestRequest(int id) {
+            this.id = id;
+        }
+    }
 
-		public TestResponse(TestRequest request, int id) {
-			super(request);
-			this.id = id;
-		}
-	}
+    static class TestResponse extends Response {
 
-	static class TestPort extends PortType {
-		{
-			negative(TestRequest.class);
-			positive(TestResponse.class);
-		}
-	}
+        final int id;
 
-	static class TestRoot1 extends ComponentDefinition {
-		public TestRoot1() {
-			Component component1 = create(TestComponent1.class);
+        public TestResponse(TestRequest request, int id) {
+            super(request);
+            this.id = id;
+        }
+    }
 
-			subscribe(testResponse, component1.getPositive(TestPort.class));
+    static class TestPort extends PortType {
 
-			TestRequest request = new TestRequest(12);
-			// System.err.println("Root triggered request " + request.id);
+        {
+            negative(TestRequest.class);
+            positive(TestResponse.class);
+        }
+    }
 
-			trigger(request, component1.getPositive(TestPort.class));
-		}
+    static class TestRoot1 extends ComponentDefinition {
 
-		Handler<TestResponse> testResponse = new Handler<TestResponse>() {
-			public void handle(TestResponse event) {
-				// System.err.println("Root got response " + event.id);
-				semaphore.release(1);
-			}
-		};
-	}
+        public TestRoot1() {
+            Component component1 = create(TestComponent1.class, Init.NONE);
 
-	static class TestComponent1 extends ComponentDefinition {
-		Negative<TestPort> testPort = negative(TestPort.class);
-		Component child;
+            subscribe(testResponse, component1.getPositive(TestPort.class));
 
-		public TestComponent1() {
-			child = create(TestComponent2.class);
+            TestRequest request = new TestRequest(12);
+            // System.err.println("Root triggered request " + request.id);
 
-			connect(testPort, child.getPositive(TestPort.class));
+            trigger(request, component1.getPositive(TestPort.class));
+        }
+        Handler<TestResponse> testResponse = new Handler<TestResponse>() {
+            public void handle(TestResponse event) {
+                // System.err.println("Root got response " + event.id);
+                semaphore.release(1);
+            }
+        };
+    }
 
-			//trigger(new TestRequest(13), child.getPositive(TestPort.class));
-		}
-	}
+    static class TestComponent1 extends ComponentDefinition {
 
-	static class TestComponent2 extends ComponentDefinition {
-		Negative<TestPort> testPort = negative(TestPort.class);
+        Negative<TestPort> testPort = negative(TestPort.class);
+        Component child;
 
-		public TestComponent2() {
-			subscribe(testRequest, testPort);
-		}
+        public TestComponent1() {
+            child = create(TestComponent2.class, Init.NONE);
 
-		Handler<TestRequest> testRequest = new Handler<TestRequest>() {
-			public void handle(TestRequest event) {
+            connect(testPort, child.getPositive(TestPort.class));
 
-				// System.err.println("Handling request " + event.id);
+            //trigger(new TestRequest(13), child.getPositive(TestPort.class));
+        }
+    }
 
-				TestResponse response = new TestResponse(event, event.id);
-				trigger(response, testPort);
-			}
-		};
-	}
+    static class TestComponent2 extends ComponentDefinition {
 
-	private static final int EVENT_COUNT = 1;
-	private static Semaphore semaphore;
+        Negative<TestPort> testPort = negative(TestPort.class);
 
-	@Test
-	public void testHandlerRequestResponse() throws Exception {
-		semaphore = new Semaphore(0);
+        public TestComponent2() {
+            subscribe(testRequest, testPort);
+        }
+        Handler<TestRequest> testRequest = new Handler<TestRequest>() {
+            @Override
+            public void handle(TestRequest event) {
 
-		Kompics.createAndStart(TestRoot1.class, 1);
+                // System.err.println("Handling request " + event.id);
 
-		semaphore.acquire(EVENT_COUNT);
+                TestResponse response = new TestResponse(event, event.id);
+                trigger(response, testPort);
+            }
+        };
+    }
+    private static final int EVENT_COUNT = 1;
+    private static Semaphore semaphore;
 
-		Kompics.shutdown();
-	}
+    @Test
+    public void testHandlerRequestResponse() throws Exception {
+        semaphore = new Semaphore(0);
+
+        Kompics.createAndStart(TestRoot1.class, 1);
+
+        semaphore.acquire(EVENT_COUNT);
+
+        Kompics.shutdown();
+    }
 }

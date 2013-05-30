@@ -42,9 +42,6 @@ public abstract class ComponentCore implements Component {
     public static ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
     protected List<ComponentCore> children;
     protected Scheduler scheduler;
-    public boolean initSubscriptionInConstructor;
-    public AtomicBoolean initDone, initReceived;
-    protected AtomicReference<Event> firstInitEvent;
     protected int wid;
 
     public ComponentCore getParent() {
@@ -111,7 +108,7 @@ public abstract class ComponentCore implements Component {
         children.remove(child);
     }
 
-    public abstract Component doCreate(Class<? extends ComponentDefinition> definition);
+    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent);
 
     public abstract <P extends PortType> Negative<P> createNegativePort(Class<P> portType);
 
@@ -129,28 +126,8 @@ public abstract class ComponentCore implements Component {
         this.scheduler = scheduler;
     }
 
-    public void eventReceived(PortCore<?> port, Event event, int wid,
-            boolean isInitEvent) {
-        // upon the first event received, we schedule the component. However, if
-        // the component needs to execute an Init event first, we don't schedule
-        // the component until it receives and handles an Init event.
-        if (!initDone.get()) {
-            // init is not yet done. we only schedule this component for
-            // execution if the received event is an Init event
-            if (isInitEvent) {
-                if (initReceived.compareAndSet(false, true)) {
-                    // for first Init received, schedule component directly
-                    firstInitEvent.set(event);
-                    if (scheduler == null) {
-                        scheduler = Kompics.getScheduler();
-                    }
-                    scheduler.schedule(this, wid);
-                    return;
-                }
-            }
-        }
-
-        // default case
+    public void eventReceived(PortCore<?> port, Event event, int wid) {
+        //System.err.println("Received event " + event + " on " + port.getPortType().portTypeClass + " work " + workCount.get());
         port.enqueue(event);
         readyPorts.offer(port);
         int wc = workCount.getAndIncrement();

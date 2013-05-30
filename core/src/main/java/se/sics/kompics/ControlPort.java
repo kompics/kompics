@@ -32,7 +32,6 @@ public class ControlPort extends PortType {
 		positive(Fault.class);
 		negative(Stop.class);
 		negative(Start.class);
-		negative(Init.class);
                 negative(Stopped.class);
 		negative(Started.class);
 	}

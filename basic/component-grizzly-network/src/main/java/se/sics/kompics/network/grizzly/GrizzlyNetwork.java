@@ -1,22 +1,22 @@
 /**
  * This file is part of the Kompics component model runtime.
- * 
+ *
  * Copyright (C) 2009-2011 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009-2011 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics.network.grizzly;
 
@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
@@ -40,6 +41,8 @@ import org.slf4j.LoggerFactory;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
+import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.ConnectionStatusRequest;
 import se.sics.kompics.network.ConnectionStatusResponse;
@@ -54,207 +57,223 @@ import se.sics.kompics.network.Transport;
 import se.sics.kompics.network.grizzly.kryo.KryoSerializationFilter;
 
 /**
- * The <code>GrizzlyNetwork</code> class.
- * 
+ * The
+ * <code>GrizzlyNetwork</code> class.
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
 public class GrizzlyNetwork extends ComponentDefinition {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(GrizzlyNetwork.class);
+    private static final Logger logger = LoggerFactory
+            .getLogger(GrizzlyNetwork.class);
+    /**
+     * The "implemented" Network port.
+     */
+    Negative<Network> net = negative(Network.class);
+    /**
+     * The "implemented" NetworkControl port.
+     */
+    Negative<NetworkControl> netControl = negative(NetworkControl.class);
+    private FilterChainBuilder filterChainBuilder;
+    private TCPNIOTransportBuilder builder;
+    private TCPNIOTransport transport;
+    private HashMap<InetSocketAddress, GrizzlySession> tcpSession;
+    private GrizzlyHandler tcpHandler;
+    private InetSocketAddress localSocketAddress;
+    int connectRetries;
+    ExecutorService sendersPool;
+    ExecutorService lowPrioritySendersPool;
 
-	/** The "implemented" Network port. */
-	Negative<Network> net = negative(Network.class);
+    /**
+     * Instantiates a new Netty network component.
+     */
+    public GrizzlyNetwork(GrizzlyNetworkInit init) {
+        filterChainBuilder = FilterChainBuilder.stateless();
 
-	/** The "implemented" NetworkControl port. */
-	Negative<NetworkControl> netControl = negative(NetworkControl.class);
+        tcpSession = new HashMap<InetSocketAddress, GrizzlySession>();
+        tcpHandler = new GrizzlyHandler(this, Transport.TCP);
 
-	private FilterChainBuilder filterChainBuilder;
-	private TCPNIOTransportBuilder builder;
-	private TCPNIOTransport transport;
+        sendersPool = Executors.newCachedThreadPool(new SenderThreadFactory());
+        lowPrioritySendersPool = Executors.newSingleThreadExecutor(
+                new SenderThreadFactory());
 
-	private HashMap<InetSocketAddress, GrizzlySession> tcpSession;
-	private GrizzlyHandler tcpHandler;
-	private InetSocketAddress localSocketAddress;
-	int connectRetries;
-	ExecutorService sendersPool;
-	ExecutorService lowPrioritySendersPool;
+        subscribe(handleMessage, net);
 
-	/**
-	 * Instantiates a new Netty network component.
-	 */
-	public GrizzlyNetwork() {
-		filterChainBuilder = FilterChainBuilder.stateless();
+        subscribe(handleStatusReq, netControl);
+        subscribe(startHandler, control);
+        subscribe(stopHandler, control);
 
-		tcpSession = new HashMap<InetSocketAddress, GrizzlySession>();
-		tcpHandler = new GrizzlyHandler(this, Transport.TCP);
+        //INIT
+        connectRetries = init.getConnectRetries();
+        localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
+                init.getSelf().getPort());
 
-		sendersPool = Executors.newCachedThreadPool(new SenderThreadFactory());
-		lowPrioritySendersPool = Executors.newSingleThreadExecutor(
-				new SenderThreadFactory());
+        boolean compress = init.getCompressionLevel() != 0;
+        int initialBufferCapacity = init.getInitialBufferCapacity();
+        int maxBufferCapacity = init.getMaxBufferCapacity();
+        int workerCount = init.getWorkerCount();
 
-		subscribe(handleInit, control);
-		subscribe(handleMessage, net);
+        filterChainBuilder.add(new TransportFilter());
+        // filterChainBuilder.add(new ProtostuffSerializationFilter());
+        filterChainBuilder.add(new KryoSerializationFilter(compress,
+                initialBufferCapacity, maxBufferCapacity));
+        // filterChainBuilder.add(new JavaSerializationFilter());
+        filterChainBuilder.add(tcpHandler);
 
-		subscribe(handleStatusReq, netControl);
-	}
+        builder = TCPNIOTransportBuilder.newInstance();
 
-	/** The handle init. */
-	Handler<GrizzlyNetworkInit> handleInit = new Handler<GrizzlyNetworkInit>() {
-		public void handle(final GrizzlyNetworkInit init) {
-			connectRetries = init.getConnectRetries();
-			localSocketAddress = new InetSocketAddress(init.getSelf().getIp(),
-					init.getSelf().getPort());
+        final ThreadPoolConfig config = ThreadPoolConfig.defaultConfig();
+        config.setCorePoolSize(workerCount).setMaxPoolSize(workerCount)
+                .setQueueLimit(-1);
 
-			boolean compress = init.getCompressionLevel() != 0;
-			int initialBufferCapacity = init.getInitialBufferCapacity();
-			int maxBufferCapacity = init.getMaxBufferCapacity();
-			int workerCount = init.getWorkerCount();
+        builder.setIOStrategy(SameThreadIOStrategy.getInstance())
+                // .setIOStrategy(WorkerThreadIOStrategy.getInstance())
+                // .setIOStrategy(SimpleDynamicNIOStrategy.getInstance())
+                // .setIOStrategy(LeaderFollowerNIOStrategy.getInstance())
+                .setKeepAlive(true).setReuseAddress(true)
+                .setTcpNoDelay(true);
 
-			filterChainBuilder.add(new TransportFilter());
-			// filterChainBuilder.add(new ProtostuffSerializationFilter());
-			filterChainBuilder.add(new KryoSerializationFilter(compress,
-					initialBufferCapacity, maxBufferCapacity));
-			// filterChainBuilder.add(new JavaSerializationFilter());
-			filterChainBuilder.add(tcpHandler);
+        transport = builder.build();
 
-			builder = TCPNIOTransportBuilder.newInstance();
+        transport.setProcessor(filterChainBuilder.build());
+        transport.setConnectionTimeout(5000);
+        transport.setReuseAddress(true);
+        transport.setKeepAlive(true);
+        transport.setTcpNoDelay(true);
 
-			final ThreadPoolConfig config = ThreadPoolConfig.defaultConfig();
-			config.setCorePoolSize(workerCount).setMaxPoolSize(workerCount)
-					.setQueueLimit(-1);
+        transport.setSelectorRunnersCount(init.getSelectorCount());
+        transport.setWorkerThreadPoolConfig(config);
 
-			builder.setIOStrategy(SameThreadIOStrategy.getInstance())
-					// .setIOStrategy(WorkerThreadIOStrategy.getInstance())
-					// .setIOStrategy(SimpleDynamicNIOStrategy.getInstance())
-					// .setIOStrategy(LeaderFollowerNIOStrategy.getInstance())
-					.setKeepAlive(true).setReuseAddress(true)
-					.setTcpNoDelay(true);
+        // final GrizzlyJmxManager manager = GrizzlyJmxManager.instance();
+        // JmxObject jmxTransportObject = transport.getMonitoringConfig()
+        // .createManagementObject();
+        // manager.registerAtRoot(jmxTransportObject, "GrizzlyTransport");
 
-			transport = builder.build();
 
-			transport.setProcessor(filterChainBuilder.build());
-			transport.setConnectionTimeout(5000);
-			transport.setReuseAddress(true);
-			transport.setKeepAlive(true);
-			transport.setTcpNoDelay(true);
+    }
+    /**
+     * The handle message.
+     */
+    Handler<Message> handleMessage = new Handler<Message>() {
+        public void handle(Message message) {
+            logger.debug(
+                    "Handling Message {} from {} to {} protocol {}",
+                    new Object[]{message, message.getSource(),
+                        message.getDestination(), message.getProtocol()});
 
-			transport.setSelectorRunnersCount(init.getSelectorCount());
-			transport.setWorkerThreadPoolConfig(config);
+            if (message.getDestination().getIp()
+                    .equals(message.getSource().getIp())
+                    && message.getDestination().getPort() == message
+                    .getSource().getPort()) {
+                // deliver locally
+                trigger(message, net);
+                return;
+            }
 
-			// final GrizzlyJmxManager manager = GrizzlyJmxManager.instance();
-			// JmxObject jmxTransportObject = transport.getMonitoringConfig()
-			// .createManagementObject();
-			// manager.registerAtRoot(jmxTransportObject, "GrizzlyTransport");
+            Transport protocol = message.getProtocol();
+            Address destination = message.getDestination();
 
-			try {
-				transport.bind(localSocketAddress);
-				transport.start();
-			} catch (IOException e) {
-				throw new RuntimeException("Grizzly cannot bind/start port", e);
-			}
-		}
-	};
+            switch (protocol) {
+                case TCP:
+                case UDP:
+                    GrizzlySession tcpSession = getTcpSession(destination);
+                    tcpSession.sendMessage(message);
+                    break;
+            }
+        }
+    };
+    Handler<Start> startHandler = new Handler<Start>() {
+        @Override
+        public void handle(Start event) {
+            try {
+                transport.bind(localSocketAddress);
+                transport.start();
+            } catch (IOException e) {
+                throw new RuntimeException("Grizzly cannot bind/start port", e);
+            }
+        }
+    };
+    Handler<Stop> stopHandler = new Handler<Stop>() {
+        @Override
+        public void handle(Stop event) {
+            try {
+                transport.stop();
+                transport.unbindAll();
+            } catch (IOException ex) {
+                throw new RuntimeException("Grizzly couldn't stop port", ex);
+            }
 
-	/** The handle message. */
-	Handler<Message> handleMessage = new Handler<Message>() {
-		public void handle(Message message) {
-			logger.debug(
-					"Handling Message {} from {} to {} protocol {}",
-					new Object[] { message, message.getSource(),
-							message.getDestination(), message.getProtocol() });
+        }
+    };
 
-			if (message.getDestination().getIp()
-					.equals(message.getSource().getIp())
-					&& message.getDestination().getPort() == message
-							.getSource().getPort()) {
-				// deliver locally
-				trigger(message, net);
-				return;
-			}
+    final void deliverMessage(Message message, Transport protocol) {
+        message.setProtocol(protocol);
+        logger.debug(
+                "Delivering message {} from {} to {} protocol {}",
+                new Object[]{message.toString(), message.getSource(),
+                    message.getDestination(), message.getProtocol()});
 
-			Transport protocol = message.getProtocol();
-			Address destination = message.getDestination();
+        trigger(message, net);
 
-			switch (protocol) {
-			case TCP:
-			case UDP:
-				GrizzlySession tcpSession = getTcpSession(destination);
-				tcpSession.sendMessage(message);
-				break;
-			}
-		}
-	};
+        GrizzlyListener.delivered(message);
+    }
 
-	final void deliverMessage(Message message, Transport protocol) {
-		message.setProtocol(protocol);
-		logger.debug(
-				"Delivering message {} from {} to {} protocol {}",
-				new Object[] { message.toString(), message.getSource(),
-						message.getDestination(), message.getProtocol() });
+    private GrizzlySession getTcpSession(Address destination) {
+        InetSocketAddress socketAddress = address2SocketAddress(destination);
+        synchronized (tcpSession) {
+            GrizzlySession session = tcpSession.get(socketAddress);
+            if (session == null) {
+                session = new GrizzlySession(transport, Transport.TCP,
+                        address2SocketAddress(destination), this);
+                session.connectInit();
+                tcpSession.put(socketAddress, session);
+            }
+            return session;
+        }
+    }
 
-		trigger(message, net);
+    final void dropSession(GrizzlySession s) {
+        synchronized (tcpSession) {
+            tcpSession.remove(s.getRemoteAddress());
+        }
+        trigger(new NetworkConnectionRefused(s.getRemoteAddress(),
+                Transport.TCP), netControl);
+    }
 
-		GrizzlyListener.delivered(message);
-	}
+    final void networkException(NetworkException event) {
+        trigger(event, netControl);
+    }
 
-	private GrizzlySession getTcpSession(Address destination) {
-		InetSocketAddress socketAddress = address2SocketAddress(destination);
-		synchronized (tcpSession) {
-			GrizzlySession session = tcpSession.get(socketAddress);
-			if (session == null) {
-				session = new GrizzlySession(transport, Transport.TCP,
-						address2SocketAddress(destination), this);
-				session.connectInit();
-				tcpSession.put(socketAddress, session);
-			}
-			return session;
-		}
-	}
+    final void networkSessionClosed(Connection<?> channel) {
+        InetSocketAddress clientSocketAddress = (InetSocketAddress) channel
+                .getPeerAddress();
+        synchronized (tcpSession) {
+            tcpSession.remove(clientSocketAddress);
+        }
 
-	final void dropSession(GrizzlySession s) {
-		synchronized (tcpSession) {
-			tcpSession.remove(s.getRemoteAddress());
-		}
-		trigger(new NetworkConnectionRefused(s.getRemoteAddress(),
-				Transport.TCP), netControl);
-	}
+        trigger(new NetworkSessionClosed(clientSocketAddress, Transport.TCP),
+                netControl);
+    }
 
-	final void networkException(NetworkException event) {
-		trigger(event, netControl);
-	}
+    final void networkSessionOpened(Connection<?> session) {
+        InetSocketAddress clientSocketAddress = (InetSocketAddress) session
+                .getPeerAddress();
+        trigger(new NetworkSessionOpened(clientSocketAddress, Transport.TCP),
+                netControl);
+    }
 
-	final void networkSessionClosed(Connection<?> channel) {
-		InetSocketAddress clientSocketAddress = (InetSocketAddress) channel
-				.getPeerAddress();
-		synchronized (tcpSession) {
-			tcpSession.remove(clientSocketAddress);
-		}
-
-		trigger(new NetworkSessionClosed(clientSocketAddress, Transport.TCP),
-				netControl);
-	}
-
-	final void networkSessionOpened(Connection<?> session) {
-		InetSocketAddress clientSocketAddress = (InetSocketAddress) session
-				.getPeerAddress();
-		trigger(new NetworkSessionOpened(clientSocketAddress, Transport.TCP),
-				netControl);
-	}
-
-	private final InetSocketAddress address2SocketAddress(Address address) {
-		return new InetSocketAddress(address.getIp(), address.getPort());
-	}
-
-	Handler<ConnectionStatusRequest> handleStatusReq = new Handler<ConnectionStatusRequest>() {
-		public void handle(ConnectionStatusRequest event) {
-			HashSet<InetSocketAddress> tcp = null;
-			synchronized (tcpSession) {
-				tcp = new HashSet<InetSocketAddress>(tcpSession.keySet());
-			}
-			trigger(new ConnectionStatusResponse(event, tcp,
-					new HashSet<InetSocketAddress>()), netControl);
-		}
-	};
+    private final InetSocketAddress address2SocketAddress(Address address) {
+        return new InetSocketAddress(address.getIp(), address.getPort());
+    }
+    Handler<ConnectionStatusRequest> handleStatusReq = new Handler<ConnectionStatusRequest>() {
+        public void handle(ConnectionStatusRequest event) {
+            HashSet<InetSocketAddress> tcp = null;
+            synchronized (tcpSession) {
+                tcp = new HashSet<InetSocketAddress>(tcpSession.keySet());
+            }
+            trigger(new ConnectionStatusResponse(event, tcp,
+                    new HashSet<InetSocketAddress>()), netControl);
+        }
+    };
 }

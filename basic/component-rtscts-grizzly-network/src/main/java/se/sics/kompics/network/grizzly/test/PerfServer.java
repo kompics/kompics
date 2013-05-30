@@ -17,44 +17,43 @@ import se.sics.kompics.network.grizzly.kryo.KryoMessage;
 
 public class PerfServer extends ComponentDefinition {
 
-	static {
-		PropertyConfigurator.configureAndWatch("log4j.properties");
-	}
+    static {
+        PropertyConfigurator.configureAndWatch("log4j.properties");
+    }
 
-	public static void main(String[] args) {
-		KryoMessage.register(TestMessage.class);
+    public static void main(String[] args) {
+        KryoMessage.register(TestMessage.class);
 
-		Kompics.createAndStart(PerfServer.class);
-	}
+        Kompics.createAndStart(PerfServer.class);
+    }
+    Component grizzly;
+    Address self;
 
-	Component grizzly;
-	Address self;
+    public PerfServer() throws UnknownHostException {
 
-	public PerfServer() throws UnknownHostException {
-		grizzly = create(GrizzlyNetwork.class);
-		subscribe(h, grizzly.provided(Network.class));
 
-		try {
-			String server = System.getProperty("PERF_SERVER");
-			String address[] = server.split(":");
+        try {
+            String server = System.getProperty("PERF_SERVER");
+            String address[] = server.split(":");
 
-			InetAddress ip = InetAddress.getByName(address[0]);
-			int port = Integer.parseInt(address[1]);
+            InetAddress ip = InetAddress.getByName(address[0]);
+            int port = Integer.parseInt(address[1]);
 
-			System.err.println("Server listening on " + ip + ":" + port);
+            System.err.println("Server listening on " + ip + ":" + port);
 
-			self = new Address(ip, port, (byte)0x00);
+            self = new Address(ip, port, (byte) 0x00);
 
-			trigger(new GrizzlyNetworkInit(self, 8), grizzly.control());
-		} catch (Exception e) {
-			throw new RuntimeException("Cannot initialize network", e);
-		}
-	}
 
-	Handler<TestMessage> h = new Handler<TestMessage>() {
-		public void handle(TestMessage event) {
-			trigger(new TestMessage(self, event.getSource(), "World".getBytes()),
-					grizzly.provided(Network.class));
-		}
-	};
+            grizzly = create(GrizzlyNetwork.class, new GrizzlyNetworkInit(self, 8));
+            subscribe(h, grizzly.provided(Network.class));
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot initialize network", e);
+        }
+    }
+    Handler<TestMessage> h = new Handler<TestMessage>() {
+        public void handle(TestMessage event) {
+            trigger(new TestMessage(self, event.getSource(), "World".getBytes()),
+                    grizzly.provided(Network.class));
+        }
+    };
 }

@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
+import se.sics.kompics.Init;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.mina.MinaNetwork;
@@ -73,17 +74,12 @@ public class CyclonMonitorServerMain extends ComponentDefinition {
 				.load(System.getProperty("jetty.web.configuration"));
 
 		// creating components
-		Component bootstrapServer = create(CyclonMonitorServer.class);
-		Component timer = create(JavaTimer.class);
-		Component network = create(MinaNetwork.class);
-		Component web = create(JettyWebServer.class);
+		Component bootstrapServer = create(CyclonMonitorServer.class, new CyclonMonitorServerInit(cyclonMonitorConfiguration));
+		Component timer = create(JavaTimer.class, Init.NONE);
+		Component network = create(MinaNetwork.class, new MinaNetworkInit(cyclonMonitorConfiguration
+				.getMonitorServerAddress(), 5));
+		Component web = create(JettyWebServer.class, new JettyWebServerInit(webConfiguration));
 
-		// initializing components
-		trigger(new CyclonMonitorServerInit(cyclonMonitorConfiguration),
-				bootstrapServer.getControl());
-		trigger(new MinaNetworkInit(cyclonMonitorConfiguration
-				.getMonitorServerAddress(), 5), network.getControl());
-		trigger(new JettyWebServerInit(webConfiguration), web.getControl());
 
 		// connecting components
 		connect(bootstrapServer.getNegative(Timer.class), timer

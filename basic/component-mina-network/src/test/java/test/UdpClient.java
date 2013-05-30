@@ -29,9 +29,8 @@ public class UdpClient extends ComponentDefinition {
 	Component mina;
 
 	public UdpClient() throws UnknownHostException {
-		mina = create(MinaNetwork.class);
+		mina = create(MinaNetwork.class, new MinaNetworkInit(c));
 		subscribe(start, control);
-		trigger(new MinaNetworkInit(c), mina.control());
 
 		mcast = new Address(InetAddress.getByName(MulticastReceiver.ADDRESS),
 				MulticastReceiver.PORT, 0);
