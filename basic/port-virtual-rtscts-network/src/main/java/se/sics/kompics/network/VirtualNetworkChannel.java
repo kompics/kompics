@@ -60,6 +60,19 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         return vnc;
     }
 
+    public static VirtualNetworkChannel connect(Positive<Network> sourcePort, ChannelFilter<?, ?> filter) {
+        return connect(sourcePort, new DefaultDeadLetterBox(), filter);
+    }
+
+    public static VirtualNetworkChannel connect(Positive<Network> sourcePort, Negative<Network> deadLetterBox, ChannelFilter<?, ?> filter) {
+        VirtualNetworkChannel vnc = new VirtualNetworkChannel(sourcePort, deadLetterBox);
+        sourcePort.addChannel(vnc, filter);
+        deadLetterBox.addChannel(vnc);
+
+        return vnc;
+    }
+
+    
     public void addConnection(byte[] id, Negative<Network> destinationPort) {
         rwlock.writeLock().lock();
         try {
