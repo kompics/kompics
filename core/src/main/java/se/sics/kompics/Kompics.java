@@ -48,6 +48,7 @@ public final class Kompics {
     private static boolean on = false;
     private static Scheduler scheduler;
     private static ComponentCore mainCore;
+    private static final Kompics obj = new Kompics();
 
     public static void setScheduler(Scheduler sched) {
         scheduler = sched;
@@ -151,6 +152,28 @@ public final class Kompics {
         }
         on = false;
         scheduler = null;
+        synchronized (obj) {
+            obj.notifyAll();
+        }
+    }
+
+    public static void forceShutdown() {
+        if (scheduler != null) {
+            scheduler.shutdown();
+        }
+        on = false;
+        scheduler = null;
+        synchronized (obj) {
+            obj.notifyAll();
+        }
+    }
+
+    public static void waitForTermination() throws InterruptedException {
+        synchronized (obj) {
+            while (on) {
+                obj.wait();
+            }
+        }
     }
 
     /**

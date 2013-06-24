@@ -253,12 +253,12 @@ public class JavaComponent extends ComponentCore {
             JavaPort<?> nextPort;
             if ((state == State.PASSIVE) || (state == State.STARTING)) {
                 //System.err.println("non-active state " + wid);
-                
+
                 event = negativeControl.pickFirstEvent();
                 nextPort = negativeControl;
 
                 if (event == null) {
-                    //System.err.println("Not scheduling component " + component + "/ State is " + state);
+                    Kompics.logger.debug("Not scheduling component {} / State is {}", component, state);
                     // try again
                     if (wc > 0) {
                         if (scheduler == null) {
@@ -276,7 +276,7 @@ public class JavaComponent extends ComponentCore {
             }
 
             if (event == null) {
-                Kompics.logger.debug("Couldn't fine event to schedule: {} / {} / {}", new Object[] {component, state, wc});
+                Kompics.logger.debug("Couldn't find event to schedule: {} / {} / {}", new Object[]{component, state, wc});
             }
 
             ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
@@ -409,8 +409,7 @@ public class JavaComponent extends ComponentCore {
     ;
     };
     
-
-	Handler<Stop> handleStop = new Handler<Stop>() {
+    Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {
 
@@ -444,13 +443,13 @@ public class JavaComponent extends ComponentCore {
     ;
     };
         
-        Handler<Started> handleStarted = new Handler<Started>() {
+    Handler<Started> handleStarted = new Handler<Started>() {
         @Override
         public void handle(Started event) {
             Kompics.logger.debug(component + " got Started event from " + event.component.getComponent());
             activeSet.add(event.component);
             Kompics.logger.debug(component + " active set has " + activeSet.size() + " members");
-            if (activeSet.size() == children.size()) {
+            if ((activeSet.size() == children.size()) && (state == Component.State.STARTING)) {
                 Kompics.logger.debug(component + " started");
                 state = Component.State.ACTIVE;
                 if (parent != null) {
@@ -467,14 +466,14 @@ public class JavaComponent extends ComponentCore {
     ;
     };
 
-	Handler<Stopped> handleStopped = new Handler<Stopped>() {
+    Handler<Stopped> handleStopped = new Handler<Stopped>() {
         @Override
         public void handle(Stopped event) {
             Kompics.logger.debug(component + " got Stopped event from " + event.component.getComponent());
 
             activeSet.remove(event.component);
             Kompics.logger.debug(component + " active set has " + activeSet.size() + " members");
-            if (activeSet.isEmpty()) {
+            if (activeSet.isEmpty() && (state == Component.State.STOPPING)) {
                 Kompics.logger.debug(component + " stopped");
                 state = Component.State.PASSIVE;
                 component.tearDown();

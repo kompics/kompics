@@ -12,6 +12,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.compress.DeflateCompressor;
 import com.esotericsoftware.kryo.serialize.FieldSerializer;
 import com.esotericsoftware.kryo.serialize.SimpleSerializer;
+import com.google.common.collect.ImmutableSet;
 
 public class KryoMessage {
 
@@ -54,6 +55,7 @@ public class KryoMessage {
 				buffer.putLong(id.getLeastSignificantBits());
 			}
 		});
+                //ImmutableCollectionsSerializer.registerSerializers(kryo);
 		kryo.register(Inet4Address.class);
 		kryo.register(Address.class);
 		if (compress) {

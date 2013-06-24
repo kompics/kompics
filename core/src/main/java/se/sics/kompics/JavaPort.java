@@ -188,7 +188,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     // delivers the event to the connected channels (called holding read lock)
     private boolean deliverToChannels(Event event, int wid) {
-//		System.out.print(event+" trying to deliver to channels...");
+        //Kompics.logger.debug("{}: trying to deliver {} to channels...", owner.getComponent(), event);
         boolean delivered = false;
         if (unfilteredChannels != null) {
             for (ChannelCore<?> channel : unfilteredChannels) {
@@ -213,7 +213,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
                 }
             }
         }
-//		System.out.println(delivered ? "succeeded" : "failed");
+        //Kompics.logger.debug("{}: {}", owner.getComponent(), delivered ? "succeeded" : "failed");
         return delivered;
     }
 
@@ -316,7 +316,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     // TODO optimize trigger/subscribe
     @Override
     public void doTrigger(Event event, int wid, ChannelCore<?> channel) {
-		//System.out.println(this.getClass()+": "+event+" triggert from "+channel);
+        //System.out.println(this.getClass()+": "+event+" triggert from "+channel);
         if (event instanceof Request) {
             Request request = (Request) event;
             request.pushPathElement(channel);
@@ -326,7 +326,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     @Override
     public void doTrigger(Event event, int wid, ComponentCore component) {
-		//System.out.println(this.getClass()+": "+event+" triggert from "+component);
+        //System.out.println(this.getClass()+": "+event+" triggert from "+component);
         if (event instanceof Request) {
             Request request = (Request) event;
             request.pushPathElement(component);
@@ -434,20 +434,20 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     // deliver event to the local component (called holding read lock)
     private boolean deliverToSubscribers(Event event, int wid,
             Class<? extends Event> eventType) {
-		//System.out.print(event+" trying to deliver to subscribers...");
+        //Kompics.logger.debug("{}: trying to deliver {} to subscribers...", owner, event);
         if (subs == null) {
-			//System.out.println("failed");
+            //Kompics.logger.debug("{}: Couldn't deliver {}, no subscribers", owner.getComponent(), event);
             return false;
         }
         for (Class<? extends Event> eType : subs.keySet()) {
             if (eType.isAssignableFrom(eventType)) {
                 // there is at least one subscription
                 doDeliver(event, wid);
-				//System.out.println("succeeded");
+                //Kompics.logger.debug("{}: Delivered {} to subscribers", owner.getComponent(), event);
                 return true;
             }
         }
-		//System.out.println("failed");
+        //Kompics.logger.debug("{}: Couldn't deliver {}, no matching subscribers", owner.getComponent(), event);
         return false;
     }
 

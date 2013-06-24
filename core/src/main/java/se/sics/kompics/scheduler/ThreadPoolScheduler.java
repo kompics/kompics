@@ -53,6 +53,11 @@ public class ThreadPoolScheduler extends Scheduler {
         }
     }
 
+    @Override
+    public void asyncShutdown() {
+        threadPool.shutdown();
+    }
+
     static class KompicsThreadFactory implements ThreadFactory {
 
         final AtomicInteger threadNumber = new AtomicInteger(1);
