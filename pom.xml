@@ -14,8 +14,8 @@ by putting together protocols programmed as event-driven components.
 	<inceptionYear>2008</inceptionYear>
 
 	<issueManagement>
-		<system>trac</system>
-		<url>http://kompics.sics.se/trac</url>
+		<system>GitHub Issues</system>
+		<url>https://github.com/kompics/kompics/issues</url>
 	</issueManagement>
 
 	<licenses>
@@ -150,13 +150,14 @@ by putting together protocols programmed as event-driven components.
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.0-beta-7</version>
-				<configuration>
-					<tagBase>svn://small.sics.se/kompics/tags</tagBase>
-				</configuration>
-			</plugin>
+      			<artifactId>maven-release-plugin</artifactId>
+      			<version>2.4.1</version>
+      			<configuration>
+        			<useReleaseProfile>false</useReleaseProfile>
+        			<releaseProfiles>release</releaseProfiles>
+        			<autoVersionSubmodules>true</autoVersionSubmodules>
+      			</configuration>
+    		</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
@@ -222,7 +223,7 @@ by putting together protocols programmed as event-driven components.
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
 			</plugin>
-
+<!-- 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-changes-plugin</artifactId>
@@ -236,7 +237,7 @@ by putting together protocols programmed as event-driven components.
 				<configuration>
 					<issueLinkTemplate>%URL%/trac/ticket/%ISSUE%</issueLinkTemplate>
 				</configuration>
-			</plugin>
+			</plugin> -->
 
 		</plugins>
 	</reporting>
@@ -267,27 +268,28 @@ by putting together protocols programmed as event-driven components.
 	</repositories>
 
 	<scm>
-		<connection>scm:svn:svn://small.sics.se/kompics/trunk</connection>
-		<url>http://kompics.sics.se/trac/browser/trunk</url>
-		<developerConnection>scm:svn:svn://small.sics.se/kompics/trunk</developerConnection>
+  		<connection>scm:git:https://github.com/kompics/kompics.git</connection>
+  		<developerConnection>scm:git:git@github.com:kompics/kompics.git</developerConnection>
+  		<url>https://github.com/kompics/kompics</url>
+  		<tag>HEAD</tag>
 	</scm>
 
 	<distributionManagement>
 		<repository>
 			<id>sics-release-repository</id>
 			<name>SICS Repository</name>
-			<url>scpexe://kompics.sics.se/home/maven2/repository</url>
+			<url>scpexe://kompics.i.sics.se/home/maven/repository</url>
 		</repository>
 		<snapshotRepository>
 			<id>sics-snapshot-repository</id>
 			<name>SICS Snapshot Repository</name>
-			<url>scpexe://kompics.sics.se/home/maven2/snapshotrepository</url>
+			<url>scpexe://kompics.i.sics.se/home/maven/snapshotrepository</url>
 		</snapshotRepository>
 		<site>
 			<id>kompics-site</id>
-			<url>scpexe://kompics.sics.se/var/www/kompics/report/trunk</url>
+			<url>scpexe://kompics.i.sics.se/var/www/kompics/report/trunk</url>
 		</site>
-		<downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
+		<downloadUrl>http://kompics.i.sics.se/maven/repository</downloadUrl>
 	</distributionManagement>
 
 	<mailingLists>
