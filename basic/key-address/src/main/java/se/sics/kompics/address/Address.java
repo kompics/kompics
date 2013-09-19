@@ -207,6 +207,10 @@ public final class Address implements Serializable, Comparable<Address> {
         return new Address(this.ip, this.port, id); //Should be safe to reuse InetAddress object
     }
     
+    public Address hostAddress() {
+        return new Address(this.ip, this.port, null);
+    }
+    
     public boolean sameHostAs(Address other) {
         return ip.equals(other.ip) && (this.port == other.port);
     }
