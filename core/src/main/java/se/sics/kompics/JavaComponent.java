@@ -238,6 +238,9 @@ public class JavaComponent extends ComponentCore {
 
     @Override
     public void execute(int wid) {
+        if (state == State.DESTROYED) {
+            return;
+        }
         this.wid = wid;
         //System.err.println("Executing " + wid);
 

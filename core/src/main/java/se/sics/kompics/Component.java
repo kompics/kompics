@@ -88,6 +88,7 @@ public interface Component {
             PASSIVE,
             STARTING,
             ACTIVE,
-            STOPPING;
+            STOPPING,
+            DESTROYED;
         }
 }

@@ -105,6 +105,7 @@ public abstract class ComponentCore implements Component {
         if (child.state != State.PASSIVE) {
             Kompics.logger.warn("Destroying a component before it has been stopped is not a good idea: " + child.getComponent());
         }
+        child.state = State.DESTROYED;
         children.remove(child);
     }
 
