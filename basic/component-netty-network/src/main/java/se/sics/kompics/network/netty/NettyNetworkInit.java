@@ -29,7 +29,7 @@ import se.sics.kompics.address.Address;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public class NettyNetworkInit extends Init {
+public class NettyNetworkInit extends Init<NettyNetwork> {
 
 	/** The self. */
 	private final Address self;

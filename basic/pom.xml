@@ -25,7 +25,6 @@
 		<module>component-mina-network</module>
 		<module>component-jetty-web-server</module>
 		<module>component-netty-network</module>
-		<!--<module>component-kryonet-network</module>-->
 		<module>component-grizzly-network</module>
 		<module>component-rtscts-grizzly-network</module>
 	</modules>

@@ -30,7 +30,7 @@ import se.sics.kompics.address.Address;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public final class MinaNetworkInit extends Init {
+public final class MinaNetworkInit extends Init<MinaNetwork> {
 
 	/** The self. */
 	private final Address self;

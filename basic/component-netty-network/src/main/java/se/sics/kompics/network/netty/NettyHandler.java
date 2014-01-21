@@ -74,7 +74,7 @@ public class NettyHandler extends SimpleChannelUpstreamHandler {
 		networkComponent.networkException(new NetworkException(address,
 				protocol));
 
-		throw new RuntimeException("Netty exception", e.getCause());
+		//throw new RuntimeException("Netty exception", e.getCause());
 	}
 
 	@Override
