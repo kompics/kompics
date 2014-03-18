@@ -1,19 +1,19 @@
 /**
  * This file is part of the Kompics component model runtime.
- *
+ * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
  * 2009 Royal Institute of Technology (KTH)
- *
+ * <p>
  * Kompics is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later
  * version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  * Place - Suite 330, Boston, MA 02111-1307, USA.
@@ -26,15 +26,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * The
- * <code>ComponentCore</code> class.
- *
+ * The <code>ComponentCore</code> class.
+ * <p>
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @author Lars Kroll <lkr@lars-kroll.com>
@@ -42,15 +38,18 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class JavaComponent extends ComponentCore {
 
-    /* outside ports */
+    /*
+     * outside ports
+     */
     private HashMap<Class<? extends PortType>, JavaPort<? extends PortType>> positivePorts;
     private HashMap<Class<? extends PortType>, JavaPort<? extends PortType>> negativePorts;
     private JavaPort<ControlPort> positiveControl, negativeControl;
     ComponentDefinition component;
+    
 
     /**
      * Instantiates a new component core.
-     *
+     * <p>
      * @param componentDefinition the component definition
      */
     public JavaComponent(ComponentDefinition componentDefinition) {
@@ -71,7 +70,7 @@ public class JavaComponent extends ComponentCore {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see se.sics.kompics.Component#getControl()
      */
     @Override
@@ -86,7 +85,7 @@ public class JavaComponent extends ComponentCore {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see se.sics.kompics.Component#getNegative(java.lang.Class)
      */
     @SuppressWarnings("unchecked")
@@ -107,7 +106,7 @@ public class JavaComponent extends ComponentCore {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see se.sics.kompics.Component#getPositive(java.lang.Class)
      */
     @SuppressWarnings("unchecked")
@@ -190,11 +189,9 @@ public class JavaComponent extends ComponentCore {
             component = createInstance(definition, initEvent);
             ComponentCore child = component.getComponentCore();
 
-
             //child.workCount.incrementAndGet();
-
-
             child.setScheduler(scheduler);
+            childrenLock.writeLock().lock();
             if (children == null) {
                 children = new LinkedList<ComponentCore>();
             }
@@ -213,6 +210,8 @@ public class JavaComponent extends ComponentCore {
         } catch (InvocationTargetException e) {
             throw new RuntimeException("Cannot create component "
                     + definition.getCanonicalName(), e);
+        } finally {
+            childrenLock.writeLock().unlock();
         }
     }
 
@@ -243,7 +242,6 @@ public class JavaComponent extends ComponentCore {
         }
         this.wid = wid;
         //System.err.println("Executing " + wid);
-
 
 //		New scheduling code: Run n and move to end of schedule
 //		
@@ -382,26 +380,33 @@ public class JavaComponent extends ComponentCore {
     // }
     // }
 
-    /* === LIFECYCLE === */
+    /*
+     * === LIFECYCLE ===
+     */
     private Set<Component> activeSet = new HashSet<Component>();
     Handler<Start> handleStart = new Handler<Start>() {
         @Override
         public void handle(Start event) {
-            if (children != null) {
-                Kompics.logger.debug(component + " starting");
-                state = Component.State.STARTING;
-                for (ComponentCore child : children) {
-                    Kompics.logger.debug("Sending Start to child: " + child.getComponent());
-                    // start child
-                    ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                            Start.event, wid, component.getComponentCore());
+            try {
+                childrenLock.readLock().lock();
+                if (children != null) {
+                    Kompics.logger.debug(component + " starting");
+                    state = Component.State.STARTING;
+                    for (ComponentCore child : children) {
+                        Kompics.logger.debug("Sending Start to child: " + child.getComponent());
+                        // start child
+                        ((PortCore<ControlPort>) child.getControl()).doTrigger(
+                                Start.event, wid, component.getComponentCore());
+                    }
+                } else {
+                    Kompics.logger.debug(component + " started");
+                    state = Component.State.ACTIVE;
+                    if (parent != null) {
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
+                    }
                 }
-            } else {
-                Kompics.logger.debug(component + " started");
-                state = Component.State.ACTIVE;
-                if (parent != null) {
-                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
-                }
+            } finally {
+                childrenLock.readLock().unlock();
             }
         }
 
@@ -415,27 +420,31 @@ public class JavaComponent extends ComponentCore {
     Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {
-
-            if (children != null) {
-                Kompics.logger.debug(component + " stopping");
-                state = Component.State.STOPPING;
-                for (ComponentCore child : children) {
-                    Kompics.logger.debug("Sending Stop to child: " + child.getComponent());
-                    // stop child
-                    ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                            Stop.event, wid, component.getComponentCore());
-                }
-            } else {
-                Kompics.logger.debug(component + " stopped");
-                state = Component.State.PASSIVE;
-                component.tearDown();
-                if (parent != null) {
-                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Stopped(component.getComponentCore()), wid, component.getComponentCore());
+            try {
+                childrenLock.readLock().lock();
+                if (children != null) {
+                    Kompics.logger.debug(component + " stopping");
+                    state = Component.State.STOPPING;
+                    for (ComponentCore child : children) {
+                        Kompics.logger.debug("Sending Stop to child: " + child.getComponent());
+                        // stop child
+                        ((PortCore<ControlPort>) child.getControl()).doTrigger(
+                                Stop.event, wid, component.getComponentCore());
+                    }
                 } else {
-                    synchronized (component.getComponentCore()) {
-                        component.getComponentCore().notifyAll();
+                    Kompics.logger.debug(component + " stopped");
+                    state = Component.State.PASSIVE;
+                    component.tearDown();
+                    if (parent != null) {
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Stopped(component.getComponentCore()), wid, component.getComponentCore());
+                    } else {
+                        synchronized (component.getComponentCore()) {
+                            component.getComponentCore().notifyAll();
+                        }
                     }
                 }
+            } finally {
+                childrenLock.readLock().unlock();
             }
         }
 
@@ -452,12 +461,17 @@ public class JavaComponent extends ComponentCore {
             Kompics.logger.debug(component + " got Started event from " + event.component.getComponent());
             activeSet.add(event.component);
             Kompics.logger.debug(component + " active set has " + activeSet.size() + " members");
-            if ((activeSet.size() == children.size()) && (state == Component.State.STARTING)) {
-                Kompics.logger.debug(component + " started");
-                state = Component.State.ACTIVE;
-                if (parent != null) {
-                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
+            try {
+                childrenLock.readLock().lock();
+                if ((activeSet.size() == children.size()) && (state == Component.State.STARTING)) {
+                    Kompics.logger.debug(component + " started");
+                    state = Component.State.ACTIVE;
+                    if (parent != null) {
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
+                    }
                 }
+            } finally {
+                childrenLock.readLock().unlock();
             }
 
         }
