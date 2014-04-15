@@ -3,21 +3,21 @@
 	<parent>
 		<artifactId>kompics-basic-components</artifactId>
 		<groupId>se.sics.kompics.basic</groupId>
-		<version>0.5.0-SNAPSHOT</version>
+		<version>0.5.1-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>se.sics.kompics.basic</groupId>
 	<artifactId>kompics-port-web</artifactId>
 	<name>Kompics Web PortType</name>
-	<version>0.5.0-SNAPSHOT</version>
+	<version>0.5.1-SNAPSHOT</version>
 	<description>Kompics Web PortType</description>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.5.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

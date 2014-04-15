@@ -184,6 +184,7 @@ public class JavaComponent extends ComponentCore {
     public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent) {
         // create an instance of the implementing component type
         ComponentDefinition component;
+        childrenLock.writeLock().lock();
         try {
             parentThreadLocal.set(this);
             component = createInstance(definition, initEvent);
@@ -191,7 +192,7 @@ public class JavaComponent extends ComponentCore {
 
             //child.workCount.incrementAndGet();
             child.setScheduler(scheduler);
-            childrenLock.writeLock().lock();
+            
             if (children == null) {
                 children = new LinkedList<ComponentCore>();
             }

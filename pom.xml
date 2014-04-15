@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-parent-pom</artifactId>
 	<packaging>pom</packaging>
-	<version>0.5.0-SNAPSHOT</version>
+	<version>0.5.1-SNAPSHOT</version>
 
 	<name>Kompics</name>
 	<url>http://kompics.sics.se</url>
@@ -71,8 +71,8 @@ by putting together protocols programmed as event-driven components.
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<encoding>UTF-8</encoding>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>1.8</source>
+					<target>1.8</target>
 					<debug>true</debug>
 					<optimize>true</optimize>
 					<showDeprecations>true</showDeprecations>
@@ -214,7 +214,7 @@ by putting together protocols programmed as event-driven components.
 					<linkXref>true</linkXref>
 					<sourceEncoding>utf-8</sourceEncoding>
 					<minimumTokens>100</minimumTokens>
-					<targetJdk>1.6</targetJdk>
+					<targetJdk>1.8</targetJdk>
 				</configuration>
 			</plugin>
 
