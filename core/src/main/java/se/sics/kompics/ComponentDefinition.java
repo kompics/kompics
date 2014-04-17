@@ -21,6 +21,9 @@
 package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
+
+import java.util.function.Consumer;
+
 /**
  * The
  * <code>ComponentDefinition</code> class.
@@ -87,6 +90,12 @@ public abstract class ComponentDefinition {
      */
     protected final void expect(Filter<?>... filter) {
         // TODO
+    }
+    
+    protected final <E extends Event, P extends PortType> Handler<E> handle(Port<P> port, Class<E> type, Consumer<E> fun) {
+        Handler<E> handler = new FunctionHandler<>(type, fun);
+        subscribe(handler, port);
+        return handler;
     }
 
     /**
