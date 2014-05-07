@@ -28,7 +28,6 @@ import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Event;
 import se.sics.kompics.Handler;
 import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Negative;
@@ -252,7 +251,7 @@ public final class P2pSimulator extends ComponentDefinition implements
     }
 
     private void executeStochasticProcessEvent(StochasticProcessEvent event) {
-        Event e = event.generateOperation(random);
+        KompicsEvent e = event.generateOperation(random);
 
         trigger(e, simulationPort);
         logger.debug("{}: {}", pName(event), e);

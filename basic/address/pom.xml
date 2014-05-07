@@ -4,13 +4,13 @@
 	<parent>
 		<groupId>se.sics.kompics.basic</groupId>
 		<artifactId>kompics-basic-components</artifactId>
-		<version>0.5.1-SNAPSHOT</version>
+		<version>0.6.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>se.sics.kompics.basic</groupId>
 	<artifactId>kompics-address</artifactId>
 	<packaging>jar</packaging>
-	<version>0.5.1-SNAPSHOT</version>
+	<version>0.6.0-SNAPSHOT</version>
 	<name>Kompics Address</name>
 
     <repositories>
