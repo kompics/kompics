@@ -36,7 +36,7 @@ public interface ChannelCore<P extends PortType> extends Channel<P> {
 
 	public Negative<P> getNegativePort();
 
-	public void forwardToPositive(Event event, int wid);
+	public void forwardToPositive(KompicsEvent event, int wid);
 
-	public void forwardToNegative(Event event, int wid);
+	public void forwardToNegative(KompicsEvent event, int wid);
 }

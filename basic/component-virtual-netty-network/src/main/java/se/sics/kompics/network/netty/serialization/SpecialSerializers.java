@@ -28,7 +28,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.UUID;
 import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 import se.sics.kompics.network.netty.DisambiguateConnection;
 
@@ -90,6 +92,7 @@ public abstract class SpecialSerializers {
 
         public static final int BYTE_KEY_SIZE = 255;
         public static final int INT_BYTE_SIZE = Integer.SIZE / 8;
+        public static final AddressSerializer INSTANCE = new AddressSerializer();
 
         @Override
         public int identifier() {
@@ -103,18 +106,19 @@ public abstract class SpecialSerializers {
                 buf.writeInt(0); //simply put four 0 bytes since 0.0.0.0 is not a valid host ip
                 return;
             }
-            int length = 6 + 4 + addr.getId().length;
-            int code = buf.ensureWritable(length, true);
-            if (code == 1 || code == 3) {
-                Serializers.LOG.error("AddressSerializer: Not enough space left on buffer to serialize " + length + " bytes.");
-                return;
-            }
+//            int length = 6 + 4 + addr.getId().length;
+//            int code = buf.ensureWritable(length, true);
+//            if (code == 1 || code == 3) {
+//                Serializers.LOG.error("AddressSerializer: Not enough space left on buffer to serialize " + length + " bytes.");
+//                return;
+//            }
 
             buf.writeBytes(addr.getIp().getAddress());
             // Write ports as 2 bytes instead of 4
             byte[] portBytes = Ints.toByteArray(addr.getPort());
             buf.writeByte(portBytes[2]);
             buf.writeByte(portBytes[3]);
+            // Id
             byte[] id = addr.getId();
             BitBuffer bbuf = BitBuffer.create(false, (id == null));
             boolean byteFlag = (id != null) && (id.length <= BYTE_KEY_SIZE);
@@ -181,8 +185,6 @@ public abstract class SpecialSerializers {
         public static final boolean REQ = false;
         public static final boolean RESP = true;
 
-        private static final AddressSerializer addrS = new AddressSerializer();
-
         @Override
         public int identifier() {
             return 5;
@@ -205,52 +207,16 @@ public abstract class SpecialSerializers {
 
         @Override
         public Object fromBinary(ByteBuf buf, Optional<Class> hint) {
-            byte[] flagB = new byte[1];
-            buf.readBytes(flagB);
-            boolean[] flags = BitBuffer.extract(7, flagB);
-            boolean isResp = flags[0];
-            boolean sourceEqOrigin = flags[1];
-            Transport proto = null;
-            if (flags[2]) {
-                proto = Transport.UDP;
-            }
-            if (flags[3]) {
-                proto = Transport.TCP;
-            }
-            if (flags[4]) {
-                proto = Transport.MULTICAST_UDP;
-            }
-            if (flags[5]) {
-                proto = Transport.UDT;
-            }
-            if (flags[6]) {
-                proto = Transport.LEDBAT;
-            }
-            if (isResp) {
-                return respFromBinary(buf, sourceEqOrigin, proto);
+            MessageSerializationUtil.MessageFields fields = MessageSerializationUtil.msgFromBinary(buf);
+            if (fields.flag1) { // Response
+                return respFromBinary(buf, fields);
             } else {
-                return reqFromBinary(buf, sourceEqOrigin, proto);
+                return reqFromBinary(buf, fields);
             }
         }
 
         private void reqToBinary(DisambiguateConnection.Req r, ByteBuf buf) {
-            // Flags 1byte
-            boolean sourceEqOrigin = r.getSource().equals(r.getOrigin());
-            BitBuffer bbuf = BitBuffer.create(REQ, // good that a byte has so many bits... can compress it more if more protocols are necessary
-                    sourceEqOrigin,
-                    r.getProtocol() == Transport.UDP,
-                    r.getProtocol() == Transport.TCP,
-                    r.getProtocol() == Transport.MULTICAST_UDP,
-                    r.getProtocol() == Transport.UDT,
-                    r.getProtocol() == Transport.LEDBAT);
-            byte[] bbufb = bbuf.finalise();
-            buf.writeBytes(bbufb);
-            // Addresses
-            addrS.toBinary(r.getSource(), buf);
-            addrS.toBinary(r.getDestination(), buf);
-            if (!sourceEqOrigin) {
-                addrS.toBinary(r.getOrigin(), buf);
-            }
+            MessageSerializationUtil.msgToBinary(r, buf, REQ, false);
             // Ports 2 byte each
             byte[] portBytes = Ints.toByteArray(r.localPort);
             buf.writeByte(portBytes[2]);
@@ -261,23 +227,7 @@ public abstract class SpecialSerializers {
         }
 
         private void respToBinary(DisambiguateConnection.Resp r, ByteBuf buf) {
-            // Flags 1byte
-            boolean sourceEqOrigin = r.getSource().equals(r.getOrigin());
-            BitBuffer bbuf = BitBuffer.create(RESP, // good that a byte has so many bits... can compress it more if more protocols are necessary
-                    sourceEqOrigin,
-                    r.getProtocol() == Transport.UDP,
-                    r.getProtocol() == Transport.TCP,
-                    r.getProtocol() == Transport.MULTICAST_UDP,
-                    r.getProtocol() == Transport.UDT,
-                    r.getProtocol() == Transport.LEDBAT);
-            byte[] bbufb = bbuf.finalise();
-            buf.writeBytes(bbufb);
-            // Addresses
-            addrS.toBinary(r.getSource(), buf);
-            addrS.toBinary(r.getDestination(), buf);
-            if (!sourceEqOrigin) {
-                addrS.toBinary(r.getOrigin(), buf);
-            }
+            MessageSerializationUtil.msgToBinary(r, buf, RESP, false);
             // Ports 2 byte each
             byte[] portBytes = Ints.toByteArray(r.localPort);
             buf.writeByte(portBytes[2]);
@@ -290,14 +240,7 @@ public abstract class SpecialSerializers {
             buf.writeByte(portBytes[3]);
         }
 
-        private Object respFromBinary(ByteBuf buf, boolean sourceEqOrigin, Transport proto) {
-            // Addresses
-            Address src = (Address) addrS.fromBinary(buf, Optional.absent());
-            Address dst = (Address) addrS.fromBinary(buf, Optional.absent());
-            Address orig = src; // We don't care about it, buf if it's there it needs to be read to move the buffer pointer
-            if (!sourceEqOrigin) {
-                orig = (Address) addrS.fromBinary(buf, Optional.absent());
-            }
+        private Object respFromBinary(ByteBuf buf, MessageSerializationUtil.MessageFields fields) {
             // Ports 2 byte each
             byte portUpper = buf.readByte();
             byte portLower = buf.readByte();
@@ -308,17 +251,10 @@ public abstract class SpecialSerializers {
             portUpper = buf.readByte();
             portLower = buf.readByte();
             int udtPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-            return new DisambiguateConnection.Resp(src, dst, proto, localPort, boundPort, udtPort);
+            return new DisambiguateConnection.Resp(fields.src, fields.dst, fields.proto, localPort, boundPort, udtPort);
         }
 
-        private Object reqFromBinary(ByteBuf buf, boolean sourceEqOrigin, Transport proto) {
-            // Addresses
-            Address src = (Address) addrS.fromBinary(buf, Optional.absent());
-            Address dst = (Address) addrS.fromBinary(buf, Optional.absent());
-            Address orig = src; // We don't care about it, buf if it's there it needs to be read to move the buffer pointer
-            if (!sourceEqOrigin) {
-                orig = (Address) addrS.fromBinary(buf, Optional.absent());
-            }
+        private Object reqFromBinary(ByteBuf buf, MessageSerializationUtil.MessageFields fields) {
             // Ports 2 byte each
             byte portUpper = buf.readByte();
             byte portLower = buf.readByte();
@@ -326,9 +262,103 @@ public abstract class SpecialSerializers {
             portUpper = buf.readByte();
             portLower = buf.readByte();
             int udtPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-            return new DisambiguateConnection.Req(src, dst, proto, localPort, udtPort);
+            return new DisambiguateConnection.Req(fields.src, fields.dst, fields.proto, localPort, udtPort);
         }
 
+    }
+
+    public static class UUIDSerializer implements Serializer {
+
+        public static final UUIDSerializer INSTANCE = new UUIDSerializer();
+
+        @Override
+        public int identifier() {
+            return 6;
+        }
+
+        @Override
+        public void toBinary(Object o, ByteBuf buf) {
+            if (o instanceof UUID) {
+                UUID id = (UUID) o;
+                buf.writeLong(id.getMostSignificantBits());
+                buf.writeLong(id.getLeastSignificantBits());
+            }
+        }
+
+        @Override
+        public Object fromBinary(ByteBuf buf, Optional<Class> hint) {
+            return new UUID(buf.readLong(), buf.readLong());
+        }
+
+    }
+
+    public static abstract class MessageSerializationUtil {
+
+        public static void msgToBinary(Msg msg, ByteBuf buf, boolean flag1, boolean flag2) {
+            // Flags 1byte
+            boolean sourceEqOrigin = msg.getSource().equals(msg.getOrigin());
+            BitBuffer bbuf = BitBuffer.create(flag1, flag2, // good that a byte has so many bits... can compress it more if more protocols are necessary
+                    sourceEqOrigin,
+                    msg.getProtocol() == Transport.UDP,
+                    msg.getProtocol() == Transport.TCP,
+                    msg.getProtocol() == Transport.MULTICAST_UDP,
+                    msg.getProtocol() == Transport.UDT,
+                    msg.getProtocol() == Transport.LEDBAT);
+            byte[] bbufb = bbuf.finalise();
+            buf.writeBytes(bbufb);
+            // Addresses
+            AddressSerializer.INSTANCE.toBinary(msg.getSource(), buf);
+            AddressSerializer.INSTANCE.toBinary(msg.getDestination(), buf);
+            if (!sourceEqOrigin) {
+                AddressSerializer.INSTANCE.toBinary(msg.getOrigin(), buf);
+            }
+        }
+
+        public static MessageFields msgFromBinary(ByteBuf buf) {
+            MessageFields fields = new MessageFields();
+
+            byte[] flagB = new byte[1];
+            buf.readBytes(flagB);
+            boolean[] flags = BitBuffer.extract(8, flagB);
+            fields.flag1 = flags[0];
+            fields.flag2 = flags[1];
+            boolean sourceEqOrigin = flags[2];
+            if (flags[3]) {
+                fields.proto = Transport.UDP;
+            }
+            if (flags[4]) {
+                fields.proto = Transport.TCP;
+            }
+            if (flags[5]) {
+                fields.proto = Transport.MULTICAST_UDP;
+            }
+            if (flags[6]) {
+                fields.proto = Transport.UDT;
+            }
+            if (flags[7]) {
+                fields.proto = Transport.LEDBAT;
+            }
+
+            // Addresses
+            fields.src = (Address) AddressSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            fields.dst = (Address) AddressSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            fields.orig = fields.src;
+            if (!sourceEqOrigin) {
+                fields.orig = (Address) AddressSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            }
+
+            return fields;
+        }
+
+        public static class MessageFields {
+
+            public Address src;
+            public Address dst;
+            public Address orig;
+            public Transport proto;
+            public boolean flag1;
+            public boolean flag2;
+        }
     }
 
     public static class BitBuffer {

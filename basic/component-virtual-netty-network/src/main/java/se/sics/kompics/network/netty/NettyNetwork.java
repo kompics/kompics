@@ -38,6 +38,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.nio.NioUdtProvider;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -57,7 +59,8 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 import se.sics.kompics.address.Address;
-import se.sics.kompics.network.Message;
+import se.sics.kompics.network.MessageNotify;
+import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.NetworkControl;
 import se.sics.kompics.network.NetworkException;
@@ -89,7 +92,8 @@ public class NettyNetwork extends ComponentDefinition {
     private final ConcurrentMap<InetSocketAddress, DatagramChannel> udpChannels = new ConcurrentHashMap<InetSocketAddress, DatagramChannel>();
     private final ConcurrentMap<InetSocketAddress, UdtChannel> udtChannels = new ConcurrentHashMap<InetSocketAddress, UdtChannel>();
     private final ConcurrentMap<Integer, Integer> udtPortMap = new ConcurrentSkipListMap<Integer, Integer>();
-    private final ConcurrentLinkedQueue<Message> delayedMessages = new ConcurrentLinkedQueue<Message>();
+    private final ConcurrentLinkedQueue<Msg> delayedMessages = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<MessageNotify.Req> delayedNotifies = new ConcurrentLinkedQueue<MessageNotify.Req>();
     // Info
     final Address self;
     private final int boundPort;
@@ -118,6 +122,7 @@ public class NettyNetwork extends ComponentDefinition {
         subscribe(startHandler, control);
         subscribe(stopHandler, control);
         subscribe(msgHandler, net);
+        subscribe(notifyHandler, net);
     }
 
     Handler<Start> startHandler = new Handler<Start>() {
@@ -166,16 +171,70 @@ public class NettyNetwork extends ComponentDefinition {
         }
     };
 
-    Handler<Message> msgHandler = new Handler<Message>() {
+    Handler<Msg> msgHandler = new Handler<Msg>() {
 
         @Override
-        public void handle(Message event) {
+        public void handle(Msg event) {
             if (event.getDestination().sameHostAs(self)) {
                 LOG.trace("Delivering message {} locally.", event);
                 trigger(event, net);
                 return;
             }
-            sendMessage(event);
+            switch (event.getProtocol()) {
+                case TCP:
+                    sendTcpMessage(event);
+                    return;
+                case UDT:
+                    sendUdtMessage(event);
+                    return;
+                case UDP:
+                    sendUdpMessage(event);
+                    return;
+                default:
+                    throw new Error("Unknown Transport type");
+            }
+        }
+    };
+    
+    Handler<MessageNotify.Req> notifyHandler = new Handler<MessageNotify.Req>() {
+
+        @Override
+        public void handle(MessageNotify.Req notify) {
+            Msg event = notify.msg;
+            if (event.getDestination().sameHostAs(self)) {
+                LOG.trace("Delivering message {} locally.", event);
+                trigger(event, net);
+                answer(notify);
+                return;
+            }
+            ChannelFuture f = null;
+            switch (event.getProtocol()) {
+                case TCP:
+                    f = sendTcpMessage(event);
+                    break;
+                case UDT:
+                    f = sendUdtMessage(notify);
+                    break;
+                case UDP:
+                    f = sendUdpMessage(event);
+                    break;
+                default:
+                    throw new Error("Unknown Transport type");
+            }
+            if (f == null) {
+                return; // Assume message got delayed or some error occurred
+            }
+            f.addListener(new GenericFutureListener(){
+
+                @Override
+                public void operationComplete(Future f) throws Exception {
+                    if (f.isSuccess()) {
+                        answer(notify);
+                    } else {
+                        LOG.warn("Sending of message {} did not succeed :(", notify.msg);
+                    }
+                }
+            });
         }
     };
 
@@ -277,7 +336,7 @@ public class NettyNetwork extends ComponentDefinition {
         trigger(networkException, netC);
     }
 
-    protected void deliverMessage(Message message) {
+    protected void deliverMessage(Msg message) {
         if (message instanceof DisambiguateConnection.Req) {
             DisambiguateConnection.Req msg = (DisambiguateConnection.Req) message;
             udtPortMap.put(msg.getSource().getPort(), msg.udtPort);
@@ -314,23 +373,7 @@ public class NettyNetwork extends ComponentDefinition {
         trigger(message, net);
     }
 
-    private void sendMessage(Message message) {
-        switch (message.getProtocol()) {
-            case TCP:
-                sendTcpMessage(message);
-                return;
-            case UDT:
-                sendUdtMessage(message);
-                return;
-            case UDP:
-                sendUdpMessage(message);
-                return;
-            default:
-                throw new Error("Unknown Transport type");
-        }
-    }
-
-    private void sendUdpMessage(Message message) {
+    private ChannelFuture sendUdpMessage(Msg message) {
         InetSocketAddress src = addressToSocket(message.getSource());
         InetSocketAddress dst = addressToSocket(message.getDestination());
         Channel c = udpChannels.get(src);
@@ -340,13 +383,14 @@ public class NettyNetwork extends ComponentDefinition {
             Serializers.toBinary(message, buf);
             DatagramPacket pack = new DatagramPacket(buf, dst);
             LOG.debug("Sending Datagram message {} from {} to {}", new Object[]{message, src, dst});
-            c.writeAndFlush(pack);
+            return c.writeAndFlush(pack);
         } catch (Exception e) { // serialization might fail horribly with size bounded buff
             LOG.warn("Could not send Datagram message {}, error was: {}", message, e);
+            return null;
         }
     }
 
-    private void sendUdtMessage(Message message) {
+    private void sendUdtMessage(Msg message) {
         Channel c = getUDTChannel(message.getDestination());
         if (c == null) {
             LOG.info("Couldn't get UDT channel for {}. Delaying message for now.", message.getDestination());
@@ -356,30 +400,53 @@ public class NettyNetwork extends ComponentDefinition {
         LOG.debug("Sending message {} from {} to {}", new Object[]{message, self, c.remoteAddress()});
         c.writeAndFlush(message);
     }
+    
+    private ChannelFuture sendUdtMessage(MessageNotify.Req req) {
+        Msg message = req.msg;
+        Channel c = getUDTChannel(message.getDestination());
+        if (c == null) {
+            LOG.info("Couldn't get UDT channel for {}. Delaying message for now.", message.getDestination());
+            delayedNotifies.offer(req);
+            return null;
+        }
+        LOG.debug("Sending message {} from {} to {}", new Object[]{message, self, c.remoteAddress()});
+        return c.writeAndFlush(message);
+    }
 
-    private void sendTcpMessage(Message message) {
+    private ChannelFuture sendTcpMessage(Msg message) {
         Channel c = getTCPChannel(message.getDestination());
         if (c == null) {
             LOG.error("Couldn't get channel for {}. Not sending message!", message.getDestination());
-            return;
+            return null;
         }
         LOG.debug("Sending message {} from {} to {}", new Object[]{message, self, c.remoteAddress()});
-        c.writeAndFlush(message);
+        return c.writeAndFlush(message);
     }
 
     private void sendDelayedMessages() {
         // As a side note: Concurrent Queues in Java need better consistency guarantees for iterators -.-
-        if (delayedMessages.isEmpty()) { // At least stop early if nothing to do
+        if (delayedMessages.isEmpty() && delayedNotifies.isEmpty()) { // At least stop early if nothing to do
             return;
         }
-        LinkedList<Message> tryThisTime = new LinkedList<Message>();
+        LinkedList<Msg> tryThisTime = new LinkedList<>();
         while (!delayedMessages.isEmpty()) {
-            Message m = delayedMessages.poll(); // Could have evaported in another way^^
+            Msg m = delayedMessages.poll(); // Could have evaported in another way^^
             if (m != null) {
                 tryThisTime.add(m);
             }
         }
-        for (Message m : tryThisTime) {
+        for (Msg m : tryThisTime) {
+            trigger(m, net.getPair()); // just try again...might end up on the delayed list again, of course
+        }
+        
+        LinkedList<MessageNotify.Req> tryThisTime2 = new LinkedList<MessageNotify.Req>();
+        while (!delayedNotifies.isEmpty()) {
+            MessageNotify.Req m = delayedNotifies.poll(); // Could have evaported in another way^^
+            if (m != null) {
+                tryThisTime2.add(m);
+            }
+        }
+        for (MessageNotify.Req m : tryThisTime2) {
             trigger(m, net.getPair()); // just try again...might end up on the delayed list again, of course
         }
     }

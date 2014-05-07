@@ -47,7 +47,7 @@ public final class JavaTimer extends ComponentDefinition {
 
 	Negative<Timer> timer = negative(Timer.class);
 
-	private static final Logger logger = LoggerFactory
+	static final Logger logger = LoggerFactory
 			.getLogger(JavaTimer.class);
 
 	// set of active timers

@@ -116,14 +116,14 @@ public class ChannelCoreImpl<P extends PortType> implements ChannelCore<P> {
     }
 
     @Override
-    public void forwardToPositive(Event event, int wid) {
+    public void forwardToPositive(KompicsEvent event, int wid) {
         if (!destroyed) {
             positivePort.doTrigger(event, wid, this);
         }
     }
 
     @Override
-    public void forwardToNegative(Event event, int wid) {
+    public void forwardToNegative(KompicsEvent event, int wid) {
         if (!destroyed) {
             negativePort.doTrigger(event, wid, this);
         }

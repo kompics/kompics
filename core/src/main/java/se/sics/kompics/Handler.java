@@ -28,7 +28,7 @@ package se.sics.kompics;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public abstract class Handler<E extends Event> {
+public abstract class Handler<E extends KompicsEvent> {
 
 	Class<E> eventType = null;
 

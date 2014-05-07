@@ -24,13 +24,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.UUID;
-
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Event;
 import se.sics.kompics.Handler;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Negative;
 import se.sics.kompics.PortType;
 import se.sics.kompics.Start;
@@ -269,7 +269,7 @@ public final class P2pSimulator extends ComponentDefinition implements
         }
     }
 
-    private void executeKompicsEvent(Event kompicsEvent) {
+    private void executeKompicsEvent(KompicsEvent kompicsEvent) {
         // trigger Messages on the Network port
         if (Message.class.isAssignableFrom(kompicsEvent.getClass())) {
             Message message = (Message) kompicsEvent;
@@ -300,7 +300,11 @@ public final class P2pSimulator extends ComponentDefinition implements
         // clone timeouts
         if (Timeout.class.isAssignableFrom(periodic.getEvent().getClass())) {
             Timeout timeout = (Timeout) periodic.getEvent();
-            periodic.setEvent((Timeout) timeout.clone());
+            try {
+                periodic.setEvent((Timeout) timeout.clone());
+            } catch (CloneNotSupportedException ex) {
+                logger.warn("Could not clone Timeout event", ex);
+            }
 
             logger.debug("Triggered [periodic] Timeout: {} {}", timeout,
                     timeout.getTimeoutId());

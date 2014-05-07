@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.p2p.experiment.dsl.events;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 
 /**
  * The <code>PeriodicSimulatorEvent</code> class.
@@ -37,7 +37,7 @@ public class PeriodicSimulatorEvent extends KompicsSimulatorEvent {
 	
 	private final long period;
 
-	public PeriodicSimulatorEvent(Event event, long time, long period) {
+	public PeriodicSimulatorEvent(KompicsEvent event, long time, long period) {
 		super(event, time);
 		this.period = period;
 	}
@@ -50,7 +50,7 @@ public class PeriodicSimulatorEvent extends KompicsSimulatorEvent {
 		super.setTime(time);
 	}
 
-	public final void setEvent(Event event) {
+	public final void setEvent(KompicsEvent event) {
 		this.event = event;
 	}
 }

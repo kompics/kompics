@@ -24,13 +24,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Event;
 import se.sics.kompics.Handler;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Negative;
 import se.sics.kompics.PortType;
 import se.sics.kompics.Start;
@@ -67,7 +65,7 @@ public final class P2pOrchestrator extends ComponentDefinition {
     public static void setSimulationPortType(Class<? extends PortType> portType) {
         simulationPortType = portType;
     }
-    private static final Logger logger = LoggerFactory
+    static final Logger logger = LoggerFactory
             .getLogger(P2pOrchestrator.class);
     Negative<?> simulationPort = negative(simulationPortType);
     Negative<Network> network = negative(Network.class);
@@ -191,7 +189,7 @@ public final class P2pOrchestrator extends ComponentDefinition {
     }
 
     private void executeStochasticProcessEvent(StochasticProcessEvent event) {
-        Event e = event.generateOperation(random);
+        KompicsEvent e = event.generateOperation(random);
 
         trigger(e, simulationPort);
         logger.debug("{}: {}", pName(event), e);
@@ -211,7 +209,7 @@ public final class P2pOrchestrator extends ComponentDefinition {
         }
     }
 
-    private void executeKompicsEvent(Event kompicsEvent) {
+    private void executeKompicsEvent(KompicsEvent kompicsEvent) {
         // trigger other Kompics events on the simulation port
         logger.debug("KOMPICS_EVENT {}", kompicsEvent.getClass());
         trigger(kompicsEvent, simulationPort);

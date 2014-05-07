@@ -251,7 +251,7 @@ public class JavaComponent extends ComponentCore {
         int wc = workCount.get();
 
         while ((count < n) && wc > 0) {
-            Event event;
+            KompicsEvent event;
             JavaPort<?> nextPort;
             if ((state == State.PASSIVE) || (state == State.STARTING)) {
                 //System.err.println("non-active state " + wid);
@@ -326,9 +326,9 @@ public class JavaComponent extends ComponentCore {
     }
 
     @SuppressWarnings("unchecked")
-    private void executeEvent(Event event, Handler<?> handler) {
+    private void executeEvent(KompicsEvent event, Handler<?> handler) {
         try {
-            ((Handler<Event>) handler).handle(event);
+            ((Handler<KompicsEvent>) handler).handle(event);
         } catch (Throwable throwable) {
             handleFault(throwable);
         }

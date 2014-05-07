@@ -20,7 +20,6 @@
  */
 package se.sics.kompics.network;
 
-import se.sics.kompics.Event;
 import se.sics.kompics.Response;
 import se.sics.kompics.address.Address;
 
@@ -111,7 +110,7 @@ public abstract class ClearToSend extends Response implements Cloneable {
      * @see se.sics.kompics.Response#clone()
      */
     @Override
-    public final Object clone() {
+    public final Object clone() throws CloneNotSupportedException {
         ClearToSend cts = (ClearToSend) super.clone();
         cts.destination = this.destination;
         cts.source = this.source;

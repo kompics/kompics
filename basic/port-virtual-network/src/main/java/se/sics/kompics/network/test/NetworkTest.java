@@ -7,12 +7,14 @@ package se.sics.kompics.network.test;
 import com.google.common.primitives.Ints;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.kompics.Channel;
@@ -31,8 +33,10 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
 import se.sics.kompics.address.Address;
 import se.sics.kompics.network.Message;
+import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.Transport;
+import se.sics.kompics.network.VirtualNetworkChannel;
 
 /**
  *
@@ -43,9 +47,10 @@ public class NetworkTest {
     private static final Logger LOG = LoggerFactory.getLogger(NetworkTest.class);
     //private static final String STARTED = "STARTED";
     private static final String STOPPED = "STOPPED";
-    private static final String SENT = "SENT";
+    private static final String SENDING = "SENDING";
     private static final String RECEIVED = "RECEIVED";
     private static final String ACKED = "ACKED";
+    private static final String SENT = "SENT";
     private static final String FAIL = "FAIL";
     private static final int NUM_MESSAGES = 100;
     private static final int BATCH_SIZE = 10;
@@ -115,11 +120,13 @@ public class NetworkTest {
                 LOG.error("Aborting test.", ex);
                 System.exit(1);
             }
+            
             for (int i = 0; i < numNodes; i++) {
                 nodes[i] = new Address(ip, startPort + i, Ints.toByteArray(i));
                 Component net = nGen.generate(myProxy, nodes[i]);
+                VirtualNetworkChannel vnc = VirtualNetworkChannel.connect(net.provided(Network.class));
                 Component scen = create(ScenarioComponent.class, new ScenarioInit(nodes[i], nodes));
-                connect(net.provided(Network.class), scen.required(Network.class));
+                vnc.addConnection(Ints.toByteArray(i), scen.required(Network.class));
             }
             //startPort = startPort + numNodes; // Don't start the same ports next time
             // Some network components shut down asynchronously -.-
@@ -180,6 +187,7 @@ public class NetworkTest {
         private int msgCount = 0;
         private int ackCount = 0;
         private Random rand = new Random(0);
+        private Map<UUID, Integer> pending = new TreeMap<UUID, Integer>();
 
         public ScenarioComponent(ScenarioInit init) {
             self = init.self;
@@ -189,14 +197,7 @@ public class NetworkTest {
                 @Override
                 public void handle(Start event) {
                     for (int i = 0; i < BATCH_SIZE; i++) {
-                        int id = msgId.getAndIncrement();
-                        if (messageStatus.putIfAbsent(id, SENT) != null) {
-                            LOG.error("Key {} was already present in messageStatus!", id);
-                            TestUtil.submit(FAIL);
-                        }
-                        Transport proto = NetworkTest.protos[rand.nextInt(NetworkTest.protos.length)];
-                        trigger(new TestMessage(self, nodes[rand.nextInt(nodes.length)], id, proto), net);
-                        msgCount++;
+                        sendMessage();
                     }
                 }
             };
@@ -209,22 +210,14 @@ public class NetworkTest {
                     messageStatus.put(event.msgId, ACKED);
                     ackCount++;
 
-                    
                     if (ackCount >= WAIT_FOR.get()) {
                         TestUtil.submit(STOPPED);
                         return;
                     }
-                    
+
                     if (msgCount < NUM_MESSAGES) {
                         for (int i = 0; i < BATCH_SIZE; i++) {
-                            int id = msgId.getAndIncrement();
-                            if (messageStatus.putIfAbsent(id, SENT) != null) {
-                                LOG.error("Key {} was already present in messageStatus!", id);
-                                TestUtil.submit(FAIL);
-                            }
-                            Transport proto = NetworkTest.protos[rand.nextInt(NetworkTest.protos.length)];
-                            trigger(new TestMessage(self, nodes[rand.nextInt(nodes.length)], id, proto), net);
-                            msgCount++;
+                            sendMessage();
                         }
                     }
                 }
@@ -240,6 +233,32 @@ public class NetworkTest {
                 }
             };
             subscribe(msgHandler, net);
+
+            Handler<MessageNotify.Resp> notifyHandler = new Handler<MessageNotify.Resp>() {
+
+                @Override
+                public void handle(MessageNotify.Resp event) {
+                    Integer msgId = pending.remove(event.msgId);
+                    assertNotNull(msgId);
+                    messageStatus.replace(msgId, SENDING, SENT);
+                    LOG.debug("Message {} was sent.", msgId);
+                }
+            };
+            subscribe(notifyHandler, net);
+        }
+
+        private void sendMessage() {
+            int id = msgId.getAndIncrement();
+            if (messageStatus.putIfAbsent(id, SENDING) != null) {
+                LOG.error("Key {} was already present in messageStatus!", id);
+                TestUtil.submit(FAIL);
+            }
+            Transport proto = NetworkTest.protos[rand.nextInt(NetworkTest.protos.length)];
+            TestMessage msg = new TestMessage(self, nodes[rand.nextInt(nodes.length)], id, proto);
+            MessageNotify.Req req = MessageNotify.create(msg);
+            pending.put(req.getMsgId(), id);
+            trigger(req, net);
+            msgCount++;
         }
     }
 

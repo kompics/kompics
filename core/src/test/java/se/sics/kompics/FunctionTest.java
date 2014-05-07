@@ -7,16 +7,10 @@ package se.sics.kompics;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Comparator;
 import java.util.TreeSet;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import static org.junit.Assert.*;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 /**
  *
@@ -26,7 +20,7 @@ import org.junit.runners.JUnit4;
 @SuppressWarnings("unused")
 public class FunctionTest {
 
-    public static interface HandlerFunc<T extends Event> extends Consumer<T>, Serializable {
+    public static interface HandlerFunc<T extends KompicsEvent> extends Consumer<T>, Serializable {
 
     }
 
@@ -49,7 +43,7 @@ public class FunctionTest {
         System.out.println("Start Event: " + event.toString());
     }
 
-    public <T extends Event> Handler<T> handle(T inst, HandlerFunc<T> fun) {
+    public <T extends KompicsEvent> Handler<T> handle(T inst, HandlerFunc<T> fun) {
         System.out.println("Gen: " + fun.getClass().toGenericString());
         Method[] ifs = fun.getClass().getDeclaredMethods();
 //        for (Method m : ifs) {
@@ -67,7 +61,7 @@ public class FunctionTest {
     }
 
     @SuppressWarnings("unchecked")
-    private <E extends Event> Class<E> reflectHandlerEventType(
+    private <E extends KompicsEvent> Class<E> reflectHandlerEventType(
             Handler<E> handler) {
         Class<E> eventType = null;
         try {
@@ -79,12 +73,12 @@ public class FunctionTest {
             // methods and pick the one with the most specific event type.
             // This sorted set stores the event types of all reflected handler
             // methods topologically ordered by the event type relationships.
-            TreeSet<Class<? extends Event>> relevant
-                    = new TreeSet<Class<? extends Event>>(
-                            new Comparator<Class<? extends Event>>() {
+            TreeSet<Class<? extends KompicsEvent>> relevant
+                    = new TreeSet<Class<? extends KompicsEvent>>(
+                            new Comparator<Class<? extends KompicsEvent>>() {
                                 @Override
-                                public int compare(Class<? extends Event> e1,
-                                        Class<? extends Event> e2) {
+                                public int compare(Class<? extends KompicsEvent> e1,
+                                        Class<? extends KompicsEvent> e2) {
                                     if (e1.isAssignableFrom(e2)) {
                                         return 1;
                                     } else if (e2.isAssignableFrom(e1)) {
@@ -96,7 +90,7 @@ public class FunctionTest {
             for (Method m : declared) {
                 if (m.getName().equals("handle")) {
                     relevant.add(
-                            (Class<? extends Event>) m.getParameterTypes()[0]);
+                            (Class<? extends KompicsEvent>) m.getParameterTypes()[0]);
                 }
             }
             eventType = (Class<E>) relevant.first();

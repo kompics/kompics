@@ -31,8 +31,10 @@ import se.sics.kompics.PortType;
  */
 public final class Network extends PortType {
 	{
-		positive(Message.class);
-		negative(Message.class);
+		positive(Msg.class);
+		negative(Msg.class);
+                request(MessageNotify.Req.class);
+                indication(MessageNotify.Resp.class);
 		request(JoinMulticastGroup.class);
 		request(LeaveMulticastGroup.class);
 	}

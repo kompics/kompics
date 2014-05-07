@@ -4,12 +4,12 @@
  * and open the template in the editor.
  */
 
-package se.sics.kompics.network.netty.serialization;
+package se.sics.kompics;
 
-/**
- *
- * @author sario
+/** 
+ * Marks an event as a KompicsEvent, i.e. being trigger-able on a Port.
+ * @author lkroll
  */
-public class DisambiguateSerializer {
+public interface KompicsEvent extends Cloneable {
     
 }

@@ -65,7 +65,7 @@ public abstract class ComponentCore implements Component {
         ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
                 negativePort.getPortType());
 
-        Class<? extends Event> eventType = filter.getEventType();
+        Class<? extends KompicsEvent> eventType = filter.getEventType();
         P portType = positivePort.getPortType();
         if (filter.isPositive()) {
             if (!portType.hasPositive(eventType)) {
@@ -132,7 +132,7 @@ public abstract class ComponentCore implements Component {
         this.scheduler = scheduler;
     }
 
-    public void eventReceived(PortCore<?> port, Event event, int wid) {
+    public void eventReceived(PortCore<?> port, KompicsEvent event, int wid) {
         //System.err.println("Received event " + event + " on " + port.getPortType().portTypeClass + " work " + workCount.get());
         port.enqueue(event);
         readyPorts.offer(port);

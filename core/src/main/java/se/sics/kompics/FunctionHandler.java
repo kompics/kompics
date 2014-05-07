@@ -12,7 +12,7 @@ import java.util.function.Consumer;
  *
  * @author lkroll
  */
-public class FunctionHandler<E extends Event> extends Handler<E> {
+public class FunctionHandler<E extends KompicsEvent> extends Handler<E> {
     
     private final Consumer<E> eventHandler;
     

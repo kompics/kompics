@@ -15,8 +15,8 @@ import org.apache.log4j.Logger;
 import se.sics.kompics.ChannelCore;
 import se.sics.kompics.ChannelFilter;
 import se.sics.kompics.ComponentCore;
-import se.sics.kompics.Event;
 import se.sics.kompics.Handler;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Negative;
 import se.sics.kompics.PortCore;
 import se.sics.kompics.PortType;
@@ -128,8 +128,8 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
     }
 
     @Override
-    public void forwardToNegative(Event event, int wid) {
-        Message msg = (Message) event;
+    public void forwardToNegative(KompicsEvent event, int wid) {
+        Msg msg = (Msg) event;
         byte[] id = msg.getDestination().getId();
         rwlock.readLock().lock();
         try {
@@ -158,7 +158,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
     }
 
     @Override
-    public void forwardToPositive(Event event, int wid) {
+    public void forwardToPositive(KompicsEvent event, int wid) {
         //log.debug("Forwarding Message down: " + event.toString());
         sourcePort.doTrigger(event, wid, this);
     }
@@ -198,12 +198,12 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         }
 
         @Override
-        public void doTrigger(Event event, int wid, ChannelCore<?> channel) {
+        public void doTrigger(KompicsEvent event, int wid, ChannelCore<?> channel) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        public void doTrigger(Event event, int wid, ComponentCore component) {
+        public void doTrigger(KompicsEvent event, int wid, ComponentCore component) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -218,7 +218,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         }
 
         @Override
-        public <E extends Event> void doSubscribe(Handler<E> handler) {
+        public <E extends KompicsEvent> void doSubscribe(Handler<E> handler) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -238,7 +238,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         }
 
         @Override
-        public void enqueue(Event event) {
+        public void enqueue(KompicsEvent event) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
     }
@@ -251,9 +251,9 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         }
 
         @Override
-        public void doTrigger(Event event, int wid, ChannelCore<?> channel) {
-            if (event instanceof Message) {
-                Message msg = (Message) event;
+        public void doTrigger(KompicsEvent event, int wid, ChannelCore<?> channel) {
+            if (event instanceof Msg) {
+                Msg msg = (Msg) event;
                 log.warn("Message from " + msg.getSource() + " to " + msg.getDestination() + " was not delivered! \n    Message: " + msg.toString());
                 return;
             }
@@ -261,7 +261,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         }
 
         @Override
-        public void doTrigger(Event event, int wid, ComponentCore component) {
+        public void doTrigger(KompicsEvent event, int wid, ComponentCore component) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -281,7 +281,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         }
 
         @Override
-        public <E extends Event> void doSubscribe(Handler<E> handler) {
+        public <E extends KompicsEvent> void doSubscribe(Handler<E> handler) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -301,7 +301,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         }
 
         @Override
-        public void enqueue(Event event) {
+        public void enqueue(KompicsEvent event) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
     }

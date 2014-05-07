@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.p2p.experiment.dsl.events;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 
 /**
  * The <code>KompicsSimulatorEvent</code> class.
@@ -35,7 +35,7 @@ public class KompicsSimulatorEvent extends SimulatorEvent {
 	 */
 	private static final long serialVersionUID = 8405417898941931667L;
 
-	protected transient Event event;
+	protected transient KompicsEvent event;
 
 	private boolean canceled = false;
 
@@ -47,12 +47,12 @@ public class KompicsSimulatorEvent extends SimulatorEvent {
 		canceled = true;
 	}
 
-	public KompicsSimulatorEvent(Event event, long time) {
+	public KompicsSimulatorEvent(KompicsEvent event, long time) {
 		super(time);
 		this.event = event;
 	}
 
-	public final Event getEvent() {
+	public final KompicsEvent getEvent() {
 		return event;
 	}
 

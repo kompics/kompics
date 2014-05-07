@@ -21,18 +21,20 @@
 package se.sics.kompics.network;
 
 import java.io.Serializable;
-import se.sics.kompics.Event;
 import se.sics.kompics.address.Address;
 
 /**
  * The <code>Message</code> class.
  * <p>
+ * @deprecated Use {@link se.sics.kompics.network.Msg Msg} instead.
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @author Lars Kroll <lkroll@sics.se>
  * @version $Id: Message.java 4051 2012-03-30 14:32:40Z Cosmin $
  */
-public abstract class Message extends Event implements Serializable {
+@Deprecated
+public abstract class Message implements Msg, Serializable {
 
     /**
      *
@@ -42,7 +44,7 @@ public abstract class Message extends Event implements Serializable {
     private Address source;
 
     private Address destination;
-    
+
     private Address origin;
 
     private Transport protocol;
@@ -56,11 +58,11 @@ public abstract class Message extends Event implements Serializable {
     protected Message(Address source, Address destination) {
         this(source, destination, source, Transport.TCP);
     }
-    
+
     protected Message(Address source, Address destination, Address origin) {
         this(source, destination, origin, Transport.TCP);
     }
-    
+
     protected Message(Address source, Address destination, Transport protocol) {
         this(source, destination, source, protocol);
     }
@@ -106,7 +108,7 @@ public abstract class Message extends Event implements Serializable {
     public void setDestination(Address destination) {
         this.destination = destination;
     }
-    
+
     public final Address getOrigin() {
         return this.origin;
     }
@@ -128,7 +130,7 @@ public abstract class Message extends Event implements Serializable {
     public final Transport getProtocol() {
         return protocol;
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

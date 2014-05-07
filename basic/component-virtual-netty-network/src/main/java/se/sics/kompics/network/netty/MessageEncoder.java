@@ -25,14 +25,14 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import java.util.List;
-import se.sics.kompics.network.Message;
+import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.netty.serialization.Serializers;
 
 /**
  *
  * @author Lars Kroll <lkroll@kth.se>
  */
-public class MessageEncoder extends MessageToMessageEncoder<Message> {
+public class MessageEncoder extends MessageToMessageEncoder<Msg> {
 
     private static final byte[] LENGTH_PLACEHOLDER = new byte[2];
 
@@ -54,7 +54,7 @@ public class MessageEncoder extends MessageToMessageEncoder<Message> {
 //    }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Message msg, List<Object> outL) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, Msg msg, List<Object> outL) throws Exception {
         ByteBuf out = ctx.alloc().buffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
         NettyNetwork.LOG.trace("Trying to encode outgoing data to {} from {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress());
         int startIdx = out.writerIndex();

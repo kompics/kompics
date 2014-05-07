@@ -27,8 +27,11 @@ import io.netty.buffer.Unpooled;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.UUID;
 import junit.framework.Assert;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -113,11 +116,21 @@ public class SerializationTest {
     public void addressTest() {
         try {
             Address addr = new Address(InetAddress.getByName("127.0.0.1"), 1234, new byte[]{1, 2, 3, 4});
+            Address hostAddr = addr.hostAddress();
             ByteBuf buf = Unpooled.directBuffer();
             Serializers.toBinary(addr, buf);
             System.out.println("Address: " + ByteBufUtil.hexDump(buf));
-            Object someRes = Serializers.fromBinary(buf, Optional.absent());
+            Address someRes = (Address) Serializers.fromBinary(buf, Optional.absent());
             assertEquals(addr, someRes);
+            
+            buf.clear();
+            
+            Serializers.toBinary(hostAddr, buf);
+            System.out.println("HostAddress: " + ByteBufUtil.hexDump(buf));
+            Address someHostRes = (Address) Serializers.fromBinary(buf, Optional.absent());
+            assertEquals(hostAddr, someHostRes);
+            
+            buf.release();
         } catch (UnknownHostException ex) {
             Assert.fail(ex.getMessage());
         }
@@ -147,8 +160,63 @@ public class SerializationTest {
             }
         }
     }
+    
+    @Test
+    public void uuidTest() {
+        ByteBuf buf = Unpooled.directBuffer();
+        UUID orig = UUID.randomUUID();
+        Serializers.toBinary(orig, buf);
+        System.out.println("UUID: " + ByteBufUtil.hexDump(buf));
+        UUID copy = (UUID) Serializers.fromBinary(buf, Optional.absent());
+        Assert.assertEquals(orig, copy);
+    }
+    
+    @Test
+    public void avroTest() throws AvroSerializer.KeyExistsException, AvroSerializer.InvalidKeyException {
+        AvroSerializer.register(15, SomeAvro.class);
+        Serializers.register(ParentSomeAvro.class, "avroS");
+        AvroSerializer.register(16, SomeGeneratedAvro.class);
+        SomeAvro some = new SomeAvro();
+        ByteBuf buf = Unpooled.directBuffer();
+        Serializers.toBinary(some, buf);
+        System.out.println("AVRO - SomeAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
+        SomeAvro someRes = (SomeAvro) Serializers.fromBinary(buf, Optional.absent());
+        assertEquals(some.getField(), someRes.getField());
+        //
+        buf.clear();
+        //
+        ParentSomeAvro someP = new ParentSomeAvro(some);
+        Serializers.toBinary(someP, buf);
+        System.out.println("AVRO - ParentSomeAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
+        ParentSomeAvro somePRes = (ParentSomeAvro) Serializers.fromBinary(buf, Optional.absent());
+        assertEquals(someP.getMySer().getField(), somePRes.getMySer().getField());
+        //
+        buf.clear();
+        //
+        SomeGeneratedAvro sga = SomeGeneratedAvro.newBuilder()
+                .setSomeNumber(1234).build();
+        Serializers.toBinary(sga, buf);
+        System.out.println("AVRO - SomeGeneratedAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
+        SomeGeneratedAvro sgaR = (SomeGeneratedAvro) Serializers.fromBinary(buf, Optional.absent());
+        assertEquals(sga.getSomeNumber(), sgaR.getSomeNumber());
+        //
+        buf.release();
+    }
 
     public static class SomeSerializable implements Serializable {
+
+        private int someField = 12345;
+
+        public void setField(int i) {
+            someField = i;
+        }
+
+        public int getField() {
+            return someField;
+        }
+    }
+    
+    public static class SomeAvro {
 
         private int someField = 12345;
 
@@ -174,6 +242,27 @@ public class SerializationTest {
         }
 
         public SomeSerializable getMySer() {
+            return mySer;
+        }
+    }
+    
+    public static class ParentSomeAvro {
+
+        private SomeAvro mySer;
+
+        ParentSomeAvro() {
+            
+        }
+        
+        public ParentSomeAvro(SomeAvro ss) {
+            mySer = ss;
+        }
+
+        public void setMySer(SomeAvro ss) {
+            mySer = ss;
+        }
+
+        public SomeAvro getMySer() {
             return mySer;
         }
     }

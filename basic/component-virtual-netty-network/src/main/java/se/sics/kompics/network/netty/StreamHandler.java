@@ -22,7 +22,7 @@ package se.sics.kompics.network.netty;
 
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
-import se.sics.kompics.network.Message;
+import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 
 /**
@@ -30,14 +30,14 @@ import se.sics.kompics.network.Transport;
  * @author Lars Kroll <lkroll@kth.se>
  */
 @Sharable
-public class StreamHandler extends BaseHandler<Message> {
+public class StreamHandler extends BaseHandler<Msg> {
     
     public StreamHandler(NettyNetwork component, Transport protocol) {
         super(component, protocol);
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Message msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, Msg msg) throws Exception {
         component.deliverMessage(msg);
     }
     

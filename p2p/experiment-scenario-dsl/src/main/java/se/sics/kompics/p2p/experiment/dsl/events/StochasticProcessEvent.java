@@ -23,7 +23,7 @@ package se.sics.kompics.p2p.experiment.dsl.events;
 import java.util.List;
 import java.util.Random;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.OperationGenerator;
 import se.sics.kompics.p2p.experiment.dsl.distribution.Distribution;
 
@@ -86,7 +86,7 @@ public final class StochasticProcessEvent extends SimulatorEvent {
 		return currentCount;
 	}
 
-	public Event generateOperation(Random random) {
+	public KompicsEvent generateOperation(Random random) {
 		OperationGenerator generator = chooseOperation(random);
 		return generator.generate();
 	}

@@ -27,7 +27,7 @@ package se.sics.kompics;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public abstract class ChannelFilter<E extends Event, F> {
+public abstract class ChannelFilter<E extends KompicsEvent, F> {
 
 	private final Class<E> eventType;
 

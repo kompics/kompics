@@ -21,29 +21,64 @@
 package se.sics.kompics.network.netty;
 
 import se.sics.kompics.address.Address;
-import se.sics.kompics.network.Message;
+import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 
 /**
  *
  * @author Lars Kroll <lkroll@kth.se>
  */
-public abstract class DisambiguateConnection {
-    public static class Req extends Message {
+public abstract class DisambiguateConnection implements Msg {
+
+    public final Address src;
+    public final Address dst;
+    public final Transport protocol;
+
+    public DisambiguateConnection(Address src, Address dst, Transport protocol) {
+        this.src = src;
+        this.dst = dst;
+        this.protocol = protocol;
+    }
+
+    @Override
+    public Address getSource() {
+        return src;
+    }
+
+    @Override
+    public Address getDestination() {
+        return dst;
+    }
+
+    @Override
+    public Address getOrigin() {
+        return src;
+    }
+
+    @Override
+    public Transport getProtocol() {
+        return protocol;
+    }
+
+    public static class Req extends DisambiguateConnection {
+
         public final int localPort;
         public final int udtPort;
-        
+
         public Req(Address src, Address dst, Transport protocol, int localPort, int udtPort) {
             super(src, dst, protocol);
             this.localPort = localPort;
             this.udtPort = udtPort;
         }
+
     }
-    public static class Resp extends Message {
+
+    public static class Resp extends DisambiguateConnection {
+
         public final int localPort;
         public final int boundPort;
         public final int udtPort;
-        
+
         public Resp(Address src, Address dst, Transport protocol, int remotePort, int boundPort, int udtPort) {
             super(src, dst, protocol);
             this.localPort = remotePort; // rename because on the sender side it's remote but for the receiver it's local

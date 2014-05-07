@@ -22,7 +22,7 @@ package se.sics.kompics.p2p.experiment.dsl.adaptor;
 
 import java.io.Serializable;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 
 /**
  * The <code>Operation2</code> class.
@@ -30,7 +30,7 @@ import se.sics.kompics.Event;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public interface Operation2<E extends Event, P1 extends Number, P2 extends Number>
+public interface Operation2<E extends KompicsEvent, P1 extends Number, P2 extends Number>
 		extends Serializable {
 
 	public E generate(P1 parameter1, P2 parameter2);

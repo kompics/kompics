@@ -28,6 +28,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
@@ -82,13 +83,16 @@ public abstract class Serializers {
             register(nullS, "nullS");
             register(new SpecialSerializers.ByteSerializer(), "byteS");
             register(byte[].class, "byteS");
-            register(new SpecialSerializers.AddressSerializer(), "addrS");
+            register(SpecialSerializers.AddressSerializer.INSTANCE, "addrS");
             register(Address.class, "addrS");
             register(new SpecialSerializers.DisambiguateSerializer(), "disambS");
             register(DisambiguateConnection.Req.class, "disambS");
             register(DisambiguateConnection.Resp.class, "disambS");
+            register(SpecialSerializers.UUIDSerializer.INSTANCE, "uuidS");
+            register(UUID.class, "uuidS");
             register(new JavaSerializer(ClassResolvers.softCachingConcurrentResolver(ClassLoader.getSystemClassLoader())), "javaS");
             register(Serializable.class, "javaS");
+            register(new AvroSerializer(), "avroS");
         } finally {
             rwLock.writeLock().unlock();
         }

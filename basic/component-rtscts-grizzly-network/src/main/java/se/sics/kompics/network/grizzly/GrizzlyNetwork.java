@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
 import org.glassfish.grizzly.filterchain.TransportFilter;
@@ -419,32 +420,36 @@ public class GrizzlyNetwork extends ComponentDefinition {
     }
 
     private void handleCTS(CTSMessage message) {
-        logger.debug(
-                "Handling CTS message {} from {} to {} protocol {}",
-                new Object[]{message.toString(), message.getSource(),
-                    message.getDestination(), message.getProtocol()});
-
-        ClearToSend cts = null;
-        outgoingLock.writeLock().lock();
-        //logger.debug("acquired wl.");        
         try {
-            cts = pendingRequests.get(message.reqId);
-            if (cts == null) {
-                logger.warn("No pending request matches id " + message.reqId);
-                return;
+            logger.debug(
+                    "Handling CTS message {} from {} to {} protocol {}",
+                    new Object[]{message.toString(), message.getSource(),
+                        message.getDestination(), message.getProtocol()});
+            
+            ClearToSend cts = null;
+            outgoingLock.writeLock().lock();
+            //logger.debug("acquired wl.");
+            try {
+                cts = pendingRequests.get(message.reqId);
+                if (cts == null) {
+                    logger.warn("No pending request matches id " + message.reqId);
+                    return;
+                }
+                //outgoingFlows.put(message.reqId, message);
+                outgoingRemainingQuota.put(message.reqId, message.quota);
+            } finally {
+                outgoingLock.writeLock().unlock();
+                //logger.debug("released wl.");
             }
-            //outgoingFlows.put(message.reqId, message);
-            outgoingRemainingQuota.put(message.reqId, message.quota);
-        } finally {
-            outgoingLock.writeLock().unlock();
-            //logger.debug("released wl.");
+            cts = (ClearToSend) cts.clone();
+            cts.setFlowId(message.flowId);
+            cts.setQuota(message.quota);
+            cts.setRequestId(message.reqId);
+            trigger(cts, net);
+            logger.debug("triggered CTS event");
+        }   catch (CloneNotSupportedException ex) {
+            logger.warn("Cloudn't clone CTS event", ex);
         }
-        cts = (ClearToSend) cts.clone();
-        cts.setFlowId(message.flowId);
-        cts.setQuota(message.quota);
-        cts.setRequestId(message.reqId);
-        trigger(cts, net);
-        logger.debug("triggered CTS event");
     }
 
     private void checkFlowPool() {

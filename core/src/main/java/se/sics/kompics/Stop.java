@@ -28,7 +28,7 @@ package se.sics.kompics;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public final class Stop extends Event {
+public final class Stop implements KompicsEvent {
 
 	public static Stop event = new Stop();
 

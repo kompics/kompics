@@ -23,11 +23,15 @@ package se.sics.kompics;
 /**
  * The <code>Event</code> class.
  * 
+ * @deprecated
+ * Use {@link se.sics.kompics.KompicsEvent KompicsEvent} instead.
+ * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public abstract class Event implements Cloneable {
+@Deprecated
+public abstract class Event implements Cloneable, KompicsEvent {
 
 	@Override
 	public Object clone() {

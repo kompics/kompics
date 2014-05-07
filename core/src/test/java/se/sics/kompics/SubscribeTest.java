@@ -37,7 +37,7 @@ import org.junit.Test;
 @SuppressWarnings("unused")
 public class SubscribeTest {
 
-    static class TestEvent extends Event {
+    static class TestEvent implements KompicsEvent {
 
         final int id;
 

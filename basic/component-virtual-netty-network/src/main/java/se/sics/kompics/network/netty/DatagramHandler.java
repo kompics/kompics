@@ -25,7 +25,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
-import se.sics.kompics.network.Message;
+import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 import se.sics.kompics.network.netty.serialization.Serializers;
 
@@ -44,8 +44,8 @@ public class DatagramHandler extends BaseHandler<DatagramPacket> {
     protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         try {
             Object m = Serializers.fromBinary(msg.content(), Optional.absent());
-            if (m instanceof Message) {
-                component.deliverMessage((Message) m);
+            if (m instanceof Msg) {
+                component.deliverMessage((Msg) m);
             } else {
                 NettyNetwork.LOG.warn("Got unexpected Datagram message type: {} -> {}", m.getClass().getCanonicalName(), m);
             }
