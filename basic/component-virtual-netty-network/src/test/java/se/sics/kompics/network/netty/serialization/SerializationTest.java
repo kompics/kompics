@@ -173,6 +173,7 @@ public class SerializationTest {
     
     @Test
     public void avroTest() throws AvroSerializer.KeyExistsException, AvroSerializer.InvalidKeyException {
+        Serializers.register(new AvroSerializer(), "avroS");
         AvroSerializer.register(15, SomeAvro.class);
         Serializers.register(ParentSomeAvro.class, "avroS");
         AvroSerializer.register(16, SomeGeneratedAvro.class);

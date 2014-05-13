@@ -92,7 +92,7 @@ public abstract class Serializers {
             register(UUID.class, "uuidS");
             register(new JavaSerializer(ClassResolvers.softCachingConcurrentResolver(ClassLoader.getSystemClassLoader())), "javaS");
             register(Serializable.class, "javaS");
-            register(new AvroSerializer(), "avroS");
+            //register(new AvroSerializer(), "avroS");
         } finally {
             rwLock.writeLock().unlock();
         }
