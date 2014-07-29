@@ -45,18 +45,15 @@ import java.util.Random;
 import java.util.TimeZone;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.Loader;
 import javassist.NotFoundException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.ConcreteOperation;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation1;
@@ -216,7 +213,7 @@ public abstract class SimulationScenario implements Serializable {
 		 * @param op
 		 *            the op
 		 */
-		protected final <E extends Event> void raise(int count, Operation<E> op) {
+		protected final <E extends KompicsEvent> void raise(int count, Operation<E> op) {
 			if (count <= 0) {
 				throw new RuntimeException(
 						"Number of raised events must be strictly positive");
@@ -237,7 +234,7 @@ public abstract class SimulationScenario implements Serializable {
 		 * @param d1
 		 *            the d1
 		 */
-		protected final <E extends Event, P1 extends Number> void raise(
+		protected final <E extends KompicsEvent, P1 extends Number> void raise(
 				int count, Operation1<E, P1> op1, Distribution<P1> d1) {
 			if (count <= 0) {
 				throw new RuntimeException(
@@ -261,7 +258,7 @@ public abstract class SimulationScenario implements Serializable {
 		 * @param d2
 		 *            the d2
 		 */
-		protected final <E extends Event, P1 extends Number, P2 extends Number> void raise(
+		protected final <E extends KompicsEvent, P1 extends Number, P2 extends Number> void raise(
 				int count, Operation2<E, P1, P2> op2, Distribution<P1> d1,
 				Distribution<P2> d2) {
 			if (count <= 0) {
@@ -288,7 +285,7 @@ public abstract class SimulationScenario implements Serializable {
 		 * @param d3
 		 *            the d3
 		 */
-		protected final <E extends Event, P1 extends Number, P2 extends Number, P3 extends Number> void raise(
+		protected final <E extends KompicsEvent, P1 extends Number, P2 extends Number, P3 extends Number> void raise(
 				int count, Operation3<E, P1, P2, P3> op3, Distribution<P1> d1,
 				Distribution<P2> d2, Distribution<P3> d3) {
 			if (count <= 0) {
@@ -317,7 +314,7 @@ public abstract class SimulationScenario implements Serializable {
 		 * @param d4
 		 *            the d4
 		 */
-		protected final <E extends Event, P1 extends Number, P2 extends Number, P3 extends Number, P4 extends Number, P5 extends Number> void raise(
+		protected final <E extends KompicsEvent, P1 extends Number, P2 extends Number, P3 extends Number, P4 extends Number, P5 extends Number> void raise(
 				int count, Operation4<E, P1, P2, P3, P4> op4,
 				Distribution<P1> d1, Distribution<P2> d2, Distribution<P3> d3,
 				Distribution<P4> d4) {
@@ -349,7 +346,7 @@ public abstract class SimulationScenario implements Serializable {
 		 * @param d5
 		 *            the d5
 		 */
-		protected final <E extends Event, P1 extends Number, P2 extends Number, P3 extends Number, P4 extends Number, P5 extends Number> void raise(
+		protected final <E extends KompicsEvent, P1 extends Number, P2 extends Number, P3 extends Number, P4 extends Number, P5 extends Number> void raise(
 				int count, Operation5<E, P1, P2, P3, P4, P5> op5,
 				Distribution<P1> d1, Distribution<P2> d2, Distribution<P3> d3,
 				Distribution<P4> d4, Distribution<P5> d5) {
