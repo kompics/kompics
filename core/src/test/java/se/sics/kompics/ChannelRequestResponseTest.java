@@ -72,22 +72,24 @@ public class ChannelRequestResponseTest {
         Negative<TestPort> testPort = negative(TestPort.class);
 
         public TestComponent2() {
-            //subscribe(testRequest, testPort);
+            subscribe(testRequest, testPort);
         }
+/* java 8        
         Handler<TestRequest> h = handle(testPort, TestRequest.class, event -> {
             TestResponse response = new TestResponse(event, event.id);
             trigger(response, testPort);
         });
-//        Handler<TestRequest> testRequest = new Handler<TestRequest>() {
-//            @Override
-//            public void handle(TestRequest event) {
-//
-//                // System.err.println("Handling request " + event.id);
-//
-//                TestResponse response = new TestResponse(event, event.id);
-//                trigger(response, testPort);
-//            }
-//        };
+*/
+        Handler<TestRequest> testRequest = new Handler<TestRequest>() {
+            @Override
+            public void handle(TestRequest event) {
+
+                // System.err.println("Handling request " + event.id);
+
+                TestResponse response = new TestResponse(event, event.id);
+                trigger(response, testPort);
+            }
+        };
     }
     private static final int EVENT_COUNT = 1;
     private static Semaphore semaphore;

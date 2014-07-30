@@ -106,7 +106,7 @@ public abstract class ComponentDefinition {
     protected final void expect(Filter<?>... filter) {
         // TODO
     }
-
+/* java8
     protected final <E extends KompicsEvent, P extends PortType> Handler<E> handle(Port<P> port, Class<E> type, Consumer<E> fun) {
         Handler<E> handler = new FunctionHandler<>(type, fun);
         subscribe(handler, port);
@@ -120,7 +120,7 @@ public abstract class ComponentDefinition {
     protected final Handler<Stop> onStop(Consumer<Stop> fun) {
         return handle(control, Stop.class, fun);
     }
-    
+*/    
     /**
      * Subscribe.
      *
