@@ -113,6 +113,14 @@ public abstract class ComponentDefinition {
         return handler;
     }
 
+    protected final Handler<Start> onStart(Consumer<Start> fun) {
+        return handle(control, Start.class, fun);
+    }
+    
+    protected final Handler<Stop> onStop(Consumer<Stop> fun) {
+        return handle(control, Stop.class, fun);
+    }
+    
     /**
      * Subscribe.
      *
