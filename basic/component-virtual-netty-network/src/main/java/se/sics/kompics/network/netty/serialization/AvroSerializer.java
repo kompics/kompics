@@ -6,6 +6,7 @@
 package se.sics.kompics.network.netty.serialization;
 
 import com.google.common.base.Optional;
+import com.google.common.io.Closer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
@@ -42,8 +43,8 @@ public class AvroSerializer implements Serializer {
 
     private static final int MY_ID = 7;
 
-    private static final ConcurrentMap<Integer, SchemaEntry> idMap = new ConcurrentSkipListMap<>();
-    private static final ConcurrentMap<String, SchemaEntry> classMap = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Integer, SchemaEntry> idMap = new ConcurrentSkipListMap<Integer, SchemaEntry>();
+    private static final ConcurrentMap<String, SchemaEntry> classMap = new ConcurrentHashMap<String, SchemaEntry>();
 
     private static final ReflectData rData = ReflectData.get();
 
@@ -125,16 +126,25 @@ public class AvroSerializer implements Serializer {
         byte[] flagsB = flags.finalise();
         buf.writeBytes(flagsB);
         buf.writeInt(se.id);
-        try (ByteBufOutputStream out = new ByteBufOutputStream(buf);) {
-            BinaryEncoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
-            DatumWriter writer;
-            if (se.generated) {
-                writer = new SpecificDatumWriter(se.schema);
-            } else {
-                writer = new ReflectDatumWriter(se.schema);
+        try {
+            Closer closer = Closer.create(); // Did I mention how much java6 sucks?
+            try {
+                ByteBufOutputStream out = closer.register(new ByteBufOutputStream(buf));
+                BinaryEncoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
+                DatumWriter writer;
+                if (se.generated) {
+                    writer = new SpecificDatumWriter(se.schema);
+                } else {
+                    writer = new ReflectDatumWriter(se.schema);
+                }
+                writer.write(o, encoder);
+                encoder.flush();
+            } catch (Throwable ex) {
+                LOG.error("Couldn't serialise object.", ex);
+                closer.rethrow(ex);
+            } finally {
+                closer.close();
             }
-            writer.write(o, encoder);
-            encoder.flush();
         } catch (IOException ex) {
             LOG.error("Couldn't serialise object.", ex);
         }
@@ -157,18 +167,26 @@ public class AvroSerializer implements Serializer {
         }
         byte[] flagsB = flags.finalise();
         buf.writeBytes(flagsB);
-        try (ByteBufOutputStream out = new ByteBufOutputStream(buf);
-                DataFileWriter writer = new DataFileWriter(refWriter)
-                .create(s, out);) {
-            writer.append(o);
-            writer.flush();
+        try {
+            Closer closer = Closer.create(); // Did I mention how much java6 sucks?
+            try {
+                ByteBufOutputStream out = closer.register(new ByteBufOutputStream(buf));
+                DataFileWriter writer = closer.register(new DataFileWriter(refWriter).create(s, out));
+                writer.append(o);
+                writer.flush();
+            } catch (Throwable ex) {
+                LOG.error("Couldn't serialise object.", ex);
+                closer.rethrow(ex);
+            } finally {
+                closer.close();
+            }
         } catch (IOException ex) {
             LOG.error("Couldn't serialise object.", ex);
         }
     }
 
     @Override
-    public Object fromBinary(ByteBuf buf, Optional<Class> hint) {
+    public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
         byte[] flagsB = new byte[1];
         buf.readBytes(flagsB);
         boolean[] flags = BitBuffer.extract(2, flagsB);
@@ -194,9 +212,19 @@ public class AvroSerializer implements Serializer {
         } else {
             refReader = new ReflectDatumReader();
         }
-        try (ByteBufInputStream in = new ByteBufInputStream(buf);
-                DataFileStream reader = new DataFileStream(in, refReader)) {
-            return reader.next(); // there should only be one
+        try {
+            Closer closer = Closer.create();
+            try {
+                ByteBufInputStream in = closer.register(new ByteBufInputStream(buf));
+                DataFileStream reader = closer.register(new DataFileStream(in, refReader));
+                return reader.next(); // there should only be one
+            } catch (Throwable ex) {
+                LOG.error("Couldn't deserialise object.", ex);
+                closer.rethrow(ex);
+                return null;
+            } finally {
+                closer.close();
+            }
         } catch (IOException ex) {
             LOG.error("Couldn't deserialise object.", ex);
             return null;
@@ -210,9 +238,19 @@ public class AvroSerializer implements Serializer {
         } else {
             refReader = new ReflectDatumReader(se.schema);
         }
-        try (ByteBufInputStream in = new ByteBufInputStream(buf);) {
-            BinaryDecoder decoder = DecoderFactory.get().directBinaryDecoder(in, null);
-            return refReader.read(null, decoder); // there should only be one
+        try {
+            Closer closer = Closer.create();
+            try {
+                ByteBufInputStream in = closer.register(new ByteBufInputStream(buf));
+                BinaryDecoder decoder = DecoderFactory.get().directBinaryDecoder(in, null);
+                return refReader.read(null, decoder); // there should only be one
+            } catch (Throwable ex) {
+                LOG.error("Couldn't deserialise object.", ex);
+                closer.rethrow(ex);
+                return null;
+            } finally {
+                closer.close();
+            }
         } catch (IOException ex) {
             LOG.error("Couldn't deserialise object.", ex);
             return null;

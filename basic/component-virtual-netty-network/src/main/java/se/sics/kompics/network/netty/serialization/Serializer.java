@@ -53,5 +53,5 @@ public interface Serializer {
      * @param hint
      * @return 
      */
-    public Object fromBinary(ByteBuf buf, Optional<Class> hint);
+    public Object fromBinary(ByteBuf buf, Optional<Object> hint); // see comment at Serializers.fromBinary
 }

@@ -82,7 +82,7 @@ public class ProtobufSerializer implements Serializer {
     }
     
     @Override
-    public Object fromBinary(ByteBuf msg, Optional<Class> hint) {
+    public Object fromBinary(ByteBuf msg, Optional<Object> hint) {
         final byte[] array;
         final int offset;
         final int length = msg.readableBytes();

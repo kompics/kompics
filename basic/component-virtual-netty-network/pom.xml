@@ -102,8 +102,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
                 <version>3.1</version>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>1.6</source>
+                    <target>1.6</target>
                     <debug>true</debug>
                     <optimize>true</optimize>
                     <showDeprecations>true</showDeprecations>

@@ -178,12 +178,15 @@ public abstract class Serializers {
         s.toBinary(o, buf);
     }
 
-    public static Object fromBinary(ByteBuf buf, Optional<Class> hint) {
+    // this SHOULD be an Optional<Class> but java6 is moronic and doesn't read generics
+    // from method declarations correctly. This is fixed in java8.
+    public static Object fromBinary(ByteBuf buf, Optional<Object> hint) {
         rwLock.readLock().lock();
         try {
             Serializer s = null;
             if (hint.isPresent()) {
-                s = lookupSerializer(hint.get());
+                Class c = (Class) hint.get(); // see comment above -.-
+                s = lookupSerializer(c);
             }
             int sId = -1;
             if (s == null) {
@@ -210,6 +213,7 @@ public abstract class Serializers {
             rwLock.readLock().unlock();
         }
     }
+    
 
     public static Serializer lookupSerializer(Class<? extends Object> aClass) {
         Serializer s = resolutionCache.get(aClass.getName());

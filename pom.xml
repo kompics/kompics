@@ -214,7 +214,7 @@ by putting together protocols programmed as event-driven components.
 					<linkXref>true</linkXref>
 					<sourceEncoding>utf-8</sourceEncoding>
 					<minimumTokens>100</minimumTokens>
-					<targetJdk>1.8</targetJdk>
+					<targetJdk>1.6</targetJdk>
 				</configuration>
 			</plugin>
 

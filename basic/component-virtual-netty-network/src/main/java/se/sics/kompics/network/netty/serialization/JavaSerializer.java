@@ -72,7 +72,7 @@ public class JavaSerializer implements Serializer {
     }
 
     @Override
-    public Object fromBinary(ByteBuf buf, Optional<Class> hint) {
+    public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
         // Ignore hint
         try {
             Closer closer = Closer.create();

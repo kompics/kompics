@@ -92,7 +92,7 @@ public class NettyNetwork extends ComponentDefinition {
     private final ConcurrentMap<InetSocketAddress, DatagramChannel> udpChannels = new ConcurrentHashMap<InetSocketAddress, DatagramChannel>();
     private final ConcurrentMap<InetSocketAddress, UdtChannel> udtChannels = new ConcurrentHashMap<InetSocketAddress, UdtChannel>();
     private final ConcurrentMap<Integer, Integer> udtPortMap = new ConcurrentSkipListMap<Integer, Integer>();
-    private final ConcurrentLinkedQueue<Msg> delayedMessages = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Msg> delayedMessages = new ConcurrentLinkedQueue<Msg>();
     private final ConcurrentLinkedQueue<MessageNotify.Req> delayedNotifies = new ConcurrentLinkedQueue<MessageNotify.Req>();
     // Info
     final Address self;
@@ -199,7 +199,7 @@ public class NettyNetwork extends ComponentDefinition {
     Handler<MessageNotify.Req> notifyHandler = new Handler<MessageNotify.Req>() {
 
         @Override
-        public void handle(MessageNotify.Req notify) {
+        public void handle(final MessageNotify.Req notify) {
             Msg event = notify.msg;
             if (event.getDestination().sameHostAs(self)) {
                 LOG.trace("Delivering message {} locally.", event);
@@ -428,7 +428,7 @@ public class NettyNetwork extends ComponentDefinition {
         if (delayedMessages.isEmpty() && delayedNotifies.isEmpty()) { // At least stop early if nothing to do
             return;
         }
-        LinkedList<Msg> tryThisTime = new LinkedList<>();
+        LinkedList<Msg> tryThisTime = new LinkedList<Msg>();
         while (!delayedMessages.isEmpty()) {
             Msg m = delayedMessages.poll(); // Could have evaported in another way^^
             if (m != null) {

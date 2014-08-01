@@ -53,7 +53,7 @@ public abstract class SpecialSerializers {
         }
 
         @Override
-        public Object fromBinary(ByteBuf buf, Optional<Class> hint) {
+        public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
             return null;
         }
 
@@ -79,7 +79,7 @@ public abstract class SpecialSerializers {
         }
 
         @Override
-        public Object fromBinary(ByteBuf buf, Optional<Class> hint) {
+        public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
             int length = buf.readInt();
             byte[] bytes = new byte[length];
             buf.readBytes(bytes);
@@ -136,7 +136,7 @@ public abstract class SpecialSerializers {
         }
 
         @Override
-        public Object fromBinary(ByteBuf buf, Optional<Class> hint) {
+        public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
             byte[] ipBytes = new byte[4];
             buf.readBytes(ipBytes);
             if ((ipBytes[0] == 0) && (ipBytes[1] == 0) && (ipBytes[2] == 0) && (ipBytes[3] == 0)) {
@@ -206,7 +206,7 @@ public abstract class SpecialSerializers {
         }
 
         @Override
-        public Object fromBinary(ByteBuf buf, Optional<Class> hint) {
+        public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
             MessageSerializationUtil.MessageFields fields = MessageSerializationUtil.msgFromBinary(buf);
             if (fields.flag1) { // Response
                 return respFromBinary(buf, fields);
@@ -286,7 +286,7 @@ public abstract class SpecialSerializers {
         }
 
         @Override
-        public Object fromBinary(ByteBuf buf, Optional<Class> hint) {
+        public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
             return new UUID(buf.readLong(), buf.readLong());
         }
 

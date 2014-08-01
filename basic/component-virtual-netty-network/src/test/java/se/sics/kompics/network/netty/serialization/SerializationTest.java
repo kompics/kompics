@@ -30,8 +30,6 @@ import java.net.UnknownHostException;
 import java.util.UUID;
 import junit.framework.Assert;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -87,7 +85,7 @@ public class SerializationTest {
         int someI = 1234;
         Serializers.toBinary(someI, buf);
         System.out.println("Ints2: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
-        int someResI = (int) Serializers.fromBinary(buf, Optional.absent());
+        int someResI = (Integer) Serializers.fromBinary(buf, Optional.absent());
         assertEquals(someI, someResI);
     }
 
