@@ -45,7 +45,6 @@ public class JavaComponent extends ComponentCore {
     private HashMap<Class<? extends PortType>, JavaPort<? extends PortType>> negativePorts;
     private JavaPort<ControlPort> positiveControl, negativeControl;
     ComponentDefinition component;
-    
 
     /**
      * Instantiates a new component core.
@@ -178,12 +177,10 @@ public class JavaComponent extends ComponentCore {
         negativeControl.doSubscribe(handleStarted);
         negativeControl.doSubscribe(handleStopped);
         negativeControl.doSubscribe(handleKilled);
-        
-        
 
         return negativeControl;
     }
-    
+
     @Override
     protected void cleanPorts() {
         for (JavaPort<? extends PortType> port : negativePorts.values()) {
@@ -206,7 +203,7 @@ public class JavaComponent extends ComponentCore {
 
             //child.workCount.incrementAndGet();
             child.setScheduler(scheduler);
-            
+
             if (children == null) {
                 children = new LinkedList<ComponentCore>();
             }
@@ -288,11 +285,19 @@ public class JavaComponent extends ComponentCore {
             } else {
                 //System.err.println("active state " + wid);
                 nextPort = (JavaPort<?>) readyPorts.poll();
+                if (nextPort == null) {
+                    wc = workCount.decrementAndGet();
+                    count++;
+                    continue;
+                }
                 event = nextPort.pickFirstEvent();
             }
 
             if (event == null) {
                 Kompics.logger.debug("Couldn't find event to schedule: {} / {} / {}", new Object[]{component, state, wc});
+                wc = workCount.decrementAndGet();
+                count++;
+                continue;
             }
 
             ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
@@ -403,7 +408,7 @@ public class JavaComponent extends ComponentCore {
         @Override
         public void handle(Start event) {
             if (state != Component.State.PASSIVE) {
-                throw new KompicsException("Received a Start event while in " + state + " state. "
+                throw new KompicsException(component + " received a Start event while in " + state + " state. "
                         + "Duplicate Start events are not allowed!");
             }
             try {
@@ -440,7 +445,7 @@ public class JavaComponent extends ComponentCore {
         @Override
         public void handle(Stop event) {
             if (state != Component.State.ACTIVE) {
-                throw new KompicsException("Received a Stop event while in " + state + " state. "
+                throw new KompicsException(component + " received a Stop event while in " + state + " state. "
                         + "Duplicate Stop events are not allowed!");
             }
             try {
@@ -449,6 +454,9 @@ public class JavaComponent extends ComponentCore {
                     Kompics.logger.debug(component + " stopping");
                     state = Component.State.STOPPING;
                     for (ComponentCore child : children) {
+                        if (child.getState() != Component.State.ACTIVE) {
+                            continue; // don't send stop events to already stopping components
+                        }
                         Kompics.logger.debug("Sending Stop to child: " + child.getComponent());
                         // stop child
                         ((PortCore<ControlPort>) child.getControl()).doTrigger(
@@ -483,7 +491,7 @@ public class JavaComponent extends ComponentCore {
         @Override
         public void handle(Kill event) {
             if (state != Component.State.ACTIVE) {
-                throw new KompicsException("Received a Kill event while in " + state + " state. "
+                throw new KompicsException(component + " received a Kill event while in " + state + " state. "
                         + "Duplicate Kill events are not allowed!");
             }
             try {
@@ -491,7 +499,11 @@ public class JavaComponent extends ComponentCore {
                 if (children != null) {
                     Kompics.logger.debug(component + " slowly dying");
                     state = Component.State.STOPPING;
+                    ((PortCore<ControlPort>) getControl().getPair()).cleanEvents(); // if multiple kills are queued up just ignore everything
                     for (ComponentCore child : children) {
+                        if (child.getState() != Component.State.ACTIVE) {
+                            continue; // don't send stop events to already stopping components
+                        }
                         Kompics.logger.debug("Sending Kill to child: " + child.getComponent());
                         // stop child
                         ((PortCore<ControlPort>) child.getControl()).doTrigger(
@@ -500,6 +512,7 @@ public class JavaComponent extends ComponentCore {
                 } else {
                     Kompics.logger.debug(component + " dying");
                     state = Component.State.PASSIVE;
+                    ((PortCore<ControlPort>) getControl().getPair()).cleanEvents(); // if multiple kills are queued up just ignore everything
                     component.tearDown();
                     if (parent != null) {
                         ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Killed(component.getComponentCore()), wid, component.getComponentCore());
@@ -513,14 +526,14 @@ public class JavaComponent extends ComponentCore {
                 childrenLock.readLock().unlock();
             }
         }
-        
+
         @Override
         public java.lang.Class<Kill> getEventType() {
             return Kill.class;
         }
-    
+
     };
-    
+
     Handler<Killed> handleKilled = new Handler<Killed>() {
 
         @Override
@@ -543,13 +556,13 @@ public class JavaComponent extends ComponentCore {
                 }
             }
         }
-        
+
         @Override
         public java.lang.Class<Killed> getEventType() {
             return Killed.class;
         }
     };
-        
+
     Handler<Started> handleStarted = new Handler<Started>() {
         @Override
         public void handle(Started event) {

@@ -50,4 +50,6 @@ public abstract class PortCore<P extends PortType> implements Negative<P>, Posit
 	}
         
         public abstract void cleanChannels();
+        
+        public abstract void cleanEvents();
 }
