@@ -31,6 +31,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
     private static Logger log = Logger.getLogger(VirtualNetworkChannel.class);
     private boolean destroyed = false;
     private PortCore<Network> sourcePort;
+    private SourcePortProxy sourceProxy;
     // Use HashMap for now and switch to a more efficient 
     // datastructure if necessary
     private Map<ByteBuffer, Set<Negative<Network>>> destinationPorts = new HashMap<ByteBuffer, Set<Negative<Network>>>();
@@ -41,6 +42,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
 
     private VirtualNetworkChannel(Positive<Network> sourcePort, Negative<Network> deadLetterBox) {
         this.sourcePort = (PortCore<Network>) sourcePort;
+        this.sourceProxy = new SourcePortProxy();
         this.deadLetterBox = deadLetterBox;
         this.decoyPort = new DecoyPort();
     }
@@ -119,7 +121,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
 
     @Override
     public Positive<Network> getPositivePort() {
-        return this.sourcePort;
+        return this.sourceProxy;
     }
 
     @Override
@@ -234,13 +236,76 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
 
         @Override
         public void removeChannelTo(PortCore<Network> remotePort) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            // ignore to allow cleanup operations to finish correctly
         }
 
         @Override
         public void enqueue(KompicsEvent event) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
+
+        @Override
+        public void cleanChannels() {
+            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+    
+    private class SourcePortProxy extends PortCore<Network> {
+        
+        SourcePortProxy() {}
+
+        @Override
+        public void cleanChannels() {
+            sourcePort.cleanChannels();
+        }
+
+        @Override
+        public void doTrigger(KompicsEvent event, int wid, ChannelCore<?> channel) {
+            sourcePort.doTrigger(event, wid, channel);
+        }
+
+        @Override
+        public void doTrigger(KompicsEvent event, int wid, ComponentCore component) {
+            sourcePort.doTrigger(event, wid, component);
+        }
+
+        @Override
+        public PortCore<Network> getPair() {
+            return sourcePort.getPair();
+        }
+
+        @Override
+        public void setPair(PortCore<Network> port) {
+            sourcePort.setPair(port);
+        }
+
+        @Override
+        public <E extends KompicsEvent> void doSubscribe(Handler<E> handler) {
+            sourcePort.doSubscribe(handler);
+        }
+
+        @Override
+        public void addChannel(ChannelCore<Network> channel) {
+            sourcePort.addChannel(channel);
+        }
+
+        @Override
+        public void addChannel(ChannelCore<Network> channel, ChannelFilter<?, ?> filter) {
+            sourcePort.addChannel(channel, filter);
+        }
+
+        @Override
+        public void removeChannelTo(PortCore<Network> remotePort) {
+            // ignore
+            // this is the point of the proxy
+            // otherwise errors will be thrown during cleanup operations
+        }
+
+        @Override
+        public void enqueue(KompicsEvent event) {
+            sourcePort.enqueue(event);
+        }
+        
     }
 
     private static class DefaultDeadLetterBox implements Negative<Network> {

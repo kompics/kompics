@@ -131,7 +131,7 @@ public final class Kompics {
 
     public static void shutdown() {
         if (mainCore != null) {
-            mainCore.control().doTrigger(Stop.event, mainCore.wid, mainCore);
+            mainCore.control().doTrigger(Kill.event, mainCore.wid, mainCore);
             synchronized (mainCore) {
                 long start = System.currentTimeMillis();
                 while (mainCore.state != Component.State.PASSIVE) {
