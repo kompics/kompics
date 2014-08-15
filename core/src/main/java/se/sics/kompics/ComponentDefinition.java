@@ -241,6 +241,12 @@ public abstract class ComponentDefinition {
     public ComponentCore getComponentCore() {
         return core;
     }
+    
+    public void suicide() {
+        if (core.state == Component.State.ACTIVE) {
+            trigger(Kill.event, control.getPair());
+        }
+    }
 
     /**
      * Use for custom cleanup. Will be called after all child components have

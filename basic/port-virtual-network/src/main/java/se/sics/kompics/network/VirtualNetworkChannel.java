@@ -106,7 +106,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         } finally {
             rwlock.writeLock().unlock();
         }
-        destinationPort.removeChannelTo(sourcePort);
+        destinationPort.removeChannelTo(sourceProxy);
     }
 
     @Override
@@ -248,6 +248,11 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         public void cleanChannels() {
             //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
+
+        @Override
+        public void cleanEvents() {
+            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
     }
     
     private class SourcePortProxy extends PortCore<Network> {
@@ -304,6 +309,11 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         @Override
         public void enqueue(KompicsEvent event) {
             sourcePort.enqueue(event);
+        }
+
+        @Override
+        public void cleanEvents() {
+            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
         
     }

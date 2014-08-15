@@ -145,6 +145,7 @@ public final class Kompics {
                         break;
                     }
                 }
+                mainCore.cleanPorts();
             }
         }
         if (scheduler != null) {

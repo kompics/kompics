@@ -53,6 +53,10 @@ public class SpinlockQueue<E> {
         public void remove(E e) {
             q.remove(e);
         }
+        
+        public void clear() {
+            q.clear();
+        }
 
 //	public static final int FL_SIZE = 1000;
 //

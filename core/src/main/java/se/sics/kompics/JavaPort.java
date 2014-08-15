@@ -565,4 +565,9 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
             rwLock.writeLock().unlock();
         }
     }
+
+    @Override
+    public void cleanEvents() {
+        eventQueue.clear();
+    }
 }
