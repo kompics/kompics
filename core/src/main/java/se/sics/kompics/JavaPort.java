@@ -24,12 +24,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * The
- * <code>PortCore</code> class.
+ * The <code>PortCore</code> class.
  *
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
@@ -422,7 +422,6 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         // if (allChannels == null || !allChannels.contains(caller)) {
         // return false;
         // }
-
         if (isPositive) {
             caller.forwardToNegative(event, wid);
         } else {
@@ -481,20 +480,20 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
             // methods and pick the one with the most specific event type.
             // This sorted set stores the event types of all reflected handler
             // methods topologically ordered by the event type relationships.
-            TreeSet<Class<? extends KompicsEvent>> relevant =
-                    new TreeSet<Class<? extends KompicsEvent>>(
-                    new Comparator<Class<? extends KompicsEvent>>() {
-                        @Override
-                        public int compare(Class<? extends KompicsEvent> e1,
-                                Class<? extends KompicsEvent> e2) {
-                            if (e1.isAssignableFrom(e2)) {
-                                return 1;
-                            } else if (e2.isAssignableFrom(e1)) {
-                                return -1;
-                            }
-                            return 0;
-                        }
-                    });
+            TreeSet<Class<? extends KompicsEvent>> relevant
+                    = new TreeSet<Class<? extends KompicsEvent>>(
+                            new Comparator<Class<? extends KompicsEvent>>() {
+                                @Override
+                                public int compare(Class<? extends KompicsEvent> e1,
+                                        Class<? extends KompicsEvent> e2) {
+                                    if (e1.isAssignableFrom(e2)) {
+                                        return 1;
+                                    } else if (e2.isAssignableFrom(e1)) {
+                                        return -1;
+                                    }
+                                    return 0;
+                                }
+                            });
             for (Method m : declared) {
                 if (m.getName().equals("handle")) {
                     relevant.add(
@@ -525,5 +524,45 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     @Override
     public PortCore<P> getPair() {
         return pair;
+    }
+
+    @Override
+    public void cleanChannels() {
+        rwLock.writeLock().lock();
+        try {
+            if (remotePorts == null) {
+                return;
+            }
+            for (Entry<Port<P>, ChannelCore<P>> e : remotePorts.entrySet()) {
+                Port<P> port = e.getKey();
+                port.removeChannelTo(this);
+                ChannelCore<P> channel = e.getValue();
+                channel.destroy();
+                if (filteredChannels != null) {
+                    filteredChannels.removeChannel(channel);
+                    if (filteredChannels.isEmpty()) {
+                        filteredChannels = null;
+                    }
+                }
+                if (unfilteredChannels != null) {
+                    unfilteredChannels.remove(channel);
+                    if (unfilteredChannels.isEmpty()) {
+                        unfilteredChannels = null;
+                    }
+                }
+                if (allChannels != null) {
+                    allChannels.remove(channel);
+                    if (allChannels.isEmpty()) {
+                        allChannels = null;
+                    }
+                }
+            }
+            if (remotePorts.isEmpty()) {
+                remotePorts = null;
+            }
+
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 }

@@ -5,15 +5,22 @@
 package se.sics.kompics.network.test;
 
 import com.google.common.primitives.Ints;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import static org.junit.Assert.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +66,7 @@ public class NetworkTest {
     private static int numNodes;
     private static AtomicInteger msgId = new AtomicInteger(0);
     private static ConcurrentMap<Integer, String> messageStatus = new ConcurrentSkipListMap<Integer, String>();
-    private static int startPort = 33000;
+    //private static int startPort = 33000;
     private static Transport[] protos;
 
     public static synchronized void runTests(NetworkGenerator nGen, int numNodes, Transport[] protos) {
@@ -120,16 +127,44 @@ public class NetworkTest {
                 LOG.error("Aborting test.", ex);
                 System.exit(1);
             }
-            
+            List<ServerSocket> sockets = new LinkedList<ServerSocket>();
             for (int i = 0; i < numNodes; i++) {
-                nodes[i] = new Address(ip, startPort + i, Ints.toByteArray(i));
+                int port = -1;
+                try {
+                    ServerSocket s = new ServerSocket(0); // try to find a free port for each address
+                    sockets.add(s);
+                    port = s.getLocalPort();
+                } catch (IOException ex) {
+                    LOG.error("Could not find any free ports: {}", ex);
+                    System.exit(1);
+                }
+                if (port < 0) {
+                    LOG.error("Could not find enough free ports!");
+                    System.exit(1);
+                }
+                nodes[i] = new Address(ip, port, Ints.toByteArray(i));
                 Component net = nGen.generate(myProxy, nodes[i]);
                 VirtualNetworkChannel vnc = VirtualNetworkChannel.connect(net.provided(Network.class));
                 Component scen = create(ScenarioComponent.class, new ScenarioInit(nodes[i], nodes));
                 vnc.addConnection(Ints.toByteArray(i), scen.required(Network.class));
             }
-            //startPort = startPort + numNodes; // Don't start the same ports next time
-            // Some network components shut down asynchronously -.-
+            // check that all ports are unique
+            Set<Integer> portSet = new TreeSet<Integer>();
+            for (Address addr : nodes) {
+                portSet.add(addr.getPort());
+            }
+            if (portSet.size() != nodes.length) {
+                LOG.error("Some ports do not appear to be unique! \n {} \n");
+                System.exit(1);
+            }
+            for (ServerSocket s : sockets) {
+                try {
+                    s.close();
+                } catch (IOException ex) {
+                    LOG.error("Could not close port: {}", ex);
+                    System.exit(1);
+                }
+            }
         }
         private final ComponentProxy myProxy = new ComponentProxy() {
             @Override

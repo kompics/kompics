@@ -94,11 +94,14 @@ public abstract class ComponentCore implements Component {
         positivePort.removeChannelTo(negativePort);
         negativePort.removeChannelTo(positivePort);
     }
+    
+    protected abstract void cleanPorts();
 
     public abstract Negative<ControlPort> createControlPort();
 
     void doDestroy(Component component) {
         ComponentCore child = (ComponentCore) component;
+        child.cleanPorts();
         if (child.state != State.PASSIVE) {
             Kompics.logger.warn("Destroying a component before it has been stopped is not a good idea: " + child.getComponent());
         }
@@ -149,7 +152,7 @@ public abstract class ComponentCore implements Component {
     /*
      * === LIFECYCLE ===
      */
-    protected Component.State state = Component.State.PASSIVE;
+    volatile protected Component.State state = Component.State.PASSIVE;
 
     public Component.State getState() {
         return state;

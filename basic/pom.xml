@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>kompics-parent-pom</artifactId>
 		<groupId>se.sics.kompics</groupId>
-		<version>0.6.0-SNAPSHOT</version>
+		<version>0.6.1-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -11,7 +11,7 @@
 	<artifactId>kompics-basic-components</artifactId>
 	<packaging>pom</packaging>
 	<name>Kompics basic components and ports</name>
-	<version>0.6.0-SNAPSHOT</version>
+	<version>0.6.1-SNAPSHOT</version>
 	<description>Basic components for timers, network communication, and web server</description>
 
 	<modules>
@@ -19,7 +19,6 @@
 		<module>key-address</module>
 		<module>port-timer</module>
 		<module>port-network</module>
-		<module>port-virtual-rtscts-network</module>
 		<module>port-virtual-network</module>
 		<module>port-web</module>
 		<module>component-java-timer</module>
@@ -27,7 +26,6 @@
 		<module>component-jetty-web-server</module>
 		<module>component-netty-network</module>
 		<module>component-grizzly-network</module>
-		<module>component-rtscts-grizzly-network</module>
 		<module>component-virtual-netty-network</module>
 	</modules>
 
