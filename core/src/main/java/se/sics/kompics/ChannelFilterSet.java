@@ -5,21 +5,21 @@ import java.util.HashMap;
 
 public class ChannelFilterSet {
 
-	private HashMap<Class<? extends Event>, ArrayList<Class<? extends ChannelFilter<?, ?>>>> filterTypesByEventType;
+	private HashMap<Class<? extends KompicsEvent>, ArrayList<Class<? extends ChannelFilter<?, ?>>>> filterTypesByEventType;
 	private HashMap<Class<? extends ChannelFilter<?, ?>>, ArrayList<ChannelFilter<?, ?>>> filtersByFilterType;
 	private HashMap<Class<? extends ChannelFilter<?, ?>>, HashMap<Object, ArrayList<ChannelCore<?>>>> channelsByFilterType;
 
 	// for removal
 	private HashMap<ChannelCore<?>, ChannelFilter<?, ?>> filtersByChannel;
-	private HashMap<Class<? extends Event>, ArrayList<Class<? extends Event>>> inheritedFilters;
+	private HashMap<Class<? extends KompicsEvent>, ArrayList<Class<? extends KompicsEvent>>> inheritedFilters;
 
 	public ChannelFilterSet() {
-		filterTypesByEventType = new HashMap<Class<? extends Event>, ArrayList<Class<? extends ChannelFilter<?, ?>>>>();
+		filterTypesByEventType = new HashMap<Class<? extends KompicsEvent>, ArrayList<Class<? extends ChannelFilter<?, ?>>>>();
 		filtersByFilterType = new HashMap<Class<? extends ChannelFilter<?, ?>>, ArrayList<ChannelFilter<?, ?>>>();
 		channelsByFilterType = new HashMap<Class<? extends ChannelFilter<?, ?>>, HashMap<Object, ArrayList<ChannelCore<?>>>>();
 
 		filtersByChannel = new HashMap<ChannelCore<?>, ChannelFilter<?, ?>>();
-		inheritedFilters = new HashMap<Class<? extends Event>, ArrayList<Class<? extends Event>>>();
+		inheritedFilters = new HashMap<Class<? extends KompicsEvent>, ArrayList<Class<? extends KompicsEvent>>>();
 	}
 
 	// public boolean containsChannel(ChannelCore<?> channel) {
@@ -28,7 +28,7 @@ public class ChannelFilterSet {
 
 	@SuppressWarnings("unchecked")
 	public void addChannelFilter(ChannelCore<?> channel, ChannelFilter<?, ?> filter) {
-		Class<? extends Event> eventType = filter.getEventType();
+		Class<? extends KompicsEvent> eventType = filter.getEventType();
 		Class<? extends ChannelFilter<?, ?>> filterType = (Class<? extends ChannelFilter<?, ?>>) filter
 				.getClass();
 
@@ -83,7 +83,7 @@ public class ChannelFilterSet {
 		filtersByChannel.remove(channel);
 
 		// undo add
-		Class<? extends Event> eventType = filter.getEventType();
+		Class<? extends KompicsEvent> eventType = filter.getEventType();
 		Class<? extends ChannelFilter<?, ?>> filterType = (Class<? extends ChannelFilter<?, ?>>) filter
 				.getClass();
 
@@ -113,10 +113,10 @@ public class ChannelFilterSet {
 				if (filterTypes.isEmpty()) {
 					filterTypesByEventType.remove(eventType);
 
-					ArrayList<Class<? extends Event>> inheritants = inheritedFilters
+					ArrayList<Class<? extends KompicsEvent>> inheritants = inheritedFilters
 							.get(eventType);
 					if (inheritants != null) {
-						for (Class<? extends Event> eType : inheritants) {
+						for (Class<? extends KompicsEvent> eType : inheritants) {
 							filterTypesByEventType.remove(eType);
 						}
 						inheritedFilters.remove(eventType);
@@ -127,16 +127,16 @@ public class ChannelFilterSet {
 	}
 
 	@SuppressWarnings("unchecked")
-	public ArrayList<ChannelCore<?>> get(Event event) {
+	public ArrayList<ChannelCore<?>> get(KompicsEvent event) {
 		ArrayList<ChannelCore<?>> result = new ArrayList<ChannelCore<?>>();
-		Class<? extends Event> eventType = event.getClass();
+		Class<? extends KompicsEvent> eventType = event.getClass();
 		ArrayList<Class<? extends ChannelFilter<?, ?>>> filterTypes = filterTypesByEventType
 				.get(eventType);
 
 		if (filterTypes == null) {
 			// no filter types found for this event type. we try to add this
 			// event type since it may be a sub-type of a filtered event type.
-			for (Class<? extends Event> eType : filterTypesByEventType.keySet()) {
+			for (Class<? extends KompicsEvent> eType : filterTypesByEventType.keySet()) {
 				if (eType.isAssignableFrom(eventType)) {
 					// I have a filter for a super-type, so I copy the filter
 					// structure for the super-type to this event type
@@ -144,10 +144,10 @@ public class ChannelFilterSet {
 							filterTypesByEventType.get(eType));
 					filterTypesByEventType.put(eventType, filterTypes);
 
-					ArrayList<Class<? extends Event>> inheritants = inheritedFilters
+					ArrayList<Class<? extends KompicsEvent>> inheritants = inheritedFilters
 							.get(eType);
 					if (inheritants == null) {
-						inheritants = new ArrayList<Class<? extends Event>>();
+						inheritants = new ArrayList<Class<? extends KompicsEvent>>();
 						inheritedFilters.put(eType, inheritants);
 					}
 					inheritants.add(eventType);
@@ -162,7 +162,7 @@ public class ChannelFilterSet {
 				// for each type of filter
 				ChannelFilter<?, ?> f = filtersByFilterType.get(
 						filterTypes.get(i)).get(0);
-				Object attValue = ((ChannelFilter<Event, ?>) f).getValue(event);
+				Object attValue = ((ChannelFilter<KompicsEvent, ?>) f).getValue(event);
 
 				HashMap<Object, ArrayList<ChannelCore<?>>> channelsByValue = channelsByFilterType
 						.get(filterTypes.get(i));

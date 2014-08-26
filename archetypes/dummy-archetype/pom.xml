@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>se.sics.kompics.archetypes</groupId>
 		<artifactId>kompics-archetypes</artifactId>
-		<version>0.5.0-SNAPSHOT</version>
+		<version>0.6.1-SNAPSHOT</version>
 	</parent>
 
 	<groupId>se.sics.kompics.archetypes</groupId>

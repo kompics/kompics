@@ -24,14 +24,11 @@ package se.sics.kompics;
  *
  * @author Lars Kroll <lkroll@sics.se>
  */
-public final class Stopped extends Event {
-    
+public final class Stopped implements KompicsEvent {
+
     public final Component component;
 
-    /**
-     * Instantiates a new start event.
-     */
-    public Stopped(Component c) {
+    protected Stopped(Component c) {
         component = c;
     }
 }

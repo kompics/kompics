@@ -24,7 +24,7 @@ package se.sics.kompics;
  *
  * @author Lars Kroll <lkroll@sics.se>
  */
-public final class Started extends Event {
+public final class Started implements KompicsEvent {
     
     public final Component component;
 

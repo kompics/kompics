@@ -21,8 +21,7 @@
 package se.sics.kompics.p2p.experiment.dsl.adaptor;
 
 import java.io.Serializable;
-
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.p2p.experiment.dsl.distribution.Distribution;
 
 /**
@@ -31,7 +30,7 @@ import se.sics.kompics.p2p.experiment.dsl.distribution.Distribution;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id$
  */
-public class ConcreteOperation<E extends Event, P1 extends Number, P2 extends Number, P3 extends Number, P4 extends Number, P5 extends Number>
+public class ConcreteOperation<E extends KompicsEvent, P1 extends Number, P2 extends Number, P3 extends Number, P4 extends Number, P5 extends Number>
 		implements Serializable {
 
 	/**

@@ -36,8 +36,8 @@ public abstract class PortType {
 
 	private static HashMap<Class<? extends PortType>, PortType> map = new HashMap<Class<? extends PortType>, PortType>();
 
-	private Set<Class<? extends Event>> positive = new HashSet<Class<? extends Event>>();
-	private Set<Class<? extends Event>> negative = new HashSet<Class<? extends Event>>();
+	private Set<Class<? extends KompicsEvent>> positive = new HashSet<Class<? extends KompicsEvent>>();
+	private Set<Class<? extends KompicsEvent>> negative = new HashSet<Class<? extends KompicsEvent>>();
 
 	Class<? extends PortType> portTypeClass;
 
@@ -77,7 +77,7 @@ public abstract class PortType {
 	 * @param eventType
 	 *            the event type
 	 */
-	protected final void positive(Class<? extends Event> eventType) {
+	protected final void positive(Class<? extends KompicsEvent> eventType) {
 		positive.add(eventType);
 	}
 
@@ -86,7 +86,7 @@ public abstract class PortType {
 	 * 
 	 * @param eventType
 	 */
-	protected final void indication(Class<? extends Event> eventType) {
+	protected final void indication(Class<? extends KompicsEvent> eventType) {
 		positive.add(eventType);
 	}
 
@@ -96,7 +96,7 @@ public abstract class PortType {
 	 * @param eventType
 	 *            the event type
 	 */
-	protected final void negative(Class<? extends Event> eventType) {
+	protected final void negative(Class<? extends KompicsEvent> eventType) {
 		negative.add(eventType);
 	}
 
@@ -105,7 +105,7 @@ public abstract class PortType {
 	 * 
 	 * @param eventType
 	 */
-	protected final void request(Class<? extends Event> eventType) {
+	protected final void request(Class<? extends KompicsEvent> eventType) {
 		negative.add(eventType);
 	}
 
@@ -117,11 +117,11 @@ public abstract class PortType {
 	 * 
 	 * @return true, if successful
 	 */
-	public final boolean hasPositive(Class<? extends Event> eventType) {
+	public final boolean hasPositive(Class<? extends KompicsEvent> eventType) {
 		if (positive.contains(eventType)) {
 			return true;
 		}
-		for (Class<? extends Event> eType : positive) {
+		for (Class<? extends KompicsEvent> eType : positive) {
 			if (eType.isAssignableFrom(eventType)) {
 				return true;
 			}
@@ -137,11 +137,11 @@ public abstract class PortType {
 	 * 
 	 * @return true, if successful
 	 */
-	public final boolean hasNegative(Class<? extends Event> eventType) {
+	public final boolean hasNegative(Class<? extends KompicsEvent> eventType) {
 		if (negative.contains(eventType)) {
 			return true;
 		}
-		for (Class<? extends Event> eType : negative) {
+		for (Class<? extends KompicsEvent> eType : negative) {
 			if (eType.isAssignableFrom(eventType)) {
 				return true;
 			}
@@ -160,7 +160,7 @@ public abstract class PortType {
 	 * @return true, if successful
 	 */
 	public final boolean hasEvent(boolean positive,
-			Class<? extends Event> eventType) {
+			Class<? extends KompicsEvent> eventType) {
 		return (positive == true ? hasPositive(eventType)
 				: hasNegative(eventType));
 	}

@@ -1,0 +1,7 @@
+{"namespace": "se.sics.kompics.network.netty.serialization",
+ "type": "record",
+ "name": "SomeGeneratedAvro",
+ "fields": [
+     {"name": "someNumber",  "type": "int"}
+ ]
+}

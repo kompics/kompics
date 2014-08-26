@@ -21,11 +21,9 @@
 package se.sics.kompics.address;
 
 import com.google.common.base.Objects;
-import com.google.common.primitives.Ints;
 import com.google.common.primitives.UnsignedBytes;
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;

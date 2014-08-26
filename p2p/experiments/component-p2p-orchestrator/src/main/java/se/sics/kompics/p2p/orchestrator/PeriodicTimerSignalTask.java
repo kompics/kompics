@@ -21,6 +21,8 @@
 package se.sics.kompics.p2p.orchestrator;
 
 import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import se.sics.kompics.timer.Timeout;
 
@@ -57,6 +59,10 @@ final class PeriodicTimerSignalTask extends TimerTask {
 	 */
 	@Override
 	public final void run() {
-		timerComponent.periodicTimeout((Timeout) timeout.clone());
+            try {
+                timerComponent.periodicTimeout((Timeout) timeout.clone());
+            } catch (CloneNotSupportedException ex) {
+                P2pOrchestrator.logger.warn("Couldn't clone Timeout event", ex);
+            }
 	}
 }

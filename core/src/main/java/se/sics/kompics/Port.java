@@ -44,7 +44,7 @@ public interface Port<P extends PortType> {
 	 * @param wid ?
 	 * @param channel that triggered the event
 	 */
-	public void doTrigger(Event event, int wid, ChannelCore<?> channel);
+	public void doTrigger(KompicsEvent event, int wid, ChannelCore<?> channel);
 	
 	/**
 	 * trigger event on this port
@@ -53,7 +53,7 @@ public interface Port<P extends PortType> {
 	 * @param wid ?
 	 * @param component that triggered the event
 	 */
-	public void doTrigger(Event event, int wid, ComponentCore component);
+	public void doTrigger(KompicsEvent event, int wid, ComponentCore component);
 	
 	/**
 	 * 
@@ -73,7 +73,7 @@ public interface Port<P extends PortType> {
 	 */
 	public void setPair(PortCore<P> port);
 	
-	public <E extends Event> void doSubscribe(Handler<E> handler);
+	public <E extends KompicsEvent> void doSubscribe(Handler<E> handler);
 	
 	public void addChannel(ChannelCore<P> channel);
 	
@@ -81,5 +81,5 @@ public interface Port<P extends PortType> {
 	
 	public void removeChannelTo(PortCore<P> remotePort);
 	
-	public void enqueue(Event event);
+	public void enqueue(KompicsEvent event);
 }

@@ -28,7 +28,7 @@ package se.sics.kompics;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public final class Start extends Event {
+public final class Start implements KompicsEvent {
 	
 	public static Start event = new Start();
 

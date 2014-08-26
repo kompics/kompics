@@ -22,7 +22,7 @@ package se.sics.kompics.p2p.experiment.dsl.adaptor;
 
 import java.io.Serializable;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 
 /**
  * The <code>OperationGenerator</code> class.
@@ -48,7 +48,7 @@ public class OperationGenerator implements Serializable {
 		this.count = count;
 	}
 
-	public final Event generate() {
+	public final KompicsEvent generate() {
 		return concreteOperation.generate();
 	}
 

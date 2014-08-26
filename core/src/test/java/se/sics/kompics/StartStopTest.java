@@ -10,7 +10,6 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.junit.runners.Parameterized;
 
 /**
  *
@@ -19,14 +18,14 @@ import org.junit.runners.Parameterized;
 @RunWith(JUnit4.class)
 public class StartStopTest {
 
-    private static BlockingQueue<Event> queue;
+    private static BlockingQueue<KompicsEvent> queue;
 
     @Test
     public void testStartStop() {
-        queue = new LinkedBlockingQueue<Event>();
+        queue = new LinkedBlockingQueue<KompicsEvent>();
         Kompics.createAndStart(RootComponent.class, 4, 10); // totally arbitrary values
         try {
-            Event e = queue.take();
+            KompicsEvent e = queue.take();
             assertTrue("First run started.", e instanceof TestReply);
             e = queue.take();
             assertTrue("First run stopped.", e instanceof Stopped);
@@ -42,7 +41,7 @@ public class StartStopTest {
 
         Kompics.createAndStart(RootComponent.class, 4, 10); // totally arbitrary values
         try {
-            Event e = queue.take();
+            KompicsEvent e = queue.take();
             assertTrue("Third run started.", e instanceof TestReply);
             e = queue.take();
             assertTrue("Third run stopped.", e instanceof Stopped);
@@ -66,10 +65,10 @@ public class StartStopTest {
         }
     }
 
-    public static class TestRequest extends Event {
+    public static class TestRequest implements KompicsEvent {
     }
 
-    public static class TestReply extends Event {
+    public static class TestReply implements KompicsEvent {
     }
 
     public static class RootComponent extends ComponentDefinition {

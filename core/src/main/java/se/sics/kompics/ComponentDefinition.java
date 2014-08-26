@@ -21,9 +21,10 @@
 package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
+import java.util.function.Consumer;
+
 /**
- * The
- * <code>ComponentDefinition</code> class.
+ * The <code>ComponentDefinition</code> class.
  *
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
@@ -75,9 +76,26 @@ public abstract class ComponentDefinition {
      * @param event the event
      * @param port the port
      */
-    protected final <P extends PortType> void trigger(Event event, Port<P> port) {
+    protected final <P extends PortType> void trigger(KompicsEvent event, Port<P> port) {
+        if (event instanceof Direct.Request) {
+            Direct.Request r = (Direct.Request) event;
+            r.setOrigin(port.getPair());
+            Kompics.logger.info("Set port on request {} to {}", r, r.getOrigin());
+        }
 //		System.out.println(this.getClass()+": "+event+" triggert on "+port);
         port.doTrigger(event, core.wid, core);
+    }
+
+    protected final <P extends PortType> void answer(Direct.Request event) {
+        if (!event.hasResponse()) {
+            Kompics.logger.warn("Can't trigger a response for {} since none was given!", event);
+            return;
+        }
+        event.getOrigin().doTrigger(event.getResponse(), core.wid, core);
+    }
+
+    protected final <P extends PortType> void answer(Direct.Request req, Direct.Response resp) {
+        req.getOrigin().doTrigger(resp, core.wid, core);
     }
 
     /**
@@ -89,6 +107,20 @@ public abstract class ComponentDefinition {
         // TODO
     }
 
+    protected final <E extends KompicsEvent, P extends PortType> Handler<E> handle(Port<P> port, Class<E> type, Consumer<E> fun) {
+        Handler<E> handler = new FunctionHandler<>(type, fun);
+        subscribe(handler, port);
+        return handler;
+    }
+
+    protected final Handler<Start> onStart(Consumer<Start> fun) {
+        return handle(control, Start.class, fun);
+    }
+    
+    protected final Handler<Stop> onStop(Consumer<Stop> fun) {
+        return handle(control, Stop.class, fun);
+    }
+    
     /**
      * Subscribe.
      *
@@ -96,7 +128,7 @@ public abstract class ComponentDefinition {
      * @param port the port
      * @throws ConfigurationException
      */
-    protected final <E extends Event, P extends PortType> void subscribe(
+    protected final <E extends KompicsEvent, P extends PortType> void subscribe(
             Handler<E> handler, Port<P> port) throws ConfigurationException {
         if (port instanceof JavaPort) {
             JavaPort<P> p = (JavaPort<P>) port;
@@ -114,7 +146,7 @@ public abstract class ComponentDefinition {
      * @param port the port
      * @throws ConfigurationException
      */
-    protected final <E extends Event, P extends PortType> void unsubscribe(
+    protected final <E extends KompicsEvent, P extends PortType> void unsubscribe(
             Handler<E> handler, Port<P> port) throws ConfigurationException {
         if (port instanceof JavaPort) {
             JavaPort<P> p = (JavaPort<P>) port;
@@ -137,7 +169,7 @@ public abstract class ComponentDefinition {
             Class<T> definition, Init<T> initEvent) {
         return core.doCreate(definition, initEvent);
     }
-    
+
     /**
      * Creates the.
      *
@@ -208,6 +240,12 @@ public abstract class ComponentDefinition {
 
     public ComponentCore getComponentCore() {
         return core;
+    }
+    
+    public void suicide() {
+        if (core.state == Component.State.ACTIVE) {
+            trigger(Kill.event, control.getPair());
+        }
     }
 
     /**

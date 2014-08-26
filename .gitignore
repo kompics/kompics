@@ -3,3 +3,5 @@ target/
 .prefs
 .classpath
 .settings/
+
+.DS_Store

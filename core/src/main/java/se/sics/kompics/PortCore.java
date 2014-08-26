@@ -48,4 +48,8 @@ public abstract class PortCore<P extends PortType> implements Negative<P>, Posit
 	public ComponentCore getOwner() {
 		return owner;
 	}
+        
+        public abstract void cleanChannels();
+        
+        public abstract void cleanEvents();
 }

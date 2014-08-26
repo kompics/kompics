@@ -28,7 +28,7 @@ package se.sics.kompics;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public abstract class Filter<E extends Event> {
+public abstract class Filter<E extends KompicsEvent> {
 
 	Port <? extends PortType> port;
 	

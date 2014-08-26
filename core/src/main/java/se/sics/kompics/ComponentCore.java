@@ -65,7 +65,7 @@ public abstract class ComponentCore implements Component {
         ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
                 negativePort.getPortType());
 
-        Class<? extends Event> eventType = filter.getEventType();
+        Class<? extends KompicsEvent> eventType = filter.getEventType();
         P portType = positivePort.getPortType();
         if (filter.isPositive()) {
             if (!portType.hasPositive(eventType)) {
@@ -94,11 +94,14 @@ public abstract class ComponentCore implements Component {
         positivePort.removeChannelTo(negativePort);
         negativePort.removeChannelTo(positivePort);
     }
+    
+    protected abstract void cleanPorts();
 
     public abstract Negative<ControlPort> createControlPort();
 
     void doDestroy(Component component) {
         ComponentCore child = (ComponentCore) component;
+        child.cleanPorts();
         if (child.state != State.PASSIVE) {
             Kompics.logger.warn("Destroying a component before it has been stopped is not a good idea: " + child.getComponent());
         }
@@ -132,7 +135,7 @@ public abstract class ComponentCore implements Component {
         this.scheduler = scheduler;
     }
 
-    public void eventReceived(PortCore<?> port, Event event, int wid) {
+    public void eventReceived(PortCore<?> port, KompicsEvent event, int wid) {
         //System.err.println("Received event " + event + " on " + port.getPortType().portTypeClass + " work " + workCount.get());
         port.enqueue(event);
         readyPorts.offer(port);
@@ -149,7 +152,7 @@ public abstract class ComponentCore implements Component {
     /*
      * === LIFECYCLE ===
      */
-    protected Component.State state = Component.State.PASSIVE;
+    volatile protected Component.State state = Component.State.PASSIVE;
 
     public Component.State getState() {
         return state;

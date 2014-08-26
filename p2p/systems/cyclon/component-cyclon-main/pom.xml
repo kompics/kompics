@@ -3,11 +3,11 @@
 	<parent>
         <artifactId>kompics-cyclon-system</artifactId>
         <groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
-        <version>0.5.0-SNAPSHOT</version>
+        <version>0.6.1-SNAPSHOT</version>
     </parent>
 	<groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
 	<artifactId>kompics-component-cyclon-peer-main</artifactId>
-	<version>0.5.0-SNAPSHOT</version>
+	<version>0.6.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>CyclonMain Kompics Component</name>
 	<description>CyclonMain Kompics Component</description>
@@ -16,40 +16,40 @@
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.6.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-timer</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.6.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-network</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.6.1-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.p2p.systems.cyclon</groupId>
 			<artifactId>kompics-component-cyclon-peer</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.6.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-component-jetty-web-server</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.6.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-component-java-timer</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.6.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-component-mina-network</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.6.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 
