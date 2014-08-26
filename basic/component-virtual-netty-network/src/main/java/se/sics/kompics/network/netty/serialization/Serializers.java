@@ -67,6 +67,7 @@ public abstract class Serializers {
     }
 
     public static final Logger LOG = LoggerFactory.getLogger(Serializers.class);
+    static final int BYTES = Integer.SIZE/8;
 
     private static final HashMap<String, Integer> classMappings = new HashMap<String, Integer>();
     private static final HashMap<String, Integer> serializerNames = new HashMap<String, Integer>();
@@ -108,7 +109,7 @@ public abstract class Serializers {
             Serializer[] oldBindings = bindings;
             idSerializationBytes = idSB;
             bindings = new Serializer[idSerializationBytes.getValues()];
-            System.arraycopy(oldBindings, 0, bindings, 0, Integer.min(oldBindings.length, bindings.length));
+            System.arraycopy(oldBindings, 0, bindings, 0, java.lang.Math.min(oldBindings.length, bindings.length));
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -171,8 +172,8 @@ public abstract class Serializers {
         }
         Integer sId = s.identifier();
         byte[] unserializedId = Ints.toByteArray(sId);
-        LOG.trace("ID: {} ({}, {})", new Object[]{unserializedId, Integer.BYTES - idSerializationBytes.getBytes(), Integer.BYTES});
-        byte[] serializedId = Arrays.copyOfRange(Ints.toByteArray(sId), Integer.BYTES - idSerializationBytes.getBytes(), Integer.BYTES);
+        LOG.trace("ID: {} ({}, {})", new Object[]{unserializedId, BYTES - idSerializationBytes.getBytes(), BYTES});
+        byte[] serializedId = Arrays.copyOfRange(Ints.toByteArray(sId), BYTES - idSerializationBytes.getBytes(), BYTES);
         buf.writeBytes(serializedId);
         LOG.debug("Using serializer {} for object {} (sID : {}) .", new Object[]{s, o, serializedId});
         s.toBinary(o, buf);
@@ -195,11 +196,11 @@ public abstract class Serializers {
                     LOG.error("Could not read serializer id ({}) from buffer with length {}!", serializedId.length, buf.readableBytes());
                 }
                 buf.readBytes(serializedId);
-                byte[] unserializedId = new byte[Integer.BYTES];
+                byte[] unserializedId = new byte[BYTES];
                 Arrays.fill(unserializedId, (byte) 0);
-                System.arraycopy(serializedId, 0, unserializedId, Integer.BYTES - idSerializationBytes.getBytes(), serializedId.length);
+                System.arraycopy(serializedId, 0, unserializedId, BYTES - idSerializationBytes.getBytes(), serializedId.length);
                 sId = Ints.fromByteArray(unserializedId);
-                LOG.trace("DS-ID: {} ({}, {})", new Object[]{sId, serializedId, Integer.BYTES});
+                LOG.trace("DS-ID: {} ({}, {})", new Object[]{sId, serializedId, BYTES});
 
                 s = bindings[sId];
             }

@@ -21,7 +21,6 @@
 package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
-import java.util.function.Consumer;
 
 /**
  * The <code>ComponentDefinition</code> class.
