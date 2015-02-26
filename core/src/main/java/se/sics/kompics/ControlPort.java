@@ -29,7 +29,7 @@ package se.sics.kompics;
  */
 public class ControlPort extends PortType {
 	{
-		positive(Fault.class);
+		negative(Fault.class);
 		negative(Stop.class);
 		negative(Start.class);
                 negative(Kill.class);

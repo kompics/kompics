@@ -222,6 +222,9 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         Class<E> eventType = handler.getEventType();
         if (eventType == null) {
             eventType = reflectHandlerEventType(handler);
+            if (Fault.class.isAssignableFrom(eventType)) {
+                throw new RuntimeException("Custom Fault handlers are not support anymore! Please override ComponentDefinition.handleFault() instead, for custom Fault handling.");
+            }
             handler.setEventType(eventType);
         }
 
@@ -250,6 +253,38 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         }
     }
 
+    <E extends KompicsEvent> void doInternalSubscribe(Handler<E> handler) {
+        Class<E> eventType = handler.getEventType();
+        if (eventType == null) {
+            eventType = reflectHandlerEventType(handler);
+            handler.setEventType(eventType);
+        }
+
+        // check that the port type carries the event type in this direction
+        if (!portType.hasEvent(isPositive, eventType)) {
+            throw new RuntimeException("Cannot subscribe handler " + handler
+                    + " to " + (isPositive ? "positive " : "negative ")
+                    + portType.getClass().getCanonicalName() + " for "
+                    + eventType.getCanonicalName() + " events.");
+        }
+
+        rwLock.writeLock().lock();
+        try {
+            if (subs == null) {
+                subs = new HashMap<Class<? extends KompicsEvent>, ArrayList<Handler<?>>>();
+            }
+            ArrayList<Handler<?>> handlers = subs.get(eventType);
+            if (handlers == null) {
+                handlers = new ArrayList<Handler<?>>();
+                subs.put(eventType, handlers);
+            }
+            handlers.add(handler);
+
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+    
     <E extends KompicsEvent> void doUnsubscribe(Handler<E> handler) {
         Class<E> eventType = handler.getEventType();
         if (eventType == null) {
@@ -382,23 +417,23 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         if (!delivered) {
             if (portType.hasEvent(isPositive, eventType)) {
-                if (event instanceof Fault) {
-                    // forward fault to parent component
-                    if (owner.parent != null) {
-                        ((PortCore<?>) owner.getComponent().control).doTrigger(
-                                event, wid, owner.getComponent().getComponentCore());
-                    } else {
-                        owner.handleFault(((Fault) event).getFault());
-                    }
-                } else {
-                    // warning, dropped event
-                    // Kompics.logger.warn("Warning: {} event dropped by {} {} in"
-                    // + " component {}", new Object[] {
-                    // eventType.getCanonicalName(),
-                    // (positive ? "positive " : "negative "),
-                    // portType.getClass().getCanonicalName(),
-                    // owner.getComponent() });
-                }
+//                if (event instanceof Fault) {
+//                    // forward fault to parent component
+//                    if (owner.parent != null) {
+//                        ((PortCore<?>) owner.getComponent().control).doTrigger(
+//                                event, wid, owner.getComponent().getComponentCore());
+//                    } else {
+//                        owner.escalateFault(((Fault) event));
+//                    }
+//                } else {
+//                    // warning, dropped event
+//                    // Kompics.logger.warn("Warning: {} event dropped by {} {} in"
+//                    // + " component {}", new Object[] {
+//                    // eventType.getCanonicalName(),
+//                    // (positive ? "positive " : "negative "),
+//                    // portType.getClass().getCanonicalName(),
+//                    // owner.getComponent() });
+//                }
             } else {
                 // error, event type doesn't flow on this port in this direction
                 throw new RuntimeException(eventType.getCanonicalName()

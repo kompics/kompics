@@ -1,7 +1,7 @@
 /**
  * This file is part of the Kompics component model runtime.
  * <p>
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  * <p>
  * Kompics is free software; you can redistribute it and/or modify it under the
@@ -25,8 +25,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
+import se.sics.kompics.Fault.ResolveAction;
 
 /**
  * The <code>ComponentCore</code> class.
@@ -178,6 +178,8 @@ public class JavaComponent extends ComponentCore {
         negativeControl.doSubscribe(handleStopped);
         negativeControl.doSubscribe(handleKilled);
 
+        negativeControl.doInternalSubscribe(handleFault);
+
         return negativeControl;
     }
 
@@ -204,9 +206,6 @@ public class JavaComponent extends ComponentCore {
             //child.workCount.incrementAndGet();
             child.setScheduler(scheduler);
 
-            if (children == null) {
-                children = new LinkedList<ComponentCore>();
-            }
             children.add(child);
 
             return child;
@@ -249,8 +248,8 @@ public class JavaComponent extends ComponentCore {
 
     @Override
     public void execute(int wid) {
-        if (state == State.DESTROYED) {
-            return;
+        if ((state == State.DESTROYED) || (state == State.FAULTY)) {
+            return; // don't schedule these components
         }
         this.wid = wid;
         //System.err.println("Executing " + wid);
@@ -262,6 +261,9 @@ public class JavaComponent extends ComponentCore {
         int wc = workCount.get();
 
         while ((count < n) && wc > 0) {
+            if (state == State.FAULTY) { // state might have changed between iterations
+                return;
+            }
             KompicsEvent event;
             JavaPort<?> nextPort;
             if ((state == State.PASSIVE) || (state == State.STARTING)) {
@@ -304,7 +306,9 @@ public class JavaComponent extends ComponentCore {
 
             if (handlers != null) {
                 for (int i = 0; i < handlers.size(); i++) {
-                    executeEvent(event, handlers.get(i));
+                    if (executeEvent(event, handlers.get(i))) {
+                        break; // state changed don't handle the rest of the event
+                    }
                 }
             }
             wc = workCount.decrementAndGet();
@@ -345,19 +349,22 @@ public class JavaComponent extends ComponentCore {
     }
 
     @SuppressWarnings("unchecked")
-    private void executeEvent(KompicsEvent event, Handler<?> handler) {
+    private boolean executeEvent(KompicsEvent event, Handler<?> handler) {
         try {
             ((Handler<KompicsEvent>) handler).handle(event);
+            return false; // no state change
         } catch (Throwable throwable) {
-            handleFault(throwable);
+            Kompics.logger.error("Handling an event caused a fault! Might be handled later...", throwable);
+            markSubtreeAs(State.FAULTY);
+            escalateFault(new Fault(throwable, this, event));
+            return true; // state changed
         }
-
     }
 
     @Override
-    public void handleFault(Throwable throwable) {
+    public void escalateFault(Fault fault) {
         if (parent != null) {
-            negativeControl.doTrigger(new Fault(throwable), wid, this);
+            parent.control().doTrigger(fault, wid, this);
         } else {
             // StackTraceElement[] stackTrace = throwable.getStackTrace();
             // System.err.println("Kompics isolated fault: "
@@ -373,7 +380,8 @@ public class JavaComponent extends ComponentCore {
             // + throwable.getMessage());
             // }
             // } while (throwable != null);
-            throw new RuntimeException("Kompics isolated fault ", throwable);
+            Kompics.logger.error("A fault was escalated to the root component: \n{} \n\n", fault);
+            throw new RuntimeException("Kompics unresolved fault ", fault.getCause());
             // System.exit(1);
         }
     }
@@ -400,6 +408,30 @@ public class JavaComponent extends ComponentCore {
     // }
     // }
 
+    Handler<Fault> handleFault = new Handler<Fault>() {
+
+        @Override
+        public void handle(Fault event) {
+            ResolveAction ra = component.handleFault(event);
+            switch (ra) {
+                case RESOLVED:
+                    Kompics.logger.info("Fault {} was resolved by user.", event);
+                    break;
+                case IGNORE:
+                    Kompics.logger.info("Fault {} was declared to be ignored by user. Resuming component...", event);
+                    event.source.markSubtreeAs(State.PASSIVE);
+                    event.source.control().doTrigger(Start.event, wid, JavaComponent.this);
+                    break;
+                case DESTROY:
+                    Kompics.logger.info("User declared that Fault {} should destroy component tree...", event);
+                    event.source.parent.destroyTree(event.source);
+                    Kompics.logger.info("finished destroying the subtree.");
+                    break;
+                default:
+                    escalateFault(event);
+            }
+        }
+    };
     /*
      * === LIFECYCLE ===
      */
@@ -408,22 +440,22 @@ public class JavaComponent extends ComponentCore {
         @Override
         public void handle(Start event) {
             if (state != Component.State.PASSIVE) {
-                throw new KompicsException(component + " received a Start event while in " + state + " state. "
+                throw new KompicsException(JavaComponent.this + " received a Start event while in " + state + " state. "
                         + "Duplicate Start events are not allowed!");
             }
             try {
                 childrenLock.readLock().lock();
-                if (children != null) {
-                    Kompics.logger.debug(component + " starting");
+                if (!children.isEmpty()) {
+                    Kompics.logger.debug(JavaComponent.this + " starting");
                     state = Component.State.STARTING;
                     for (ComponentCore child : children) {
-                        Kompics.logger.debug("Sending Start to child: " + child.getComponent());
+                        Kompics.logger.debug("Sending Start to child: " + child);
                         // start child
                         ((PortCore<ControlPort>) child.getControl()).doTrigger(
                                 Start.event, wid, component.getComponentCore());
                     }
                 } else {
-                    Kompics.logger.debug(component + " started");
+                    Kompics.logger.debug(JavaComponent.this + " started");
                     state = Component.State.ACTIVE;
                     if (parent != null) {
                         ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
@@ -445,25 +477,25 @@ public class JavaComponent extends ComponentCore {
         @Override
         public void handle(Stop event) {
             if (state != Component.State.ACTIVE) {
-                throw new KompicsException(component + " received a Stop event while in " + state + " state. "
+                throw new KompicsException(JavaComponent.this + " received a Stop event while in " + state + " state. "
                         + "Duplicate Stop events are not allowed!");
             }
             try {
                 childrenLock.readLock().lock();
-                if (children != null) {
-                    Kompics.logger.debug(component + " stopping");
+                if (!children.isEmpty()) {
+                    Kompics.logger.debug(JavaComponent.this + " stopping");
                     state = Component.State.STOPPING;
                     for (ComponentCore child : children) {
-                        if (child.getState() != Component.State.ACTIVE) {
+                        if (child.state() != Component.State.ACTIVE) {
                             continue; // don't send stop events to already stopping components
                         }
-                        Kompics.logger.debug("Sending Stop to child: " + child.getComponent());
+                        Kompics.logger.debug("Sending Stop to child: " + child);
                         // stop child
                         ((PortCore<ControlPort>) child.getControl()).doTrigger(
                                 Stop.event, wid, component.getComponentCore());
                     }
                 } else {
-                    Kompics.logger.debug(component + " stopped");
+                    Kompics.logger.debug(JavaComponent.this + " stopped");
                     state = Component.State.PASSIVE;
                     component.tearDown();
                     if (parent != null) {
@@ -491,26 +523,26 @@ public class JavaComponent extends ComponentCore {
         @Override
         public void handle(Kill event) {
             if (state != Component.State.ACTIVE) {
-                throw new KompicsException(component + " received a Kill event while in " + state + " state. "
+                throw new KompicsException(JavaComponent.this + " received a Kill event while in " + state + " state. "
                         + "Duplicate Kill events are not allowed!");
             }
             try {
                 childrenLock.readLock().lock();
-                if (children != null) {
-                    Kompics.logger.debug(component + " slowly dying");
+                if (!children.isEmpty()) {
+                    Kompics.logger.debug(JavaComponent.this + " slowly dying");
                     state = Component.State.STOPPING;
                     ((PortCore<ControlPort>) getControl().getPair()).cleanEvents(); // if multiple kills are queued up just ignore everything
                     for (ComponentCore child : children) {
-                        if (child.getState() != Component.State.ACTIVE) {
+                        if (child.state() != Component.State.ACTIVE) {
                             continue; // don't send stop events to already stopping components
                         }
-                        Kompics.logger.debug("Sending Kill to child: " + child.getComponent());
+                        Kompics.logger.debug("Sending Kill to child: " + child);
                         // stop child
                         ((PortCore<ControlPort>) child.getControl()).doTrigger(
                                 Kill.event, wid, component.getComponentCore());
                     }
                 } else {
-                    Kompics.logger.debug(component + " dying");
+                    Kompics.logger.debug(JavaComponent.this + " dying");
                     state = Component.State.PASSIVE;
                     ((PortCore<ControlPort>) getControl().getPair()).cleanEvents(); // if multiple kills are queued up just ignore everything
                     component.tearDown();
@@ -538,13 +570,13 @@ public class JavaComponent extends ComponentCore {
 
         @Override
         public void handle(Killed event) {
-            Kompics.logger.debug(component + " got Killed event from " + event.component.getComponent());
+            Kompics.logger.debug(JavaComponent.this + " got Killed event from " + event.component);
 
             activeSet.remove(event.component);
             doDestroy(event.component);
-            Kompics.logger.debug(component + " active set has " + activeSet.size() + " members");
+            Kompics.logger.debug(JavaComponent.this + " active set has " + activeSet.size() + " members");
             if (activeSet.isEmpty() && (state == Component.State.STOPPING)) {
-                Kompics.logger.debug(component + " stopped");
+                Kompics.logger.debug(JavaComponent.this + " stopped");
                 state = Component.State.PASSIVE;
                 component.tearDown();
                 if (parent != null) {
@@ -566,13 +598,13 @@ public class JavaComponent extends ComponentCore {
     Handler<Started> handleStarted = new Handler<Started>() {
         @Override
         public void handle(Started event) {
-            Kompics.logger.debug(component + " got Started event from " + event.component.getComponent());
+            Kompics.logger.debug(JavaComponent.this + " got Started event from " + event.component);
             activeSet.add(event.component);
-            Kompics.logger.debug(component + " active set has " + activeSet.size() + " members");
+            Kompics.logger.debug(JavaComponent.this + " active set has " + activeSet.size() + " members");
             try {
                 childrenLock.readLock().lock();
                 if ((activeSet.size() == children.size()) && (state == Component.State.STARTING)) {
-                    Kompics.logger.debug(component + " started");
+                    Kompics.logger.debug(JavaComponent.this + " started");
                     state = Component.State.ACTIVE;
                     if (parent != null) {
                         ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
@@ -594,12 +626,12 @@ public class JavaComponent extends ComponentCore {
     Handler<Stopped> handleStopped = new Handler<Stopped>() {
         @Override
         public void handle(Stopped event) {
-            Kompics.logger.debug(component + " got Stopped event from " + event.component.getComponent());
+            Kompics.logger.debug(JavaComponent.this + " got Stopped event from " + event.component);
 
             activeSet.remove(event.component);
-            Kompics.logger.debug(component + " active set has " + activeSet.size() + " members");
+            Kompics.logger.debug(JavaComponent.this + " active set has " + activeSet.size() + " members");
             if (activeSet.isEmpty() && (state == Component.State.STOPPING)) {
-                Kompics.logger.debug(component + " stopped");
+                Kompics.logger.debug(JavaComponent.this + " stopped");
                 state = Component.State.PASSIVE;
                 component.tearDown();
                 if (parent != null) {
@@ -621,10 +653,6 @@ public class JavaComponent extends ComponentCore {
 
     };
 
-    @Override
-    public boolean equals(Object obj) {
-        return this == obj;
-    }
 
     @Override
     public ComponentDefinition getComponent() {

@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>kompics-p2p</artifactId>
 		<groupId>se.sics.kompics.p2p</groupId>
-		<version>0.6.1-SNAPSHOT</version>
+		<version>0.7.0-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -11,7 +11,7 @@
 	<artifactId>kompics-p2p-experiments</artifactId>
 	<packaging>pom</packaging>
 	<name>Kompics P2P Experiments</name>
-	<version>0.6.1-SNAPSHOT</version>
+	<version>0.7.0-SNAPSHOT</version>
 	<description>Kompics P2P Experiments</description>
 
 	<modules>

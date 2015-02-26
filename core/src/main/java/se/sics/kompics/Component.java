@@ -21,6 +21,9 @@
 package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
+
+import java.util.UUID;
+
 /**
  * The <code>Component</code> class.
  * 
@@ -82,13 +85,18 @@ public interface Component {
 	
 	public ComponentDefinition getComponent();
 	
-	public void handleFault(Throwable throwable);
+	public void escalateFault(Fault fault);
+        
+        public UUID id();
+        
+        public State state();
         
         public static enum State {
             PASSIVE,
             STARTING,
             ACTIVE,
             STOPPING,
+            FAULTY,
             DESTROYED;
         }
 }

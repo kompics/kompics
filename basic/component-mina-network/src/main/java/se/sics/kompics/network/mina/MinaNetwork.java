@@ -35,7 +35,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -48,9 +47,7 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.apache.mina.util.ExceptionMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Fault;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.address.Address;
@@ -248,7 +245,7 @@ public final class MinaNetwork extends ComponentDefinition {
             @Override
             public void exceptionCaught(Throwable throwable) {
                 logger.error("MINA exception: {}", throwable);
-                trigger(new Fault(throwable), control);
+                //trigger(new Fault(throwable), control);
 
                 throw new RuntimeException("MINA exception", throwable);
             }
@@ -326,12 +323,12 @@ public final class MinaNetwork extends ComponentDefinition {
                         multicastReceived(message);
                     } catch (IOException e) {
                         logger.error("MINA exception: {}", e);
-                        trigger(new Fault(e), control);
+                        //trigger(new Fault(e), control);
 
                         throw new RuntimeException("MINA exception", e);
                     } catch (ClassNotFoundException e) {
                         logger.error("MINA exception: {}", e);
-                        trigger(new Fault(e), control);
+                        //trigger(new Fault(e), control);
 
                         throw new RuntimeException("MINA exception", e);
                     }
@@ -362,7 +359,7 @@ public final class MinaNetwork extends ComponentDefinition {
             datagramSocket.send(packet);
         } catch (IOException e) {
             logger.error("MINA exception: {}", e);
-            trigger(new Fault(e), control);
+            //trigger(new Fault(e), control);
 
             throw new RuntimeException("MINA exception", e);
         }
@@ -423,7 +420,7 @@ public final class MinaNetwork extends ComponentDefinition {
                 startMulticast(); // if not already started
             } catch (IOException e) {
                 logger.error("MINA exception: {}", e);
-                trigger(new Fault(e), control);
+                //trigger(new Fault(e), control);
 
                 throw new RuntimeException("MINA exception", e);
             }
@@ -436,7 +433,7 @@ public final class MinaNetwork extends ComponentDefinition {
                 addresses.add(event.getAddress());
             } catch (IOException e) {
                 logger.error("MINA exception: {}", e);
-                trigger(new Fault(e), control);
+                //trigger(new Fault(e), control);
 
                 throw new RuntimeException("MINA exception", e);
             }
@@ -465,7 +462,7 @@ public final class MinaNetwork extends ComponentDefinition {
                     multicastSocket.leaveGroup(group);
                 } catch (IOException e) {
                     logger.error("MINA exception: {}", e);
-                    trigger(new Fault(e), control);
+                    //trigger(new Fault(e), control);
 
                     throw new RuntimeException("MINA exception", e);
                 }

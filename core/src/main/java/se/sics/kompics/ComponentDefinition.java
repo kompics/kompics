@@ -22,6 +22,9 @@ package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
 
+import se.sics.kompics.Fault.ResolveAction;
+
+
 /**
  * The <code>ComponentDefinition</code> class.
  *
@@ -237,15 +240,15 @@ public abstract class ComponentDefinition {
     protected Negative<LoopbackPort> loopback;
     protected Positive<LoopbackPort> onSelf;
 
-    public Negative<ControlPort> getControlPort() {
+    public final Negative<ControlPort> getControlPort() {
         return control;
     }
 
-    public ComponentCore getComponentCore() {
+    public final ComponentCore getComponentCore() {
         return core;
     }
     
-    public void suicide() {
+    public final void suicide() {
         if (core.state == Component.State.ACTIVE) {
             trigger(Kill.event, control.getPair());
         }
@@ -258,6 +261,22 @@ public abstract class ComponentDefinition {
      */
     public void tearDown() {
         // Do nothing normally
+    }
+    
+    /**
+     * Override for custom error handling.
+     * 
+     * Default action is ESCALATE.
+     * 
+     * ESCALATE -> Forward fault to parent.
+     * IGNORE -> Drop fault. Resume component as if nothing happened.
+     * RESOLVED -> Fault has been handled by user. Don't do anything else.
+     * 
+     * @param fault
+     * @return 
+     */
+    public ResolveAction handleFault(Fault fault) {
+        return ResolveAction.ESCALATE;
     }
 
     /* === PRIVATE === */
