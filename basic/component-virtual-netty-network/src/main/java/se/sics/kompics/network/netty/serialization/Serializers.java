@@ -1,5 +1,5 @@
 /* 
- * This file is part of the CaracalDB distributed storage system.
+ * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
  * Copyright (C) 2009 Royal Institute of Technology (KTH)

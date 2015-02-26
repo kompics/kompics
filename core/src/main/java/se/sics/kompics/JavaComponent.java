@@ -1,8 +1,8 @@
 /**
  * This file is part of the Kompics component model runtime.
  * <p>
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
- * 2009 Royal Institute of Technology (KTH)
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
  * <p>
  * Kompics is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software

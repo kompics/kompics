@@ -32,12 +32,18 @@ public class MessageNotify {
         public UUID getMsgId() {
             return this.getResponse().msgId;
         }
+        
+        public void prepareResponse(long time, boolean success) {
+            this.getResponse().setTime(time);
+            this.getResponse().setSuccess(success);
+        }
     }
     
     public static class Resp implements Direct.Response {
         
         private long time;
         public final UUID msgId;
+        private boolean success = false;
         
         public Resp() {
             msgId = UUID.randomUUID();
@@ -49,6 +55,14 @@ public class MessageNotify {
         
         public long getTime() {
             return time;
+        }
+        
+        void setSuccess(boolean status) {
+            this.success = status;
+        }
+        
+        public boolean isSuccess() {
+            return this.success;
         }
     }
 }

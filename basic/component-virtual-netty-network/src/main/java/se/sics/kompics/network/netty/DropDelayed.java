@@ -1,4 +1,4 @@
-/* 
+/*
  * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
@@ -20,30 +20,20 @@
  */
 package se.sics.kompics.network.netty;
 
-import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.channel.ChannelHandlerContext;
-import se.sics.kompics.network.Msg;
+import java.net.InetSocketAddress;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author lkroll
  */
-@Sharable
-public class StreamHandler extends BaseHandler<Msg> {
+public class DropDelayed implements KompicsEvent {
+    public final InetSocketAddress isa;
+    public final Transport protocol;
     
-    public StreamHandler(NettyNetwork component, Transport protocol) {
-        super(component, protocol);
-    }
-
-    @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Msg msg) throws Exception {
-        component.deliverMessage(msg);
-    }
-    
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        component.channelInactive(ctx, protocol);
-        super.channelInactive(ctx);
+    public DropDelayed(InetSocketAddress isa, Transport protocol) {
+        this.isa = isa;
+        this.protocol = protocol;
     }
 }

@@ -52,6 +52,7 @@ import se.sics.kompics.network.VirtualNetworkChannel;
 public class NetworkTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetworkTest.class);
+    private static final int SEED = 0;
     //private static final String STARTED = "STARTED";
     private static final String STOPPED = "STOPPED";
     private static final String SENDING = "SENDING";
@@ -117,9 +118,24 @@ public class NetworkTest {
     }
 
     public static class LauncherComponent extends ComponentDefinition {
+        
+        private Random rand = new Random(SEED);
 
         public LauncherComponent() {
             Address[] nodes = new Address[numNodes];
+            Address[] fakeNodes = new Address[numNodes]; // these are used to test that the network doesn't crash on connection errors
+            for (int i = 0; i < numNodes; i++) {
+                try {
+                    byte[] ipB = new byte[4];
+                    rand.nextBytes(ipB);
+                    InetAddress ip = InetAddress.getByAddress(ipB);
+                    int port = rand.nextInt(65535-49152)+49152;
+                    fakeNodes[i] = new Address(ip, port, Ints.toByteArray(i));
+                } catch (UnknownHostException ex) {
+                    LOG.error("Aborting test.", ex);
+                    System.exit(1);
+                }
+            }
             InetAddress ip = null;
             try {
                 ip = InetAddress.getByName("127.0.0.1");
@@ -145,7 +161,7 @@ public class NetworkTest {
                 nodes[i] = new Address(ip, port, Ints.toByteArray(i));
                 Component net = nGen.generate(myProxy, nodes[i]);
                 VirtualNetworkChannel vnc = VirtualNetworkChannel.connect(net.provided(Network.class));
-                Component scen = create(ScenarioComponent.class, new ScenarioInit(nodes[i], nodes));
+                Component scen = create(ScenarioComponent.class, new ScenarioInit(nodes[i], nodes, fakeNodes));
                 vnc.addConnection(Ints.toByteArray(i), scen.required(Network.class));
             }
             // check that all ports are unique
@@ -218,15 +234,17 @@ public class NetworkTest {
 
         public final Address self;
         public final Address[] nodes;
+        public final Address[] fakeNodes;
         private final Positive<Network> net = requires(Network.class);
         private int msgCount = 0;
         private int ackCount = 0;
-        private Random rand = new Random(0);
+        private Random rand = new Random(SEED);
         private Map<UUID, Integer> pending = new TreeMap<UUID, Integer>();
 
         public ScenarioComponent(ScenarioInit init) {
             self = init.self;
             nodes = init.nodes;
+            fakeNodes = init.fakeNodes;
 
             Handler<Start> startHandler = new Handler<Start>() {
                 @Override
@@ -290,9 +308,11 @@ public class NetworkTest {
             }
             Transport proto = NetworkTest.protos[rand.nextInt(NetworkTest.protos.length)];
             TestMessage msg = new TestMessage(self, nodes[rand.nextInt(nodes.length)], id, proto);
+            TestMessage fakemsg = new TestMessage(self, fakeNodes[rand.nextInt(nodes.length)], id, proto); // send this as well
             MessageNotify.Req req = MessageNotify.create(msg);
             pending.put(req.getMsgId(), id);
             trigger(req, net);
+            trigger(fakemsg, net); // see fakeNodes in LauncherComponent
             msgCount++;
         }
     }
@@ -301,10 +321,12 @@ public class NetworkTest {
 
         public final Address self;
         public final Address[] nodes;
+        public final Address[] fakeNodes;
 
-        public ScenarioInit(Address self, Address[] nodes) {
+        public ScenarioInit(Address self, Address[] nodes, Address[] fakeNodes) {
             this.self = self;
             this.nodes = nodes;
+            this.fakeNodes = fakeNodes;
         }
     }
 

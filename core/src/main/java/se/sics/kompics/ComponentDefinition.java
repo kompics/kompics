@@ -79,7 +79,7 @@ public abstract class ComponentDefinition {
         if (event instanceof Direct.Request) {
             Direct.Request r = (Direct.Request) event;
             r.setOrigin(port.getPair());
-            Kompics.logger.info("Set port on request {} to {}", r, r.getOrigin());
+            Kompics.logger.trace("Set port on request {} to {}", r, r.getOrigin());
         }
 //		System.out.println(this.getClass()+": "+event+" triggert on "+port);
         port.doTrigger(event, core.wid, core);
@@ -231,7 +231,11 @@ public abstract class ComponentDefinition {
             Negative<P> negative) {
         core.doDisconnect(positive, negative);
     }
+    
     protected Negative<ControlPort> control;
+    // different sides of the same port...naming is for readability in usage
+    protected Negative<LoopbackPort> loopback;
+    protected Positive<LoopbackPort> onSelf;
 
     public Negative<ControlPort> getControlPort() {
         return control;
@@ -265,6 +269,8 @@ public abstract class ComponentDefinition {
     protected ComponentDefinition() {
         core = new JavaComponent(this);
         control = core.createControlPort();
+        loopback = core.createNegativePort(LoopbackPort.class);
+        onSelf = loopback.getPair();
     }
 
     protected ComponentDefinition(Class<? extends ComponentCore> coreClass) {
@@ -276,5 +282,7 @@ public abstract class ComponentDefinition {
             throw new ConfigurationException(e.getMessage());
         }
         control = core.createControlPort();
+        loopback = core.createNegativePort(LoopbackPort.class);
+        onSelf = loopback.getPair();
     }
 }

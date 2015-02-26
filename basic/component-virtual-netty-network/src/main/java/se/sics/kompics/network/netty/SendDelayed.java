@@ -20,30 +20,13 @@
  */
 package se.sics.kompics.network.netty;
 
-import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.channel.ChannelHandlerContext;
-import se.sics.kompics.network.Msg;
-import se.sics.kompics.network.Transport;
+import se.sics.kompics.KompicsEvent;
 
 /**
+ * Just a notification event
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author lkroll
  */
-@Sharable
-public class StreamHandler extends BaseHandler<Msg> {
-    
-    public StreamHandler(NettyNetwork component, Transport protocol) {
-        super(component, protocol);
-    }
-
-    @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Msg msg) throws Exception {
-        component.deliverMessage(msg);
-    }
-    
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        component.channelInactive(ctx, protocol);
-        super.channelInactive(ctx);
-    }
+public class SendDelayed implements KompicsEvent {
+    public static final SendDelayed event = new SendDelayed();
 }

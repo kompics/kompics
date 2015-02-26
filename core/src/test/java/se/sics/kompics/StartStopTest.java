@@ -6,7 +6,8 @@ package se.sics.kompics;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -99,6 +100,13 @@ public class StartStopTest {
                 }
             };
 
+            Handler<Start> startHandler = new Handler<Start>() {
+
+                @Override
+                public void handle(Start event) {
+                    trigger(new TestRequest(), port);
+                }
+            };
             Handler<Stopped> stoppedHandler = new Handler<Stopped>() {
                 @Override
                 public void handle(Stopped event) {
@@ -121,9 +129,8 @@ public class StartStopTest {
             };
 
             subscribe(replyHandler, port);
+            subscribe(startHandler, control);
             subscribe(stoppedHandler, control);
-
-            trigger(new TestRequest(), port);
         }
     }
 
