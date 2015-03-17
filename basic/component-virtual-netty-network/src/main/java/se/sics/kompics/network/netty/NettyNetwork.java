@@ -20,6 +20,9 @@
  */
 package se.sics.kompics.network.netty;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Maps;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -39,6 +42,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.nio.NioUdtProvider;
+import io.netty.util.concurrent.Future;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -47,7 +51,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import org.slf4j.Logger;
@@ -90,7 +93,7 @@ public class NettyNetwork extends ComponentDefinition {
     private final ConcurrentMap<InetSocketAddress, SocketChannel> tcpChannels = new ConcurrentHashMap<InetSocketAddress, SocketChannel>();
     private final ConcurrentMap<InetSocketAddress, DatagramChannel> udpChannels = new ConcurrentHashMap<InetSocketAddress, DatagramChannel>();
     private final ConcurrentMap<InetSocketAddress, UdtChannel> udtChannels = new ConcurrentHashMap<InetSocketAddress, UdtChannel>();
-    private final ConcurrentMap<Integer, Integer> udtPortMap = new ConcurrentSkipListMap<Integer, Integer>();
+    private final BiMap<InetSocketAddress, InetSocketAddress> udtPortMap;
     private final ConcurrentMap<InetSocketAddress, ChannelFuture> udtIncompleteChannels = new ConcurrentHashMap<InetSocketAddress, ChannelFuture>();
     private final ConcurrentMap<InetSocketAddress, ChannelFuture> tcpIncompleteChannels = new ConcurrentHashMap<InetSocketAddress, ChannelFuture>();
     private final LinkedList<Msg> delayedMessages = new LinkedList<Msg>();
@@ -102,6 +105,8 @@ public class NettyNetwork extends ComponentDefinition {
 
     public NettyNetwork(NettyInit init) {
         System.setProperty("java.net.preferIPv4Stack", "true");
+        HashBiMap<InetSocketAddress, InetSocketAddress> bm = HashBiMap.create();
+        udtPortMap = Maps.synchronizedBiMap(bm);
 
         self = init.self;
         boundPort = self.getPort();
@@ -144,33 +149,7 @@ public class NettyNetwork extends ComponentDefinition {
 
         @Override
         public void handle(Stop event) {
-            LOG.info("Closing all connections...");
-            List<ChannelFuture> futures = new LinkedList<ChannelFuture>();
-            for (SocketChannel c : tcpChannels.values()) {
-                futures.add(c.close());
-            }
-            tcpChannels.clear();
-            for (DatagramChannel c : udpChannels.values()) {
-                futures.add(c.close());
-            }
-            udpChannels.clear();
-            for (UdtChannel c : udtChannels.values()) {
-                futures.add(c.close());
-            }
-            udtChannels.clear();
-
-            for (ChannelFuture cf : futures) {
-                cf.syncUninterruptibly();
-            }
-            LOG.info("Shutting down handler groups...");
-            bootstrapUDTClient.group().shutdownGracefully();
-            bootstrapTCP.childGroup().shutdownGracefully();
-            bootstrapTCP.group().shutdownGracefully();
-            bootstrapTCPClient.group().shutdownGracefully();
-            bootstrapUDP.group().shutdownGracefully();
-            bootstrapUDT.childGroup().shutdownGracefully();
-            bootstrapUDT.group().shutdownGracefully();
-            LOG.info("Netty shutdown complete.");
+            clearConnections();
         }
     };
 
@@ -365,13 +344,13 @@ public class NettyNetwork extends ComponentDefinition {
     protected void deliverMessage(Msg message) {
         if (message instanceof DisambiguateConnection.Req) {
             DisambiguateConnection.Req msg = (DisambiguateConnection.Req) message;
-            udtPortMap.put(msg.getSource().getPort(), msg.udtPort);
+            udtPortMap.put(addressToSocket(msg.src), new InetSocketAddress(msg.src.getIp(), msg.udtPort));
             trigger(new DisambiguateConnection.Resp(self, msg.getSource(), msg.getProtocol(), msg.localPort, boundPort, boundUDTPort), net.getPair());
             trigger(new SendDelayed(), onSelf);
         }
         if (message instanceof DisambiguateConnection.Resp) {
             DisambiguateConnection.Resp msg = (DisambiguateConnection.Resp) message;
-            udtPortMap.put(msg.getSource().getPort(), msg.udtPort);
+            udtPortMap.put(addressToSocket(msg.src), new InetSocketAddress(msg.src.getIp(), msg.udtPort));
             InetSocketAddress oldAddr = new InetSocketAddress(msg.getSource().getIp(), msg.localPort);
             InetSocketAddress newAddr = new InetSocketAddress(msg.getSource().getIp(), msg.boundPort);
             switch (msg.getProtocol()) {
@@ -472,7 +451,14 @@ public class NettyNetwork extends ComponentDefinition {
                     tcpChannels.remove(remoteAddress);
                     break;
                 case UDT:
-                    udtChannels.remove(remoteAddress);
+                    InetSocketAddress baseAddress = udtPortMap.inverse().get(remoteAddress);
+                    if (baseAddress == null) {
+                        LOG.debug("Channel {} was already closed", remoteAddress);
+                        return;
+                    }
+                    LOG.debug("Closing UDT channel for base address {}", baseAddress);
+                    udtChannels.remove(baseAddress);
+                    udtPortMap.remove(baseAddress);
                     break;
                 default:
                     throw new Error("Unknown Transport type");
@@ -525,13 +511,12 @@ public class NettyNetwork extends ComponentDefinition {
             if (f != null) {
                 return null; // already establishing connection but not done, yet
             }
-            Integer udtPort = udtPortMap.get(destination.getPort());
-            if ((udtPort == null) || (udtPort < 1)) { // We have to ask for the UDT port first, since it's random
+            InetSocketAddress newISA = udtPortMap.get(isa);
+            if (newISA == null) { // We have to ask for the UDT port first, since it's random
                 DisambiguateConnection.Req r = new DisambiguateConnection.Req(self, destination, Transport.TCP, destination.getPort(), boundUDTPort);
                 trigger(r, net.getPair());
                 return null;
             }
-            InetSocketAddress newISA = new InetSocketAddress(isa.getAddress(), udtPort);
             f = bootstrapUDTClient.connect(newISA);
             udtIncompleteChannels.put(isa, f);
             f.addListener(new ChannelFutureListener() {
@@ -549,6 +534,66 @@ public class NettyNetwork extends ComponentDefinition {
             });
         }
         return c;
+    }
+
+    private void clearConnections() {
+        LOG.info("Closing all connections...");
+        for (ChannelFuture f : udtIncompleteChannels.values()) {
+            f.cancel(false);
+        }
+        for (ChannelFuture f : tcpIncompleteChannels.values()) {
+            f.cancel(false);
+        }
+        List<ChannelFuture> futures = new LinkedList<ChannelFuture>();
+        for (SocketChannel c : tcpChannels.values()) {
+            futures.add(c.close());
+        }
+        tcpChannels.clear();
+        for (DatagramChannel c : udpChannels.values()) {
+            futures.add(c.close());
+        }
+        udpChannels.clear();
+        for (UdtChannel c : udtChannels.values()) {
+            futures.add(c.close());
+        }
+        udtChannels.clear();
+
+        for (ChannelFuture cf : futures) {
+            cf.syncUninterruptibly();
+        }
+        
+        udtPortMap.clear();
+        
+        udtIncompleteChannels.clear();
+        tcpIncompleteChannels.clear();
+        
+        delayedMessages.clear();
+        delayedNotifies.clear();
+    }
+    
+    @Override
+    public void tearDown() {
+        clearConnections();
+        
+        LOG.info("Shutting down handler groups...");
+        List<Future> gfutures = new LinkedList<Future>();
+        gfutures.add(bootstrapUDTClient.group().shutdownGracefully());
+        gfutures.add(bootstrapTCP.childGroup().shutdownGracefully());
+        gfutures.add(bootstrapTCP.group().shutdownGracefully());
+        gfutures.add(bootstrapTCPClient.group().shutdownGracefully());
+        gfutures.add(bootstrapUDP.group().shutdownGracefully());
+        gfutures.add(bootstrapUDT.childGroup().shutdownGracefully());
+        gfutures.add(bootstrapUDT.group().shutdownGracefully());
+        for (Future f : gfutures) {
+            f.syncUninterruptibly();
+        }
+        bootstrapUDTClient = null;
+        bootstrapTCP = null;
+        bootstrapTCPClient = null;
+        bootstrapUDP = null;
+        bootstrapUDT = null;
+        LOG.info("Netty shutdown complete.");
+
     }
 
     class NotifyListener implements ChannelFutureListener {

@@ -435,6 +435,10 @@ public class JavaComponent extends ComponentCore {
     /*
      * === LIFECYCLE ===
      */
+    @Override
+    void setInactive(Component child) {
+        activeSet.remove(child);
+    }
     private Set<Component> activeSet = new HashSet<Component>();
     Handler<Start> handleStart = new Handler<Start>() {
         @Override

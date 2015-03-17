@@ -125,6 +125,7 @@ public abstract class ComponentCore implements Component {
             for (ComponentCore grandchild : child.children) {
                 child.destroyTree(grandchild);
             }
+            child.getComponent().tearDown();
             doDestroy(child);
         } finally {
             child.childrenLock.writeLock().unlock();
@@ -132,8 +133,13 @@ public abstract class ComponentCore implements Component {
         }
     }
     
+    abstract void setInactive(Component child);
+    
     void markSubtreeAs(State s) {
         this.state = s;
+        if (s == State.FAULTY || s == State.DESTROYED || s == State.PASSIVE) {
+            parent.setInactive(this);
+        }
         try {
             childrenLock.readLock().lock();
             for (ComponentCore child : children) {
