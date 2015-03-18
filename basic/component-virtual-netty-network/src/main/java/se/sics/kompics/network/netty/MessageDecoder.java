@@ -32,8 +32,11 @@ import se.sics.kompics.network.netty.serialization.Serializers;
  */
 public class MessageDecoder extends LengthFieldBasedFrameDecoder {
     
-    public MessageDecoder() {
+    private final NettyNetwork component;
+    
+    public MessageDecoder(NettyNetwork component) {
         super(65532, 0, 2, 0 , 2);
+        this.component = component;
     }
     
     @Override
@@ -43,9 +46,9 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
             return null;
         }
         
-        NettyNetwork.LOG.trace("Trying to decode incoming {} bytes of data from {} to {}.", new Object[]{frame.readableBytes(), ctx.channel().remoteAddress(), ctx.channel().localAddress()});
+        component.LOG.trace("Trying to decode incoming {} bytes of data from {} to {}.", new Object[]{frame.readableBytes(), ctx.channel().remoteAddress(), ctx.channel().localAddress()});
         Object o = Serializers.fromBinary(frame, Optional.absent());
-        NettyNetwork.LOG.trace("Decoded incoming data from {}: ", ctx.channel().remoteAddress(), o);
+        component.LOG.trace("Decoded incoming data from {}: ", ctx.channel().remoteAddress(), o);
         return o;
     }
     

@@ -120,14 +120,14 @@ public class SerializationTest {
             System.out.println("Address: " + ByteBufUtil.hexDump(buf));
             Address someRes = (Address) Serializers.fromBinary(buf, Optional.absent());
             assertEquals(addr, someRes);
-            
+
             buf.clear();
-            
+
             Serializers.toBinary(hostAddr, buf);
             System.out.println("HostAddress: " + ByteBufUtil.hexDump(buf));
             Address someHostRes = (Address) Serializers.fromBinary(buf, Optional.absent());
             assertEquals(hostAddr, someHostRes);
-            
+
             buf.release();
         } catch (UnknownHostException ex) {
             Assert.fail(ex.getMessage());
@@ -140,8 +140,7 @@ public class SerializationTest {
             try {
                 Address src = new Address(InetAddress.getByName("127.0.0.1"), 1234, new byte[]{1, 2, 3, 4});
                 Address dst = new Address(InetAddress.getByName("127.0.0.1"), 5678, new byte[]{5, 6, 7, 8});
-                DisambiguateConnection.Req req = new DisambiguateConnection.Req(src, dst, proto, 1234, 5678);
-                DisambiguateConnection.Resp resp = new DisambiguateConnection.Resp(src, dst, proto, 1234, 5678, 9876);
+                DisambiguateConnection req = new DisambiguateConnection(src, dst, proto, 1234, false);
                 ByteBuf buf = Unpooled.directBuffer();
                 Serializers.toBinary(req, buf);
                 System.out.println("DisambReq: " + ByteBufUtil.hexDump(buf));
@@ -149,16 +148,13 @@ public class SerializationTest {
                 Assert.assertNotNull(someRes);
                 someRes = null;
                 buf.clear();
-                Serializers.toBinary(resp, buf);
-                System.out.println("DisambResp: " + ByteBufUtil.hexDump(buf));
-                someRes = Serializers.fromBinary(buf, Optional.absent());
-                Assert.assertNotNull(someRes);
+
             } catch (UnknownHostException ex) {
                 Assert.fail(ex.getMessage());
             }
         }
     }
-    
+
     @Test
     public void uuidTest() {
         ByteBuf buf = Unpooled.directBuffer();
@@ -168,7 +164,7 @@ public class SerializationTest {
         UUID copy = (UUID) Serializers.fromBinary(buf, Optional.absent());
         Assert.assertEquals(orig, copy);
     }
-    
+
     @Test
     public void avroTest() throws AvroSerializer.KeyExistsException, AvroSerializer.InvalidKeyException {
         Serializers.register(new AvroSerializer(), "avroS");
@@ -214,7 +210,7 @@ public class SerializationTest {
             return someField;
         }
     }
-    
+
     public static class SomeAvro {
 
         private int someField = 12345;
@@ -244,15 +240,15 @@ public class SerializationTest {
             return mySer;
         }
     }
-    
+
     public static class ParentSomeAvro {
 
         private SomeAvro mySer;
 
         ParentSomeAvro() {
-            
+
         }
-        
+
         public ParentSomeAvro(SomeAvro ss) {
             mySer = ss;
         }

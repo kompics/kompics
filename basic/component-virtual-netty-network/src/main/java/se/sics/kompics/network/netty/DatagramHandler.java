@@ -45,12 +45,12 @@ public class DatagramHandler extends BaseHandler<DatagramPacket> {
         try {
             Object m = Serializers.fromBinary(msg.content(), Optional.absent());
             if (m instanceof Msg) {
-                component.deliverMessage((Msg) m);
+                component.deliverMessage((Msg) m, ctx.channel());
             } else {
-                NettyNetwork.LOG.warn("Got unexpected Datagram message type: {} -> {}", m.getClass().getCanonicalName(), m);
+                component.LOG.warn("Got unexpected Datagram message type: {} -> {}", m.getClass().getCanonicalName(), m);
             }
         } catch (Exception e) { // Catch anything...the Serializer could through any kind of weird exception if you get message that were send by someone else
-            NettyNetwork.LOG.warn("Got weird Datagram message, ignoring it: {}", ByteBufUtil.hexDump(msg.content()));            
+            component.LOG.warn("Got weird Datagram message, ignoring it: {}", ByteBufUtil.hexDump(msg.content()));            
         }
     }
     

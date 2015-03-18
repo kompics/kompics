@@ -24,6 +24,8 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.udt.UdtChannel;
 import java.net.InetSocketAddress;
+import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 
 /**
@@ -38,12 +40,18 @@ public class UDTServerHandler extends StreamHandler {
     }
 
     @Override
+    protected void messageReceived(ChannelHandlerContext ctx, Msg msg) throws Exception {
+        component.channels.checkUDTChannel(msg, (UdtChannel) ctx.channel());
+        super.messageReceived(ctx, msg);
+    }
+
+    @Override
     public void channelActive(ChannelHandlerContext ctx) {
         super.channelActive(ctx);
         UdtChannel channel = (UdtChannel) ctx.channel();
-        component.addLocalSocket(channel.remoteAddress(), channel);
+        component.channels.addLocalSocket(channel);
         InetSocketAddress other = channel.remoteAddress();
-        channel.writeAndFlush(new DisambiguateConnection.Req(component.self, component.socketToAddress(other), protocol, other.getPort(), component.boundUDTPort));        
+        channel.writeAndFlush(new DisambiguateConnection(component.self, Address.fromInetSocket(other), protocol, component.boundUDTPort, true));
     }
 
 }

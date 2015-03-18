@@ -38,12 +38,12 @@ public class StreamHandler extends BaseHandler<Msg> {
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, Msg msg) throws Exception {
-        component.deliverMessage(msg);
+        component.deliverMessage(msg, ctx.channel());
     }
     
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        component.channelInactive(ctx, protocol);
+        component.channels.channelInactive(ctx, protocol);
         super.channelInactive(ctx);
     }
 }

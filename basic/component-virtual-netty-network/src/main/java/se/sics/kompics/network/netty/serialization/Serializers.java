@@ -87,8 +87,7 @@ public abstract class Serializers {
             register(SpecialSerializers.AddressSerializer.INSTANCE, "addrS");
             register(Address.class, "addrS");
             register(new SpecialSerializers.DisambiguateSerializer(), "disambS");
-            register(DisambiguateConnection.Req.class, "disambS");
-            register(DisambiguateConnection.Resp.class, "disambS");
+            register(DisambiguateConnection.class, "disambS");
             register(SpecialSerializers.UUIDSerializer.INSTANCE, "uuidS");
             register(UUID.class, "uuidS");
             register(new JavaSerializer(ClassResolvers.softCachingConcurrentResolver(ClassLoader.getSystemClassLoader())), "javaS");

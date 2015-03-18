@@ -53,15 +53,30 @@ public class NetworkTest {
             
         };
         
-        //Transport[] protos = new Transport[]{Transport.TCP, Transport.UDP, Transport.UDT};
         Transport[] protos = new Transport[]{Transport.TCP, Transport.UDT};
+        //Transport[] protos = new Transport[]{Transport.TCP};
         
         LOG.info("********* 2 Node Network Test ***********");
         se.sics.kompics.network.test.NetworkTest.runTests(netGen, 2, protos);
         LOG.info("********* 5 Node Network Test ***********");
         se.sics.kompics.network.test.NetworkTest.runTests(netGen, 5, protos);
         
-        protos = new Transport[]{Transport.UDP};
+        
+    }
+    
+    @Test
+    public void datagramTest() {
+        NetworkGenerator netGen = new NetworkGenerator() {
+
+            @Override
+            public Component generate(ComponentProxy parent, Address self) {
+                NettyInit init = new NettyInit(self);
+                return parent.create(NettyNetwork.class, init);                
+            }
+            
+        };
+        
+        Transport[] protos = new Transport[]{Transport.UDP};
         
         LOG.info("********* 2 Node Datagram Network Test ***********");
         se.sics.kompics.network.test.NetworkTest.runAtLeastTests(netGen, 2, protos);

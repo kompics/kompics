@@ -24,6 +24,7 @@ import com.google.common.base.Objects;
 import com.google.common.primitives.UnsignedBytes;
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -43,25 +44,25 @@ public final class Address implements Serializable, Comparable<Address> {
      *
      */
     private static final long serialVersionUID = -7330046056166039992L;
-    private final InetAddress ip;
-    private final int port;
+    private final InetSocketAddress ipport;
     private final byte[] id;
 
-    /**
-     * Instantiates a new address.
-     *
-     * @param ip the ip
-     * @param port the port
-     * @param id the id
-     */
-    public Address(InetAddress ip, int port, byte[] id) {
-        this.ip = ip;
-        this.port = port;
+    public Address(InetSocketAddress ipport, byte[] id) {
+        this.ipport = ipport;
         this.id = id;
     }
-    
+
+    public Address(InetSocketAddress ipport, byte id) {
+        this(ipport, new byte[]{id});
+    }
+
+    public Address(InetAddress ip, int port, byte[] id) {
+        this(new InetSocketAddress(ip, port), id);
+
+    }
+
     public Address(InetAddress ip, int port, byte id) {
-        this(ip, port, new byte[] {id});
+        this(ip, port, new byte[]{id});
     }
 
     /**
@@ -70,7 +71,7 @@ public final class Address implements Serializable, Comparable<Address> {
      * @return the ip
      */
     public final InetAddress getIp() {
-        return ip;
+        return ipport.getAddress();
     }
 
     /**
@@ -79,7 +80,7 @@ public final class Address implements Serializable, Comparable<Address> {
      * @return the port
      */
     public final int getPort() {
-        return port;
+        return ipport.getPort();
     }
 
     /**
@@ -99,9 +100,9 @@ public final class Address implements Serializable, Comparable<Address> {
     @Override
     public final String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(ip.getHostAddress());
+        sb.append(ipport.getAddress().getHostAddress());
         sb.append(':');
-        sb.append(port);
+        sb.append(ipport.getPort());
         sb.append('/');
 
         IdUtils.printFormat(id, sb);
@@ -119,16 +120,15 @@ public final class Address implements Serializable, Comparable<Address> {
         final int prime = 31;
         int result;
         result = prime + ((id == null) ? 0 : byteHashCode(id));
-        result = prime * result + ((ip == null) ? 0 : byteHashCode(ip.getAddress()));
-        result = prime * result + port;
+        result = prime * result + ((ipport == null) ? 0 : ipport.hashCode());
         return result;
     }
-    
+
     private int byteHashCode(byte[] bytes) {
         final int prime = 47;
         int result = prime;
         for (int i = 0; i < bytes.length; i++) {
-            result = prime*result + bytes[i];
+            result = prime * result + bytes[i];
         }
         return result;
     }
@@ -150,10 +150,7 @@ public final class Address implements Serializable, Comparable<Address> {
             return false;
         }
         Address other = (Address) obj;
-        if (!Objects.equal(ip, other.ip)) {
-            return false;
-        }
-        if (!Objects.equal(port, other.port)) {
+        if (!Objects.equal(ipport, other.ipport)) {
             return false;
         }
         if (id == null) {
@@ -167,9 +164,9 @@ public final class Address implements Serializable, Comparable<Address> {
 
     @Override
     public int compareTo(Address that) {
-        ByteBuffer thisIpBytes = ByteBuffer.wrap(this.ip.getAddress()).order(
+        ByteBuffer thisIpBytes = ByteBuffer.wrap(this.ipport.getAddress().getAddress()).order(
                 ByteOrder.BIG_ENDIAN);
-        ByteBuffer thatIpBytes = ByteBuffer.wrap(that.ip.getAddress()).order(
+        ByteBuffer thatIpBytes = ByteBuffer.wrap(that.ipport.getAddress().getAddress()).order(
                 ByteOrder.BIG_ENDIAN);
 
         int ipres = thisIpBytes.compareTo(thatIpBytes);
@@ -177,39 +174,51 @@ public final class Address implements Serializable, Comparable<Address> {
             return ipres;
         }
 
-        if (this.port != that.port) {
-            return this.port - that.port;
+        if (this.ipport.getPort() != that.ipport.getPort()) {
+            return this.ipport.getPort() - that.ipport.getPort();
         }
 
         if ((this.id == null) && (that.id == null)) {
             return 0;
         }
-        
+
         if (this.id == null) {
             return -1;
         }
-        
+
         if (that.id == null) {
             return 1;
         }
-        
+
         return byteLexComp.compare(id, that.id);
     }
     private static Comparator<byte[]> byteLexComp = UnsignedBytes.lexicographicalComparator();
-    
+
     public Address newVirtual(byte[] id) {
-        return new Address(this.ip, this.port, id); //Should be safe to reuse InetAddress object
+        return new Address(this.ipport, id); //Should be safe to reuse InetSocketAddress object
     }
-    
+
     public Address newVirtual(byte id) {
-        return new Address(this.ip, this.port, id); //Should be safe to reuse InetAddress object
+        return new Address(this.ipport, id); //Should be safe to reuse InetSocketAddress object
     }
-    
+
     public Address hostAddress() {
-        return new Address(this.ip, this.port, null);
+        return new Address(this.ipport, null);
     }
-    
+
     public boolean sameHostAs(Address other) {
-        return ip.equals(other.ip) && (this.port == other.port);
+        return this.ipport.equals(other.ipport);
+    }
+
+    public boolean sameHostAs(InetSocketAddress isa) {
+        return this.ipport.equals(isa);
+    }
+
+    public InetSocketAddress asSocket() {
+        return this.ipport;
+    }
+
+    public static Address fromInetSocket(InetSocketAddress sock) {
+        return new Address(sock, null);
     }
 }

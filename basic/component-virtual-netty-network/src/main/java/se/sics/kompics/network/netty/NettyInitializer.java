@@ -52,7 +52,7 @@ public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {
         ChannelPipeline pipeline = ch.pipeline();
         // IN
         pipeline.addLast("decompressor", new SnappyFramedDecoder());
-        pipeline.addLast("decoder", new MessageDecoder());
+        pipeline.addLast("decoder", new MessageDecoder(handler.component));
         pipeline.addLast("handler", handler);
         //pipeline.addBefore("handler", "handlerLogger", new LoggingHandler("handlerLogger"));
         //pipeline.addBefore("handler", "decoder", new MessageDecoder());
@@ -62,7 +62,7 @@ public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {
         //pipeline.addBefore("decoder", "decompressor", new SnappyFramedDecoder());
         // OUT
         pipeline.addLast("compressor", new SnappyFramedEncoder());
-        pipeline.addLast("encoder", new MessageEncoder());
+        pipeline.addLast("encoder", new MessageEncoder(handler.component));
         //pipeline.addAfter("encoder", "encoderLogger", new LoggingHandler("encoderLogger"));
         //pipeline.addAfter("encoderLogger", "framer", new LengthFieldPrepender(2));
         //pipeline.addAfter("framer", "framerLogger", new LoggingHandler("framerLogger"));

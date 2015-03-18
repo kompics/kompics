@@ -53,7 +53,7 @@ import se.sics.kompics.network.VirtualNetworkChannel;
  * @author Lars Kroll <lkroll@sics.se>
  */
 public class NetworkTest {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(NetworkTest.class);
     private static final int SEED = 0;
     //private static final String STARTED = "STARTED";
@@ -73,74 +73,84 @@ public class NetworkTest {
     private static ConcurrentSkipListMap<Integer, String> messageStatus = new ConcurrentSkipListMap<Integer, String>();
     //private static int startPort = 33000;
     private static Transport[] protos;
-    
+
     public static synchronized void runTests(NetworkGenerator nGen, int numNodes, Transport[] protos) {
-        LOG.info("******************** Running All Test ********************");
+        LOG.info("\n******************** Running All Test ********************\n");
         NetworkTest.nGen = nGen;
         NetworkTest.numNodes = numNodes;
         NetworkTest.protos = protos;
         WAIT_FOR.set(NUM_MESSAGES);
-        
+
         msgId.set(0);
         messageStatus.clear();
-        TestUtil.reset(10000); //10 sec timeout for all the connections to be dropped properly
+        TestUtil.reset(100000); //10 sec timeout for all the connections to be dropped properly
 
         Kompics.createAndStart(LauncherComponent.class, 8, 50);
-        
+
         for (int i = 0; i < numNodes; i++) {
+            LOG.info("Waiting for {}/{} STOPPED.", i + 1, numNodes);
             TestUtil.waitFor(STOPPED);
             LOG.info("Got {}/{} STOPPED.", i + 1, numNodes);
         }
+
+        LOG.info("\n******************** Shutting Down Kompics ********************\n");
         Kompics.shutdown();
-        
+
         assertEquals(NUM_MESSAGES * numNodes, messageStatus.size());
         for (String s : messageStatus.values()) {
             assertEquals(ACKED, s);
         }
+        LOG.info("\n******************** All Test Done ********************\n");
         for (Transport proto : protos) {
-            LOG.info("******************** Running Fail-Recovery Test for {} ********************", proto);
+            LOG.info("\n******************** Running Fail-Recovery Test for {} ********************\n", proto);
             messageStatus.clear();
             TestUtil.reset(100000); //10 sec timeout for all the connections to be dropped properly
             NetworkTest.protos = new Transport[]{proto};
-            
+
             Kompics.createAndStart(FRLauncher.class, 8, 50);
-            
+
             TestUtil.waitFor(STOPPED);
-            
+
+            LOG.info("\n******************** Shutting Down Kompics ********************\n");
             Kompics.shutdown();
             assertEquals(NUM_FR_MESSAGES, messageStatus.size());
             for (String s : messageStatus.values()) {
                 assertEquals(ACKED, s);
             }
+            LOG.info("\n******************** Fail-Recovery Test for {} done ********************\n", proto);
         }
     }
-    
+
     public static synchronized void runAtLeastTests(NetworkGenerator nGen, int numNodes, Transport[] protos) {
-        LOG.info("******************** Running AT LEAST Test ********************");
+        LOG.info("\n******************** Running AT LEAST Test ********************\n");
         NetworkTest.nGen = nGen;
         NetworkTest.numNodes = numNodes;
         NetworkTest.protos = protos;
         WAIT_FOR.set(1);
-        
+
         msgId.set(0);
         messageStatus.clear();
         TestUtil.reset(10000); //10 sec timeout for all the connections to be dropped properly
 
         Kompics.createAndStart(LauncherComponent.class, 8, 50);
-        
+
         for (int i = 0; i < numNodes; i++) {
-            LOG.info("Got {}/{} STOPPED.", i, numNodes);
+            LOG.info("Waiting for {}/{} STOPPED.", i + 1, numNodes);
             TestUtil.waitFor(STOPPED);
+            LOG.info("Got {}/{} STOPPED.", i + 1, numNodes);
         }
+        
+        LOG.info("\n******************** Shutting Down Kompics ********************\n");
         Kompics.shutdown();
-        
+
         assertTrue(numNodes <= messageStatus.size());
+        LOG.info("\n******************** AT LEAST Test Done ********************\n");
     }
-    
+
     public static class LauncherComponent extends ComponentDefinition {
-        
+
         private Random rand = new Random(SEED);
-        
+
         public LauncherComponent() {
             Address[] nodes = new Address[numNodes];
             Address[] fakeNodes = new Address[numNodes]; // these are used to test that the network doesn't crash on connection errors
@@ -179,7 +189,7 @@ public class NetworkTest {
                     System.exit(1);
                 }
                 nodes[i] = new Address(ip, port, Ints.toByteArray(i));
-                Component net = nGen.generate(myProxy, nodes[i]);
+                Component net = nGen.generate(myProxy, nodes[i].hostAddress());
                 VirtualNetworkChannel vnc = VirtualNetworkChannel.connect(net.provided(Network.class));
                 Component scen = create(ScenarioComponent.class, new ScenarioInit(nodes[i], nodes, fakeNodes));
                 vnc.addConnection(Ints.toByteArray(i), scen.required(Network.class));
@@ -207,51 +217,51 @@ public class NetworkTest {
             public <P extends PortType> void trigger(Event e, Port<P> p) {
                 LauncherComponent.this.trigger(e, p);
             }
-            
+
             @Override
             public <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent) {
                 return LauncherComponent.this.create(definition, initEvent);
             }
-            
+
             @Override
             public <T extends ComponentDefinition> Component create(Class<T> definition, None initEvent) {
                 return LauncherComponent.this.create(definition, initEvent);
             }
-            
+
             @Override
             public void destroy(Component component) {
                 LauncherComponent.this.destroy(component);
             }
-            
+
             @Override
             public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative) {
                 return LauncherComponent.this.connect(positive, negative);
             }
-            
+
             @Override
             public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive) {
                 return LauncherComponent.this.connect(negative, positive);
             }
-            
+
             @Override
             public <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive) {
                 LauncherComponent.this.disconnect(negative, positive);
             }
-            
+
             @Override
             public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative) {
                 LauncherComponent.this.disconnect(positive, negative);
             }
-            
+
             @Override
             public Negative<ControlPort> getControlPort() {
                 return LauncherComponent.this.control;
             }
         };
     }
-    
+
     public static class ScenarioComponent extends ComponentDefinition {
-        
+
         public final Address self;
         public final Address[] nodes;
         public final Address[] fakeNodes;
@@ -260,12 +270,12 @@ public class NetworkTest {
         private int ackCount = 0;
         private Random rand = new Random(SEED);
         private Map<UUID, Integer> pending = new TreeMap<UUID, Integer>();
-        
+
         public ScenarioComponent(ScenarioInit init) {
             self = init.self;
             nodes = init.nodes;
             fakeNodes = init.fakeNodes;
-            
+
             Handler<Start> startHandler = new Handler<Start>() {
                 @Override
                 public void handle(Start event) {
@@ -275,19 +285,20 @@ public class NetworkTest {
                 }
             };
             subscribe(startHandler, control);
-            
+
             Handler<Ack> ackHandler = new Handler<Ack>() {
                 @Override
                 public void handle(Ack event) {
                     LOG.debug("Got Ack {}", event);
                     messageStatus.put(event.msgId, ACKED);
                     ackCount++;
-                    
+
                     if (ackCount >= WAIT_FOR.get()) {
+                        LOG.info("Scenario Component {} is done.", self);
                         TestUtil.submit(STOPPED);
                         return;
                     }
-                    
+
                     if (msgCount < NUM_MESSAGES) {
                         for (int i = 0; i < BATCH_SIZE; i++) {
                             sendMessage();
@@ -296,7 +307,7 @@ public class NetworkTest {
                 }
             };
             subscribe(ackHandler, net);
-            
+
             Handler<TestMessage> msgHandler = new Handler<TestMessage>() {
                 @Override
                 public void handle(TestMessage event) {
@@ -306,9 +317,9 @@ public class NetworkTest {
                 }
             };
             subscribe(msgHandler, net);
-            
+
             Handler<MessageNotify.Resp> notifyHandler = new Handler<MessageNotify.Resp>() {
-                
+
                 @Override
                 public void handle(MessageNotify.Resp event) {
                     Integer msgId = pending.remove(event.msgId);
@@ -319,7 +330,7 @@ public class NetworkTest {
             };
             subscribe(notifyHandler, net);
         }
-        
+
         private void sendMessage() {
             int id = msgId.getAndIncrement();
             if (messageStatus.putIfAbsent(id, SENDING) != null) {
@@ -336,26 +347,26 @@ public class NetworkTest {
             msgCount++;
         }
     }
-    
+
     public static class ScenarioInit extends Init<ScenarioComponent> {
-        
+
         public final Address self;
         public final Address[] nodes;
         public final Address[] fakeNodes;
-        
+
         public ScenarioInit(Address self, Address[] nodes, Address[] fakeNodes) {
             this.self = self;
             this.nodes = nodes;
             this.fakeNodes = fakeNodes;
         }
     }
-    
+
     public static class FRLauncher extends ComponentDefinition {
-        
+
         private final FRInit init;
-        
+
         public FRLauncher() {
-            
+
             InetAddress ip = null;
             try {
                 ip = InetAddress.getByName("127.0.0.1");
@@ -398,26 +409,26 @@ public class NetworkTest {
                     System.exit(1);
                 }
             }
-            
+
             init = new FRInit(nodes[0], nodes[1]);
             Component acker = create(Acker.class, init);
-            
+
             Component net = nGen.generate(myProxy, nodes[1]);
             VirtualNetworkChannel vnc = VirtualNetworkChannel.connect(net.provided(Network.class));
             vnc.addConnection(null, acker.required(Network.class));
-            
+
             createFRComponent();
-            
+
             subscribe(recoverHandler, loopback);
         }
-        
+
         private Component createFRComponent() {
             Component fr = create(FRComponent.class, init);
             return fr;
         }
-        
+
         Handler<Recover> recoverHandler = new Handler<Recover>() {
-            
+
             @Override
             public void handle(Recover event) {
                 long diff = System.currentTimeMillis() - event.timestamp;
@@ -436,85 +447,85 @@ public class NetworkTest {
                 Component fr = createFRComponent();
                 trigger(Start.event, fr.control());
             }
-            
+
         };
-        
+
         @Override
         public ResolveAction handleFault(Fault fault) {
             trigger(new Recover(System.currentTimeMillis()), onSelf);
-            
+
             return ResolveAction.DESTROY;
         }
-        
+
         private final ComponentProxy myProxy = new ComponentProxy() {
             @Override
             public <P extends PortType> void trigger(Event e, Port<P> p) {
                 FRLauncher.this.trigger(e, p);
             }
-            
+
             @Override
             public <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent) {
                 return FRLauncher.this.create(definition, initEvent);
             }
-            
+
             @Override
             public <T extends ComponentDefinition> Component create(Class<T> definition, None initEvent) {
                 return FRLauncher.this.create(definition, initEvent);
             }
-            
+
             @Override
             public void destroy(Component component) {
                 FRLauncher.this.destroy(component);
             }
-            
+
             @Override
             public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative) {
                 return FRLauncher.this.connect(positive, negative);
             }
-            
+
             @Override
             public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive) {
                 return FRLauncher.this.connect(negative, positive);
             }
-            
+
             @Override
             public <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive) {
                 FRLauncher.this.disconnect(negative, positive);
             }
-            
+
             @Override
             public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative) {
                 FRLauncher.this.disconnect(positive, negative);
             }
-            
+
             @Override
             public Negative<ControlPort> getControlPort() {
                 return FRLauncher.this.control;
             }
         };
     }
-    
+
     public static class FRComponent extends ComponentDefinition {
-        
+
         private final Positive<Network> net = requires(Network.class);
-        
+
         private final Address self;
         private final Address acker;
-        
+
         public FRComponent(FRInit init) {
             self = init.frAddr;
             acker = init.ackerAddr;
-            
+
             Component netw = nGen.generate(myProxy, self);
             VirtualNetworkChannel vnc = VirtualNetworkChannel.connect(netw.provided(Network.class));
             vnc.addConnection(null, net.getPair());
-            
+
             subscribe(startHandler, control);
             subscribe(ackHandler, net);
         }
-        
+
         Handler<Start> startHandler = new Handler<Start>() {
-            
+
             @Override
             public void handle(Start event) {
                 Integer lastid;
@@ -537,80 +548,80 @@ public class NetworkTest {
                 TestMessage msg = new TestMessage(self, acker, msgid, protos[0]);
                 trigger(msg, net);
             }
-            
+
         };
-        
+
         Handler<Ack> ackHandler = new Handler<Ack>() {
-            
+
             @Override
             public void handle(Ack event) {
                 messageStatus.put(event.msgId, ACKED);
                 throw new RuntimeException(); // crash this thing
             }
         };
-        
+
         private final ComponentProxy myProxy = new ComponentProxy() {
             @Override
             public <P extends PortType> void trigger(Event e, Port<P> p) {
                 FRComponent.this.trigger(e, p);
             }
-            
+
             @Override
             public <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent) {
                 return FRComponent.this.create(definition, initEvent);
             }
-            
+
             @Override
             public <T extends ComponentDefinition> Component create(Class<T> definition, None initEvent) {
                 return FRComponent.this.create(definition, initEvent);
             }
-            
+
             @Override
             public void destroy(Component component) {
                 FRComponent.this.destroy(component);
             }
-            
+
             @Override
             public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative) {
                 return FRComponent.this.connect(positive, negative);
             }
-            
+
             @Override
             public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive) {
                 return FRComponent.this.connect(negative, positive);
             }
-            
+
             @Override
             public <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive) {
                 FRComponent.this.disconnect(negative, positive);
             }
-            
+
             @Override
             public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative) {
                 FRComponent.this.disconnect(positive, negative);
             }
-            
+
             @Override
             public Negative<ControlPort> getControlPort() {
                 return FRComponent.this.control;
             }
         };
     }
-    
+
     public static class Acker extends ComponentDefinition {
-        
+
         private final Positive<Network> net = requires(Network.class);
-        
+
         private final Address self;
-        
+
         public Acker(FRInit init) {
             self = init.ackerAddr;
-            
+
             subscribe(msgHandler, net);
         }
-        
+
         Handler<TestMessage> msgHandler = new Handler<TestMessage>() {
-            
+
             @Override
             public void handle(TestMessage event) {
                 messageStatus.put(event.msgId, RECEIVED);
@@ -618,46 +629,80 @@ public class NetworkTest {
             }
         };
     }
-    
+
     public static class FRInit extends Init {
-        
+
         public final Address frAddr;
         public final Address ackerAddr;
-        
+
         public FRInit(Address frAddr, Address ackerAddr) {
             this.frAddr = frAddr;
             this.ackerAddr = ackerAddr;
         }
     }
-    
+
     public static class TestMessage extends Message {
-        
+
         public final int msgId;
-        
+
         public TestMessage(Address src, Address dst, int id, Transport p) {
             super(src, dst, p);
             this.msgId = id;
         }
-        
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append(this.getClass().getSimpleName());
+            sb.append("(");
+            sb.append("SRC: ");
+            sb.append(this.getSource());
+            sb.append(", DST: ");
+            sb.append(this.getDestination());
+            sb.append(", PRT: ");
+            sb.append(this.getProtocol());
+            sb.append(", msgId: ");
+            sb.append(this.msgId);
+            sb.append(")");
+            return sb.toString();
+        }
+
         public Ack ack() {
             return new Ack(this.getDestination(), this.getSource(), msgId, this.getProtocol());
         }
     }
-    
+
     public static class Ack extends Message {
-        
+
         public final int msgId;
-        
+
         public Ack(Address src, Address dst, int id, Transport p) {
             super(src, dst, p);
             this.msgId = id;
         }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append(this.getClass().getSimpleName());
+            sb.append("(");
+            sb.append("SRC: ");
+            sb.append(this.getSource());
+            sb.append(", DST: ");
+            sb.append(this.getDestination());
+            sb.append(", PRT: ");
+            sb.append(this.getProtocol());
+            sb.append(", msgId: ");
+            sb.append(this.msgId);
+            sb.append(")");
+            return sb.toString();
+        }
     }
-    
+
     public static class Recover implements KompicsEvent {
-        
+
         public final long timestamp;
-        
+
         public Recover(long timestamp) {
             this.timestamp = timestamp;
         }

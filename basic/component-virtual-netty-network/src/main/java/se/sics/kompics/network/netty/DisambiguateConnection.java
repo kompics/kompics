@@ -28,16 +28,20 @@ import se.sics.kompics.network.Transport;
  *
  * @author Lars Kroll <lkroll@kth.se>
  */
-public abstract class DisambiguateConnection implements Msg {
+public class DisambiguateConnection implements Msg {
 
     public final Address src;
     public final Address dst;
     public final Transport protocol;
+    public final int udtPort;
+    public final boolean reply;
 
-    public DisambiguateConnection(Address src, Address dst, Transport protocol) {
+    public DisambiguateConnection(Address src, Address dst, Transport protocol, int udtPort, boolean reply) {
         this.src = src;
         this.dst = dst;
         this.protocol = protocol;
+        this.udtPort = udtPort;
+        this.reply = reply;
     }
 
     @Override
@@ -60,30 +64,64 @@ public abstract class DisambiguateConnection implements Msg {
         return protocol;
     }
 
-    public static class Req extends DisambiguateConnection {
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getClass().getSimpleName());
+        sb.append("(");
+        sb.append("SRC: ");
+        sb.append(src);
+        sb.append(", DST: ");
+        sb.append(dst);
+        sb.append(", PRT: ");
+        sb.append(protocol);
+        sb.append(", UDTport: ");
+        sb.append(udtPort);
+        sb.append(", reply? ");
+        sb.append(reply);
+        sb.append(")");
+        return sb.toString();
+    }
+    
+    
 
-        public final int localPort;
-        public final int udtPort;
-
-        public Req(Address src, Address dst, Transport protocol, int localPort, int udtPort) {
-            super(src, dst, protocol);
-            this.localPort = localPort;
-            this.udtPort = udtPort;
-        }
-
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 79 * hash + (this.src != null ? this.src.hashCode() : 0);
+        hash = 79 * hash + (this.dst != null ? this.dst.hashCode() : 0);
+        hash = 79 * hash + (this.protocol != null ? this.protocol.hashCode() : 0);
+        hash = 79 * hash + this.udtPort;
+        hash = 79 * hash + (this.reply ? 1 : 0);
+        return hash;
     }
 
-    public static class Resp extends DisambiguateConnection {
-
-        public final int localPort;
-        public final int boundPort;
-        public final int udtPort;
-
-        public Resp(Address src, Address dst, Transport protocol, int remotePort, int boundPort, int udtPort) {
-            super(src, dst, protocol);
-            this.localPort = remotePort; // rename because on the sender side it's remote but for the receiver it's local
-            this.boundPort = boundPort;
-            this.udtPort = udtPort;
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
         }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DisambiguateConnection other = (DisambiguateConnection) obj;
+        if (this.src != other.src && (this.src == null || !this.src.equals(other.src))) {
+            return false;
+        }
+        if (this.dst != other.dst && (this.dst == null || !this.dst.equals(other.dst))) {
+            return false;
+        }
+        if (this.protocol != other.protocol) {
+            return false;
+        }
+        if (this.udtPort != other.udtPort) {
+            return false;
+        }
+        if (this.reply != other.reply) {
+            return false;
+        }
+        return true;
     }
+    
+    
 }

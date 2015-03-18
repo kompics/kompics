@@ -20,9 +20,6 @@
  */
 package se.sics.kompics.network.netty;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -30,7 +27,6 @@ import io.netty.channel.AdaptiveRecvByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -45,18 +41,18 @@ import io.netty.channel.udt.nio.NioUdtProvider;
 import io.netty.util.concurrent.Future;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
@@ -66,7 +62,6 @@ import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Network;
 import se.sics.kompics.network.NetworkControl;
 import se.sics.kompics.network.NetworkException;
-import se.sics.kompics.network.NetworkSessionOpened;
 import se.sics.kompics.network.Transport;
 import se.sics.kompics.network.netty.serialization.Serializers;
 
@@ -76,7 +71,7 @@ import se.sics.kompics.network.netty.serialization.Serializers;
  */
 public class NettyNetwork extends ComponentDefinition {
 
-    public static final Logger LOG = LoggerFactory.getLogger(NettyNetwork.class);
+    public final Logger LOG;
     private static final int CONNECT_TIMEOUT_MS = 5000;
     static final int RECV_BUFFER_SIZE = 65536;
     static final int SEND_BUFFER_SIZE = 65536;
@@ -90,14 +85,11 @@ public class NettyNetwork extends ComponentDefinition {
     private Bootstrap bootstrapUDP;
     private ServerBootstrap bootstrapUDT;
     private Bootstrap bootstrapUDTClient;
-    private final ConcurrentMap<InetSocketAddress, SocketChannel> tcpChannels = new ConcurrentHashMap<InetSocketAddress, SocketChannel>();
-    private final ConcurrentMap<InetSocketAddress, DatagramChannel> udpChannels = new ConcurrentHashMap<InetSocketAddress, DatagramChannel>();
-    private final ConcurrentMap<InetSocketAddress, UdtChannel> udtChannels = new ConcurrentHashMap<InetSocketAddress, UdtChannel>();
-    private final BiMap<InetSocketAddress, InetSocketAddress> udtPortMap;
-    private final ConcurrentMap<InetSocketAddress, ChannelFuture> udtIncompleteChannels = new ConcurrentHashMap<InetSocketAddress, ChannelFuture>();
-    private final ConcurrentMap<InetSocketAddress, ChannelFuture> tcpIncompleteChannels = new ConcurrentHashMap<InetSocketAddress, ChannelFuture>();
     private final LinkedList<Msg> delayedMessages = new LinkedList<Msg>();
     private final LinkedList<MessageNotify.Req> delayedNotifies = new LinkedList<MessageNotify.Req>();
+    private final HashSet<DisambiguateConnection> delayedDisambs = new HashSet<DisambiguateConnection>();
+    final ChannelManager channels = new ChannelManager(this);
+    private DatagramChannel udpChannel;
     // Info
     final Address self;
     private final int boundPort;
@@ -105,11 +97,17 @@ public class NettyNetwork extends ComponentDefinition {
 
     public NettyNetwork(NettyInit init) {
         System.setProperty("java.net.preferIPv4Stack", "true");
-        HashBiMap<InetSocketAddress, InetSocketAddress> bm = HashBiMap.create();
-        udtPortMap = Maps.synchronizedBiMap(bm);
 
-        self = init.self;
+        self = init.self.hostAddress();
+
         boundPort = self.getPort();
+
+        LOG = LoggerFactory.getLogger("NettyNetwork@" + self.getPort());
+
+        if (!self.equals(init.self)) {
+            LOG.error("Do NOT bind Netty to a virtual address!");
+            System.exit(1);
+        }
 
         // Prepare Bootstraps
         bootstrapTCPClient = new Bootstrap();
@@ -163,6 +161,13 @@ public class NettyNetwork extends ComponentDefinition {
                 return;
             }
             if (sendMessage(event) == null) {
+                if (event instanceof DisambiguateConnection) {
+                    DisambiguateConnection dc = (DisambiguateConnection) event;
+                    if (delayedDisambs.add(dc)) {
+                        LOG.info("Couldn't find channel for {}. Delaying message while establishing connection!", event);
+                    }
+                    return;
+                }
                 LOG.info("Couldn't find channel for {}. Delaying message while establishing connection!", event);
                 delayedMessages.offer(event);
             }
@@ -225,7 +230,7 @@ public class NettyNetwork extends ComponentDefinition {
             LOG.info("Cleaning delayed messages.");
             for (Iterator<Msg> it = delayedMessages.iterator(); it.hasNext();) {
                 Msg m = it.next();
-                if (event.isa.equals(addressToSocket(m.getDestination())) && event.protocol == m.getProtocol()) {
+                if (m.getDestination().sameHostAs(event.isa) && event.protocol == m.getProtocol()) {
                     LOG.warn("Dropping message {} because connection could not be established.", m);
                     it.remove();
                 }
@@ -233,7 +238,7 @@ public class NettyNetwork extends ComponentDefinition {
             for (Iterator<MessageNotify.Req> it = delayedNotifies.iterator(); it.hasNext();) {
                 MessageNotify.Req notify = it.next();
                 Msg m = notify.msg;
-                if (event.isa.equals(addressToSocket(m.getDestination())) && event.protocol == m.getProtocol()) {
+                if (m.getDestination().sameHostAs(event.isa) && event.protocol == m.getProtocol()) {
                     LOG.warn("Dropping message {} (with notify) because connection could not be established.", m);
                     it.remove();
                     notify.prepareResponse(System.currentTimeMillis(), false);
@@ -274,9 +279,9 @@ public class NettyNetwork extends ComponentDefinition {
 
         try {
             InetSocketAddress iAddr = new InetSocketAddress(addr, port);
-            DatagramChannel c = (DatagramChannel) bootstrapUDP.bind(iAddr).sync().channel();
+            udpChannel = (DatagramChannel) bootstrapUDP.bind(iAddr).sync().channel();
 
-            addLocalSocket(iAddr, c);
+            //addLocalSocket(iAddr, c);
             LOG.info("Successfully bound to ip:port {}:{}", addr, port);
         } catch (InterruptedException e) {
             LOG.error("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
@@ -341,35 +346,15 @@ public class NettyNetwork extends ComponentDefinition {
         trigger(networkException, netC);
     }
 
-    protected void deliverMessage(Msg message) {
-        if (message instanceof DisambiguateConnection.Req) {
-            DisambiguateConnection.Req msg = (DisambiguateConnection.Req) message;
-            udtPortMap.put(addressToSocket(msg.src), new InetSocketAddress(msg.src.getIp(), msg.udtPort));
-            trigger(new DisambiguateConnection.Resp(self, msg.getSource(), msg.getProtocol(), msg.localPort, boundPort, boundUDTPort), net.getPair());
-            trigger(new SendDelayed(), onSelf);
-        }
-        if (message instanceof DisambiguateConnection.Resp) {
-            DisambiguateConnection.Resp msg = (DisambiguateConnection.Resp) message;
-            udtPortMap.put(addressToSocket(msg.src), new InetSocketAddress(msg.src.getIp(), msg.udtPort));
-            InetSocketAddress oldAddr = new InetSocketAddress(msg.getSource().getIp(), msg.localPort);
-            InetSocketAddress newAddr = new InetSocketAddress(msg.getSource().getIp(), msg.boundPort);
-            switch (msg.getProtocol()) {
-                case TCP:
-                    SocketChannel c = tcpChannels.remove(oldAddr);
-                    if (c != null) { // Shouldn't be...but you never know
-                        tcpChannels.put(newAddr, c);
-                    }
-                    break;
-                case UDT:
-                    UdtChannel c2 = udtChannels.remove(oldAddr);
-                    if (c2 != null) { // Shouldn't be...but you never know
-                        udtChannels.put(newAddr, c2);
-                    }
-                    break;
-                default:
-                    throw new Error("Unknown Transport type");
+    protected void deliverMessage(Msg message, Channel c) {
+        if (message instanceof DisambiguateConnection) {
+            DisambiguateConnection msg = (DisambiguateConnection) message;
+            channels.disambiguate(msg, c);
+            if (msg.reply) {
+                c.writeAndFlush(new DisambiguateConnection(self, msg.getSource(), msg.getProtocol(), boundUDTPort, false));
             }
-            trigger(new SendDelayed(), onSelf);
+            //trigger(SendDelayed.event, onSelf);
+            return;
         }
         LOG.debug(
                 "Delivering message {} from {} to {} protocol {}",
@@ -392,16 +377,12 @@ public class NettyNetwork extends ComponentDefinition {
     }
 
     private ChannelFuture sendUdpMessage(Msg message) {
-        InetSocketAddress src = addressToSocket(message.getSource());
-        InetSocketAddress dst = addressToSocket(message.getDestination());
-        Channel c = udpChannels.get(src);
-        //ByteBuf buf = Unpooled.buffer(INITIAL_BUFFER_SIZE, SEND_BUFFER_SIZE);
-        ByteBuf buf = c.alloc().buffer(INITIAL_BUFFER_SIZE, SEND_BUFFER_SIZE);
+        ByteBuf buf = udpChannel.alloc().buffer(INITIAL_BUFFER_SIZE, SEND_BUFFER_SIZE);
         try {
             Serializers.toBinary(message, buf);
-            DatagramPacket pack = new DatagramPacket(buf, dst);
-            LOG.debug("Sending Datagram message {} from {} to {}", new Object[]{message, src, dst});
-            return c.writeAndFlush(pack);
+            DatagramPacket pack = new DatagramPacket(buf, message.getDestination().asSocket());
+            LOG.debug("Sending Datagram message {} ({}bytes)", message, buf.readableBytes());
+            return udpChannel.writeAndFlush(pack);
         } catch (Exception e) { // serialization might fail horribly with size bounded buff
             LOG.warn("Could not send Datagram message {}, error was: {}", message, e);
             return null;
@@ -409,181 +390,73 @@ public class NettyNetwork extends ComponentDefinition {
     }
 
     private ChannelFuture sendUdtMessage(Msg message) {
-        Channel c = getUDTChannel(message.getDestination());
+        Channel c = channels.getUDTChannel(message.getDestination());
+        if (c == null) {
+            c = channels.createUDTChannel(message.getDestination(), bootstrapUDTClient);
+        }
         if (c == null) {
             return null;
         }
-        LOG.debug("Sending message {} from {} to {}", new Object[]{message, self, c.remoteAddress()});
+        LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{message, c.localAddress(), c.remoteAddress()});
         return c.writeAndFlush(message);
     }
 
     private ChannelFuture sendTcpMessage(Msg message) {
-        Channel c = getTCPChannel(message.getDestination());
+        Channel c = channels.getTCPChannel(message.getDestination());
+        if (c == null) {
+            c = channels.createTCPChannel(message.getDestination(), bootstrapTCPClient);
+        }
         if (c == null) {
             return null;
         }
-        LOG.debug("Sending message {} from {} to {}", new Object[]{message, self, c.remoteAddress()});
+        LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{message, c.localAddress(), c.remoteAddress()});
         return c.writeAndFlush(message);
     }
 
-    void addLocalSocket(InetSocketAddress localAddress, DatagramChannel channel) {
-        udpChannels.put(localAddress, channel); // Not sure how this makes sense...but at least the pipeline is there
-    }
-
-    void addLocalSocket(InetSocketAddress remoteAddress, SocketChannel channel) {
-        tcpChannels.put(remoteAddress, channel);
-        trigger(new NetworkSessionOpened(remoteAddress, Transport.TCP), netC);
-    }
-
-    void addLocalSocket(InetSocketAddress remoteAddress, UdtChannel channel) {
-        udtChannels.put(remoteAddress, channel);
-        trigger(new NetworkSessionOpened(remoteAddress, Transport.UDT), netC);
-    }
-
-    void channelInactive(ChannelHandlerContext ctx, Transport protocol) {
-
-        SocketAddress addr = ctx.channel().remoteAddress();
-
-        if (addr instanceof InetSocketAddress) {
-            InetSocketAddress remoteAddress = (InetSocketAddress) addr;
-            switch (protocol) {
-                case TCP:
-                    tcpChannels.remove(remoteAddress);
-                    break;
-                case UDT:
-                    InetSocketAddress baseAddress = udtPortMap.inverse().get(remoteAddress);
-                    if (baseAddress == null) {
-                        LOG.debug("Channel {} was already closed", remoteAddress);
-                        return;
-                    }
-                    LOG.debug("Closing UDT channel for base address {}", baseAddress);
-                    udtChannels.remove(baseAddress);
-                    udtPortMap.remove(baseAddress);
-                    break;
-                default:
-                    throw new Error("Unknown Transport type");
-            }
-            LOG.debug("Channel {} ({}) closed", remoteAddress, protocol);
-        }
-
-    }
-
-    Address socketToAddress(InetSocketAddress sock) {
-        return new Address(sock.getAddress(), sock.getPort(), null);
-    }
-
-    InetSocketAddress addressToSocket(Address addr) {
-        return new InetSocketAddress(addr.getIp(), addr.getPort());
-    }
-
-    private SocketChannel getTCPChannel(Address destination) {
-        final InetSocketAddress isa = addressToSocket(destination);
-        SocketChannel c = tcpChannels.get(isa);
-        if (c == null) {
-            ChannelFuture f = tcpIncompleteChannels.get(isa);
-            if (f != null) {
-                return null; // already establishing connection but not done, yet
-            }
-            f = bootstrapTCPClient.connect(isa);
-            tcpIncompleteChannels.put(isa, f);
-            f.addListener(new ChannelFutureListener() {
-
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    tcpIncompleteChannels.remove(isa);
-                    if (future.isSuccess()) {
-                        tcpChannels.put(isa, (SocketChannel) future.channel());
-                    } else {
-                        LOG.error("Error while trying to connect to {}! Error was {}", isa, future.cause());
-                        trigger(new DropDelayed(isa, Transport.TCP), onSelf);
-                    }
-                }
-            });
-        }
-        return c;
-    }
-
-    private UdtChannel getUDTChannel(Address destination) {
-        final InetSocketAddress isa = addressToSocket(destination);
-        UdtChannel c = udtChannels.get(isa);
-        if (c == null) {
-            ChannelFuture f = udtIncompleteChannels.get(isa);
-            if (f != null) {
-                return null; // already establishing connection but not done, yet
-            }
-            InetSocketAddress newISA = udtPortMap.get(isa);
-            if (newISA == null) { // We have to ask for the UDT port first, since it's random
-                DisambiguateConnection.Req r = new DisambiguateConnection.Req(self, destination, Transport.TCP, destination.getPort(), boundUDTPort);
-                trigger(r, net.getPair());
-                return null;
-            }
-            f = bootstrapUDTClient.connect(newISA);
-            udtIncompleteChannels.put(isa, f);
-            f.addListener(new ChannelFutureListener() {
-
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    udtIncompleteChannels.remove(isa);
-                    if (future.isSuccess()) {
-                        udtChannels.put(isa, (UdtChannel) future.channel());
-                    } else {
-                        LOG.error("Error while trying to connect to {}! Error was {}", isa, future.cause());
-                        trigger(new DropDelayed(isa, Transport.UDT), onSelf);
-                    }
-                }
-            });
-        }
-        return c;
-    }
-
+//    void addLocalSocket(InetSocketAddress localAddress, DatagramChannel channel) {
+//        udpChannels.put(localAddress, channel); // Not sure how this makes sense...but at least the pipeline is there
+//    }
+//    void addLocalSocket(InetSocketAddress remoteAddress, SocketChannel channel) {
+//        tcpChannels.put(remoteAddress, channel);
+//        trigger(new NetworkSessionOpened(remoteAddress, Transport.TCP), netC);
+//    }
+//
+//    void addLocalSocket(InetSocketAddress remoteAddress, UdtChannel channel) {
+//        udtChannels.put(remoteAddress, channel);
+//        trigger(new NetworkSessionOpened(remoteAddress, Transport.UDT), netC);
+//    }
     private void clearConnections() {
-        LOG.info("Closing all connections...");
-        for (ChannelFuture f : udtIncompleteChannels.values()) {
-            f.cancel(false);
-        }
-        for (ChannelFuture f : tcpIncompleteChannels.values()) {
-            f.cancel(false);
-        }
-        List<ChannelFuture> futures = new LinkedList<ChannelFuture>();
-        for (SocketChannel c : tcpChannels.values()) {
-            futures.add(c.close());
-        }
-        tcpChannels.clear();
-        for (DatagramChannel c : udpChannels.values()) {
-            futures.add(c.close());
-        }
-        udpChannels.clear();
-        for (UdtChannel c : udtChannels.values()) {
-            futures.add(c.close());
-        }
-        udtChannels.clear();
 
-        for (ChannelFuture cf : futures) {
-            cf.syncUninterruptibly();
-        }
-        
-        udtPortMap.clear();
-        
-        udtIncompleteChannels.clear();
-        tcpIncompleteChannels.clear();
-        
+        long tstart = System.currentTimeMillis();
+
+        channels.clearConnections();
+
+        udpChannel.close().syncUninterruptibly();
+
         delayedMessages.clear();
         delayedNotifies.clear();
+        delayedDisambs.clear();
+
+        long tend = System.currentTimeMillis();
+
+        LOG.info("Closed all connections in {}ms", tend - tstart);
     }
-    
+
     @Override
     public void tearDown() {
+        long tstart = System.currentTimeMillis();
+
         clearConnections();
-        
+
         LOG.info("Shutting down handler groups...");
         List<Future> gfutures = new LinkedList<Future>();
-        gfutures.add(bootstrapUDTClient.group().shutdownGracefully());
-        gfutures.add(bootstrapTCP.childGroup().shutdownGracefully());
-        gfutures.add(bootstrapTCP.group().shutdownGracefully());
-        gfutures.add(bootstrapTCPClient.group().shutdownGracefully());
-        gfutures.add(bootstrapUDP.group().shutdownGracefully());
-        gfutures.add(bootstrapUDT.childGroup().shutdownGracefully());
-        gfutures.add(bootstrapUDT.group().shutdownGracefully());
+        gfutures.add(bootstrapUDTClient.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        gfutures.add(bootstrapTCP.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        gfutures.add(bootstrapTCP.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        gfutures.add(bootstrapTCPClient.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        gfutures.add(bootstrapUDP.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        gfutures.add(bootstrapUDT.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        gfutures.add(bootstrapUDT.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         for (Future f : gfutures) {
             f.syncUninterruptibly();
         }
@@ -592,8 +465,19 @@ public class NettyNetwork extends ComponentDefinition {
         bootstrapTCPClient = null;
         bootstrapUDP = null;
         bootstrapUDT = null;
-        LOG.info("Netty shutdown complete.");
 
+        long tend = System.currentTimeMillis();
+
+        LOG.info("Netty shutdown complete. It took {}ms", tend - tstart);
+
+    }
+
+    public void trigger(KompicsEvent event) {
+        if (event instanceof Msg) {
+            trigger(event, net.getPair());
+        } else {
+            trigger(event, onSelf);
+        }
     }
 
     class NotifyListener implements ChannelFutureListener {

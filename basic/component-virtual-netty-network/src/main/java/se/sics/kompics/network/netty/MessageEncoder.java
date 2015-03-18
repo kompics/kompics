@@ -35,6 +35,12 @@ import se.sics.kompics.network.netty.serialization.Serializers;
 public class MessageEncoder extends MessageToMessageEncoder<Msg> {
 
     private static final byte[] LENGTH_PLACEHOLDER = new byte[2];
+    
+    private final NettyNetwork component;
+    
+    public MessageEncoder(NettyNetwork component) {
+        this.component = component;
+    }
 
 //    @Override
 //    protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
@@ -56,7 +62,7 @@ public class MessageEncoder extends MessageToMessageEncoder<Msg> {
     @Override
     protected void encode(ChannelHandlerContext ctx, Msg msg, List<Object> outL) throws Exception {
         ByteBuf out = ctx.alloc().buffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
-        NettyNetwork.LOG.trace("Trying to encode outgoing data to {} from {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress());
+        component.LOG.trace("Trying to encode outgoing data to {} from {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress());
         int startIdx = out.writerIndex();
         out.writeBytes(LENGTH_PLACEHOLDER);
 
@@ -68,7 +74,7 @@ public class MessageEncoder extends MessageToMessageEncoder<Msg> {
             throw new Exception("Can't encode message longer than 65532 bytes!");
         }
         out.setShort(startIdx, diff);
-        NettyNetwork.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
+        component.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
         outL.add(out);
     }
 

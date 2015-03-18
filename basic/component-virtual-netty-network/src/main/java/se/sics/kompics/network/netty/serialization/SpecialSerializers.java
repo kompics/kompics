@@ -182,9 +182,6 @@ public abstract class SpecialSerializers {
 
     public static class DisambiguateSerializer implements Serializer {
 
-        public static final boolean REQ = false;
-        public static final boolean RESP = true;
-
         @Override
         public int identifier() {
             return 5;
@@ -192,14 +189,13 @@ public abstract class SpecialSerializers {
 
         @Override
         public void toBinary(Object o, ByteBuf buf) {
-            if (o instanceof DisambiguateConnection.Req) {
-                DisambiguateConnection.Req r = (DisambiguateConnection.Req) o;
-                reqToBinary(r, buf);
-                return;
-            }
-            if (o instanceof DisambiguateConnection.Resp) {
-                DisambiguateConnection.Resp r = (DisambiguateConnection.Resp) o;
-                respToBinary(r, buf);
+            if (o instanceof DisambiguateConnection) {
+                DisambiguateConnection r = (DisambiguateConnection) o;
+                MessageSerializationUtil.msgToBinary(r, buf, r.reply, false);
+                // Port 2 byte
+                byte[] portBytes = Ints.toByteArray(r.udtPort);
+                buf.writeByte(portBytes[2]);
+                buf.writeByte(portBytes[3]);
                 return;
             }
             throw new RuntimeException("Can't serialize " + o.getClass() + " with this serializer!");
@@ -208,61 +204,11 @@ public abstract class SpecialSerializers {
         @Override
         public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
             MessageSerializationUtil.MessageFields fields = MessageSerializationUtil.msgFromBinary(buf);
-            if (fields.flag1) { // Response
-                return respFromBinary(buf, fields);
-            } else {
-                return reqFromBinary(buf, fields);
-            }
-        }
-
-        private void reqToBinary(DisambiguateConnection.Req r, ByteBuf buf) {
-            MessageSerializationUtil.msgToBinary(r, buf, REQ, false);
-            // Ports 2 byte each
-            byte[] portBytes = Ints.toByteArray(r.localPort);
-            buf.writeByte(portBytes[2]);
-            buf.writeByte(portBytes[3]);
-            portBytes = Ints.toByteArray(r.udtPort);
-            buf.writeByte(portBytes[2]);
-            buf.writeByte(portBytes[3]);
-        }
-
-        private void respToBinary(DisambiguateConnection.Resp r, ByteBuf buf) {
-            MessageSerializationUtil.msgToBinary(r, buf, RESP, false);
-            // Ports 2 byte each
-            byte[] portBytes = Ints.toByteArray(r.localPort);
-            buf.writeByte(portBytes[2]);
-            buf.writeByte(portBytes[3]);
-            portBytes = Ints.toByteArray(r.boundPort);
-            buf.writeByte(portBytes[2]);
-            buf.writeByte(portBytes[3]);
-            portBytes = Ints.toByteArray(r.udtPort);
-            buf.writeByte(portBytes[2]);
-            buf.writeByte(portBytes[3]);
-        }
-
-        private Object respFromBinary(ByteBuf buf, MessageSerializationUtil.MessageFields fields) {
-            // Ports 2 byte each
+            // Port 2 byte
             byte portUpper = buf.readByte();
             byte portLower = buf.readByte();
-            int localPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-            portUpper = buf.readByte();
-            portLower = buf.readByte();
-            int boundPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-            portUpper = buf.readByte();
-            portLower = buf.readByte();
             int udtPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-            return new DisambiguateConnection.Resp(fields.src, fields.dst, fields.proto, localPort, boundPort, udtPort);
-        }
-
-        private Object reqFromBinary(ByteBuf buf, MessageSerializationUtil.MessageFields fields) {
-            // Ports 2 byte each
-            byte portUpper = buf.readByte();
-            byte portLower = buf.readByte();
-            int localPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-            portUpper = buf.readByte();
-            portLower = buf.readByte();
-            int udtPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-            return new DisambiguateConnection.Req(fields.src, fields.dst, fields.proto, localPort, udtPort);
+            return new DisambiguateConnection(fields.src, fields.dst, fields.proto, udtPort, fields.flag1);
         }
 
     }

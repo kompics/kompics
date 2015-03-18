@@ -47,7 +47,7 @@ public abstract class BaseHandler<M> extends SimpleChannelInboundHandler<M> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        NettyNetwork.LOG.trace("Channel connected: " + ctx.toString());
+        component.LOG.trace("Channel connected: {} {} => {} ({})", new Object[]{protocol, ctx.channel().localAddress(), ctx.channel().remoteAddress(), ctx.channel()});
     }
 
     @Override
@@ -61,8 +61,9 @@ public abstract class BaseHandler<M> extends SimpleChannelInboundHandler<M> {
             component.networkException(new NetworkException(inetAddress, protocol));
         }
 
-        //component.exceptionCaught(ctx, cause); // Don't fail fast for now
-        NettyNetwork.LOG.error(cause.getMessage());
-        cause.printStackTrace();
+        component.LOG.error("Error in channel.", cause);
+        //cause.printStackTrace();
+        component.LOG.error("Closing channel {} due to error.", channel);
+        channel.close();
     }
 }

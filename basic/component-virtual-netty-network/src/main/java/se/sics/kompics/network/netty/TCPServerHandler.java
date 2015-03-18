@@ -24,6 +24,8 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import java.net.InetSocketAddress;
+import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 
 /**
@@ -38,13 +40,18 @@ public class TCPServerHandler extends StreamHandler {
     }
 
     @Override
+    protected void messageReceived(ChannelHandlerContext ctx, Msg msg) throws Exception {
+        component.channels.checkTCPChannel(msg, (SocketChannel) ctx.channel());
+        super.messageReceived(ctx, msg);        
+    }
+    
+    @Override
     public void channelActive(ChannelHandlerContext ctx) {
-         super.channelActive(ctx);
+        super.channelActive(ctx);
         SocketChannel channel = (SocketChannel) ctx.channel();
-        component.addLocalSocket(channel.remoteAddress(), channel);
+        component.channels.addLocalSocket(channel);
         InetSocketAddress other = channel.remoteAddress();
-        DisambiguateConnection.Req r = new DisambiguateConnection.Req(component.self, component.socketToAddress(other), protocol, other.getPort(), component.boundUDTPort);
-        NettyNetwork.LOG.debug("Sending REQ: {}", r);
-        channel.writeAndFlush(r);     
+        DisambiguateConnection r = new DisambiguateConnection(component.self, Address.fromInetSocket(other), protocol, component.boundUDTPort, true);
+        channel.writeAndFlush(r);
     }
 }
