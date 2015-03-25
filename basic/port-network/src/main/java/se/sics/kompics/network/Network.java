@@ -27,13 +27,13 @@ import se.sics.kompics.PortType;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id$
+ * @version $Id: Network.java 2826 2010-05-26 15:09:05Z Cosmin $
  */
 public final class Network extends PortType {
 	{
-		positive(Message.class);
-		negative(Message.class);
-		request(JoinMulticastGroup.class);
-		request(LeaveMulticastGroup.class);
+		positive(Msg.class);
+		negative(Msg.class);
+                request(MessageNotify.Req.class);
+                indication(MessageNotify.Resp.class);
 	}
 }

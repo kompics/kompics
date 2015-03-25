@@ -29,7 +29,7 @@ import se.sics.kompics.Event;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id$
+ * @version $Id: NetworkException.java 636 2009-02-08 01:41:23Z Cosmin $
  */
 public final class NetworkException extends Event {
 

@@ -27,16 +27,10 @@ import se.sics.kompics.PortType;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id$
+ * @version $Id: NetworkControl.java 3881 2010-12-17 16:19:47Z Cosmin $
  */
 public final class NetworkControl extends PortType {
 	{
-		positive(NetworkSessionOpened.class);
-		positive(NetworkSessionClosed.class);
 		positive(NetworkException.class);
-		positive(NetworkConnectionRefused.class);
-		
-		request(ConnectionStatusRequest.class);
-		indication(ConnectionStatusResponse.class);
 	}
 }

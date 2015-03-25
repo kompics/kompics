@@ -1,10 +1,10 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
- * 
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
+ *
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
+ * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
@@ -18,15 +18,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package se.sics.kompics.network;
+package se.sics.kompics.network.virtual;
+
 
 /**
- * The <code>Transport</code> class.
- * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
- * @version $Id: Transport.java 2826 2010-05-26 15:09:05Z Cosmin $
+ *
+ * @author lkroll
+ * @param <Adr>
  */
-public enum Transport {
-	UDP, TCP, MULTICAST_UDP, UDT, LEDBAT;
+public interface Header<Adr extends Address> extends se.sics.kompics.network.Header<Adr> {
+    public byte[] getDstId();
 }

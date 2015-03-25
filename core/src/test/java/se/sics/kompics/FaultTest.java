@@ -12,8 +12,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.sics.kompics.Fault.ResolveAction;
-import static se.sics.kompics.LoopbackTest.LOG;
 
 /**
  *
@@ -21,6 +22,8 @@ import static se.sics.kompics.LoopbackTest.LOG;
  */
 @RunWith(JUnit4.class)
 public class FaultTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FaultTest.class);
 
     private static ResolveAction type;
     private static final BlockingQueue<String> stringQ = new LinkedBlockingQueue<String>();
@@ -39,13 +42,13 @@ public class FaultTest {
         waitFor(PARENT_HANDLED);
         Kompics.shutdown();
     }
-    
+
     @Test
     public void ignoreTest() {
         type = ResolveAction.IGNORE;
         Kompics.createAndStart(ParentComponent.class);
         waitFor(GC_STARTED); // regular start
-        
+
         waitFor(GC_STARTED); // resumed start
         Kompics.shutdown();
     }
@@ -113,7 +116,7 @@ public class FaultTest {
             subscribe(testHandler, testport);
             subscribe(startHandler, control);
         }
-        
+
         Handler<Start> startHandler = new Handler<Start>() {
 
             @Override

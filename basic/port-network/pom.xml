@@ -4,7 +4,7 @@
     <parent>
         <groupId>se.sics.kompics.basic</groupId>
         <artifactId>kompics-basic-components</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
     </parent>
 
 	<artifactId>kompics-port-network</artifactId>
@@ -15,13 +15,7 @@
         <dependency>
             <groupId>se.sics.kompics</groupId>
             <artifactId>kompics-core</artifactId>
-            <version>0.7.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>se.sics.kompics.basic</groupId>
-            <artifactId>kompics-address</artifactId>
-            <version>0.7.0-SNAPSHOT</version>
+            <version>0.8.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

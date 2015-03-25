@@ -140,6 +140,16 @@ public abstract class ComponentDefinition {
                     + "Handler subscription only works in Java");
         }
     }
+    
+    protected final void subscribe(MatchedHandler handler, Port port) {
+        if (port instanceof JavaPort) {
+            JavaPort p = (JavaPort) port;
+            p.doSubscribe(handler);
+        } else {
+            throw new ConfigurationException("Port (" + port.toString() + " is not an instance of JavaPort!"
+                    + "Handler subscription only works in Java");
+        }
+    }
 
     /**
      * Unsubscribe.

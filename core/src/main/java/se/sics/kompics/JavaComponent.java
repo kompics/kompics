@@ -22,9 +22,9 @@ package se.sics.kompics;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import se.sics.kompics.Fault.ResolveAction;
 
@@ -302,12 +302,23 @@ public class JavaComponent extends ComponentCore {
                 continue;
             }
 
-            ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
+            List<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
 
             if (handlers != null) {
-                for (int i = 0; i < handlers.size(); i++) {
-                    if (executeEvent(event, handlers.get(i))) {
+                for (Handler h : handlers) {
+                    if (executeEvent(event, h)) {
                         break; // state changed don't handle the rest of the event
+                    }
+                }
+            }
+            if (event instanceof PatternExtractor) {
+                PatternExtractor pe = (PatternExtractor) event;
+                List<MatchedHandler> mhandlers = nextPort.getSubscribedMatchers(pe);
+                if (mhandlers != null) {
+                    for (MatchedHandler mh : mhandlers) {
+                        if (executeEvent(pe, mh)) {
+                            break; // state changed don't handle the rest of the event
+                        }
                     }
                 }
             }
@@ -352,6 +363,19 @@ public class JavaComponent extends ComponentCore {
     private boolean executeEvent(KompicsEvent event, Handler<?> handler) {
         try {
             ((Handler<KompicsEvent>) handler).handle(event);
+            return false; // no state change
+        } catch (Throwable throwable) {
+            Kompics.logger.error("Handling an event caused a fault! Might be handled later...", throwable);
+            markSubtreeAs(State.FAULTY);
+            escalateFault(new Fault(throwable, this, event));
+            return true; // state changed
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean executeEvent(PatternExtractor event, MatchedHandler handler) {
+        try {
+            handler.handle(event.extractValue(), event);
             return false; // no state change
         } catch (Throwable throwable) {
             Kompics.logger.error("Handling an event caused a fault! Might be handled later...", throwable);
@@ -435,6 +459,7 @@ public class JavaComponent extends ComponentCore {
     /*
      * === LIFECYCLE ===
      */
+
     @Override
     void setInactive(Component child) {
         activeSet.remove(child);

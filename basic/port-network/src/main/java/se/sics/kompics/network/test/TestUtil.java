@@ -84,7 +84,7 @@ public abstract class TestUtil {
         try {
             String qString = stringQ.poll(timeout, timeUnit);
             if (qString == null) {
-                Assert.fail("Timeout");
+                Assert.fail("Timeout on waiting for \'" + s+ "\'");
             }
             Assert.assertEquals(s, qString);
         } catch (InterruptedException ex) {

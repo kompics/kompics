@@ -20,7 +20,6 @@
  */
 package se.sics.kompics;
 
-// TODO: Auto-generated Javadoc
 /**
  * The <code>Handler</code> class.
  * 

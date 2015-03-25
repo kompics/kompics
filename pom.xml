@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-parent-pom</artifactId>
 	<packaging>pom</packaging>
-	<version>0.7.0-SNAPSHOT</version>
+	<version>0.8.0-SNAPSHOT</version>
 
 	<name>Kompics</name>
 	<url>http://kompics.sics.se</url>
@@ -29,11 +29,7 @@ by putting together protocols programmed as event-driven components.
 	<modules>
 		<module>core</module>
 		<module>basic</module>
-		<module>archetypes</module>
-		<module>p2p</module>
 		<module>simulation</module>
-		<module>launcher</module>
-		<module>examples</module>
 	</modules>
 
 	<dependencies>
@@ -53,14 +49,19 @@ by putting together protocols programmed as event-driven components.
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.5.6</version>
-			<scope>compile</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.14</version>
-			<scope>compile</scope>
+			<scope>test</scope>
 		</dependency>
+		<dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
+        </dependency>
 	</dependencies>
 
 	<build>
@@ -139,10 +140,6 @@ by putting together protocols programmed as event-driven components.
 									<title>Kompics Timer</title>
 									<packages>se.sics.kompics.timer:se.sics.kompics.timer.*</packages>
 								</group>
-								<group>
-									<title>Kompics Distributed System Launcher</title>
-									<packages>se.sics.kompics.launch</packages>
-								</group>
 							</groups>
 							<locale>en_US</locale>
 						</configuration>
@@ -183,19 +180,6 @@ by putting together protocols programmed as event-driven components.
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.6.1</version>
 			</plugin>
-			<!-- <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>findbugs-maven-plugin</artifactId> 
-				<configuration> <threshold>Normal</threshold> <linkXref>true</linkXref> </configuration> 
-				</plugin> -->
-			<plugin>
-				<inherited>true</inherited>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jxr-plugin</artifactId>
-				<configuration>
-					<aggregate>true</aggregate>
-					<linkJavadoc>true</linkJavadoc>
-				</configuration>
-			</plugin>
-
 			<plugin>
 				<inherited>true</inherited>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -205,39 +189,6 @@ by putting together protocols programmed as event-driven components.
 					<linkXRef>true</linkXRef>
 				</configuration>
 			</plugin>
-
-			<plugin>
-				<inherited>true</inherited>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-pmd-plugin</artifactId>
-				<configuration>
-					<linkXref>true</linkXref>
-					<sourceEncoding>utf-8</sourceEncoding>
-					<minimumTokens>100</minimumTokens>
-					<targetJdk>1.6</targetJdk>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<inherited>true</inherited>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-			</plugin>
-<!-- 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-changes-plugin</artifactId>
-				<reportSets>
-					<reportSet>
-						<reports>
-							<report>changes-report</report>
-						</reports>
-					</reportSet>
-				</reportSets>
-				<configuration>
-					<issueLinkTemplate>%URL%/trac/ticket/%ISSUE%</issueLinkTemplate>
-				</configuration>
-			</plugin> -->
 
 		</plugins>
 	</reporting>

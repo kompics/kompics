@@ -20,10 +20,13 @@
  */
 package se.sics.kompics;
 
+import com.google.common.collect.ArrayListMultimap;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -40,7 +43,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     private JavaPort<P> pair;
     private ReentrantReadWriteLock rwLock;
-    private HashMap<Class<? extends KompicsEvent>, ArrayList<Handler<?>>> subs;
+    private final ArrayListMultimap<Class<? extends KompicsEvent>, Handler<?>> subs = ArrayListMultimap.create();
+    private final HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>> matchers = new HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>>();
     private ArrayList<ChannelCore<P>> allChannels;
     private ArrayList<ChannelCore<P>> unfilteredChannels;
     private ChannelFilterSet filteredChannels;
@@ -238,15 +242,41 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         rwLock.writeLock().lock();
         try {
-            if (subs == null) {
-                subs = new HashMap<Class<? extends KompicsEvent>, ArrayList<Handler<?>>>();
+            subs.put(handler.getEventType(), handler);
+
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void doSubscribe(MatchedHandler handler) {
+        if (handler instanceof ClassMatchedHandler) {
+            ClassMatchedHandler cmh = (ClassMatchedHandler) handler;
+            reflectCMHType(cmh);
+        }
+        Class cxtType = handler.getCxtType();
+        if (cxtType == null) {
+            cxtType = reflectHandlerCxtType(handler);
+            handler.setCxtType(cxtType);
+        }
+
+        // check that the port type carries the event type in this direction
+        if (!portType.hasEvent(isPositive, cxtType)) {
+            throw new RuntimeException("Cannot subscribe handler " + handler
+                    + " to " + (isPositive ? "positive " : "negative ")
+                    + portType.getClass().getCanonicalName() + " for "
+                    + cxtType.getCanonicalName() + " events.");
+        }
+
+        rwLock.writeLock().lock();
+        try {
+            ArrayListMultimap<Object, MatchedHandler> patterns = matchers.get(handler.getCxtType());
+            if (patterns == null) {
+                patterns = ArrayListMultimap.create();
+                matchers.put(cxtType, patterns);
             }
-            ArrayList<Handler<?>> handlers = subs.get(eventType);
-            if (handlers == null) {
-                handlers = new ArrayList<Handler<?>>();
-                subs.put(eventType, handlers);
-            }
-            handlers.add(handler);
+            patterns.put(handler.pattern(), handler);
 
         } finally {
             rwLock.writeLock().unlock();
@@ -270,21 +300,13 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         rwLock.writeLock().lock();
         try {
-            if (subs == null) {
-                subs = new HashMap<Class<? extends KompicsEvent>, ArrayList<Handler<?>>>();
-            }
-            ArrayList<Handler<?>> handlers = subs.get(eventType);
-            if (handlers == null) {
-                handlers = new ArrayList<Handler<?>>();
-                subs.put(eventType, handlers);
-            }
-            handlers.add(handler);
+            subs.put(handler.getEventType(), handler);
 
         } finally {
             rwLock.writeLock().unlock();
         }
     }
-    
+
     <E extends KompicsEvent> void doUnsubscribe(Handler<E> handler) {
         Class<E> eventType = handler.getEventType();
         if (eventType == null) {
@@ -294,52 +316,81 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         rwLock.writeLock().lock();
         try {
-            if (subs == null) {
+            if (!subs.remove(handler.getEventType(), handler)) {
                 throw new RuntimeException("Handler " + handler
                         + " is not subscribed to "
                         + (isPositive ? "positive " : "negative ")
                         + portType.getClass().getCanonicalName() + " for "
                         + eventType.getCanonicalName() + " events.");
-            }
-            ArrayList<Handler<?>> handlers = subs.get(eventType);
-            if (handlers == null) {
-                throw new RuntimeException("Handler " + handler
-                        + " is not subscribed to "
-                        + (isPositive ? "positive " : "negative ")
-                        + portType.getClass().getCanonicalName() + " for "
-                        + eventType.getCanonicalName() + " events.");
-            }
-
-            if (!handlers.remove(handler)) {
-                throw new RuntimeException("Handler " + handler
-                        + " is not subscribed to "
-                        + (isPositive ? "positive " : "negative ")
-                        + portType.getClass().getCanonicalName() + " for "
-                        + eventType.getCanonicalName() + " events.");
-            }
-
-            if (handlers.isEmpty()) {
-                subs.remove(handlers);
-                if (subs.isEmpty()) {
-                    subs = null;
-                }
             }
         } finally {
             rwLock.writeLock().unlock();
         }
     }
 
-    ArrayList<Handler<?>> getSubscribedHandlers(KompicsEvent event) {
-        if (subs == null) {
-            return null;
+    void doUnsubscribe(MatchedHandler handler) {
+        Class cxtType = handler.getCxtType();
+        if (cxtType == null) {
+            cxtType = reflectHandlerCxtType(handler);
+            handler.setCxtType(cxtType);
         }
 
+        rwLock.writeLock().lock();
+        try {
+            ArrayListMultimap<Object, MatchedHandler> patterns = matchers.get(handler.getCxtType());
+            if (patterns == null) {
+                throw new RuntimeException("Handler " + handler
+                        + " is not subscribed to "
+                        + (isPositive ? "positive " : "negative ")
+                        + portType.getClass().getCanonicalName() + " for "
+                        + cxtType.getCanonicalName() + " events with pattern "
+                        + handler.pattern() + ".");
+            }
+            if (!patterns.remove(handler.pattern(), handler)) {
+                throw new RuntimeException("Handler " + handler
+                        + " is not subscribed to "
+                        + (isPositive ? "positive " : "negative ")
+                        + portType.getClass().getCanonicalName() + " for "
+                        + cxtType.getCanonicalName() + " events with pattern "
+                        + handler.pattern() + ".");
+            } else {
+                if (patterns.isEmpty()) {
+                    matchers.remove(handler.getCxtType(), patterns);
+                }
+            }
+
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    List<Handler<?>> getSubscribedHandlers(KompicsEvent event) {
+
         Class<? extends KompicsEvent> eventType = event.getClass();
-        ArrayList<Handler<?>> ret = new ArrayList<Handler<?>>();
+        List<Handler<?>> ret = new LinkedList<Handler<?>>();
 
         for (Class<? extends KompicsEvent> eType : subs.keySet()) {
             if (eType.isAssignableFrom(eventType)) {
-                ArrayList<Handler<?>> handlers = subs.get(eType);
+                List<Handler<?>> handlers = subs.get(eType);
+                if (handlers != null) {
+                    ret.addAll(handlers);
+                }
+            }
+        }
+        return ret;
+    }
+
+    List<MatchedHandler> getSubscribedMatchers(PatternExtractor event) {
+        Class<? extends KompicsEvent> eventType = event.getClass();
+        List<MatchedHandler> ret = new LinkedList<MatchedHandler>();
+
+        for (Class<? extends KompicsEvent> eType : matchers.keySet()) {
+            if (eType.isAssignableFrom(eventType)) {
+                ArrayListMultimap<Object, MatchedHandler> patterns = matchers.get(eType);
+                if (patterns == null) {
+                    continue;
+                }
+                List<MatchedHandler> handlers = patterns.get(event.extractPattern());
                 if (handlers != null) {
                     ret.addAll(handlers);
                 }
@@ -469,16 +520,31 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     private boolean deliverToSubscribers(KompicsEvent event, int wid,
             Class<? extends KompicsEvent> eventType) {
         //Kompics.logger.debug("{}: trying to deliver {} to subscribers...", owner, event);
-        if (subs == null) {
-            //Kompics.logger.debug("{}: Couldn't deliver {}, no subscribers", owner.getComponent(), event);
-            return false;
-        }
+
         for (Class<? extends KompicsEvent> eType : subs.keySet()) {
             if (eType.isAssignableFrom(eventType)) {
                 // there is at least one subscription
                 doDeliver(event, wid);
                 //Kompics.logger.debug("{}: Delivered {} to subscribers", owner.getComponent(), event);
                 return true;
+            }
+        }
+        if (event instanceof PatternExtractor) {
+            PatternExtractor pe = (PatternExtractor) event;
+            for (Class<? extends KompicsEvent> eType : matchers.keySet()) {
+                if (eType.isAssignableFrom(eventType)) {
+                    ArrayListMultimap<Object, MatchedHandler> patterns = matchers.get(eType);
+                    if (patterns == null) {
+                        continue;
+                    }
+                    List<MatchedHandler> handlers = patterns.get(pe.extractPattern());
+                    if (!handlers.isEmpty()) {
+                        // there is at least one subscription
+                        doDeliver(event, wid);
+                        //Kompics.logger.debug("{}: Delivered {} to subscribers", owner.getComponent(), event);
+                        return true;
+                    }
+                }
             }
         }
         //Kompics.logger.debug("{}: Couldn't deliver {}, no matching subscribers", owner.getComponent(), event);
@@ -503,11 +569,10 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     }
 
     @SuppressWarnings("unchecked")
-    private <E extends KompicsEvent> Class<E> reflectHandlerEventType(
-            Handler<E> handler) {
+    private <E extends KompicsEvent> Class<E> reflectEventType(Class handlerC, int parameter) {
         Class<E> eventType = null;
         try {
-            Method declared[] = handler.getClass().getDeclaredMethods();
+            Method declared[] = handlerC.getDeclaredMethods();
             // The JVM in Java 7 wrongly reflects the "handle" methods for some 
             // handlers: e.g. both `handle(Event e)` and `handle(Message m)` are
             // reflected as "declared" methods when only the second is actually
@@ -532,19 +597,19 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
             for (Method m : declared) {
                 if (m.getName().equals("handle")) {
                     relevant.add(
-                            (Class<? extends KompicsEvent>) m.getParameterTypes()[0]);
+                            (Class<? extends KompicsEvent>) m.getParameterTypes()[parameter]);
                 }
             }
             eventType = (Class<E>) relevant.first();
         } catch (Exception e) {
             throw new RuntimeException("Cannot reflect handler event type for "
-                    + "handler " + handler + ". Please specify it "
+                    + "handler " + handlerC + ". Please specify it "
                     + "as an argument to the handler constructor.", e);
         } finally {
             if (eventType == null) {
                 throw new RuntimeException(
                         "Cannot reflect handler event type for handler "
-                        + handler + ". Please specify it "
+                        + handlerC + ". Please specify it "
                         + "as an argument to the handler constructor.");
             }
         }
@@ -604,5 +669,18 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     @Override
     public void cleanEvents() {
         eventQueue.clear();
+    }
+
+    private void reflectCMHType(ClassMatchedHandler cmh) {
+        Class cmhType =  reflectEventType(cmh.getClass(), 0);
+        cmh.setPattern(cmhType);
+    }
+
+    private Class reflectHandlerCxtType(MatchedHandler handler) {
+        return reflectEventType(handler.getClass(), 1);
+    }
+
+    private <E extends Object & KompicsEvent> Class<E> reflectHandlerEventType(Handler<E> handler) {
+        return reflectEventType(handler.getClass(), 0);
     }
 }
