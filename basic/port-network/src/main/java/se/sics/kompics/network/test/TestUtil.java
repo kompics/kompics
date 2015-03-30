@@ -24,35 +24,37 @@ public abstract class TestUtil {
     private static BlockingQueue<String> stringQ;
     private static BlockingQueue<Event> eventQ;
     private static long timeout = 5000;
+    private static String testDesc = "";
     private static final TimeUnit timeUnit = TimeUnit.MILLISECONDS;
 
-    public static void reset() {
+    public static void reset(String testDescription) {
         stringQ = new LinkedBlockingQueue<String>();
         eventQ = new LinkedBlockingQueue<Event>();
+        testDesc = testDescription;
     }
 
-    public static void reset(long timeout) {
+    public static void reset(String testDescription, long timeout) {
         TestUtil.timeout = timeout;
-        reset();
+        reset(testDescription);
     }
 
     public static void submit(String s) {
         try {
             if (!stringQ.offer(s, timeout, timeUnit)) {
-                Assert.fail("Timeout");
+                Assert.fail(testDesc+" -- "+"Timeout");
             }
         } catch (InterruptedException ex) {
-            log.debug("Failed on putting String: " + s, ex);
+            log.debug(testDesc+" -- "+"Failed on putting String: " + s, ex);
         }
     }
 
     public static void submit(Event e) {
         try {
             if (!eventQ.offer(e, timeout, timeUnit)) {
-                Assert.fail("Timeout");
+                Assert.fail(testDesc+" -- "+"Timeout");
             }
         } catch (InterruptedException ex) {
-            log.debug("Failed on putting Event: " + e, ex);
+            log.debug(testDesc+" -- "+"Failed on putting Event: " + e, ex);
         }
     }
 
@@ -60,11 +62,11 @@ public abstract class TestUtil {
         try {
             Event qEvent = eventQ.poll(timeout, timeUnit);
             if (qEvent == null) {
-                Assert.fail("Timeout");
+                Assert.fail(testDesc+" -- "+"Timeout");
             }
             Assert.assertEquals(e, qEvent);
         } catch (InterruptedException ex) {
-            log.debug("Failed waiting for Event: " + e, ex);
+            log.debug(testDesc+" -- "+"Failed waiting for Event: " + e, ex);
         }
     }
 
@@ -72,11 +74,11 @@ public abstract class TestUtil {
         try {
             Event qEvent = eventQ.poll(timeout, timeUnit);
             if (qEvent == null) {
-                Assert.fail("Timeout");
+                Assert.fail(testDesc+" -- "+"Timeout");
             }
             Assert.assertTrue(eventType.isInstance(qEvent));
         } catch (InterruptedException ex) {
-            log.debug("Failed waiting for Event of Type: " + eventType, ex);
+            log.debug(testDesc+" -- "+"Failed waiting for Event of Type: " + eventType, ex);
         }
     }
 
@@ -84,11 +86,11 @@ public abstract class TestUtil {
         try {
             String qString = stringQ.poll(timeout, timeUnit);
             if (qString == null) {
-                Assert.fail("Timeout on waiting for \'" + s+ "\'");
+                Assert.fail(testDesc+" -- "+"Timeout on waiting for \'" + s+ "\'");
             }
             Assert.assertEquals(s, qString);
         } catch (InterruptedException ex) {
-            log.debug("Failed waiting for String: " + s, ex);
+            log.debug(testDesc+" -- "+"Failed waiting for String: " + s, ex);
         }
     }
 
@@ -101,16 +103,16 @@ public abstract class TestUtil {
             while (!el.isEmpty()) {
                 Event qEvent = eventQ.poll(timeout, timeUnit);
                 if (qEvent == null) {
-                    Assert.fail("Timeout");
+                    Assert.fail(testDesc+" -- "+"Timeout");
                 }
                 if (el.contains(qEvent)) {
                     el.remove(qEvent);
                 } else {
-                    Assert.fail("Unexpected event: " + qEvent);
+                    Assert.fail(testDesc+" -- "+"Unexpected event: " + qEvent);
                 }
             }
         } catch (InterruptedException ex) {
-            log.debug("Failed waiting for Events.", ex);
+            log.debug(testDesc+" -- "+"Failed waiting for Events.", ex);
         }
     }
 
@@ -123,7 +125,7 @@ public abstract class TestUtil {
             while (!el.isEmpty()) {
                 Event qEvent = eventQ.poll(timeout, timeUnit);
                 if (qEvent == null) {
-                    Assert.fail("Timeout");
+                    Assert.fail(testDesc+" -- "+"Timeout");
                 }
                 Iterator<Class<? extends Event>> it = el.iterator();
                 boolean found = false;
@@ -136,11 +138,11 @@ public abstract class TestUtil {
                     }
                 }
                 if (!found) {
-                    Assert.fail("Unexpected event: " + qEvent);
+                    Assert.fail(testDesc+" -- "+"Unexpected event: " + qEvent);
                 }
             }
         } catch (InterruptedException ex) {
-            log.debug("Failed waiting for Events.", ex);
+            log.debug(testDesc+" -- "+"Failed waiting for Events.", ex);
         }
     }
     
@@ -153,17 +155,17 @@ public abstract class TestUtil {
             while (!sl.isEmpty()) {
                 String qString = stringQ.poll(timeout, timeUnit);
                 if (qString == null) {
-                    Assert.fail("Timeout");
+                    Assert.fail(testDesc+" -- "+"Timeout");
                 }
                 if (sl.contains(qString)) {
                     sl.remove(qString);
                     System.out.println("Got " + qString);
                 } else {
-                    Assert.fail("Unexpected key: " + qString);
+                    Assert.fail(testDesc+" -- "+"Unexpected key: " + qString);
                 }
             }
         } catch (InterruptedException ex) {
-            log.debug("Failed waiting for Events.", ex);
+            log.debug(testDesc+" -- "+"Failed waiting for Events.", ex);
         }
     }
 }

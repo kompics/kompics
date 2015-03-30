@@ -355,6 +355,16 @@ public class NettyNetwork extends ComponentDefinition {
             //trigger(SendDelayed.event, onSelf);
             return;
         }
+        if (message instanceof CheckChannelActive) {
+            CheckChannelActive msg = (CheckChannelActive) message;
+            channels.checkActive(msg, c);
+            return;
+        }
+        if (message instanceof CloseChannel) {
+            CloseChannel msg = (CloseChannel) message;
+            channels.flushAndClose(msg, c);
+            return;
+        }
         LOG.debug(
                 "Delivering message {} from {} to {} protocol {}",
                 new Object[]{message.toString(), message.getSource(),
@@ -492,7 +502,7 @@ public class NettyNetwork extends ComponentDefinition {
             if (future.isSuccess()) {
                 notify.prepareResponse(System.currentTimeMillis(), true);
             } else {
-                LOG.warn("Sending of message {} did not succeed :(", notify.msg);
+                LOG.warn("Sending of message {} did not succeed :( : {}", notify.msg, future.cause());
                 notify.prepareResponse(System.currentTimeMillis(), false);
             }
             answer(notify);

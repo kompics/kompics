@@ -20,6 +20,7 @@
  */
 package se.sics.kompics.network.test;
 
+import java.io.Serializable;
 import se.sics.kompics.network.Header;
 import se.sics.kompics.network.Transport;
 
@@ -27,7 +28,7 @@ import se.sics.kompics.network.Transport;
  *
  * @author lkroll
  */
-public class TestHeader implements Header<TestAddress> {
+public class TestHeader implements Header<TestAddress>, Serializable {
 
     public final TestAddress src;
     public final TestAddress dst;

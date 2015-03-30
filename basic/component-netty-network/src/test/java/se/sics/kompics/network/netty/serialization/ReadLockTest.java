@@ -63,7 +63,7 @@ public class ReadLockTest {
         long time = stopTS - startTS;
         System.out.println("NoLocks finished in " + time + "ns with an average op time of " + (time / (numT * executions)) + "ns.");
         threads.clear();
-        
+
         // ConcMap
         ConcMap service2 = new ConcMap(mymap);
         for (int i = 0; i < numT; i++) {
@@ -81,7 +81,7 @@ public class ReadLockTest {
         time = stopTS - startTS;
         System.out.println("ConcMap finished in " + time + "ns with an average op time of " + (time / (numT * executions)) + "ns.");
         threads.clear();
-        
+
         // RWLock
         RWLock service3 = new RWLock(mymap);
         for (int i = 0; i < numT; i++) {
@@ -99,7 +99,7 @@ public class ReadLockTest {
         time = stopTS - startTS;
         System.out.println("RWLock finished in " + time + "ns with an average op time of " + (time / (numT * executions)) + "ns.");
         threads.clear();
-        
+
         // SyncLock
         SyncLock service4 = new SyncLock(mymap);
         for (int i = 0; i < numT; i++) {
@@ -117,6 +117,7 @@ public class ReadLockTest {
         time = stopTS - startTS;
         System.out.println("SyncLock finished in " + time + "ns with an average op time of " + (time / (numT * executions)) + "ns.");
         threads.clear();
+        
     }
 
     public static class Worker implements Runnable {

@@ -5,9 +5,11 @@
 package se.sics.kompics.network.test;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -66,8 +68,8 @@ public class NetworkTest {
     private static final AtomicInteger WAIT_FOR = new AtomicInteger(NUM_MESSAGES);
     private static NetworkGenerator nGen;
     private static int numNodes;
-    private static AtomicInteger msgId = new AtomicInteger(0);
-    private static ConcurrentSkipListMap<Integer, String> messageStatus = new ConcurrentSkipListMap<Integer, String>();
+    private static final AtomicInteger msgId = new AtomicInteger(0);
+    private static final ConcurrentSkipListMap<Integer, String> messageStatus = new ConcurrentSkipListMap<Integer, String>();
     //private static int startPort = 33000;
     private static Transport[] protos;
 
@@ -80,7 +82,7 @@ public class NetworkTest {
 
         msgId.set(0);
         messageStatus.clear();
-        TestUtil.reset(100000); //10 sec timeout for all the connections to be dropped properly
+        TestUtil.reset("Stream test ("+Arrays.toString(NetworkTest.protos)+") Nodes #"+numNodes, 100000); //10 sec timeout for all the connections to be dropped properly
 
         Kompics.createAndStart(LauncherComponent.class, 8, 50);
 
@@ -101,8 +103,10 @@ public class NetworkTest {
         for (Transport proto : protos) {
             LOG.info("\n******************** Running Fail-Recovery Test for {} ********************\n", proto);
             messageStatus.clear();
-            TestUtil.reset(100000); //10 sec timeout for all the connections to be dropped properly
             NetworkTest.protos = new Transport[]{proto};
+            
+            TestUtil.reset("FR test ("+Arrays.toString(NetworkTest.protos)+")",100000); //10 sec timeout for all the connections to be dropped properly
+            
 
             Kompics.createAndStart(FRLauncher.class, 8, 50);
 
@@ -123,8 +127,9 @@ public class NetworkTest {
         for (Transport[] protoRow : protoMatrix) {
             LOG.info("\n******************** Running Fail-Recovery Test for {} -> {} ********************\n", protoRow[0], protoRow[1]);
             messageStatus.clear();
-            TestUtil.reset(100000); //10 sec timeout for all the connections to be dropped properly
             NetworkTest.protos = protoRow;
+            TestUtil.reset("FR test ("+Arrays.toString(NetworkTest.protos)+")", 100000); //10 sec timeout for all the connections to be dropped properly
+            
 
             Kompics.createAndStart(FRLauncher.class, 8, 50);
 
@@ -149,7 +154,7 @@ public class NetworkTest {
 
         msgId.set(0);
         messageStatus.clear();
-        TestUtil.reset(10000); //10 sec timeout for all the connections to be dropped properly
+        TestUtil.reset("Datagram test ("+Arrays.toString(NetworkTest.protos)+") Nodes #"+numNodes, 10000); //10 sec timeout for all the connections to be dropped properly
 
         Kompics.createAndStart(LauncherComponent.class, 8, 50);
 
@@ -657,7 +662,7 @@ public class NetworkTest {
         }
     }
 
-    public static class TestMessage extends Message {
+    public static class TestMessage extends Message implements Serializable {
 
         public final int msgId;
 
@@ -688,7 +693,7 @@ public class NetworkTest {
         }
     }
 
-    public static class Ack extends Message {
+    public static class Ack extends Message implements Serializable {
 
         public final int msgId;
 

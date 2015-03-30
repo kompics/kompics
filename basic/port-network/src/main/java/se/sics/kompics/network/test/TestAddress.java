@@ -20,6 +20,7 @@
  */
 package se.sics.kompics.network.test;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import se.sics.kompics.network.Address;
@@ -28,14 +29,14 @@ import se.sics.kompics.network.Address;
  *
  * @author lkroll
  */
-public class TestAddress implements Address {
+public class TestAddress implements Address, Serializable {
 
     private final InetSocketAddress isa;
 
     public TestAddress(InetSocketAddress isa) {
         this.isa = isa;
     }
-    
+
     public TestAddress(InetAddress addr, int port) {
         this(new InetSocketAddress(addr, port));
     }
@@ -60,4 +61,8 @@ public class TestAddress implements Address {
         return this.isa.equals(other.asSocket());
     }
 
+    @Override
+    public final String toString() {
+        return isa.toString();
+    }
 }

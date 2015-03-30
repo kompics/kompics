@@ -64,4 +64,31 @@ public class NettyAddress implements Address {
         return this.isa.equals(other.asSocket());
     }
 
+    @Override
+    public final String toString() {
+        return isa.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 11 * hash + (this.isa != null ? this.isa.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final NettyAddress other = (NettyAddress) obj;
+        if (this.isa != other.isa && (this.isa == null || !this.isa.equals(other.isa))) {
+            return false;
+        }
+        return true;
+    }
+
 }

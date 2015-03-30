@@ -35,39 +35,40 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @version $Id: $
  */
 public abstract class ComponentCore implements Component {
-    
+
     private final UUID id = UUID.randomUUID();
     protected ComponentCore parent;
     public static ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
-    protected List<ComponentCore> children = children = new LinkedList<ComponentCore>();;
+    protected List<ComponentCore> children = children = new LinkedList<ComponentCore>();
+    ;
     protected final ReentrantReadWriteLock childrenLock = new ReentrantReadWriteLock();
     protected Scheduler scheduler;
     protected int wid;
-    
+
     public ComponentCore getParent() {
         return parent;
     }
-    
+
     public <P extends PortType> Channel<P> doConnect(Positive<P> positive,
             Negative<P> negative) {
         PortCore<P> positivePort = (PortCore<P>) positive;
         PortCore<P> negativePort = (PortCore<P>) negative;
         ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
                 negativePort.getPortType());
-        
+
         positivePort.addChannel(channel);
         negativePort.addChannel(channel);
-        
+
         return channel;
     }
-    
+
     public <P extends PortType> Channel<P> doConnect(Positive<P> positive,
             Negative<P> negative, ChannelFilter<?, ?> filter) {
         PortCore<P> positivePort = (PortCore<P>) positive;
         PortCore<P> negativePort = (PortCore<P>) negative;
         ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
                 negativePort.getPortType());
-        
+
         Class<? extends KompicsEvent> eventType = filter.getEventType();
         P portType = positivePort.getPortType();
         if (filter.isPositive()) {
@@ -85,23 +86,23 @@ public abstract class ComponentCore implements Component {
             positivePort.addChannel(channel);
             negativePort.addChannel(channel, filter);
         }
-        
+
         return channel;
     }
-    
+
     public <P extends PortType> void doDisconnect(Positive<P> positive,
             Negative<P> negative) {
         PortCore<P> positivePort = (PortCore<P>) positive;
         PortCore<P> negativePort = (PortCore<P>) negative;
-        
+
         positivePort.removeChannelTo(negativePort);
         negativePort.removeChannelTo(positivePort);
     }
-    
+
     protected abstract void cleanPorts();
-    
+
     public abstract Negative<ControlPort> createControlPort();
-    
+
     void doDestroy(Component component) {
         ComponentCore child = (ComponentCore) component;
         child.cleanPorts();
@@ -112,12 +113,12 @@ public abstract class ComponentCore implements Component {
         try {
             childrenLock.writeLock().lock();
             children.remove(child);
-            
+
         } finally {
             childrenLock.writeLock().unlock();
         }
     }
-    
+
     void destroyTree(ComponentCore child) {
         try {
             childrenLock.writeLock().lock();
@@ -132,13 +133,15 @@ public abstract class ComponentCore implements Component {
             childrenLock.writeLock().unlock();
         }
     }
-    
+
     abstract void setInactive(Component child);
-    
+
     void markSubtreeAs(State s) {
         this.state = s;
         if (s == State.FAULTY || s == State.DESTROYED || s == State.PASSIVE) {
-            parent.setInactive(this);
+            if (parent != null) {
+                parent.setInactive(this);
+            }
         }
         try {
             childrenLock.readLock().lock();
@@ -149,11 +152,11 @@ public abstract class ComponentCore implements Component {
             childrenLock.readLock().unlock();
         }
     }
-    
+
     public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent);
-    
+
     public abstract <P extends PortType> Negative<P> createNegativePort(Class<P> portType);
-    
+
     public abstract <P extends PortType> Positive<P> createPositivePort(Class<P> portType);
     /*
      * === SCHEDULING ===
@@ -169,7 +172,7 @@ public abstract class ComponentCore implements Component {
     public void setScheduler(Scheduler scheduler) {
         this.scheduler = scheduler;
     }
-    
+
     public void eventReceived(PortCore<?> port, KompicsEvent event, int wid) {
         //System.err.println("Received event " + event + " on " + port.getPortType().portTypeClass + " work " + workCount.get());
         port.enqueue(event);
@@ -182,14 +185,14 @@ public abstract class ComponentCore implements Component {
             scheduler.schedule(this, wid);
         }
     }
-    
+
     public abstract void execute(int wid);
-    
+
     @Override
     public UUID id() {
         return this.id;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof ComponentCore) {
@@ -198,14 +201,14 @@ public abstract class ComponentCore implements Component {
         }
         return false;
     }
-    
+
     @Override
     public int hashCode() {
         int hash = 7;
         hash = 59 * hash + (this.id != null ? this.id.hashCode() : 0);
         return hash;
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -219,7 +222,7 @@ public abstract class ComponentCore implements Component {
      * === LIFECYCLE ===
      */
     volatile protected Component.State state = Component.State.PASSIVE;
-    
+
     @Override
     public Component.State state() {
         return state;
