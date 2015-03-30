@@ -355,7 +355,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
                         + handler.pattern() + ".");
             } else {
                 if (patterns.isEmpty()) {
-                    matchers.remove(handler.getCxtType(), patterns);
+                    matchers.remove(handler.getCxtType());
                 }
             }
 
