@@ -221,7 +221,7 @@ public abstract class SpecialSerializers {
         }
     }
 
-    public static class BitBuffer {
+    static class BitBuffer {
 
         private static final int ZERO = 0;
         private static final int[] POS = {1, 2, 4, 8, 16, 32, 64, 128};
