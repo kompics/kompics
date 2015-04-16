@@ -68,7 +68,7 @@ public abstract class Serializers {
     }
 
     public static final Logger LOG = LoggerFactory.getLogger(Serializers.class);
-    static final int BYTES = Integer.SIZE/8;
+    static final int BYTES = Integer.SIZE / 8;
 
     private static final HashMap<String, Integer> classMappings = new HashMap<String, Integer>();
     private static final HashMap<String, Integer> serializerNames = new HashMap<String, Integer>();
@@ -214,7 +214,6 @@ public abstract class Serializers {
             rwLock.readLock().unlock();
         }
     }
-    
 
     public static Serializer lookupSerializer(Class<? extends Object> aClass) {
         Serializer s = resolutionCache.get(aClass.getName());
@@ -247,6 +246,31 @@ public abstract class Serializers {
         } finally {
             rwLock.readLock().unlock();
         }
+    }
+
+    public static Serializer getSerializer(int serializerId) {
+        rwLock.readLock().lock();
+        try {
+            if ((serializerId < 0) || (serializerId >= bindings.length)) {
+                return null;
+            }
+            return bindings[serializerId];
+        } finally {
+            rwLock.readLock().unlock();
+        }
+    }
+
+    public static Serializer getSerializer(String name) {
+        rwLock.readLock().lock();
+        try {
+            Integer sId = serializerNames.get(name);
+            if (sId != null) {
+                return bindings[sId];
+            }
+        } finally {
+            rwLock.readLock().unlock();
+        }
+        return null;
     }
 
     private static void printRules() {

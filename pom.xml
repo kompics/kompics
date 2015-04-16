@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-parent-pom</artifactId>
 	<packaging>pom</packaging>
-	<version>0.8.0-SNAPSHOT</version>
+	<version>0.8.1-SNAPSHOT</version>
 
 	<name>Kompics</name>
 	<url>http://kompics.sics.se</url>

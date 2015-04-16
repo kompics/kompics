@@ -186,19 +186,19 @@ public abstract class SpecialSerializers {
             boolean[] flags = BitBuffer.extract(8, flagB);
             fields.flag1 = flags[0];
             fields.flag2 = flags[1];
-            if (flags[3]) {
+            if (flags[2]) {
                 fields.proto = Transport.UDP;
             }
-            if (flags[4]) {
+            if (flags[3]) {
                 fields.proto = Transport.TCP;
             }
-            if (flags[5]) {
+            if (flags[4]) {
                 fields.proto = Transport.MULTICAST_UDP;
             }
-            if (flags[6]) {
+            if (flags[5]) {
                 fields.proto = Transport.UDT;
             }
-            if (flags[7]) {
+            if (flags[6]) {
                 fields.proto = Transport.LEDBAT;
             }
 

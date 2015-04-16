@@ -20,8 +20,10 @@
  */
 package se.sics.kompics.network.netty;
 
+import com.google.common.collect.ImmutableSet;
 import se.sics.kompics.Init;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.Transport;
 
 /**
  *
@@ -29,8 +31,16 @@ import se.sics.kompics.network.Address;
  */
 public class NettyInit extends Init<NettyNetwork> {
     public final Address self;
+    public final int udtPort;
+    public final ImmutableSet<Transport> protocols;
+    
+    public NettyInit(Address self, int udtPort, ImmutableSet<Transport> protocols) {
+        this.self = self;
+        this.udtPort = udtPort;
+        this.protocols = protocols;
+    }
     
     public NettyInit(Address self) {
-        this.self = self;
+        this(self, 0, ImmutableSet.of(Transport.TCP, Transport.UDP, Transport.UDT));
     }
 }

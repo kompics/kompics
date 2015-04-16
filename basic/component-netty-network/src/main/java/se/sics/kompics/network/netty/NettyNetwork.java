@@ -93,6 +93,9 @@ public class NettyNetwork extends ComponentDefinition {
     final NettyAddress self;
     private final int boundPort;
     volatile int boundUDTPort = -1; // Unbound
+    private final boolean bindTCP;
+    private final boolean bindUDP;
+    private final boolean bindUDT;
 
     public NettyNetwork(NettyInit init) {
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -107,6 +110,12 @@ public class NettyNetwork extends ComponentDefinition {
 //            LOG.error("Do NOT bind Netty to a virtual address!");
 //            System.exit(1);
 //        }
+        bindTCP = init.protocols.contains(Transport.TCP);
+        bindUDP = init.protocols.contains(Transport.UDP);
+        bindUDT = init.protocols.contains(Transport.UDT);
+        if (bindUDT) {
+            boundUDTPort = init.udtPort;
+        }
 
         // Prepare Bootstraps
         bootstrapTCPClient = new Bootstrap();
@@ -135,9 +144,15 @@ public class NettyNetwork extends ComponentDefinition {
         @Override
         public void handle(Start event) {
             // Prepare listening sockets
-            bindPort(self.getIp(), self.getPort(), Transport.TCP);
-            bindPort(self.getIp(), self.getPort(), Transport.UDT);
-            bindPort(self.getIp(), self.getPort(), Transport.UDP);
+            if (bindTCP) {
+                bindPort(self.getIp(), self.getPort(), Transport.TCP);
+            }
+            if (bindUDT) {
+                bindPort(self.getIp(), self.getPort(), Transport.UDT);
+            }
+            if (bindUDP) {
+                bindPort(self.getIp(), self.getPort(), Transport.UDP);
+            }
         }
 
     };
@@ -328,9 +343,9 @@ public class NettyNetwork extends ComponentDefinition {
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            Channel c = bootstrapUDT.bind(addr, 0).sync().channel();
+            Channel c = bootstrapUDT.bind(addr, boundUDTPort).sync().channel();
             InetSocketAddress localAddress = (InetSocketAddress) c.localAddress(); // Should work
-            boundUDTPort = localAddress.getPort();
+            boundUDTPort = localAddress.getPort(); // in case it was 0 -> random port
 
             LOG.info("Successfully bound UDT to ip:port {}:{}", addr, boundUDTPort);
         } catch (InterruptedException e) {
@@ -440,7 +455,9 @@ public class NettyNetwork extends ComponentDefinition {
 
         channels.clearConnections();
 
-        udpChannel.close().syncUninterruptibly();
+        if (bindUDP) {
+            udpChannel.close().syncUninterruptibly();
+        }
 
         delayedMessages.clear();
         delayedNotifies.clear();
@@ -460,12 +477,18 @@ public class NettyNetwork extends ComponentDefinition {
         LOG.info("Shutting down handler groups...");
         List<Future> gfutures = new LinkedList<Future>();
         gfutures.add(bootstrapUDTClient.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
-        gfutures.add(bootstrapTCP.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
-        gfutures.add(bootstrapTCP.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        if (bindTCP) {
+            gfutures.add(bootstrapTCP.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+            gfutures.add(bootstrapTCP.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        }
         gfutures.add(bootstrapTCPClient.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
-        gfutures.add(bootstrapUDP.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
-        gfutures.add(bootstrapUDT.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
-        gfutures.add(bootstrapUDT.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        if (bindUDP) {
+            gfutures.add(bootstrapUDP.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        }
+        if (bindUDT) {
+            gfutures.add(bootstrapUDT.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+            gfutures.add(bootstrapUDT.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        }
         for (Future f : gfutures) {
             f.syncUninterruptibly();
         }
