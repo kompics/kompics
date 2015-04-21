@@ -273,18 +273,23 @@ public abstract class Serializers {
         return null;
     }
 
-    private static void printRules() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Current Ruleset: {\n");
+    public static void printRules() {
+        rwLock.readLock().lock();
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Current Ruleset: {\n");
 
-        for (Entry<String, Integer> e : classMappings.entrySet()) {
-            sb.append("    ");
-            sb.append(e.getKey());
-            sb.append(" -> ");
-            sb.append(e.getValue());
-            sb.append('\n');
+            for (Entry<String, Integer> e : classMappings.entrySet()) {
+                sb.append("    ");
+                sb.append(e.getKey());
+                sb.append(" -> ");
+                sb.append(e.getValue());
+                sb.append('\n');
+            }
+            sb.append("}\n");
+            LOG.trace(sb.toString());
+        } finally {
+            rwLock.readLock().unlock();
         }
-        sb.append("}\n");
-        LOG.trace(sb.toString());
     }
 }
