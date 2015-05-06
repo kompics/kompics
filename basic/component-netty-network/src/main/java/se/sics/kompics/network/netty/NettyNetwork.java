@@ -41,6 +41,7 @@ import io.netty.channel.udt.nio.NioUdtProvider;
 import io.netty.util.concurrent.Future;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -96,6 +97,7 @@ public class NettyNetwork extends ComponentDefinition {
     private final boolean bindTCP;
     private final boolean bindUDP;
     private final boolean bindUDT;
+    private InetAddress alternativeBindIf = null;
 
     public NettyNetwork(NettyInit init) {
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -105,6 +107,16 @@ public class NettyNetwork extends ComponentDefinition {
         boundPort = self.getPort();
 
         LOG = LoggerFactory.getLogger("NettyNetwork@" + self.getPort());
+
+        String abif = System.getProperty("altBindIf");
+        if (abif != null) {
+            try {
+                alternativeBindIf = InetAddress.getByName(abif);
+            } catch (UnknownHostException ex) {
+                LOG.error("Could not get alternave bind interface {}", abif);
+                throw new RuntimeException(ex);
+            }
+        }
 
 //        if (!self.equals(init.self)) {
 //            LOG.error("Do NOT bind Netty to a virtual address!");
@@ -144,6 +156,10 @@ public class NettyNetwork extends ComponentDefinition {
         @Override
         public void handle(Start event) {
             // Prepare listening sockets
+            InetAddress bindIp = self.getIp();
+            if (alternativeBindIf != null) {
+                bindIp = alternativeBindIf;
+            }
             if (bindTCP) {
                 bindPort(self.getIp(), self.getPort(), Transport.TCP);
             }
@@ -305,7 +321,7 @@ public class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
-    private boolean bindTcpPort(InetAddress addr, int port) {
+    private boolean bindTcpPort(final InetAddress addr, int port) {
 
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -328,7 +344,7 @@ public class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
-    private boolean bindUdtPort(InetAddress addr) {
+    private boolean bindUdtPort(final InetAddress addr) {
 
         ThreadFactory bossFactory = Executors.defaultThreadFactory();
         ThreadFactory workerFactory = Executors.defaultThreadFactory();
@@ -341,13 +357,12 @@ public class NettyNetwork extends ComponentDefinition {
         bootstrapUDT.group(bossGroup, workerGroup).channelFactory(NioUdtProvider.BYTE_ACCEPTOR)
                 .childHandler(new NettyInitializer<UdtChannel>(handler))
                 .option(ChannelOption.SO_REUSEADDR, true);
-
         try {
             Channel c = bootstrapUDT.bind(addr, boundUDTPort).sync().channel();
             InetSocketAddress localAddress = (InetSocketAddress) c.localAddress(); // Should work
             boundUDTPort = localAddress.getPort(); // in case it was 0 -> random port
 
-            LOG.info("Successfully bound UDT to ip:port {}:{}", addr, boundUDTPort);
+            LOG.info("Successfully bound UDT to ip:port {}:{} with config: {}", new Object[]{addr, boundUDTPort, c.config().getOptions()});
         } catch (InterruptedException e) {
             LOG.error("Problem when trying to bind UDT to {}", addr);
             return false;

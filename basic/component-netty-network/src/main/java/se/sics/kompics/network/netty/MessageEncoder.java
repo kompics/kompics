@@ -21,7 +21,6 @@
 package se.sics.kompics.network.netty;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import java.util.List;
@@ -74,7 +73,7 @@ public class MessageEncoder extends MessageToMessageEncoder<Msg> {
             throw new Exception("Can't encode message longer than 65532 bytes!");
         }
         out.setShort(startIdx, diff);
-        component.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
+        //component.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
         outL.add(out);
     }
 
