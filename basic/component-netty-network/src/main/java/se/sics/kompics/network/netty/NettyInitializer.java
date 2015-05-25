@@ -23,8 +23,8 @@ package se.sics.kompics.network.netty;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
-import io.netty.handler.codec.compression.SnappyFramedDecoder;
-import io.netty.handler.codec.compression.SnappyFramedEncoder;
+import io.netty.handler.codec.compression.SnappyFrameDecoder;
+import io.netty.handler.codec.compression.SnappyFrameEncoder;
 
 /**
  *
@@ -51,7 +51,7 @@ public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {
     protected void initChannel(C ch) throws Exception {
         ChannelPipeline pipeline = ch.pipeline();
         // IN
-        pipeline.addLast("decompressor", new SnappyFramedDecoder());
+        pipeline.addLast("decompressor", new SnappyFrameDecoder());
         pipeline.addLast("decoder", new MessageDecoder(handler.component));
         pipeline.addLast("handler", handler);
         //pipeline.addBefore("handler", "handlerLogger", new LoggingHandler("handlerLogger"));
@@ -61,7 +61,7 @@ public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {
         //pipeline.addBefore("deframer", "deframerLogger", new LoggingHandler("deframerLogger"));
         //pipeline.addBefore("decoder", "decompressor", new SnappyFramedDecoder());
         // OUT
-        pipeline.addLast("compressor", new SnappyFramedEncoder());
+        pipeline.addLast("compressor", new SnappyFrameEncoder());
         pipeline.addLast("encoder", new MessageEncoder(handler.component));
         //pipeline.addAfter("encoder", "encoderLogger", new LoggingHandler("encoderLogger"));
         //pipeline.addAfter("encoderLogger", "framer", new LengthFieldPrepender(2));

@@ -20,6 +20,9 @@
  */
 package se.sics.kompics.network.netty;
 
+import com.barchart.udt.ExceptionUDT;
+import com.barchart.udt.OptionUDT;
+import com.barchart.udt.SocketUDT;
 import com.google.common.collect.HashMultimap;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -28,6 +31,7 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.udt.UdtChannel;
+import io.netty.channel.udt.nio.NioUdtProvider;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.HashMap;
@@ -346,7 +350,16 @@ public class ChannelManager {
                             udtChannelsByRemote.put(sc.remoteAddress(), sc);
                             address4Remote.put(sc.remoteAddress(), destination.asSocket());
                             component.trigger(SendDelayed.event);
-                            component.LOG.trace("New UDT channel to {} was created!.", destination.asSocket());
+                            SocketUDT socket = NioUdtProvider.socketUDT(sc);
+//                            if (component.udtBufferSizes > 0) {
+//                                socket.setSendBufferSize(component.udtBufferSizes);
+//                                socket.setReceiveBufferSize(component.udtBufferSizes);
+//                            }
+                            if (component.udtMSS > 0) {
+                                socket.setOption(OptionUDT.Maximum_Transfer_Unit, component.udtMSS);
+                            }
+                            component.LOG.debug("New UDT channel to {} was created! Properties: \n {} \n {}", 
+                                    new Object[]{destination.asSocket(), socket.toStringOptions(), socket.toStringMonitor()});
                         } else {
                             component.LOG.error("Error while trying to connect to {}! Error was {}", destination, future.cause());
                             component.trigger(new DropDelayed(destination.asSocket(), Transport.UDT));
@@ -444,6 +457,22 @@ public class ChannelManager {
         }
         sb.append("}\n");
         component.LOG.trace("{}", sb.toString());
+    }
+
+    void monitor() {
+        component.LOG.debug("Monitoring UDT channels:");
+        for (UdtChannel c : udtChannelsByRemote.values()) {
+            SocketUDT socket = NioUdtProvider.socketUDT(c);
+            if (socket != null) {
+                component.LOG.debug("UDT Stats: \n {} \n {}",
+                        new Object[]{socket.toStringMonitor(), socket.toStringOptions()});
+                try {
+                    socket.updateMonitor(true); // reset statistics
+                } catch (ExceptionUDT ex) {
+                   component.LOG.warn("Couldn't reset UDT monitoring stats.");
+                }
+            }
+        }
     }
 
     void clearConnections() {

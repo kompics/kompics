@@ -37,6 +37,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.udt.UdtChannel;
+import io.netty.channel.udt.UdtChannelOption;
 import io.netty.channel.udt.nio.NioUdtProvider;
 import io.netty.util.concurrent.Future;
 import java.net.InetAddress;
@@ -46,8 +47,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +98,10 @@ public class NettyNetwork extends ComponentDefinition {
     private final boolean bindUDP;
     private final boolean bindUDT;
     private InetAddress alternativeBindIf = null;
+    private boolean udtMonitoring = false;
+    private final long monitoringInterval = 1000; //1s
+    final int udtBufferSizes;
+    final int udtMSS;
 
     public NettyNetwork(NettyInit init) {
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -116,6 +120,25 @@ public class NettyNetwork extends ComponentDefinition {
                 LOG.error("Could not get alternave bind interface {}", abif);
                 throw new RuntimeException(ex);
             }
+        }
+        String umon = System.getProperty("udtMon");
+        if (umon != null) {
+            LOG.info("UDT monitoring requested.");
+            udtMonitoring = true;
+        }
+
+        String ubs = System.getProperty("udtBuffer");
+        if (ubs != null) {
+            udtBufferSizes = Integer.parseInt(ubs);
+        } else {
+            udtBufferSizes = -1; // use default instead
+        }
+
+        String umss = System.getProperty("udtMSS");
+        if (umss != null) {
+            udtMSS = Integer.parseInt(umss);
+        } else {
+            udtMSS = -1; // use default instead
         }
 
 //        if (!self.equals(init.self)) {
@@ -136,12 +159,26 @@ public class NettyNetwork extends ComponentDefinition {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
                 .option(ChannelOption.SO_REUSEADDR, true);
         bootstrapUDTClient = new Bootstrap();
-        NioEventLoopGroup groupUDT = new NioEventLoopGroup(1, Executors.defaultThreadFactory(),
+        NioEventLoopGroup groupUDT = new NioEventLoopGroup(0, (Executor) null,
                 NioUdtProvider.BYTE_PROVIDER);
         bootstrapUDTClient.group(groupUDT).channelFactory(NioUdtProvider.BYTE_CONNECTOR)
                 .handler(new NettyInitializer<SocketChannel>(new StreamHandler(this, Transport.UDT)))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
                 .option(ChannelOption.SO_REUSEADDR, true);
+        if (this.udtBufferSizes > 0) {
+            bootstrapUDTClient.option(UdtChannelOption.PROTOCOL_SEND_BUFFER_SIZE, this.udtBufferSizes)
+                    .option(UdtChannelOption.PROTOCOL_RECEIVE_BUFFER_SIZE, this.udtBufferSizes);
+        }
+        if (udtMonitoring) {
+            LOG.info("Activating UDT monitoring (client).");
+            bootstrapUDTClient.group().scheduleAtFixedRate(new Runnable() {
+
+                @Override
+                public void run() {
+                    channels.monitor();
+                }
+            }, monitoringInterval, monitoringInterval, TimeUnit.MILLISECONDS);
+        }
 
         subscribe(startHandler, control);
         subscribe(stopHandler, control);
@@ -161,13 +198,13 @@ public class NettyNetwork extends ComponentDefinition {
                 bindIp = alternativeBindIf;
             }
             if (bindTCP) {
-                bindPort(self.getIp(), self.getPort(), Transport.TCP);
+                bindPort(bindIp, self.getPort(), Transport.TCP);
             }
             if (bindUDT) {
-                bindPort(self.getIp(), self.getPort(), Transport.UDT);
+                bindPort(bindIp, self.getPort(), Transport.UDT);
             }
             if (bindUDP) {
-                bindPort(self.getIp(), self.getPort(), Transport.UDP);
+                bindPort(bindIp, self.getPort(), Transport.UDP);
             }
         }
 
@@ -345,18 +382,31 @@ public class NettyNetwork extends ComponentDefinition {
     }
 
     private boolean bindUdtPort(final InetAddress addr) {
-
-        ThreadFactory bossFactory = Executors.defaultThreadFactory();
-        ThreadFactory workerFactory = Executors.defaultThreadFactory();
-        NioEventLoopGroup bossGroup = new NioEventLoopGroup(1, bossFactory,
+        NioEventLoopGroup bossGroup = new NioEventLoopGroup(0, (Executor) null,
                 NioUdtProvider.BYTE_PROVIDER);
-        NioEventLoopGroup workerGroup = new NioEventLoopGroup(1, workerFactory,
+        NioEventLoopGroup workerGroup = new NioEventLoopGroup(0, (Executor) null,
                 NioUdtProvider.BYTE_PROVIDER);
         UDTServerHandler handler = new UDTServerHandler(this);
         bootstrapUDT = new ServerBootstrap();
         bootstrapUDT.group(bossGroup, workerGroup).channelFactory(NioUdtProvider.BYTE_ACCEPTOR)
                 .childHandler(new NettyInitializer<UdtChannel>(handler))
                 .option(ChannelOption.SO_REUSEADDR, true);
+        if (this.udtBufferSizes > 0) {
+            bootstrapUDT.option(UdtChannelOption.PROTOCOL_SEND_BUFFER_SIZE, this.udtBufferSizes)
+                    .option(UdtChannelOption.PROTOCOL_RECEIVE_BUFFER_SIZE, this.udtBufferSizes);
+            bootstrapUDT.childOption(UdtChannelOption.PROTOCOL_SEND_BUFFER_SIZE, this.udtBufferSizes)
+                    .childOption(UdtChannelOption.PROTOCOL_RECEIVE_BUFFER_SIZE, this.udtBufferSizes);
+        }
+        if (udtMonitoring) {
+            LOG.info("Activating UDT monitoring (server).");
+            bootstrapUDT.childGroup().scheduleAtFixedRate(new Runnable() {
+
+                @Override
+                public void run() {
+                    channels.monitor();
+                }
+            }, monitoringInterval, monitoringInterval, TimeUnit.MILLISECONDS);
+        }
         try {
             Channel c = bootstrapUDT.bind(addr, boundUDTPort).sync().channel();
             InetSocketAddress localAddress = (InetSocketAddress) c.localAddress(); // Should work
