@@ -71,6 +71,8 @@ import se.sics.kompics.network.netty.serialization.Serializers;
  */
 public class NettyNetwork extends ComponentDefinition {
 
+    public static final int STREAM_MAX = 65536;
+    public static final int DATAGRAM_MAX = 1500;
     public final Logger LOG;
     private static final int CONNECT_TIMEOUT_MS = 5000;
     static final int RECV_BUFFER_SIZE = 65536;

@@ -42,7 +42,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>5.0.0.Alpha2-SNAPSHOT</version>
+            <version>5.0.0.Alpha2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

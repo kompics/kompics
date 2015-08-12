@@ -20,7 +20,6 @@
  */
 package se.sics.kompics.network.netty;
 
-import com.google.common.base.Optional;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -43,13 +42,13 @@ public class DatagramHandler extends BaseHandler<DatagramPacket> {
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         try {
-            Object m = Serializers.fromBinary(msg.content(), Optional.absent());
+            Object m = Serializers.fromBinary(msg.content(), msg);
             if (m instanceof Msg) {
                 component.deliverMessage((Msg) m, ctx.channel());
             } else {
                 component.LOG.warn("Got unexpected Datagram message type: {} -> {}", m.getClass().getCanonicalName(), m);
             }
-        } catch (Exception e) { // Catch anything...the Serializer could through any kind of weird exception if you get message that were send by someone else
+        } catch (Exception e) { // Catch anything...the Serializer could throw any kind of weird exception if you get message that were send by someone else
             component.LOG.warn("Got weird Datagram message, ignoring it: {}", ByteBufUtil.hexDump(msg.content()));            
         }
     }

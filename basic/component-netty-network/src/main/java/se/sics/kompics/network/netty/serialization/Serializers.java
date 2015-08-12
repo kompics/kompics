@@ -23,6 +23,7 @@ package se.sics.kompics.network.netty.serialization;
 import com.google.common.base.Optional;
 import com.google.common.primitives.Ints;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import java.io.Serializable;
 import java.util.Arrays;
@@ -186,8 +187,11 @@ public abstract class Serializers {
         try {
             Serializer s = null;
             if (hint.isPresent()) {
-                Class c = (Class) hint.get(); // see comment above -.-
-                s = lookupSerializer(c);
+                Object ho = hint.get();
+                if (ho instanceof Class) {
+                    Class c = (Class) hint.get(); // see comment above -.-
+                    s = lookupSerializer(c);
+                }
             }
             int sId = -1;
             if (s == null) {
@@ -210,6 +214,41 @@ public abstract class Serializers {
             }
             LOG.debug("Using deserializer {} for buffer with hint {}.", s, hint);
             return s.fromBinary(buf, hint);
+        } finally {
+            rwLock.readLock().unlock();
+        }
+    }
+
+    public static Object fromBinary(ByteBuf buf, DatagramPacket datagram) {
+        rwLock.readLock().lock();
+        try {
+            Serializer s = null;
+            int sId = -1;
+            byte[] serializedId = new byte[idSerializationBytes.getBytes()];
+            if (!(buf.readableBytes() >= serializedId.length)) {
+                LOG.error("Could not read serializer id ({}) from buffer with length {}!", serializedId.length, buf.readableBytes());
+            }
+            buf.readBytes(serializedId);
+            byte[] unserializedId = new byte[BYTES];
+            Arrays.fill(unserializedId, (byte) 0);
+            System.arraycopy(serializedId, 0, unserializedId, BYTES - idSerializationBytes.getBytes(), serializedId.length);
+            sId = Ints.fromByteArray(unserializedId);
+            LOG.trace("DS-ID: {} ({}, {})", new Object[]{sId, serializedId, BYTES});
+
+            s = bindings[sId];
+
+            if (s == null) {
+                LOG.error("No deserializer {} found for buffer with hint {}.", sId);
+                return null;
+            }
+            LOG.debug("Using deserializer {} for buffer with hint {}.", s);
+            if (s instanceof DatagramSerializer) {
+                DatagramSerializer ds = (DatagramSerializer) s;
+                return ds.fromBinary(buf, datagram);
+            } else {
+                LOG.warn("Datagram message was serialised with a Serializer that is not a DatagramSerializer: \n   s: {}", s.getClass());
+                return s.fromBinary(buf, Optional.absent());
+            }
         } finally {
             rwLock.readLock().unlock();
         }
