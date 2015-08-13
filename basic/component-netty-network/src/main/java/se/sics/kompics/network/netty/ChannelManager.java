@@ -78,19 +78,20 @@ public class ChannelManager {
     void disambiguate(DisambiguateConnection msg, Channel c) {
         synchronized (this) {
             if (c.isActive()) { // might have been closed by the time we get the lock?
-                udtBoundPorts.put(msg.getSource().asSocket(), new InetSocketAddress(msg.getSource().getIp(), msg.udtPort));
 
                 if (c instanceof SocketChannel) {
                     SocketChannel sc = (SocketChannel) c;
                     address4Remote.put(sc.remoteAddress(), msg.getSource().asSocket());
                     tcpChannels.put(msg.getSource().asSocket(), sc);
-                    component.trigger(SendDelayed.event);
                 } else if (c instanceof UdtChannel) {
                     UdtChannel uc = (UdtChannel) c;
                     address4Remote.put(uc.remoteAddress(), msg.getSource().asSocket());
                     udtChannels.put(msg.getSource().asSocket(), uc);
-                    component.trigger(SendDelayed.event);
                 }
+                if (!tcpChannels.get(msg.getSource().asSocket()).isEmpty()) { // don't add if we don't have a TCP channel since host is most likely dead
+                    udtBoundPorts.put(msg.getSource().asSocket(), new InetSocketAddress(msg.getSource().getIp(), msg.udtPort));
+                }
+                component.trigger(SendDelayed.event);
             }
         }
     }
