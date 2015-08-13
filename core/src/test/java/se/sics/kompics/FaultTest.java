@@ -31,26 +31,84 @@ public class FaultTest {
     private static final TimeUnit timeUnit = TimeUnit.MILLISECONDS;
 
     private static final String PARENT_HANDLED = "PARENT_HANDLED";
+    private static final String TOP_HANDLED = "TOP_HANDLED";
     private static final String GC_STARTED = "GC_STARTED";
     //private static final String TMSG = "TMSG";
 
     @Test
     public void escalateTest() {
         type = ResolveAction.ESCALATE;
+        LOG.info("Escalate Test: Starting Kompics...");
         Kompics.createAndStart(ParentComponent.class);
+        LOG.info("Escalate Test: Waiting for GrandChild...");
         waitFor(GC_STARTED);
+        LOG.info("Escalate Test: Waiting for Parent...");
         waitFor(PARENT_HANDLED);
+        LOG.info("Escalate Test:Shutting down Kompics...");
         Kompics.shutdown();
+        try {
+            Kompics.waitForTermination();
+        } catch (InterruptedException ex) {
+            Assert.fail(ex.getMessage());
+        }
+        LOG.info("Escalate Test: Kompics shut down.");
     }
 
     @Test
     public void ignoreTest() {
         type = ResolveAction.IGNORE;
+        LOG.info("Ignore Test: Starting Kompics...");
         Kompics.createAndStart(ParentComponent.class);
+        LOG.info("Ignore Test: Waiting for regular start...");
         waitFor(GC_STARTED); // regular start
-
+        LOG.info("Ignore Test: Waiting for resume...");
         waitFor(GC_STARTED); // resumed start
+        LOG.info("Ignore Test: Shutting down Kompics...");
         Kompics.shutdown();
+        try {
+            Kompics.waitForTermination();
+        } catch (InterruptedException ex) {
+            Assert.fail(ex.getMessage());
+        }
+        LOG.info("Ignore Test: Kompics shut down.");
+    }
+
+    @Test
+    public void parentFaultTest() {
+        Kompics.setFaultHandler(new FaultHandler() {
+
+            @Override
+            public ResolveAction handle(Fault f) {
+                stringQ.offer(TOP_HANDLED);
+                return ResolveAction.DESTROY;
+            }
+        });
+        LOG.info("Parent Fault Test: Starting Kompics...");
+        Kompics.createAndStart(FailingParent.class);
+        LOG.info("Parent Fault Test: Waiting for fault handling...");
+        waitFor(TOP_HANDLED);
+        LOG.info("Parent Fault Test: Waiting for shutdown...");
+        try {
+            Kompics.waitForTermination();
+        } catch (InterruptedException ex) {
+            Assert.fail(ex.getMessage());
+        }
+        LOG.info("Parent Fault Test: Kompics shut down.");
+    }
+
+    public static class FailingParent extends ComponentDefinition {
+
+        Handler<Start> startHandler = new Handler<Start>() {
+
+            @Override
+            public void handle(Start event) {
+                throw new TestError();
+            }
+        };
+
+        {
+            subscribe(startHandler, control);
+        }
     }
 
     public static class ParentComponent extends ComponentDefinition {

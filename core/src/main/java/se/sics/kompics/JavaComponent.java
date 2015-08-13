@@ -405,7 +405,7 @@ public class JavaComponent extends ComponentCore {
             // }
             // } while (throwable != null);
             Kompics.logger.error("A fault was escalated to the root component: \n{} \n\n", fault);
-            throw new RuntimeException("Kompics unresolved fault ", fault.getCause());
+            Kompics.handleFault(fault);
             // System.exit(1);
         }
     }
@@ -436,6 +436,7 @@ public class JavaComponent extends ComponentCore {
 
         @Override
         public void handle(Fault event) {
+            
             ResolveAction ra = component.handleFault(event);
             switch (ra) {
                 case RESOLVED:
