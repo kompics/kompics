@@ -21,7 +21,9 @@
 package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
-import java.util.function.Consumer;
+
+import se.sics.kompics.Fault.ResolveAction;
+
 
 /**
  * The <code>ComponentDefinition</code> class.
@@ -80,7 +82,7 @@ public abstract class ComponentDefinition {
         if (event instanceof Direct.Request) {
             Direct.Request r = (Direct.Request) event;
             r.setOrigin(port.getPair());
-            Kompics.logger.info("Set port on request {} to {}", r, r.getOrigin());
+            Kompics.logger.trace("Set port on request {} to {}", r, r.getOrigin());
         }
 //		System.out.println(this.getClass()+": "+event+" triggert on "+port);
         port.doTrigger(event, core.wid, core);
@@ -106,7 +108,7 @@ public abstract class ComponentDefinition {
     protected final void expect(Filter<?>... filter) {
         // TODO
     }
-
+/* java8
     protected final <E extends KompicsEvent, P extends PortType> Handler<E> handle(Port<P> port, Class<E> type, Consumer<E> fun) {
         Handler<E> handler = new FunctionHandler<>(type, fun);
         subscribe(handler, port);
@@ -120,7 +122,7 @@ public abstract class ComponentDefinition {
     protected final Handler<Stop> onStop(Consumer<Stop> fun) {
         return handle(control, Stop.class, fun);
     }
-    
+*/    
     /**
      * Subscribe.
      *
@@ -132,6 +134,16 @@ public abstract class ComponentDefinition {
             Handler<E> handler, Port<P> port) throws ConfigurationException {
         if (port instanceof JavaPort) {
             JavaPort<P> p = (JavaPort<P>) port;
+            p.doSubscribe(handler);
+        } else {
+            throw new ConfigurationException("Port (" + port.toString() + " is not an instance of JavaPort!"
+                    + "Handler subscription only works in Java");
+        }
+    }
+    
+    protected final void subscribe(MatchedHandler handler, Port port) {
+        if (port instanceof JavaPort) {
+            JavaPort p = (JavaPort) port;
             p.doSubscribe(handler);
         } else {
             throw new ConfigurationException("Port (" + port.toString() + " is not an instance of JavaPort!"
@@ -232,17 +244,22 @@ public abstract class ComponentDefinition {
             Negative<P> negative) {
         core.doDisconnect(positive, negative);
     }
+    
     protected Negative<ControlPort> control;
+    // different sides of the same port...naming is for readability in usage
+    protected Negative<LoopbackPort> loopback;
+    protected Positive<LoopbackPort> onSelf;
 
-    public Negative<ControlPort> getControlPort() {
+    public final Negative<ControlPort> getControlPort() {
         return control;
     }
 
-    public ComponentCore getComponentCore() {
+    public final ComponentCore getComponentCore() {
         return core;
     }
     
-    public void suicide() {
+
+    public final void suicide() {
         if (core.state == Component.State.ACTIVE) {
             trigger(Kill.event, control.getPair());
         }
@@ -256,6 +273,22 @@ public abstract class ComponentDefinition {
     public void tearDown() {
         // Do nothing normally
     }
+    
+    /**
+     * Override for custom error handling.
+     * 
+     * Default action is ESCALATE.
+     * 
+     * ESCALATE -> Forward fault to parent.
+     * IGNORE -> Drop fault. Resume component as if nothing happened.
+     * RESOLVED -> Fault has been handled by user. Don't do anything else.
+     * 
+     * @param fault
+     * @return 
+     */
+    public ResolveAction handleFault(Fault fault) {
+        return ResolveAction.ESCALATE;
+    }
 
     /* === PRIVATE === */
     private ComponentCore core;
@@ -266,6 +299,8 @@ public abstract class ComponentDefinition {
     protected ComponentDefinition() {
         core = new JavaComponent(this);
         control = core.createControlPort();
+        loopback = core.createNegativePort(LoopbackPort.class);
+        onSelf = loopback.getPair();
     }
 
     protected ComponentDefinition(Class<? extends ComponentCore> coreClass) {
@@ -277,5 +312,7 @@ public abstract class ComponentDefinition {
             throw new ConfigurationException(e.getMessage());
         }
         control = core.createControlPort();
+        loopback = core.createNegativePort(LoopbackPort.class);
+        onSelf = loopback.getPair();
     }
 }

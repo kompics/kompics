@@ -20,7 +20,9 @@
  */
 package se.sics.kompics;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -34,9 +36,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class ComponentCore implements Component {
 
+    private final UUID id = UUID.randomUUID();
     protected ComponentCore parent;
     public static ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
-    protected List<ComponentCore> children;
+    protected List<ComponentCore> children = children = new LinkedList<ComponentCore>();
+    ;
     protected final ReentrantReadWriteLock childrenLock = new ReentrantReadWriteLock();
     protected Scheduler scheduler;
     protected int wid;
@@ -94,7 +98,7 @@ public abstract class ComponentCore implements Component {
         positivePort.removeChannelTo(negativePort);
         negativePort.removeChannelTo(positivePort);
     }
-    
+
     protected abstract void cleanPorts();
 
     public abstract Negative<ControlPort> createControlPort();
@@ -102,7 +106,7 @@ public abstract class ComponentCore implements Component {
     void doDestroy(Component component) {
         ComponentCore child = (ComponentCore) component;
         child.cleanPorts();
-        if (child.state != State.PASSIVE) {
+        if ((child.state != State.PASSIVE) && (child.state != State.FAULTY)) {
             Kompics.logger.warn("Destroying a component before it has been stopped is not a good idea: " + child.getComponent());
         }
         child.state = State.DESTROYED;
@@ -112,6 +116,40 @@ public abstract class ComponentCore implements Component {
 
         } finally {
             childrenLock.writeLock().unlock();
+        }
+    }
+
+    void destroyTree(ComponentCore child) {
+        try {
+            childrenLock.writeLock().lock();
+            child.childrenLock.writeLock().lock();
+            for (ComponentCore grandchild : child.children) {
+                child.destroyTree(grandchild);
+            }
+            child.getComponent().tearDown();
+            doDestroy(child);
+        } finally {
+            child.childrenLock.writeLock().unlock();
+            childrenLock.writeLock().unlock();
+        }
+    }
+
+    abstract void setInactive(Component child);
+
+    void markSubtreeAs(State s) {
+        this.state = s;
+        if (s == State.FAULTY || s == State.DESTROYED || s == State.PASSIVE) {
+            if (parent != null) {
+                parent.setInactive(this);
+            }
+        }
+        try {
+            childrenLock.readLock().lock();
+            for (ComponentCore child : children) {
+                child.markSubtreeAs(s);
+            }
+        } finally {
+            childrenLock.readLock().unlock();
         }
     }
 
@@ -149,12 +187,44 @@ public abstract class ComponentCore implements Component {
     }
 
     public abstract void execute(int wid);
+
+    @Override
+    public UUID id() {
+        return this.id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ComponentCore) {
+            ComponentCore cc = (ComponentCore) obj;
+            return this.id.equals(cc.id);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 59 * hash + (this.id != null ? this.id.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Component(");
+        sb.append(id);
+        sb.append("):");
+        sb.append(getComponent());
+        return sb.toString();
+    }
     /*
      * === LIFECYCLE ===
      */
     volatile protected Component.State state = Component.State.PASSIVE;
 
-    public Component.State getState() {
+    @Override
+    public Component.State state() {
         return state;
     }
 }

@@ -25,8 +25,8 @@ package se.sics.kompics.network;
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
- * @version $Id$
+ * @version $Id: Transport.java 2826 2010-05-26 15:09:05Z Cosmin $
  */
 public enum Transport {
-	UDP, TCP, MULTICAST_UDP;
+	UDP, TCP, MULTICAST_UDP, UDT, LEDBAT;
 }

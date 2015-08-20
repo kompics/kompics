@@ -30,7 +30,9 @@ package se.sics.kompics;
  */
 public class Fault implements KompicsEvent {
 
-	private final Throwable fault;
+	private final Throwable cause;
+        final ComponentCore source;
+        private final KompicsEvent event;
 
 	/**
 	 * Instantiates a new fault.
@@ -38,16 +40,45 @@ public class Fault implements KompicsEvent {
 	 * @param throwable
 	 *            the throwable
 	 */
-	public Fault(Throwable throwable) {
-		this.fault = throwable;
+	public Fault(Throwable throwable, ComponentCore source, KompicsEvent event) {
+		this.cause = throwable;
+                this.source = source;
+                this.event = event;
 	}
-	
-	/**
-	 * Gets the fault.
-	 * 
-	 * @return the fault
-	 */
-	public final Throwable getFault() {
-		return fault;
-	}
+        
+        public ComponentDefinition getSource() {
+            return source.getComponent();
+        }
+        
+        public Component getSourceCore() {
+            return source;
+        }
+        
+        public Throwable getCause() {
+            return cause;
+        }
+        
+        public KompicsEvent getEvent() {
+            return this.event;
+        }
+        
+       @Override
+       public String toString() {
+           StringBuilder sb = new StringBuilder();
+           sb.append("KompicsFault(");
+           sb.append(cause);
+           sb.append(" thrown in ");
+           sb.append(source);
+           sb.append(" while handling event ");
+           sb.append(event);
+           sb.append(")");
+           return sb.toString();
+       }
+        
+        public static enum ResolveAction {
+            RESOLVED,
+            IGNORE,
+            DESTROY,
+            ESCALATE;
+        }
 }

@@ -5,7 +5,7 @@
 package se.sics.kompics.network.test;
 
 import se.sics.kompics.Component;
-import se.sics.kompics.address.Address;
+import se.sics.kompics.network.Address;
 
 /**
  *

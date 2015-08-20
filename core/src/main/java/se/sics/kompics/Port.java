@@ -74,6 +74,7 @@ public interface Port<P extends PortType> {
 	public void setPair(PortCore<P> port);
 	
 	public <E extends KompicsEvent> void doSubscribe(Handler<E> handler);
+        public void doSubscribe(MatchedHandler handler);
 	
 	public void addChannel(ChannelCore<P> channel);
 	

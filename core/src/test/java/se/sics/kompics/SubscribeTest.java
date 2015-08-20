@@ -22,9 +22,9 @@ package se.sics.kompics;
 
 import java.util.LinkedList;
 import java.util.concurrent.Semaphore;
-
 import org.junit.Assert;
 import org.junit.Test;
+import se.sics.kompics.Fault.ResolveAction;
 
 /**
  * The
@@ -106,30 +106,36 @@ public class SubscribeTest {
 
     private static class TestRoot2 extends ComponentDefinition {
 
+        private Component component2;
+        
         public TestRoot2() {
-            Component component2 = create(TestComponent2.class, Init.NONE);
-
-            subscribe(faultHandler, component2.getControl());
-
-            for (int i = 0; i < EVENT_COUNT; i++) {
-                trigger(new TestEvent(i), component2.getPositive(TestPort.class));
-            }
+            component2 = create(TestComponent2.class, Init.NONE);
+            subscribe(startHandler, control);
         }
-        Handler<Fault> faultHandler = new Handler<Fault>() {
+
+        Handler<Start> startHandler = new Handler<Start>() {
+
             @Override
-            public void handle(Fault event) {
-                semaphore.release(EVENT_COUNT);
-                // event.getFault().printStackTrace();
+            public void handle(Start event) {
+                for (int i = 0; i < EVENT_COUNT; i++) {
+                    trigger(new TestEvent(i), component2.getPositive(TestPort.class));
+                }
             }
         };
+
+        @Override
+        public ResolveAction handleFault(Fault fault) {
+            semaphore.release(EVENT_COUNT);
+            return ResolveAction.IGNORE;
+        }
     }
 
     private static class TestComponent2 extends ComponentDefinition {
 
         private final Negative<TestPort> testPort = provides(TestPort.class);
-        
+
         public TestComponent2() {
-            
+
             subscribe(testHandler1, testPort);
         }
         Handler<TestEvent> testHandler1 = new Handler<TestEvent>() {

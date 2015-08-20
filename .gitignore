@@ -3,5 +3,8 @@ target/
 .prefs
 .classpath
 .settings/
+lib/
 
 .DS_Store
+
+nb-configuration.xml
