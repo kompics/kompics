@@ -229,7 +229,8 @@ public class NettyNetwork extends ComponentDefinition {
                 trigger(event, net);
                 return;
             }
-            if (sendMessage(event) == null) {
+            
+            if (sendMessage(new MessageNotify.Req(event)) == null) {
                 if (event instanceof DisambiguateConnection) {
                     DisambiguateConnection dc = (DisambiguateConnection) event;
                     if (delayedDisambs.add(dc)) {
@@ -254,7 +255,7 @@ public class NettyNetwork extends ComponentDefinition {
                 answer(notify);
                 return;
             }
-            ChannelFuture f = sendMessage(event);
+            ChannelFuture f = sendMessage(notify);
             if (f == null) {
                 LOG.info("Couldn't find channel for {} (with notify). Delaying message while establishing connection!", event);
                 delayedNotifies.offer(notify);
@@ -275,7 +276,7 @@ public class NettyNetwork extends ComponentDefinition {
             Iterator<Msg> mit = delayedMessages.listIterator();
             while (mit.hasNext()) {
                 Msg m = mit.next();
-                if (sendMessage(m) != null) {
+                if (sendMessage(new MessageNotify.Req(m)) != null) {
                     mit.remove();
                 }
             }
@@ -283,7 +284,7 @@ public class NettyNetwork extends ComponentDefinition {
             Iterator<MessageNotify.Req> mnit = delayedNotifies.listIterator();
             while (mnit.hasNext()) {
                 MessageNotify.Req m = mnit.next();
-                ChannelFuture f = sendMessage(m.msg);
+                ChannelFuture f = sendMessage(m);
                 if (f != null) {
                     mnit.remove();
                     f.addListener(new NotifyListener(m));
@@ -432,7 +433,7 @@ public class NettyNetwork extends ComponentDefinition {
             DisambiguateConnection msg = (DisambiguateConnection) message;
             channels.disambiguate(msg, c);
             if (msg.reply) {
-                c.writeAndFlush(new DisambiguateConnection(self, msg.getSource(), msg.getProtocol(), boundUDTPort, false));
+                c.writeAndFlush(new MessageNotify.Req(new DisambiguateConnection(self, msg.getSource(), msg.getProtocol(), boundUDTPort, false)));
             }
             //trigger(SendDelayed.event, onSelf);
             return;
@@ -454,8 +455,8 @@ public class NettyNetwork extends ComponentDefinition {
         trigger(message, net);
     }
 
-    private ChannelFuture sendMessage(Msg message) {
-        switch (message.getProtocol()) {
+    private ChannelFuture sendMessage(MessageNotify.Req message) {
+        switch (message.msg.getProtocol()) {
             case TCP:
                 return sendTcpMessage(message);
             case UDT:
@@ -467,11 +468,12 @@ public class NettyNetwork extends ComponentDefinition {
         }
     }
 
-    private ChannelFuture sendUdpMessage(Msg message) {
+    private ChannelFuture sendUdpMessage(MessageNotify.Req message) {
         ByteBuf buf = udpChannel.alloc().buffer(INITIAL_BUFFER_SIZE, SEND_BUFFER_SIZE);
         try {
-            Serializers.toBinary(message, buf);
-            DatagramPacket pack = new DatagramPacket(buf, message.getDestination().asSocket());
+            Serializers.toBinary(message.msg, buf);
+            message.injectSize(buf.readableBytes());
+            DatagramPacket pack = new DatagramPacket(buf, message.msg.getDestination().asSocket());
             LOG.debug("Sending Datagram message {} ({}bytes)", message, buf.readableBytes());
             return udpChannel.writeAndFlush(pack);
         } catch (Exception e) { // serialization might fail horribly with size bounded buff
@@ -480,10 +482,10 @@ public class NettyNetwork extends ComponentDefinition {
         }
     }
 
-    private ChannelFuture sendUdtMessage(Msg message) {
-        Channel c = channels.getUDTChannel(message.getDestination());
+    private ChannelFuture sendUdtMessage(MessageNotify.Req message) {
+        Channel c = channels.getUDTChannel(message.msg.getDestination());
         if (c == null) {
-            c = channels.createUDTChannel(message.getDestination(), bootstrapUDTClient);
+            c = channels.createUDTChannel(message.msg.getDestination(), bootstrapUDTClient);
         }
         if (c == null) {
             return null;
@@ -492,15 +494,15 @@ public class NettyNetwork extends ComponentDefinition {
         return c.writeAndFlush(message);
     }
 
-    private ChannelFuture sendTcpMessage(Msg message) {
-        Channel c = channels.getTCPChannel(message.getDestination());
+    private ChannelFuture sendTcpMessage(MessageNotify.Req message) {
+        Channel c = channels.getTCPChannel(message.msg.getDestination());
         if (c == null) {
-            c = channels.createTCPChannel(message.getDestination(), bootstrapTCPClient);
+            c = channels.createTCPChannel(message.msg.getDestination(), bootstrapTCPClient);
         }
         if (c == null) {
             return null;
         }
-        LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{message, c.localAddress(), c.remoteAddress()});
+        LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{message.msg, c.localAddress(), c.remoteAddress()});
         return c.writeAndFlush(message);
     }
 

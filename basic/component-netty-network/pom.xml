@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
     <parent>
         <groupId>se.sics.kompics.basic</groupId>
         <artifactId>kompics-basic-components</artifactId>
-        <version>0.8.2-SNAPSHOT</version>
+        <version>0.8.3-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.kompics.basic</groupId>
     <artifactId>kompics-component-netty-network</artifactId>
@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-port-network</artifactId>
-            <version>0.8.2-SNAPSHOT</version>
+            <version>0.8.3-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

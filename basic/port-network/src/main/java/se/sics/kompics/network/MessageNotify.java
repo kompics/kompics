@@ -37,11 +37,16 @@ public class MessageNotify {
             this.getResponse().setTime(time);
             this.getResponse().setSuccess(success);
         }
+        
+        public void injectSize(int size) {
+            this.getResponse().setSize(size);
+        }
     }
     
     public static class Resp implements Direct.Response {
         
         private long time;
+        private int size;
         public final UUID msgId;
         private boolean success = false;
         
@@ -63,6 +68,14 @@ public class MessageNotify {
         
         public boolean isSuccess() {
             return this.success;
+        }
+        
+        void setSize(int size) {
+            this.size = size;
+        }
+        
+        public int getSize() {
+            return size;
         }
     }
 }

@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -109,7 +110,7 @@ public class ChannelManager {
                         if (!channel.equals(activeC)) {
                             component.LOG.warn("Preparing to close duplicate TCP channel between {} and {}: local {}, remote {}",
                                     new Object[]{msg.getSource(), msg.getDestination(), channel.localAddress(), channel.remoteAddress()});
-                            channel.writeAndFlush(new CloseChannel(component.self, msg.getSource(), Transport.TCP));
+                            channel.writeAndFlush(new MessageNotify.Req(new CloseChannel(component.self, msg.getSource(), Transport.TCP)));
                         }
                     }
                 }
@@ -124,7 +125,7 @@ public class ChannelManager {
                         if (!channel.equals(activeC)) {
                             component.LOG.warn("Preparing to close duplicate UDT channel between {} and {}: local {}, remote {}",
                                     new Object[]{msg.getSource(), msg.getDestination(), channel.localAddress(), channel.remoteAddress()});
-                            channel.writeAndFlush(new CloseChannel(component.self, msg.getSource(), Transport.UDT));
+                            channel.writeAndFlush(new MessageNotify.Req(new CloseChannel(component.self, msg.getSource(), Transport.UDT)));
                         }
                     }
                 }
@@ -143,7 +144,7 @@ public class ChannelManager {
                     component.LOG.warn("Can't close TCP channel between {} and {}: local {}, remote {} -- it's the only channel!",
                             new Object[]{msg.getSource(), msg.getDestination(), sc.localAddress(), sc.remoteAddress()});
                     tcpActiveChannels.put(msg.getSource().asSocket(), sc);
-                    sc.writeAndFlush(new CheckChannelActive(component.self, msg.getSource(), Transport.TCP));
+                    sc.writeAndFlush(new MessageNotify.Req(new CheckChannelActive(component.self, msg.getSource(), Transport.TCP)));
                 } else {
                     if (activeC.equals(sc)) { // pick any channel as active
                         for (SocketChannel channel : channels) {
@@ -153,7 +154,7 @@ public class ChannelManager {
                             }
                         }
                     }
-                    ChannelFuture f = sc.writeAndFlush(new ChannelClosed(component.self, msg.getSource(), Transport.TCP));
+                    ChannelFuture f = sc.writeAndFlush(new MessageNotify.Req(new ChannelClosed(component.self, msg.getSource(), Transport.TCP)));
                     f.addListener(ChannelFutureListener.CLOSE);
                     component.LOG.info("Closing duplicate TCP channel between {} and {}: local {}, remote {}",
                             new Object[]{msg.getSource(), msg.getDestination(), sc.localAddress(), sc.remoteAddress()});
@@ -168,7 +169,7 @@ public class ChannelManager {
                     component.LOG.warn("Can't close UDT channel between {} and {}: local {}, remote {} -- it's the only channel!",
                             new Object[]{msg.getSource(), msg.getDestination(), uc.localAddress(), uc.remoteAddress()});
                     udtActiveChannels.put(msg.getSource().asSocket(), uc);
-                    uc.writeAndFlush(new CheckChannelActive(component.self, msg.getSource(), Transport.UDT));
+                    uc.writeAndFlush(new MessageNotify.Req(new CheckChannelActive(component.self, msg.getSource(), Transport.UDT)));
                 } else {
                     if (activeC.equals(uc)) { // pick any channel as active
                         for (UdtChannel channel : channels) {
@@ -178,7 +179,7 @@ public class ChannelManager {
                             }
                         }
                     }
-                    ChannelFuture f = uc.writeAndFlush(new ChannelClosed(component.self, msg.getSource(), Transport.UDT));
+                    ChannelFuture f = uc.writeAndFlush(new MessageNotify.Req(new ChannelClosed(component.self, msg.getSource(), Transport.UDT)));
                     f.addListener(ChannelFutureListener.CLOSE);
                     component.LOG.info("Closing duplicate UDT channel between {} and {}: local {}, remote {}",
                             new Object[]{msg.getSource(), msg.getDestination(), uc.localAddress(), uc.remoteAddress()});
@@ -210,7 +211,7 @@ public class ChannelManager {
 
                     SocketChannel minsc = minChannel(tcpChannels.get(msg.getSource().asSocket()));
 
-                    minsc.writeAndFlush(new CheckChannelActive(component.self, msg.getSource(), Transport.TCP));
+                    minsc.writeAndFlush(new MessageNotify.Req(new CheckChannelActive(component.self, msg.getSource(), Transport.TCP)));
 
                 }
             }
@@ -241,7 +242,7 @@ public class ChannelManager {
 
                     UdtChannel minsc = minChannel(udtChannels.get(msg.getSource().asSocket()));
 
-                    minsc.writeAndFlush(new CheckChannelActive(component.self, msg.getSource(), Transport.UDT));
+                    minsc.writeAndFlush(new MessageNotify.Req(new CheckChannelActive(component.self, msg.getSource(), Transport.UDT)));
 
                 }
             }
