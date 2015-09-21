@@ -216,7 +216,11 @@ public class NettyNetwork extends ComponentDefinition {
 
         @Override
         public void handle(Stop event) {
-            clearConnections();
+            try {
+                clearConnections();
+            } catch (Exception ex) {
+                LOG.warn("Error:{} while clearing connections - ignoring", ex.getCause());
+            }
         }
     };
 
@@ -229,7 +233,7 @@ public class NettyNetwork extends ComponentDefinition {
                 trigger(event, net);
                 return;
             }
-            
+
             if (sendMessage(new MessageNotify.Req(event)) == null) {
                 if (event instanceof DisambiguateConnection) {
                     DisambiguateConnection dc = (DisambiguateConnection) event;
