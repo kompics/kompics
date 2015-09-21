@@ -564,14 +564,26 @@ public class ChannelManager {
         synchronized (this) {
             component.LOG.info("Closing all connections...");
             for (ChannelFuture f : udtIncompleteChannels.values()) {
-                f.cancel(false);
+                try {
+                    f.cancel(false);
+                } catch (Exception ex) {
+                    component.LOG.warn("Error during Netty shutdown. Messages might have been lost! \n {}", ex);
+                }
             }
             for (ChannelFuture f : tcpIncompleteChannels.values()) {
-                f.cancel(false);
+                try {
+                    f.cancel(false);
+                } catch (Exception ex) {
+                    component.LOG.warn("Error during Netty shutdown. Messages might have been lost! \n {}", ex);
+                }
             }
 
             for (SocketChannel c : tcpChannelsByRemote.values()) {
-                futures.add(c.close());
+                try {
+                    futures.add(c.close());
+                } catch (Exception ex) {
+                    component.LOG.warn("Error during Netty shutdown. Messages might have been lost! \n {}", ex);
+                }
             }
 
             tcpActiveChannels.clear(); // clear them again just to be sure
@@ -579,7 +591,11 @@ public class ChannelManager {
             tcpChannelsByRemote.clear();
 
             for (UdtChannel c : udtChannelsByRemote.values()) {
-                futures.add(c.close());
+                try {
+                    futures.add(c.close());
+                } catch (Exception ex) {
+                    component.LOG.warn("Error during Netty shutdown. Messages might have been lost! \n {}", ex);
+                }
             }
 
             udtActiveChannels.clear();
@@ -592,7 +608,11 @@ public class ChannelManager {
             tcpIncompleteChannels.clear();
         }
         for (ChannelFuture cf : futures) {
-            cf.syncUninterruptibly();
+            try {
+                cf.syncUninterruptibly();
+            } catch (Exception ex) {
+                component.LOG.warn("Error during Netty shutdown. Messages might have been lost! \n {}", ex);
+            }
         }
     }
 

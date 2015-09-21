@@ -525,7 +525,11 @@ public class NettyNetwork extends ComponentDefinition {
         channels.clearConnections();
 
         if (bindUDP) {
-            udpChannel.close().syncUninterruptibly();
+            try {
+                udpChannel.close().syncUninterruptibly();
+            } catch (Exception ex) {
+                LOG.warn("Error during Netty shutdown. Messages might have been lost! \n {}", ex);
+            }
         }
 
         delayedMessages.clear();
