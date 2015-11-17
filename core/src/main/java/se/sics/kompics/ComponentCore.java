@@ -39,7 +39,7 @@ public abstract class ComponentCore implements Component {
     private final UUID id = UUID.randomUUID();
     protected ComponentCore parent;
     public static ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
-    protected List<ComponentCore> children = children = new LinkedList<ComponentCore>();
+    protected List<ComponentCore> children = new LinkedList<ComponentCore>();
     ;
     protected final ReentrantReadWriteLock childrenLock = new ReentrantReadWriteLock();
     protected Scheduler scheduler;

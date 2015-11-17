@@ -474,10 +474,10 @@ public class NettyNetwork extends ComponentDefinition {
             Serializers.toBinary(message.msg, buf);
             message.injectSize(buf.readableBytes());
             DatagramPacket pack = new DatagramPacket(buf, message.msg.getDestination().asSocket());
-            LOG.debug("Sending Datagram message {} ({}bytes)", message, buf.readableBytes());
+            LOG.debug("Sending Datagram message {} ({}bytes)", message.msg, buf.readableBytes());
             return udpChannel.writeAndFlush(pack);
         } catch (Exception e) { // serialization might fail horribly with size bounded buff
-            LOG.warn("Could not send Datagram message {}, error was: {}", message, e);
+            LOG.warn("Could not send Datagram message {}, error was: {}", message.msg, e);
             return null;
         }
     }
@@ -490,7 +490,7 @@ public class NettyNetwork extends ComponentDefinition {
         if (c == null) {
             return null;
         }
-        LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{message, c.localAddress(), c.remoteAddress()});
+        LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{message.msg, c.localAddress(), c.remoteAddress()});
         return c.writeAndFlush(message);
     }
 
