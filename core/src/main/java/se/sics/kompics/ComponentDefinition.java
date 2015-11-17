@@ -83,6 +83,8 @@ public abstract class ComponentDefinition {
             Direct.Request r = (Direct.Request) event;
             r.setOrigin(port.getPair());
             Kompics.logger.trace("Set port on request {} to {}", r, r.getOrigin());
+        } else if (event instanceof Direct.Response) {
+            throw new KompicsException("Direct.Response can not be \"trigger\"ed. It has to \"answer\" a Direct.Request!");
         }
 //		System.out.println(this.getClass()+": "+event+" triggert on "+port);
         port.doTrigger(event, core.wid, core);

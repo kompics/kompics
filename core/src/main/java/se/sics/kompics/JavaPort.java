@@ -457,6 +457,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
                     delivered = deliverToSubscribers(event, wid, eventType);
                     delivered |= deliverToChannels(event, wid);
                 }
+            } else if (event instanceof Direct.Response) {
+                delivered = deliverToSubscribers(event, wid, eventType);
             } else {
                 // event is not a response event
                 delivered = deliverToSubscribers(event, wid, eventType);
