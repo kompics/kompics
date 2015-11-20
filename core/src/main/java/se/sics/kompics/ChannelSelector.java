@@ -21,13 +21,13 @@
 package se.sics.kompics;
 
 /**
- * The <code>ChannelFilter</code> class.
+ * The <code>ChannelSelector</code> class.
  * 
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
  */
-public abstract class ChannelFilter<E extends KompicsEvent, F> {
+public abstract class ChannelSelector<E extends KompicsEvent, F> {
 
 	private final Class<E> eventType;
 
@@ -35,7 +35,7 @@ public abstract class ChannelFilter<E extends KompicsEvent, F> {
 
 	private final boolean positive;
 
-	protected ChannelFilter(Class<E> eventType, F value, boolean positive) {
+	protected ChannelSelector(Class<E> eventType, F value, boolean positive) {
 		this.eventType = eventType;
 		this.value = value;
 		this.positive = positive;

@@ -1,6 +1,6 @@
 /**
  * This file is part of the Kompics component model runtime.
- * 
+ * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
@@ -11,45 +11,48 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics;
 
+import java.util.List;
+
 /**
  * The <code>PortCore</code> class.
- * 
+ * <p>
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @author Lars Kroll <lkr@lars-kroll.com>
  * @version $Id: $
  */
 public abstract class PortCore<P extends PortType> implements Negative<P>, Positive<P> {
-	
-	protected boolean isPositive;
 
-	protected boolean isControlPort;
-	
-	protected P portType;
-	
-	protected ComponentCore owner;
-	
-	@Override
-	public P getPortType() {
-		return portType;
-	}
-	
+    protected boolean isPositive;
 
-	@Override
-	public ComponentCore getOwner() {
-		return owner;
-	}
-        
-        public abstract void cleanChannels();
-        
-        public abstract void cleanEvents();
+    protected boolean isControlPort;
+
+    protected P portType;
+
+    protected ComponentCore owner;
+
+    @Override
+    public P getPortType() {
+        return portType;
+    }
+
+    @Override
+    public ComponentCore getOwner() {
+        return owner;
+    }
+
+    public abstract void cleanChannels();
+
+    public abstract void cleanEvents();
+
+    public abstract List<Channel<P>> findChannelsTo(PortCore<P> port);
 }

@@ -28,7 +28,9 @@ import java.util.ArrayDeque;
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
+ * @deprecated Use {@link Direct.Request} instead if possible.
  */
+@Deprecated
 public abstract class Request implements KompicsEvent {
 
     ArrayDeque<RequestPathElement> requestPath = new ArrayDeque<RequestPathElement>();

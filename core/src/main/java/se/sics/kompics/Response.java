@@ -29,7 +29,9 @@ import java.util.ArrayDeque;
  * @author Cosmin Arad <cosmin@sics.se>
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id$
+ * @deprecated Use {@link Direct.Response} instead if possible.
  */
+@Deprecated
 public abstract class Response implements KompicsEvent {
 
     private ArrayDeque<RequestPathElement> requestPath;

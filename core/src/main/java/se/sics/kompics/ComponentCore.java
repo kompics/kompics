@@ -49,55 +49,55 @@ public abstract class ComponentCore implements Component {
         return parent;
     }
 
-    public <P extends PortType> Channel<P> doConnect(Positive<P> positive,
-            Negative<P> negative) {
-        PortCore<P> positivePort = (PortCore<P>) positive;
-        PortCore<P> negativePort = (PortCore<P>) negative;
-        ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
-                negativePort.getPortType());
-
-        positivePort.addChannel(channel);
-        negativePort.addChannel(channel);
-
-        return channel;
-    }
-
-    public <P extends PortType> Channel<P> doConnect(Positive<P> positive,
-            Negative<P> negative, ChannelFilter<?, ?> filter) {
-        PortCore<P> positivePort = (PortCore<P>) positive;
-        PortCore<P> negativePort = (PortCore<P>) negative;
-        ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
-                negativePort.getPortType());
-
-        Class<? extends KompicsEvent> eventType = filter.getEventType();
-        P portType = positivePort.getPortType();
-        if (filter.isPositive()) {
-            if (!portType.hasPositive(eventType)) {
-                throw new RuntimeException("Port type " + portType
-                        + " has no positive " + eventType);
-            }
-            positivePort.addChannel(channel, filter);
-            negativePort.addChannel(channel);
-        } else {
-            if (!portType.hasNegative(eventType)) {
-                throw new RuntimeException("Port type " + portType
-                        + " has no negative " + eventType);
-            }
-            positivePort.addChannel(channel);
-            negativePort.addChannel(channel, filter);
-        }
-
-        return channel;
-    }
-
-    public <P extends PortType> void doDisconnect(Positive<P> positive,
-            Negative<P> negative) {
-        PortCore<P> positivePort = (PortCore<P>) positive;
-        PortCore<P> negativePort = (PortCore<P>) negative;
-
-        positivePort.removeChannelTo(negativePort);
-        negativePort.removeChannelTo(positivePort);
-    }
+//    public <P extends PortType> Channel<P> doConnect(Positive<P> positive,
+//            Negative<P> negative) {
+//        PortCore<P> positivePort = (PortCore<P>) positive;
+//        PortCore<P> negativePort = (PortCore<P>) negative;
+//        ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
+//                negativePort.getPortType());
+//
+//        positivePort.addChannel(channel);
+//        negativePort.addChannel(channel);
+//
+//        return channel;
+//    }
+//
+//    public <P extends PortType> Channel<P> doConnect(Positive<P> positive,
+//            Negative<P> negative, ChannelSelector<?, ?> filter) {
+//        PortCore<P> positivePort = (PortCore<P>) positive;
+//        PortCore<P> negativePort = (PortCore<P>) negative;
+//        ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
+//                negativePort.getPortType());
+//
+//        Class<? extends KompicsEvent> eventType = filter.getEventType();
+//        P portType = positivePort.getPortType();
+//        if (filter.isPositive()) {
+//            if (!portType.hasPositive(eventType)) {
+//                throw new RuntimeException("Port type " + portType
+//                        + " has no positive " + eventType);
+//            }
+//            positivePort.addChannel(channel, filter);
+//            negativePort.addChannel(channel);
+//        } else {
+//            if (!portType.hasNegative(eventType)) {
+//                throw new RuntimeException("Port type " + portType
+//                        + " has no negative " + eventType);
+//            }
+//            positivePort.addChannel(channel);
+//            negativePort.addChannel(channel, filter);
+//        }
+//
+//        return channel;
+//    }
+//
+//    public <P extends PortType> void doDisconnect(Positive<P> positive,
+//            Negative<P> negative) {
+//        PortCore<P> positivePort = (PortCore<P>) positive;
+//        PortCore<P> negativePort = (PortCore<P>) negative;
+//
+//        positivePort.removeChannelTo(negativePort);
+//        negativePort.removeChannelTo(positivePort);
+//    }
 
     protected abstract void cleanPorts();
 

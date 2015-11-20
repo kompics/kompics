@@ -78,9 +78,9 @@ public interface Port<P extends PortType> {
 	
 	public void addChannel(ChannelCore<P> channel);
 	
-	public void addChannel(ChannelCore<P> channel, ChannelFilter<?, ?> filter);
+	public void addChannel(ChannelCore<P> channel, ChannelSelector<?, ?> filter);
 	
-	public void removeChannelTo(PortCore<P> remotePort);
+	public void removeChannel(ChannelCore<P> remotePort);
 	
 	public void enqueue(KompicsEvent event);
 }

@@ -28,13 +28,11 @@ package se.sics.kompics;
  */
 public interface ChannelCore<P extends PortType> extends Channel<P> {
 	
-	boolean isDestroyed();
+	public boolean isDestroyed();
 
-	void destroy();
+	public boolean hasPositivePort(Port<P> port);
 
-	public Positive<P> getPositivePort();
-
-	public Negative<P> getNegativePort();
+	public boolean hasNegativePort(Port<P> port);
 
 	public void forwardToPositive(KompicsEvent event, int wid);
 

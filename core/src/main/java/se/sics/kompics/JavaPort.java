@@ -27,7 +27,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -45,11 +44,10 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     private ReentrantReadWriteLock rwLock;
     private final ArrayListMultimap<Class<? extends KompicsEvent>, Handler<?>> subs = ArrayListMultimap.create();
     private final HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>> matchers = new HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>>();
-    private ArrayList<ChannelCore<P>> allChannels;
-    private ArrayList<ChannelCore<P>> unfilteredChannels;
-    private ChannelFilterSet filteredChannels;
+    private ArrayList<ChannelCore<P>> normalChannels = new ArrayList<ChannelCore<P>>();
+    private ChannelSelectorSet selectorChannels = new ChannelSelectorSet();
+    ;
     private SpinlockQueue<KompicsEvent> eventQueue = new SpinlockQueue<KompicsEvent>();
-    private HashMap<Port<P>, ChannelCore<P>> remotePorts;
 
     public JavaPort(JavaPort<P> other) {
         this.isPositive = other.isPositive;
@@ -66,8 +64,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         // this.subs = new HashMap<Class<? extends KompicsEvent>,
         // ArrayList<Handler<?>>>();
         // this.allChannels = new ArrayList<ChannelCore<P>>();
-        // this.unfilteredChannels = new ArrayList<ChannelCore<P>>();
-        // this.filteredChannels = new ChannelFilterSet();
+        // this.normalChannels = new ArrayList<ChannelCore<P>>();
+        // this.selectorChannels = new ChannelSelectorSet();
         // this.remotePorts = new HashMap<PortCore<P>, ChannelCore<P>>();
         this.owner = owner;
         this.isControlPort = (portType instanceof ControlPort);
@@ -84,107 +82,30 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     @Override
     public void addChannel(ChannelCore<P> channel) {
-        Port<P> remotePort = (isPositive ? channel.getNegativePort()
-                : channel.getPositivePort());
-
-        if (remotePorts != null && remotePorts.containsKey(remotePort)) {
-            throw new RuntimeException((isPositive ? "Positive " : "Negative ")
-                    + portType.getClass().getCanonicalName() + " of "
-                    + pair.getOwner().getComponent() + " is already connected to "
-                    + (!isPositive ? "positive " : "negative ")
-                    + portType.getClass().getCanonicalName() + " of "
-                    + remotePort.getPair().getOwner().getComponent());
-        }
-
         rwLock.writeLock().lock();
         try {
-            if (remotePorts == null) {
-                remotePorts = new HashMap<Port<P>, ChannelCore<P>>();
-            }
-            if (allChannels == null) {
-                allChannels = new ArrayList<ChannelCore<P>>();
-            }
-            if (unfilteredChannels == null) {
-                unfilteredChannels = new ArrayList<ChannelCore<P>>();
-            }
-            allChannels.add(channel);
-            unfilteredChannels.add(channel);
-            remotePorts.put(remotePort, channel);
+            normalChannels.add(channel);
         } finally {
             rwLock.writeLock().unlock();
         }
     }
 
     @Override
-    public void addChannel(ChannelCore<P> channel, ChannelFilter<?, ?> filter) {
-        Port<P> remotePort = (isPositive ? channel.getNegativePort()
-                : channel.getPositivePort());
-
-        if (remotePorts != null && remotePorts.containsKey(remotePort)) {
-            throw new RuntimeException((isPositive ? "Positive " : "Negative ")
-                    + portType.getClass().getCanonicalName() + " of "
-                    + pair.getOwner().getComponent() + " is already connected to "
-                    + (!isPositive ? "positive " : "negative ")
-                    + portType.getClass().getCanonicalName() + " of "
-                    + remotePort.getPair().getOwner().getComponent());
-        }
-
+    public void addChannel(ChannelCore<P> channel, ChannelSelector<?, ?> filter) {
         rwLock.writeLock().lock();
         try {
-            if (remotePorts == null) {
-                remotePorts = new HashMap<Port<P>, ChannelCore<P>>();
-            }
-            if (allChannels == null) {
-                allChannels = new ArrayList<ChannelCore<P>>();
-            }
-            if (filteredChannels == null) {
-                filteredChannels = new ChannelFilterSet();
-            }
-            allChannels.add(channel);
-            filteredChannels.addChannelFilter(channel, filter);
-            remotePorts.put(remotePort, channel);
+            selectorChannels.addChannelFilter(channel, filter);
         } finally {
             rwLock.writeLock().unlock();
         }
     }
 
     @Override
-    public void removeChannelTo(PortCore<P> remotePort) {
-        if (remotePorts == null || !remotePorts.containsKey(remotePort)) {
-            throw new RuntimeException((isPositive ? "Positive " : "Negative ")
-                    + portType.getClass().getCanonicalName() + " of "
-                    + pair.getOwner().getComponent() + " is not connected to "
-                    + (!isPositive ? "positive " : "negative ")
-                    + portType.getClass().getCanonicalName() + " of "
-                    + remotePort.getPair().getOwner().getComponent());
-        }
-
+    public void removeChannel(ChannelCore<P> channel) {
         rwLock.writeLock().lock();
         try {
-            ChannelCore<P> channel = remotePorts.remove(remotePort); // ! null
-            channel.destroy();
-            if (remotePorts.isEmpty()) {
-                remotePorts = null;
-            }
-
-            if (filteredChannels != null) {
-                filteredChannels.removeChannel(channel);
-                if (filteredChannels.isEmpty()) {
-                    filteredChannels = null;
-                }
-            }
-            if (unfilteredChannels != null) {
-                unfilteredChannels.remove(channel);
-                if (unfilteredChannels.isEmpty()) {
-                    unfilteredChannels = null;
-                }
-            }
-            if (allChannels != null) {
-                allChannels.remove(channel);
-                if (allChannels.isEmpty()) {
-                    allChannels = null;
-                }
-            }
+            selectorChannels.removeChannel(channel);
+            normalChannels.remove(channel);
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -194,8 +115,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     private boolean deliverToChannels(KompicsEvent event, int wid) {
         //Kompics.logger.debug("{}: trying to deliver {} to channels...", owner.getComponent(), event);
         boolean delivered = false;
-        if (unfilteredChannels != null) {
-            for (ChannelCore<?> channel : unfilteredChannels) {
+        if (normalChannels != null) {
+            for (ChannelCore<?> channel : normalChannels) {
                 if (isPositive) {
                     channel.forwardToNegative(event, wid);
                 } else {
@@ -204,14 +125,14 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
                 delivered = true;
             }
         }
-        if (filteredChannels != null) {
-            ArrayList<ChannelCore<?>> channels = filteredChannels.get(event);
+        if (selectorChannels != null) {
+            ArrayList<ChannelCore<?>> channels = selectorChannels.get(event);
             if (channels != null) {
-                for (int i = 0; i < channels.size(); i++) {
+                for (ChannelCore channel : channels) {
                     if (isPositive) {
-                        channels.get(i).forwardToNegative(event, wid);
+                        channel.forwardToNegative(event, wid);
                     } else {
-                        channels.get(i).forwardToPositive(event, wid);
+                        channel.forwardToPositive(event, wid);
                     }
                     delivered = true;
                 }
@@ -632,37 +553,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     public void cleanChannels() {
         rwLock.writeLock().lock();
         try {
-            if (remotePorts == null) {
-                return;
-            }
-            for (Entry<Port<P>, ChannelCore<P>> e : remotePorts.entrySet()) {
-                Port<P> port = e.getKey();
-                port.removeChannelTo(this);
-                ChannelCore<P> channel = e.getValue();
-                channel.destroy();
-                if (filteredChannels != null) {
-                    filteredChannels.removeChannel(channel);
-                    if (filteredChannels.isEmpty()) {
-                        filteredChannels = null;
-                    }
-                }
-                if (unfilteredChannels != null) {
-                    unfilteredChannels.remove(channel);
-                    if (unfilteredChannels.isEmpty()) {
-                        unfilteredChannels = null;
-                    }
-                }
-                if (allChannels != null) {
-                    allChannels.remove(channel);
-                    if (allChannels.isEmpty()) {
-                        allChannels = null;
-                    }
-                }
-            }
-            if (remotePorts.isEmpty()) {
-                remotePorts = null;
-            }
-
+            selectorChannels.clear();
+            normalChannels.clear();
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -674,7 +566,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     }
 
     private void reflectCMHType(ClassMatchedHandler cmh) {
-        Class cmhType =  reflectEventType(cmh.getClass(), 0);
+        Class cmhType = reflectEventType(cmh.getClass(), 0);
         cmh.setPattern(cmhType);
     }
 
@@ -684,5 +576,34 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     private <E extends Object & KompicsEvent> Class<E> reflectHandlerEventType(Handler<E> handler) {
         return reflectEventType(handler.getClass(), 0);
+    }
+
+    @Override
+    public List<Channel<P>> findChannelsTo(PortCore<P> port) {
+        List<Channel<P>> channels = new ArrayList<Channel<P>>();
+        for (ChannelCore<P> c : normalChannels) {
+            if (this.isPositive) {
+                if (c.hasNegativePort(port)) {
+                    channels.add(c);
+                }
+            } else {
+                if (c.hasPositivePort(port)) {
+                    channels.add(c);
+                }
+            }
+        }
+        for (ChannelCore<?> cnt : selectorChannels) {
+            ChannelCore<P> c = (ChannelCore<P>) cnt; // must be right type...just got lost in the ChannelSelector
+            if (this.isPositive) {
+                if (c.hasNegativePort(port)) {
+                    channels.add(c);
+                }
+            } else {
+                if (c.hasPositivePort(port)) {
+                    channels.add(c);
+                }
+            }
+        }
+        return channels;
     }
 }
