@@ -467,6 +467,22 @@ public abstract class ComponentDefinition {
         public Negative<ControlPort> getControlPort() {
             return ComponentDefinition.this.getControlPort();
         }
+        
+        @Override
+        public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelFactory factory) {
+            return ComponentDefinition.this.connect(positive, negative, factory);
+        }
+        
+        @Override
+        public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, 
+                ChannelSelector<?, ?> selector, ChannelFactory factory) {
+            return ComponentDefinition.this.connect(positive, negative, selector, factory);
+        }
+        
+        @Override
+        public <P extends PortType> void disconnect(Channel<P> c) {
+            ComponentDefinition.this.disconnect(c);
+        }
     };
 
     /* === PRIVATE === */
