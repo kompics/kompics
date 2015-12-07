@@ -23,8 +23,8 @@ package se.sics.kompics;
 /**
  * The <code>ChannelSelector</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 public abstract class ChannelSelector<E extends KompicsEvent, F> {

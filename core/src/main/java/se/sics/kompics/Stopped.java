@@ -22,7 +22,7 @@ package se.sics.kompics;
 
 /**
  *
- * @author Lars Kroll <lkroll@sics.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public final class Stopped implements KompicsEvent {
 

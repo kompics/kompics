@@ -25,7 +25,7 @@ import se.sics.kompics.PortType;
 /**
  * The <code>NetworkControl</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id: NetworkControl.java 3881 2010-12-17 16:19:47Z Cosmin $
  */

@@ -1,10 +1,10 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
- * 
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
+ *
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
+ * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
@@ -20,18 +20,19 @@
  */
 package se.sics.kompics;
 
+import java.util.UUID;
+import se.sics.kompics.config.ConfigUpdate;
+
 /**
- * The <code>LoopbackPort</code> class.
- * 
- * Components can trigger any type of event in any direction on themselves.
- * This is mostly useful for delaying handling (e.g. batching) of events
- * and for interfacing with external systems with their own threads.
- * (Triggering events on ports is thread-safe.)
- * 
- * @author Lars Kroll {@literal <lkroll@kth.se>}
- * @version $Id$
+ *
+ * @author lkroll
  */
-public class LoopbackPort extends PortType {{
-    request(KompicsEvent.class);
-    indication(KompicsEvent.class);
-}}
+class Update implements KompicsEvent {
+    public final ConfigUpdate update;
+    public final UUID forwarder;
+    
+    Update(ConfigUpdate update, UUID forwarder) {
+        this.update = update;
+        this.forwarder = forwarder;
+    }
+}

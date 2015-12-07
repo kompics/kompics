@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.kompics.Component.State;
 import se.sics.kompics.Fault.ResolveAction;
+import se.sics.kompics.config.Config;
+import se.sics.kompics.config.TypesafeConfig;
 import se.sics.kompics.scheduler.ThreadPoolScheduler;
 import se.sics.kompics.scheduler.WorkStealingScheduler;
 
@@ -34,8 +36,8 @@ import se.sics.kompics.scheduler.WorkStealingScheduler;
  * The
  * <code>Kompics</code> class.
  *
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 public final class Kompics {
@@ -55,6 +57,7 @@ public final class Kompics {
         }
     };
     private static FaultHandler faultHandler = defaultFaultHandler;
+    private static Config config;
 
     public static void setScheduler(Scheduler sched) {
         synchronized (obj) {
@@ -92,6 +95,33 @@ public final class Kompics {
     public static FaultHandler getFaultHandler() {
         synchronized (obj) {
             return faultHandler;
+        }
+    }
+
+    public static void setConfig(Config conf) {
+        synchronized (obj) {
+            if (on) {
+                throw new RuntimeException("Kompics already created");
+            }
+            config = conf;
+        }
+    }
+
+    public static void resetConfig() {
+        synchronized (obj) {
+            if (on) {
+                throw new RuntimeException("Kompics already created");
+            }
+            config = TypesafeConfig.load();
+        }
+    }
+
+    public static Config getConfig() {
+        synchronized (obj) {
+            if (config == null) {
+                config = TypesafeConfig.load();
+            }
+            return config;
         }
     }
 

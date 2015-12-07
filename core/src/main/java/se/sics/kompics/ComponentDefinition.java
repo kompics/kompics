@@ -22,13 +22,16 @@ package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
 import java.util.List;
+import java.util.UUID;
 import se.sics.kompics.Fault.ResolveAction;
+import se.sics.kompics.config.Config;
+import se.sics.kompics.config.ConfigUpdate;
 
 /**
  * The <code>ComponentDefinition</code> class.
  *
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 public abstract class ComponentDefinition {
@@ -216,7 +219,7 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link connect(Positive<P>, Negative<P>, ChannelFactory } instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) } instead
      */
     @Deprecated
     protected final <P extends PortType> Channel<P> connect(
@@ -229,7 +232,7 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link connect(Positive<P>, Negative<P>, ChannelFactory } instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) } instead
      */
     @Deprecated
     protected final <P extends PortType> Channel<P> connect(
@@ -242,7 +245,7 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link connect(Positive<P>, Negative<P>, ChannelSelector<?, ?> , ChannelFactory } instead
+     * @deprecated Use {@link  #connect(Positive, Negative, ChannelSelector, ChannelFactory) } instead
      */
     @Deprecated
     protected <P extends PortType> Channel<P> connect(Positive<P> positive,
@@ -255,7 +258,7 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link connect(Positive<P>, Negative<P>, ChannelSelector<?, ?> , ChannelFactory } instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelSelector, ChannelFactory) } instead
      */
     @Deprecated
     protected <P extends PortType> Channel<P> connect(Negative<P> negative,
@@ -287,7 +290,7 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link disconnect(Channel<P>)} or @{@link Channel.disconnect()} instead
+     * @deprecated Use {@link #disconnect(Channel)} or {@link Channel.disconnect()} instead
      */
     @Deprecated
     protected final <P extends PortType> void disconnect(Negative<P> negative,
@@ -305,7 +308,7 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link disconnect(Channel<P>)} or @{@link Channel.disconnect()} instead
+     * @deprecated Use {@link #disconnect(Channel)} or {@link Channel.disconnect()} instead
      */
     @Deprecated
     protected final <P extends PortType> void disconnect(Positive<P> positive,
@@ -333,6 +336,14 @@ public abstract class ComponentDefinition {
 
     public final ComponentCore getComponentCore() {
         return core;
+    }
+    
+    public final Config config() {
+        return core.config();
+    }
+    
+    public final UUID id() {
+        return core.id();
     }
 
     public final void suicide() {
@@ -364,6 +375,40 @@ public abstract class ComponentDefinition {
      */
     public ResolveAction handleFault(Fault fault) {
         return ResolveAction.ESCALATE;
+    }
+    
+    /**
+     * Override for custom update handling.
+     * <p>
+     * Default action is to propagate the original everywhere and apply to self.
+     * <p>
+     * @param update
+     * @return 
+     */
+    public UpdateAction handleUpdate(ConfigUpdate update) {
+        return UpdateAction.DEFAULT;
+    }
+    
+    /**
+     * Override to perform actions after a ConfigUpdate was applied and forwarded.
+     */
+    public void postUpdate() {
+    }
+    
+    public final void updateConfig(ConfigUpdate update) {
+        core.doConfigUpdate(update);
+    }
+    
+    /**
+     * Override to allow components of this type to start their own independent {@link se.sics.kompics.config.Config} id lines.
+     * <p>
+     * This is helpful in simulation, when simulating multiple independent nodes.
+     * Make sure that no {@code ConfigUpdate}s are passed to siblings or parents of such nodes! (Override {@link #handleUpdate(se.sics.kompics.config.ConfigUpdate)})
+     * <p>
+     * @return Whether to create a new config id line for this component (default: {@code true})
+     */
+    public boolean separateConfigId() {
+        return false;
     }
 
     public final ComponentProxy proxy = new ComponentProxy() {

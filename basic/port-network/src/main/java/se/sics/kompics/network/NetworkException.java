@@ -27,7 +27,7 @@ import se.sics.kompics.Event;
 /**
  * The <code>NetworkException</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id: NetworkException.java 636 2009-02-08 01:41:23Z Cosmin $
  */

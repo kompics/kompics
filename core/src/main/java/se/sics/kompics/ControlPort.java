@@ -20,11 +20,12 @@
  */
 package se.sics.kompics;
 
+
 /**
  * The <code>ControlPort</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 public class ControlPort extends PortType {
@@ -36,5 +37,6 @@ public class ControlPort extends PortType {
                 negative(Stopped.class);
 		negative(Started.class);
                 negative(Killed.class);
+                negative(Update.class);
 	}
 }

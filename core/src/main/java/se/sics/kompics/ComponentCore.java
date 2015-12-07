@@ -25,19 +25,22 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import se.sics.kompics.config.Config;
+import se.sics.kompics.config.ConfigUpdate;
 
 /**
  * The <code>ComponentCore</code> class.
  * <p>
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
- * @author Lars Kroll <lkroll@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id: $
  */
 public abstract class ComponentCore implements Component {
 
     private final UUID id = UUID.randomUUID();
     protected ComponentCore parent;
+    protected Config conf;
     public static ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
     protected List<ComponentCore> children = new LinkedList<ComponentCore>();
     ;
@@ -47,6 +50,10 @@ public abstract class ComponentCore implements Component {
 
     public ComponentCore getParent() {
         return parent;
+    }
+
+    public Config config() {
+        return conf;
     }
 
 //    public <P extends PortType> Channel<P> doConnect(Positive<P> positive,
@@ -98,7 +105,6 @@ public abstract class ComponentCore implements Component {
 //        positivePort.removeChannelTo(negativePort);
 //        negativePort.removeChannelTo(positivePort);
 //    }
-
     protected abstract void cleanPorts();
 
     public abstract Negative<ControlPort> createControlPort();
@@ -152,6 +158,8 @@ public abstract class ComponentCore implements Component {
             childrenLock.readLock().unlock();
         }
     }
+
+    abstract void doConfigUpdate(ConfigUpdate update);
 
     public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent);
 
@@ -227,4 +235,5 @@ public abstract class ComponentCore implements Component {
     public Component.State state() {
         return state;
     }
+
 }

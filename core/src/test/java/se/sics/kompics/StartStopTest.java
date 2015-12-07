@@ -14,7 +14,7 @@ import org.junit.runners.JUnit4;
 
 /**
  *
- * @author Lars Kroll <lkroll@sics.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @RunWith(JUnit4.class)
 public class StartStopTest {

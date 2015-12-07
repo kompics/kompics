@@ -26,8 +26,8 @@ import java.util.ArrayDeque;
 /**
  * The <code>Response</code> class.
  *
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  * @deprecated Use {@link Direct.Response} instead if possible.
  */

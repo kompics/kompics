@@ -30,8 +30,8 @@ import se.sics.kompics.Fault.ResolveAction;
  * The
  * <code>SubscribeTest</code> class tests dynamic subscriptions.
  *
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 @SuppressWarnings("unused")

@@ -23,9 +23,9 @@ package se.sics.kompics;
 /**
  * The <code>Init</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
- * @author Lars Kroll <lkroll@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public abstract class Init<T extends ComponentDefinition> {

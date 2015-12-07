@@ -27,8 +27,8 @@ import java.util.UUID;
 /**
  * The <code>Component</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 public interface Component {

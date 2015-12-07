@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 @RunWith(JUnit4.class)
 public class DirectRequestResponseTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MatcherTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DirectRequestResponseTest.class);
 
     private static final BlockingQueue<String> stringQ = new LinkedBlockingQueue<String>();
     private static long timeout = 5000;
@@ -137,13 +137,15 @@ public class DirectRequestResponseTest {
                     Assert.fail("Messages got misordered! Expected " + rcount + " but got " + event.id);
                 }
                 rcount++;
-                if ((rcount == scount) && (scount < num)) {
-                    for (int i = 0; i < batch; i++) {
-                        trigger(new Down(scount), p);
-                        scount++;
+                if (rcount == scount) {
+                    if (scount < num) {
+                        for (int i = 0; i < batch; i++) {
+                            trigger(new Down(scount), p);
+                            scount++;
+                        }
+                    } else {
+                        stringQ.offer(END);
                     }
-                } else {
-                    stringQ.offer(END);
                 }
             }
         };

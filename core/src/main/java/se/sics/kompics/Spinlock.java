@@ -26,8 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * The <code>Spinlock</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 public final class Spinlock {

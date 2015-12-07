@@ -27,12 +27,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import se.sics.kompics.Fault.ResolveAction;
+import se.sics.kompics.config.Config;
+import se.sics.kompics.config.ConfigUpdate;
+import se.sics.kompics.config.ValueMerger;
 
 /**
  * The <code>ComponentCore</code> class.
  * <p>
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @author Lars Kroll <lkr@lars-kroll.com>
  * @version $Id$
  */
@@ -55,17 +58,23 @@ public class JavaComponent extends ComponentCore {
         this.positivePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
         this.negativePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
         this.parent = parentThreadLocal.get();
+        if (this.parent != null) {
+            this.conf = parent.conf.copy(componentDefinition.separateConfigId());
+        } else {
+            this.conf = Kompics.getConfig().copy(componentDefinition.separateConfigId());
+        }
         this.component = componentDefinition;
         parentThreadLocal.set(null);
     }
 
-    public JavaComponent(JavaComponent other) {
-        this.positivePorts = other.positivePorts;
-        this.negativePorts = other.negativePorts;
-        this.parent = other.parent;
-        this.component = other.component;
-        parentThreadLocal.set(null);
-    }
+//    public JavaComponent(JavaComponent other) {
+//        this.positivePorts = other.positivePorts;
+//        this.negativePorts = other.negativePorts;
+//        this.parent = other.parent;
+//        this.conf = other.conf;
+//        this.component = other.component;
+//        parentThreadLocal.set(null);
+//    }
 
     /*
      * (non-Javadoc)
@@ -179,6 +188,8 @@ public class JavaComponent extends ComponentCore {
         negativeControl.doSubscribe(handleKilled);
 
         negativeControl.doInternalSubscribe(handleFault);
+
+        negativeControl.doInternalSubscribe(configHandler);
 
         return negativeControl;
     }
@@ -409,34 +420,12 @@ public class JavaComponent extends ComponentCore {
             // System.exit(1);
         }
     }
-    // fault handler that swallows exceptions and logs them instead of printing
-    // them to stderr and halting
-    // void handleFault(Throwable throwable) {
-    // if (parent != null) {
-    // negativeControl.doTrigger(new Fault(throwable), wid, this);
-    // } else {
-    // StackTraceElement[] stackTrace = throwable.getStackTrace();
-    // Kompics.logger.error("Kompics isolated fault: {}", throwable
-    // .getMessage());
-    // do {
-    // for (int i = 0; i < stackTrace.length; i++) {
-    // Kompics.logger.error("    {}", stackTrace[i]);
-    // }
-    // throwable = throwable.getCause();
-    // if (throwable != null) {
-    // stackTrace = throwable.getStackTrace();
-    // Kompics.logger.error("Caused by: {}: {}", throwable,
-    // throwable.getMessage());
-    // }
-    // } while (throwable != null);
-    // }
-    // }
 
     Handler<Fault> handleFault = new Handler<Fault>() {
 
         @Override
         public void handle(Fault event) {
-            
+
             ResolveAction ra = component.handleFault(event);
             switch (ra) {
                 case RESOLVED:
@@ -457,6 +446,119 @@ public class JavaComponent extends ComponentCore {
             }
         }
     };
+    Handler<Update> configHandler = new Handler<Update>() {
+
+        @Override
+        public void handle(Update event) {
+            UpdateAction action = JavaComponent.this.component.handleUpdate(event.update);
+            switch (action.selfStrategy) {
+                case ORIGINAL:
+                    ((Config.Impl) conf).apply(event.update, action.merger);
+                    break;
+                case MAP:
+                    ((Config.Impl) conf).apply(
+                            action.selfMapper.map(
+                                    event.update,
+                                    event.update.modify(id())
+                            ), action.merger
+                    );
+                    break;
+                case SWALLOW:
+                    break;
+            }
+            if ((parent != null) && (event.forwarder == parent.id())) { // downwards
+                switch (action.downStrategy) {
+                    case ORIGINAL: {
+                        Update forwardedEvent = new Update(event.update, id());
+                        for (Component child : children) {
+                            ((PortCore<ControlPort>) child.getControl()).doTrigger(
+                                    forwardedEvent, wid, component.getComponentCore());
+                        }
+                    }
+                    break;
+                    case MAP: {
+                        ConfigUpdate mappedUpdate = action.downMapper.map(event.update, event.update.modify(id()));
+                        Update forwardedEvent = new Update(mappedUpdate, id());
+                        for (Component child : children) {
+                            ((PortCore<ControlPort>) child.getControl()).doTrigger(
+                                    forwardedEvent, wid, component.getComponentCore());
+                        }
+                    }
+                    break;
+                    case SWALLOW:
+                        break;
+                }
+            } else { // upwards and to other children
+                switch (action.downStrategy) {
+                    case ORIGINAL: {
+                        Update forwardedEvent = new Update(event.update, id());
+                        for (Component child : children) {
+                            if (child.id() != event.forwarder) {
+                                ((PortCore<ControlPort>) child.getControl()).doTrigger(
+                                        forwardedEvent, wid, component.getComponentCore());
+                            }
+                        }
+                    }
+                    break;
+                    case MAP: {
+                        ConfigUpdate mappedUpdate = action.downMapper.map(event.update, event.update.modify(id()));
+                        Update forwardedEvent = new Update(mappedUpdate, id());
+                        for (Component child : children) {
+                            if (child.id() != event.forwarder) {
+                                ((PortCore<ControlPort>) child.getControl()).doTrigger(
+                                        forwardedEvent, wid, component.getComponentCore());
+                            }
+                        }
+                    }
+                    break;
+                    case SWALLOW:
+                        break;
+                }
+                if (parent != null) {
+                    switch (action.upStrategy) {
+                        case ORIGINAL: {
+                            Update forwardedEvent = new Update(event.update, id());
+                            ((PortCore<ControlPort>) parent.getControl()).doTrigger(
+                                    forwardedEvent, wid, component.getComponentCore());
+                        }
+                        break;
+
+                        case MAP: {
+                            ConfigUpdate mappedUpdate = action.upMapper.map(event.update, event.update.modify(id()));
+                            Update forwardedEvent = new Update(mappedUpdate, id());
+                            ((PortCore<ControlPort>) parent.getControl()).doTrigger(
+                                    forwardedEvent, wid, component.getComponentCore());
+                        }
+                        break;
+                        case SWALLOW:
+                            break;
+                    }
+                }
+            }
+            component.postUpdate();
+        }
+    };
+
+    @Override
+    public ComponentDefinition getComponent() {
+        return component;
+    }
+
+    @Override
+    void doConfigUpdate(ConfigUpdate update) {
+        Config.Impl impl = (Config.Impl) conf;
+        impl.apply(update, ValueMerger.NONE);
+        Update forwardedEvent = new Update(update, id());
+        // forward down
+        for (Component child : children) {
+            ((PortCore<ControlPort>) child.getControl()).doTrigger(
+                    forwardedEvent, wid, this);
+        }
+        // forward up
+        ((PortCore<ControlPort>) parent.getControl()).doTrigger(
+                forwardedEvent, wid, this);
+        component.postUpdate();
+    }
     /*
      * === LIFECYCLE ===
      */
@@ -681,12 +783,6 @@ public class JavaComponent extends ComponentCore {
         }
     ;
 
-    };
-
-
-    @Override
-    public ComponentDefinition getComponent() {
-        return component;
-    }
+};
 
 }

@@ -26,8 +26,8 @@ package se.sics.kompics;
  * @deprecated
  * Use {@link se.sics.kompics.KompicsEvent KompicsEvent} instead.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 @Deprecated

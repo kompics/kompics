@@ -25,8 +25,8 @@ import java.util.List;
 /**
  * The <code>PortCore</code> class.
  * <p>
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @author Lars Kroll <lkr@lars-kroll.com>
  * @version $Id: $
  */

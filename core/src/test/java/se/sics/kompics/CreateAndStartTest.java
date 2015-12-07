@@ -29,8 +29,8 @@ import org.junit.Test;
 /**
  * The <code>CreateAndStartTest</code> class tests component creation and start.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 @SuppressWarnings("unused")

@@ -24,8 +24,8 @@ package se.sics.kompics;
 /**
  * The <code>Channel</code> class.
  * <p>
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 public interface Channel<P extends PortType> {
