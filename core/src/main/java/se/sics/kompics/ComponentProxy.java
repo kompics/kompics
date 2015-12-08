@@ -34,19 +34,31 @@ public interface ComponentProxy {
 
     public void destroy(Component component);
 
+    @Deprecated
     public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative);
-
+    
+    @Deprecated
     public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive);
 
+    @Deprecated
     public <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive);
 
+    @Deprecated
     public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative);
 
+    @Deprecated
     public <P extends PortType> Channel<P> connect(Positive<P> positive,
             Negative<P> negative, ChannelSelector<?, ?> filter);
 
+    @Deprecated
     public <P extends PortType> Channel<P> connect(Negative<P> negative,
             Positive<P> positive, ChannelSelector<?, ?> filter);
 
     public Negative<ControlPort> getControlPort();
+    
+    public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelFactory factory);
+
+    public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelSelector<?, ?> selector, ChannelFactory factory);
+
+    public <P extends PortType> void disconnect(Channel<P> c);
 }
