@@ -42,6 +42,7 @@ public abstract class ComponentCore implements Component {
     protected ComponentCore parent;
     protected Config conf;
     public static ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
+    public static ThreadLocal<ConfigUpdate> childUpdate = new ThreadLocal<ConfigUpdate>();
     protected List<ComponentCore> children = new LinkedList<ComponentCore>();
     ;
     protected final ReentrantReadWriteLock childrenLock = new ReentrantReadWriteLock();
@@ -162,6 +163,8 @@ public abstract class ComponentCore implements Component {
     abstract void doConfigUpdate(ConfigUpdate update);
 
     public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent);
+    
+    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent, ConfigUpdate update);
 
     public abstract <P extends PortType> Negative<P> createNegativePort(Class<P> portType);
 

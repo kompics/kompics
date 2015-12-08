@@ -306,7 +306,7 @@ public interface Config {
         public Config copy(boolean newVersionLine) {
             Impl copy;
             if (newVersionLine) {
-                copy = new Impl(baseline, version);
+                copy = new Impl(baseline, version, new AtomicLong(versionFactory.get()));
             } else {
                 copy = new Impl(baseline, version, versionFactory);
             }

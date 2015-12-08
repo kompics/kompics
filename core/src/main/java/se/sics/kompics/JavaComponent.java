@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import se.sics.kompics.Fault.ResolveAction;
 import se.sics.kompics.config.Config;
@@ -62,6 +63,11 @@ public class JavaComponent extends ComponentCore {
             this.conf = parent.conf.copy(componentDefinition.separateConfigId());
         } else {
             this.conf = Kompics.getConfig().copy(componentDefinition.separateConfigId());
+        }
+        if (childUpdate.get() != null) {
+            Config.Impl ci = (Config.Impl) this.conf;
+            ci.apply(childUpdate.get(), ValueMerger.NONE);
+            childUpdate.set(null);
         }
         this.component = componentDefinition;
         parentThreadLocal.set(null);
@@ -206,11 +212,17 @@ public class JavaComponent extends ComponentCore {
 
     @Override
     public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent) {
+        return doCreate(definition, initEvent, null);
+    }
+
+    @Override
+    public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent, ConfigUpdate update) {
         // create an instance of the implementing component type
         ComponentDefinition component;
         childrenLock.writeLock().lock();
         try {
             parentThreadLocal.set(this);
+            childUpdate.set(update);
             component = createInstance(definition, initEvent);
             ComponentCore child = component.getComponentCore();
 
@@ -237,6 +249,7 @@ public class JavaComponent extends ComponentCore {
         }
     }
 
+    
     private <T extends ComponentDefinition> T createInstance(Class<T> definition, Init<T> initEvent) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         if (initEvent == null) {
             return definition.newInstance();
@@ -558,6 +571,22 @@ public class JavaComponent extends ComponentCore {
         ((PortCore<ControlPort>) parent.getControl()).doTrigger(
                 forwardedEvent, wid, this);
         component.postUpdate();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof JavaComponent) {
+            JavaComponent that = (JavaComponent) o;
+            return this.id().equals(that.id());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 11 * hash + Objects.hashCode(this.id());
+        return hash;
     }
     /*
      * === LIFECYCLE ===

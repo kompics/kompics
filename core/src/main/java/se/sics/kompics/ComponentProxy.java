@@ -20,6 +20,8 @@
  */
 package se.sics.kompics;
 
+import java.util.UUID;
+
 /**
  *
  * @author lkroll
@@ -36,7 +38,7 @@ public interface ComponentProxy {
 
     @Deprecated
     public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative);
-    
+
     @Deprecated
     public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive);
 
@@ -55,10 +57,24 @@ public interface ComponentProxy {
             Positive<P> positive, ChannelSelector<?, ?> filter);
 
     public Negative<ControlPort> getControlPort();
-    
+
     public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelFactory factory);
 
     public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelSelector<?, ?> selector, ChannelFactory factory);
 
     public <P extends PortType> void disconnect(Channel<P> c);
+
+    public <E extends KompicsEvent, P extends PortType> void subscribe(Handler<E> handler, Port<P> port);
+
+    public void subscribe(MatchedHandler handler, Port port);
+
+    public void unsubscribe(MatchedHandler handler, Port port);
+
+    public <E extends KompicsEvent, P extends PortType> void unsubscribe(Handler<E> handler, Port<P> port);
+
+    public UUID id();
+
+    public <P extends PortType> Positive<P> getPositive(Class<P> portType);
+
+    public <P extends PortType> Negative<P> getNegative(Class<P> portType);
 }

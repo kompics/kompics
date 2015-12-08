@@ -104,14 +104,6 @@ public abstract class ComponentDefinition {
         req.getOrigin().doTrigger(resp, core.wid, core);
     }
 
-    /**
-     * Expect.
-     *
-     * @param filter the filter
-     */
-    protected final void expect(Filter<?>... filter) {
-        // TODO
-    }
     /* java8
      protected final <E extends KompicsEvent, P extends PortType> Handler<E> handle(Port<P> port, Class<E> type, Consumer<E> fun) {
      Handler<E> handler = new FunctionHandler<>(type, fun);
@@ -127,7 +119,6 @@ public abstract class ComponentDefinition {
      return handle(control, Stop.class, fun);
      }
      */
-
     /**
      * Subscribe.
      *
@@ -136,7 +127,7 @@ public abstract class ComponentDefinition {
      * @throws ConfigurationException
      */
     protected final <E extends KompicsEvent, P extends PortType> void subscribe(
-            Handler<E> handler, Port<P> port) throws ConfigurationException {
+            Handler<E> handler, Port<P> port) {
         if (port instanceof JavaPort) {
             JavaPort<P> p = (JavaPort<P>) port;
             p.doSubscribe(handler);
@@ -149,7 +140,15 @@ public abstract class ComponentDefinition {
     protected final void subscribe(MatchedHandler handler, Port port) {
         if (port instanceof JavaPort) {
             JavaPort p = (JavaPort) port;
-            p.doSubscribe(handler);
+            if (p.owner.equals(this.core)) {
+                p.doSubscribe(handler);
+            } else {
+                throw new ConfigurationException(
+                        "Cannot subscribe Handlers to other component's ports, "
+                        + "since the behaviour of this is unspecifed. "
+                        + "(The handler might be executed on the wrong thrad)");
+            }
+
         } else {
             throw new ConfigurationException("Port (" + port.toString() + " is not an instance of JavaPort!"
                     + "Handler subscription only works in Java");
@@ -209,17 +208,44 @@ public abstract class ComponentDefinition {
             Class<T> definition, Init.None initEvent) {
         return core.doCreate(definition, null);
     }
+    
+    /**
+     * Creates the.
+     *
+     * @param definition the definition
+     * @param initEvent init event to be passed to constructor
+     *
+     * @return the component
+     */
+    protected final <T extends ComponentDefinition> Component create(
+            Class<T> definition, Init<T> initEvent, ConfigUpdate update) {
+        return core.doCreate(definition, initEvent, update);
+    }
+
+    /**
+     * Creates the.
+     *
+     * @param definition the definition
+     * @param initEvent none
+     *
+     * @return the component
+     */
+    protected final <T extends ComponentDefinition> Component create(
+            Class<T> definition, Init.None initEvent, ConfigUpdate update) {
+        return core.doCreate(definition, null, update);
+    }
 
     protected final void destroy(Component component) {
         core.doDestroy(component);
     }
 
     /**
-     * 
+     *
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) } instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) }
+     * instead
      */
     @Deprecated
     protected final <P extends PortType> Channel<P> connect(
@@ -228,11 +254,12 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * 
+     *
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) } instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) }
+     * instead
      */
     @Deprecated
     protected final <P extends PortType> Channel<P> connect(
@@ -241,11 +268,12 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * 
+     *
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link  #connect(Positive, Negative, ChannelSelector, ChannelFactory) } instead
+     * @deprecated Use {@link  #connect(Positive, Negative, ChannelSelector, ChannelFactory)
+     * } instead
      */
     @Deprecated
     protected <P extends PortType> Channel<P> connect(Positive<P> positive,
@@ -254,11 +282,12 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * 
+     *
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #connect(Positive, Negative, ChannelSelector, ChannelFactory) } instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelSelector, ChannelFactory)
+     * } instead
      */
     @Deprecated
     protected <P extends PortType> Channel<P> connect(Negative<P> negative,
@@ -286,11 +315,12 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * 
+     *
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #disconnect(Channel)} or {@link Channel.disconnect()} instead
+     * @deprecated Use {@link #disconnect(Channel)} or
+     * {@link Channel.disconnect()} instead
      */
     @Deprecated
     protected final <P extends PortType> void disconnect(Negative<P> negative,
@@ -304,11 +334,12 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * 
+     *
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #disconnect(Channel)} or {@link Channel.disconnect()} instead
+     * @deprecated Use {@link #disconnect(Channel)} or
+     * {@link Channel.disconnect()} instead
      */
     @Deprecated
     protected final <P extends PortType> void disconnect(Positive<P> positive,
@@ -337,11 +368,11 @@ public abstract class ComponentDefinition {
     public final ComponentCore getComponentCore() {
         return core;
     }
-    
+
     public final Config config() {
         return core.config();
     }
-    
+
     public final UUID id() {
         return core.id();
     }
@@ -376,36 +407,42 @@ public abstract class ComponentDefinition {
     public ResolveAction handleFault(Fault fault) {
         return ResolveAction.ESCALATE;
     }
-    
+
     /**
      * Override for custom update handling.
      * <p>
      * Default action is to propagate the original everywhere and apply to self.
      * <p>
      * @param update
-     * @return 
+     * @return
      */
     public UpdateAction handleUpdate(ConfigUpdate update) {
         return UpdateAction.DEFAULT;
     }
-    
+
     /**
-     * Override to perform actions after a ConfigUpdate was applied and forwarded.
+     * Override to perform actions after a ConfigUpdate was applied and
+     * forwarded.
      */
     public void postUpdate() {
     }
-    
+
     public final void updateConfig(ConfigUpdate update) {
         core.doConfigUpdate(update);
     }
-    
+
     /**
-     * Override to allow components of this type to start their own independent {@link se.sics.kompics.config.Config} id lines.
+     * Override to allow components of this type to start their own independent
+     * {@link se.sics.kompics.config.Config} id lines.
      * <p>
-     * This is helpful in simulation, when simulating multiple independent nodes.
-     * Make sure that no {@code ConfigUpdate}s are passed to siblings or parents of such nodes! (Override {@link #handleUpdate(se.sics.kompics.config.ConfigUpdate)})
+     * This is helpful in simulation, when simulating multiple independent
+     * nodes.
+     * Make sure that no {@code ConfigUpdate}s are passed to siblings or parents
+     * of such nodes! (Override
+     * {@link #handleUpdate(se.sics.kompics.config.ConfigUpdate)})
      * <p>
-     * @return Whether to create a new config id line for this component (default: {@code true})
+     * @return Whether to create a new config id line for this component
+     * (default: {@code true})
      */
     public boolean separateConfigId() {
         return false;
@@ -467,22 +504,58 @@ public abstract class ComponentDefinition {
         public Negative<ControlPort> getControlPort() {
             return ComponentDefinition.this.getControlPort();
         }
-        
+
         @Override
         public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelFactory factory) {
             return ComponentDefinition.this.connect(positive, negative, factory);
         }
-        
+
         @Override
-        public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, 
+        public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative,
                 ChannelSelector<?, ?> selector, ChannelFactory factory) {
             return ComponentDefinition.this.connect(positive, negative, selector, factory);
         }
-        
+
         @Override
         public <P extends PortType> void disconnect(Channel<P> c) {
             ComponentDefinition.this.disconnect(c);
         }
+
+        @Override
+        public <E extends KompicsEvent, P extends PortType> void subscribe(Handler<E> handler, Port<P> port) {
+            ComponentDefinition.this.subscribe(handler, port);
+        }
+
+        @Override
+        public void subscribe(MatchedHandler handler, Port port) {
+            ComponentDefinition.this.subscribe(handler, port);
+        }
+
+        @Override
+        public void unsubscribe(MatchedHandler handler, Port port) {
+            ComponentDefinition.this.unsubscribe(handler, port);
+        }
+
+        @Override
+        public <E extends KompicsEvent, P extends PortType> void unsubscribe(Handler<E> handler, Port<P> port) {
+            ComponentDefinition.this.unsubscribe(handler, port);
+        }
+
+        @Override
+        public UUID id() {
+            return ComponentDefinition.this.id();
+        }
+
+        @Override
+        public <P extends PortType> Positive<P> getPositive(Class<P> portType) {
+            return ComponentDefinition.this.getComponentCore().getPositive(portType);
+        }
+
+        @Override
+        public <P extends PortType> Negative<P> getNegative(Class<P> portType) {
+            return ComponentDefinition.this.getComponentCore().getNegative(portType);
+        }
+
     };
 
     /* === PRIVATE === */
