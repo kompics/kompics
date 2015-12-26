@@ -41,7 +41,7 @@ public abstract class Conversions {
                     return n.longValue();
                 }
                 if (o instanceof String) {
-                    Long.parseLong((String) o);
+                    return Long.parseLong((String) o);
                 }
                 return null;
             }
@@ -61,7 +61,7 @@ public abstract class Conversions {
                     return n.intValue();
                 }
                 if (o instanceof String) {
-                    Integer.parseInt((String) o);
+                    return Integer.parseInt((String) o);
                 }
                 return null;
             }
@@ -81,7 +81,7 @@ public abstract class Conversions {
                     return n.byteValue();
                 }
                 if (o instanceof String) {
-                    Byte.parseByte((String) o);
+                    return Byte.parseByte((String) o);
                 }
                 return null;
             }
@@ -101,7 +101,7 @@ public abstract class Conversions {
                     return n.shortValue();
                 }
                 if (o instanceof String) {
-                    Short.parseShort((String) o);
+                    return Short.parseShort((String) o);
                 }
                 return null;
             }
@@ -121,7 +121,7 @@ public abstract class Conversions {
                     return n.floatValue();
                 }
                 if (o instanceof String) {
-                    Float.parseFloat((String) o);
+                    return Float.parseFloat((String) o);
                 }
                 return null;
             }
@@ -141,7 +141,7 @@ public abstract class Conversions {
                     return n.doubleValue();
                 }
                 if (o instanceof String) {
-                    Double.parseDouble((String) o);
+                    return Double.parseDouble((String) o);
                 }
                 return null;
             }
