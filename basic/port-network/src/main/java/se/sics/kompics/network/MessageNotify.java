@@ -33,19 +33,22 @@ public class MessageNotify {
             return this.getResponse().msgId;
         }
         
-        public void prepareResponse(long time, boolean success) {
+        public void prepareResponse(long time, boolean success, long nanoEnd) {
             this.getResponse().setTime(time);
             this.getResponse().setSuccess(success);
+            this.getResponse().setSendTime(nanoEnd - this.getResponse().getSendTime());
         }
         
-        public void injectSize(int size) {
+        public void injectSize(int size, long nanoStart) {
             this.getResponse().setSize(size);
+            this.getResponse().setSendTime(nanoStart);
         }
     }
     
     public static class Resp implements Direct.Response {
         
         private long time;
+        private long sendTime;
         private int size;
         public final UUID msgId;
         private boolean success = false;
@@ -58,6 +61,10 @@ public class MessageNotify {
             this.time = time;
         }
         
+        /**
+         * 
+         * @return the time when then data was sent in ms
+         */
         public long getTime() {
             return time;
         }
@@ -76,6 +83,17 @@ public class MessageNotify {
         
         public int getSize() {
             return size;
+        }
+
+        /**
+         * @return the time it took to send the data over the wire in ns
+         */
+        public long getSendTime() {
+            return sendTime;
+        }
+
+        void setSendTime(long sendTime) {
+            this.sendTime = sendTime;
         }
     }
 }

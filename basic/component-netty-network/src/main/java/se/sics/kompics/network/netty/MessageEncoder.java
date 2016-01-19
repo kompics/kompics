@@ -61,6 +61,7 @@ public class MessageEncoder extends MessageToMessageEncoder<MessageNotify.Req> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, MessageNotify.Req msgr, List<Object> outL) throws Exception {
+        long startTS = System.nanoTime(); // start measuring here to avoid overestimating the throuhgput
         Msg msg = msgr.msg;
         ByteBuf out = ctx.alloc().buffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
         component.LOG.trace("Trying to encode outgoing data to {} from {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress());
@@ -76,7 +77,7 @@ public class MessageEncoder extends MessageToMessageEncoder<MessageNotify.Req> {
         }
         out.setShort(startIdx, diff);
         //component.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
-        msgr.injectSize(diff);
+        msgr.injectSize(diff, startTS);
         outL.add(out);
     }
 

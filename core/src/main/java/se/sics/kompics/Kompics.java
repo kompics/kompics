@@ -233,6 +233,18 @@ public final class Kompics {
     private Kompics() {
     }
 
+    public static void asyncShutdown() {
+        Runnable r = new Runnable() {
+
+            @Override
+            public void run() {
+                Kompics.shutdown();;
+            }
+        };
+        Thread t = new Thread(r);
+        t.start();
+    }
+
     public static void shutdown() {
         synchronized (obj) {
             if (mainCore != null) {

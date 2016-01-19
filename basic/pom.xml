@@ -20,6 +20,7 @@
 		<module>port-virtual-network</module>
 		<module>component-java-timer</module>
 		<module>component-netty-network</module>
+		<module>data-network-interceptor</module>
 	</modules>
 
 	<repositories>

@@ -311,7 +311,7 @@ public class NettyNetwork extends ComponentDefinition {
                 if (m.getDestination().asSocket().equals(event.isa) && event.protocol == m.getProtocol()) {
                     LOG.warn("Dropping message {} (with notify) because connection could not be established.", m);
                     it.remove();
-                    notify.prepareResponse(System.currentTimeMillis(), false);
+                    notify.prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
                     answer(notify);
                 }
             }
@@ -469,10 +469,10 @@ public class NettyNetwork extends ComponentDefinition {
     }
 
     private ChannelFuture sendUdpMessage(MessageNotify.Req message) {
-        ByteBuf buf = udpChannel.alloc().buffer(INITIAL_BUFFER_SIZE, SEND_BUFFER_SIZE);
+        ByteBuf buf = udpChannel.alloc().ioBuffer(INITIAL_BUFFER_SIZE, SEND_BUFFER_SIZE);
         try {
             Serializers.toBinary(message.msg, buf);
-            message.injectSize(buf.readableBytes());
+            message.injectSize(buf.readableBytes(), System.nanoTime());
             DatagramPacket pack = new DatagramPacket(buf, message.msg.getDestination().asSocket());
             LOG.debug("Sending Datagram message {} ({}bytes)", message.msg, buf.readableBytes());
             return udpChannel.writeAndFlush(pack);
@@ -596,10 +596,10 @@ public class NettyNetwork extends ComponentDefinition {
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
             if (future.isSuccess()) {
-                notify.prepareResponse(System.currentTimeMillis(), true);
+                notify.prepareResponse(System.currentTimeMillis(), true, System.nanoTime());
             } else {
                 LOG.warn("Sending of message {} did not succeed :( : {}", notify.msg, future.cause());
-                notify.prepareResponse(System.currentTimeMillis(), false);
+                notify.prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
             }
             answer(notify);
         }
