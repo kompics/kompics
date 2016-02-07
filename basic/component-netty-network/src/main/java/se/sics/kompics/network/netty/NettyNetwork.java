@@ -42,11 +42,12 @@ import io.netty.channel.udt.nio.NioUdtProvider;
 import io.netty.util.concurrent.Future;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -73,7 +74,6 @@ public class NettyNetwork extends ComponentDefinition {
 
     public static final int STREAM_MAX = 65536;
     public static final int DATAGRAM_MAX = 1500;
-    public final Logger LOG;
     private static final int CONNECT_TIMEOUT_MS = 5000;
     static final int RECV_BUFFER_SIZE = 65536;
     static final int SEND_BUFFER_SIZE = 65536;
@@ -90,6 +90,7 @@ public class NettyNetwork extends ComponentDefinition {
     private final LinkedList<Msg> delayedMessages = new LinkedList<Msg>();
     private final LinkedList<MessageNotify.Req> delayedNotifies = new LinkedList<MessageNotify.Req>();
     private final HashSet<DisambiguateConnection> delayedDisambs = new HashSet<DisambiguateConnection>();
+    private final HashMap<UUID, MessageNotify.Req> awaitingDelivery = new HashMap<UUID, MessageNotify.Req>();
     final ChannelManager channels = new ChannelManager(this);
     private DatagramChannel udpChannel;
     // Info
@@ -104,8 +105,10 @@ public class NettyNetwork extends ComponentDefinition {
     private final long monitoringInterval = 1000; //1s
     final int udtBufferSizes;
     final int udtMSS;
+    public final Logger LOG;
 
     public NettyNetwork(NettyInit init) {
+        // probably useless to set here as it won't be re-read in most JVMs after start
         System.setProperty("java.net.preferIPv4Stack", "true");
 
         self = new NettyAddress(init.self);
@@ -114,34 +117,16 @@ public class NettyNetwork extends ComponentDefinition {
 
         LOG = LoggerFactory.getLogger("NettyNetwork@" + self.getPort());
 
-        String abif = System.getProperty("altBindIf");
-        if (abif != null) {
-            try {
-                alternativeBindIf = InetAddress.getByName(abif);
-            } catch (UnknownHostException ex) {
-                LOG.error("Could not get alternave bind interface {}", abif);
-                throw new RuntimeException(ex);
-            }
-        }
-        String umon = System.getProperty("udtMon");
-        if (umon != null) {
+        // CONFIG
+        alternativeBindIf = config().getValue("netty.bindInterface", InetAddress.class);
+
+        udtMonitoring = config().getValueOrDefault("netty.udt.monitor", false);
+        if (udtMonitoring) {
             LOG.info("UDT monitoring requested.");
-            udtMonitoring = true;
         }
 
-        String ubs = System.getProperty("udtBuffer");
-        if (ubs != null) {
-            udtBufferSizes = Integer.parseInt(ubs);
-        } else {
-            udtBufferSizes = -1; // use default instead
-        }
-
-        String umss = System.getProperty("udtMSS");
-        if (umss != null) {
-            udtMSS = Integer.parseInt(umss);
-        } else {
-            udtMSS = -1; // use default instead
-        }
+        udtBufferSizes = config().getValueOrDefault("netty.udt.buffer", -1);
+        udtMSS = config().getValueOrDefault("netty.udt.mss", -1);
 
 //        if (!self.equals(init.self)) {
 //            LOG.error("Do NOT bind Netty to a virtual address!");
@@ -229,7 +214,7 @@ public class NettyNetwork extends ComponentDefinition {
                 trigger(event, net);
                 return;
             }
-            
+
             if (sendMessage(new MessageNotify.Req(event)) == null) {
                 if (event instanceof DisambiguateConnection) {
                     DisambiguateConnection dc = (DisambiguateConnection) event;
@@ -448,6 +433,17 @@ public class NettyNetwork extends ComponentDefinition {
             channels.flushAndClose(msg, c);
             return;
         }
+        if (message instanceof NotifyAck) {
+            NotifyAck ack = (NotifyAck) message;
+            LOG.trace("Got NotifyAck for {}", ack.id);
+            MessageNotify.Req req = awaitingDelivery.get(ack.id);
+            if (req != null) {
+                answer(req, req.deliveryResponse(System.currentTimeMillis(), true, System.nanoTime()));
+            } else {
+                LOG.warn("Could not find MessageNotify.Req with id: {}!", ack.id);
+            }
+            return;
+        }
         LOG.debug(
                 "Delivering message {} from {} to {} protocol {}",
                 new Object[]{message.toString(), message.getSource(),
@@ -471,7 +467,12 @@ public class NettyNetwork extends ComponentDefinition {
     private ChannelFuture sendUdpMessage(MessageNotify.Req message) {
         ByteBuf buf = udpChannel.alloc().ioBuffer(INITIAL_BUFFER_SIZE, SEND_BUFFER_SIZE);
         try {
-            Serializers.toBinary(message.msg, buf);
+            if (message.notifyOfDelivery) {
+                AckRequestMsg arm = new AckRequestMsg(message.msg, message.getMsgId());
+                Serializers.toBinary(arm, buf);
+            } else {
+                Serializers.toBinary(message.msg, buf);
+            }
             message.injectSize(buf.readableBytes(), System.nanoTime());
             DatagramPacket pack = new DatagramPacket(buf, message.msg.getDestination().asSocket());
             LOG.debug("Sending Datagram message {} ({}bytes)", message.msg, buf.readableBytes());
@@ -490,8 +491,9 @@ public class NettyNetwork extends ComponentDefinition {
         if (c == null) {
             return null;
         }
+        ChannelFuture cf = c.writeAndFlush(message);
         LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{message.msg, c.localAddress(), c.remoteAddress()});
-        return c.writeAndFlush(message);
+        return cf;
     }
 
     private ChannelFuture sendTcpMessage(MessageNotify.Req message) {
@@ -535,6 +537,7 @@ public class NettyNetwork extends ComponentDefinition {
         delayedMessages.clear();
         delayedNotifies.clear();
         delayedDisambs.clear();
+        awaitingDelivery.clear();
 
         long tend = System.currentTimeMillis();
 
@@ -597,6 +600,9 @@ public class NettyNetwork extends ComponentDefinition {
         public void operationComplete(ChannelFuture future) throws Exception {
             if (future.isSuccess()) {
                 notify.prepareResponse(System.currentTimeMillis(), true, System.nanoTime());
+                if (notify.notifyOfDelivery) {
+                    awaitingDelivery.put(notify.getMsgId(), notify);
+                }
             } else {
                 LOG.warn("Sending of message {} did not succeed :( : {}", notify.msg, future.cause());
                 notify.prepareResponse(System.currentTimeMillis(), false, System.nanoTime());

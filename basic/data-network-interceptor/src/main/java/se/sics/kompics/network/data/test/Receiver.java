@@ -48,6 +48,8 @@ import se.sics.kompics.timer.java.JavaTimer;
  */
 public class Receiver {
     
+    public static final int THREADS = Runtime.getRuntime().availableProcessors();
+    
     static {
         Serializers.register(new DataMessageSerialiser(), "dmS");
         Serializers.register(DataMessage.class, "dmS");

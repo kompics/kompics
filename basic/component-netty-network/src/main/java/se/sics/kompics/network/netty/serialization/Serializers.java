@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.sics.kompics.network.netty.AckRequestMsg;
 import se.sics.kompics.network.netty.DirectMessage;
 import se.sics.kompics.network.netty.NettyAddress;
 import se.sics.kompics.network.netty.NettySerializer;
@@ -90,6 +91,7 @@ public abstract class Serializers {
             register(NettyAddress.class, "nettyAddrS");
             register(new NettySerializer(), "nettyS");
             register(DirectMessage.class, "nettyS");
+            register(AckRequestMsg.class, "nettyS");
             register(SpecialSerializers.UUIDSerializer.INSTANCE, "uuidS");
             register(UUID.class, "uuidS");
             register(new JavaSerializer(ClassResolvers.softCachingConcurrentResolver(ClassLoader.getSystemClassLoader())), "javaS");

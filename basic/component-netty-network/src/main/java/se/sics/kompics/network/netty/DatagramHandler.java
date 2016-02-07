@@ -20,10 +20,13 @@
  */
 package se.sics.kompics.network.netty;
 
+import com.google.common.base.Optional;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
+import java.util.UUID;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 import se.sics.kompics.network.netty.serialization.Serializers;
@@ -34,23 +37,39 @@ import se.sics.kompics.network.netty.serialization.Serializers;
  */
 @ChannelHandler.Sharable
 public class DatagramHandler extends BaseHandler<DatagramPacket> {
-    
+
     public DatagramHandler(NettyNetwork component, Transport protocol) {
         super(component, protocol);
     }
-    
+
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         try {
-            Object m = Serializers.fromBinary(msg.content(), msg);
-            if (m instanceof Msg) {
-                component.deliverMessage((Msg) m, ctx.channel());
+            UUID id = (UUID) Serializers.fromBinary(msg.content(), Optional.absent());
+            Object o = Serializers.fromBinary(msg.content(), msg);
+
+            if (o instanceof AckRequestMsg) {
+                AckRequestMsg arm = (AckRequestMsg) o;
+                component.deliverMessage(arm.content, ctx.channel());
+                if (id != null) {
+                    ByteBuf buf = ctx.alloc().ioBuffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
+                    NotifyAck ack = arm.reply();
+                    Serializers.toBinary(ack, buf);
+                    DatagramPacket pack = new DatagramPacket(buf, ack.getDestination().asSocket());
+                    component.LOG.trace("Sending Datagram ACK {} ({}bytes)", ack, buf.readableBytes());
+                    ctx.writeAndFlush(pack);
+                }
+            }
+            if (o instanceof Msg) {
+                Msg m = (Msg) o;
+                component.deliverMessage(m, ctx.channel());
             } else {
-                component.LOG.warn("Got unexpected Datagram message type: {} -> {}", m.getClass().getCanonicalName(), m);
+                component.LOG.warn("Got unexpected Datagram message type: {} -> {}", o.getClass().getCanonicalName(), o);
             }
         } catch (Exception e) { // Catch anything...the Serializer could throw any kind of weird exception if you get message that were send by someone else
-            component.LOG.warn("Got weird Datagram message, ignoring it: {}", ByteBufUtil.hexDump(msg.content()));            
+            component.LOG.warn("Got weird Datagram message, ignoring it: {}", ByteBufUtil.hexDump(msg.content()));
+            component.LOG.trace("Exception was: \n{}", e);
         }
     }
-    
+
 }

@@ -21,6 +21,8 @@
 package se.sics.kompics.config;
 
 import com.google.common.collect.HashMultimap;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  *
@@ -213,6 +215,37 @@ public abstract class Conversions {
             }
         };
         converters.put(boolConv.type(), boolConv);
+        
+        // InetAddress
+        Converter<InetAddress> inetConv = new Converter<InetAddress>() {
+
+            @Override
+            public InetAddress convert(Object o) {
+                if (o instanceof String) {
+                    String s = (String) o;
+                    try {
+                        return InetAddress.getByName(s);
+                    } catch (UnknownHostException ex) {
+                        return null;
+                    }
+                }
+                if (o instanceof byte[]) {
+                    byte[] b = (byte[]) o;
+                    try {
+                        return InetAddress.getByAddress(b);
+                    } catch (UnknownHostException ex) {
+                        return null;
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public Class<InetAddress> type() {
+                return InetAddress.class;
+            }
+        };
+        converters.put(inetConv.type(), inetConv);
     }
 
     public static <T> T convert(Object o, Class<T> type) {

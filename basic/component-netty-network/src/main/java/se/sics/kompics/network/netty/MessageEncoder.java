@@ -33,7 +33,7 @@ import se.sics.kompics.network.netty.serialization.Serializers;
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class MessageEncoder extends MessageToMessageEncoder<MessageNotify.Req> {
-
+    
     private static final byte[] LENGTH_PLACEHOLDER = new byte[2];
     
     private final NettyNetwork component;
@@ -58,18 +58,29 @@ public class MessageEncoder extends MessageToMessageEncoder<MessageNotify.Req> {
 //        out.setShort(startIdx, diff);
 //        NettyNetwork.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
 //    }
-
     @Override
     protected void encode(ChannelHandlerContext ctx, MessageNotify.Req msgr, List<Object> outL) throws Exception {
         long startTS = System.nanoTime(); // start measuring here to avoid overestimating the throuhgput
         Msg msg = msgr.msg;
         ByteBuf out = ctx.alloc().buffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
-        component.LOG.trace("Trying to encode outgoing data to {} from {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress());
+        component.LOG.trace("Trying to encode outgoing data to {} from {}: {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress(), msgr.msg.getClass());
         int startIdx = out.writerIndex();
         out.writeBytes(LENGTH_PLACEHOLDER);
-
-        Serializers.toBinary(msg, out);
-
+        
+        try {
+            if (msgr.notifyOfDelivery) {
+                component.LOG.trace("Serialising message with AckRequest: {}", msgr.getMsgId());
+                AckRequestMsg arm = new AckRequestMsg(msgr.msg, msgr.getMsgId());
+                Serializers.toBinary(arm, out);
+            } else {
+                Serializers.toBinary(msgr.msg, out);
+            }
+        } catch (Throwable e) {
+            component.LOG.warn("There was a problem serialising {}: \n --> {}", msgr, e);
+            e.printStackTrace(System.err);
+            throw e;
+        }
+        
         int endIdx = out.writerIndex();
         int diff = endIdx - startIdx - LENGTH_PLACEHOLDER.length;
         if (diff > 65532) { //2^16 - 2bytes for the length header (snappy wants no more than 65536 bytes uncompressed)
@@ -80,5 +91,5 @@ public class MessageEncoder extends MessageToMessageEncoder<MessageNotify.Req> {
         msgr.injectSize(diff, startTS);
         outL.add(out);
     }
-
+    
 }

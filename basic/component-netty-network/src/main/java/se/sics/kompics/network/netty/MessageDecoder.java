@@ -24,6 +24,8 @@ import com.google.common.base.Optional;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import se.sics.kompics.network.MessageNotify;
+import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.netty.serialization.Serializers;
 
 /**
@@ -31,30 +33,41 @@ import se.sics.kompics.network.netty.serialization.Serializers;
  * @author Lars Kroll <lkroll@kth.se>
  */
 public class MessageDecoder extends LengthFieldBasedFrameDecoder {
-    
+
     private final NettyNetwork component;
-    
+
     public MessageDecoder(NettyNetwork component) {
-        super(65532, 0, 2, 0 , 2);
+        super(65532, 0, 2, 0, 2);
         this.component = component;
     }
-    
+
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
         ByteBuf frame = (ByteBuf) super.decode(ctx, in);
         if (frame == null) {
             return null;
         }
-        
+
         component.LOG.trace("Trying to decode incoming {} bytes of data from {} to {}.", new Object[]{frame.readableBytes(), ctx.channel().remoteAddress(), ctx.channel().localAddress()});
         Object o = Serializers.fromBinary(frame, Optional.absent());
-        component.LOG.trace("Decoded incoming data from {}: ", ctx.channel().remoteAddress(), o);
+        component.LOG.trace("Decoded incoming data from {}: {}", ctx.channel().remoteAddress(), o);
+        if (o instanceof AckRequestMsg) {
+            AckRequestMsg arm = (AckRequestMsg) o;
+            component.LOG.trace("Got AckRequest for {}. Replying...", arm.id);
+            NotifyAck an = arm.reply();
+            ctx.channel().writeAndFlush(MessageNotify.create(an));
+            return arm.content;
+        } else if (o instanceof Msg) {
+            return o;
+        } else {
+            component.LOG.warn("Got unexpected Stream message type: {} -> {}", o.getClass().getCanonicalName(), o);
+        }
         return o;
     }
-    
+
     @Override
     protected ByteBuf extractFrame(ChannelHandlerContext ctx, ByteBuf buffer, int index, int length) {
         return buffer.slice(index, length);
     }
-    
+
 }

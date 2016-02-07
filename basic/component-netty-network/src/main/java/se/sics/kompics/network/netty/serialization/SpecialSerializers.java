@@ -29,6 +29,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
+import se.sics.kompics.network.Address;
 import se.sics.kompics.network.Transport;
 import se.sics.kompics.network.netty.DirectMessage;
 import se.sics.kompics.network.netty.NettyAddress;
@@ -100,7 +101,7 @@ public abstract class SpecialSerializers {
 
         @Override
         public void toBinary(Object o, ByteBuf buf) {
-            NettyAddress addr = (NettyAddress) o;
+            Address addr = (Address) o;
             if (addr == null) {
                 buf.writeInt(0); //simply put four 0 bytes since 0.0.0.0 is not a valid host ip
                 return;

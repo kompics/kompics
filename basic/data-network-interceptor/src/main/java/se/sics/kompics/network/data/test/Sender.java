@@ -64,7 +64,7 @@ public class Sender {
         InetAddress ip2 = InetAddress.getByName(args[2]);
         int port2 = Integer.parseInt(args[3]);
         Address targetAddress = new NettyAddress(ip2, port2);
-        Kompics.createAndStart(Parent.class, new Parent.Init(selfAddress, targetAddress), 2, 50);
+        Kompics.createAndStart(Parent.class, new Parent.Init(selfAddress, targetAddress), Receiver.THREADS, 50);
     }
 
     public static class Parent extends ComponentDefinition {
@@ -103,7 +103,7 @@ public class Sender {
 
     public static class SenderC extends ComponentDefinition {
 
-        private static final int DATA_VOLUME = 1000; // in #Messages
+        private static final int DATA_VOLUME = 10000; // in #Messages
 
         final Positive<Network> net = requires(Network.class);
 
@@ -143,7 +143,7 @@ public class Sender {
                     byte[] blob = new byte[DataMessage.MESSAGE_SIZE];
                     System.arraycopy(data, i, blob, 0, DataMessage.MESSAGE_SIZE);
                     Data msg = new Data(selfAddress, targetAddress, Transport.DATA, i, DATA_VOLUME, blob);
-                    MessageNotify.Req req = MessageNotify.create(msg);
+                    MessageNotify.Req req = MessageNotify.createWithDeliveryNotification(msg);
                     trigger(req, net);
                     outstanding.put(req.getMsgId(), msg);
                 }
@@ -155,9 +155,25 @@ public class Sender {
 
             @Override
             public void handle(MessageNotify.Resp event) {
-                Data dm = outstanding.remove(event.msgId);
+                Data dm = outstanding.get(event.msgId);
                 if (dm != null) {
-                    System.out.println("Message #" + dm.pos + " was sent.");
+                    switch (event.getState()) {
+                        case SENT: {
+                            System.out.println("Message #" + dm.pos + " was sent.");
+                        }
+                        break;
+                        case DELIVERED: {
+                            System.out.println("Message #" + dm.pos + " was delivered.");
+                            outstanding.remove(event.msgId);
+                        }
+                        break;
+                        default: {
+                            System.out.println("Message #" + dm.pos + " encountered a problem!");
+                            outstanding.remove(event.msgId);
+                        }
+                        break;
+                    }
+                    
                     if (outstanding.isEmpty()) {
                         long endTS = System.currentTimeMillis();
                         double diff = ((double) endTS - startTS) / 1000.0;
