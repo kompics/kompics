@@ -25,6 +25,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.UnsignedBytes;
 import io.netty.buffer.ByteBuf;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,11 +108,7 @@ public abstract class SpecialSerializers {
                 return;
             }
 
-            buf.writeBytes(addr.getIp().getAddress());
-            // Write ports as 2 bytes instead of 4
-            byte[] portBytes = Ints.toByteArray(addr.getPort());
-            buf.writeByte(portBytes[2]);
-            buf.writeByte(portBytes[3]);
+            socketToBinary(addr.asSocket(), buf);
         }
 
         @Override
@@ -134,6 +131,30 @@ public abstract class SpecialSerializers {
             
 
             return new NettyAddress(ip, port);
+        }
+        
+        public void socketToBinary(InetSocketAddress isa, ByteBuf buf) {
+            buf.writeBytes(isa.getAddress().getAddress());
+            // Write ports as 2 bytes instead of 4
+            byte[] portBytes = Ints.toByteArray(isa.getPort());
+            buf.writeByte(portBytes[2]);
+            buf.writeByte(portBytes[3]);
+        }
+        
+        public InetSocketAddress socketFromBinary(ByteBuf buf) {
+            byte[] ipBytes = new byte[4];
+            buf.readBytes(ipBytes);
+            InetAddress ip;
+            try {
+                ip = InetAddress.getByAddress(ipBytes);
+            } catch (UnknownHostException ex) {
+                Serializers.LOG.error("AddressSerializer: Could not create InetAddress.", ex);
+                return null;
+            }
+            byte portUpper = buf.readByte();
+            byte portLower = buf.readByte();
+            int port = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
+            return new InetSocketAddress(ip, port);
         }
 
     }

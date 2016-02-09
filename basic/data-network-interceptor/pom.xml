@@ -51,6 +51,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>1.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-netty-network</artifactId>
             <version>0.9.1-SNAPSHOT</version>
