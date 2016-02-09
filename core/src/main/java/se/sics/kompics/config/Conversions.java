@@ -215,7 +215,7 @@ public abstract class Conversions {
             }
         };
         converters.put(boolConv.type(), boolConv);
-        
+
         // InetAddress
         Converter<InetAddress> inetConv = new Converter<InetAddress>() {
 
@@ -223,9 +223,13 @@ public abstract class Conversions {
             public InetAddress convert(Object o) {
                 if (o instanceof String) {
                     String s = (String) o;
-                    try {
-                        return InetAddress.getByName(s);
-                    } catch (UnknownHostException ex) {
+                    if (!s.isEmpty()) {
+                        try {
+                            return InetAddress.getByName(s);
+                        } catch (UnknownHostException ex) {
+                            return null;
+                        }
+                    } else {
                         return null;
                     }
                 }

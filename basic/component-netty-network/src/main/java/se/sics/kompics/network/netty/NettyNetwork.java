@@ -20,6 +20,7 @@
  */
 package se.sics.kompics.network.netty;
 
+import com.google.common.base.Optional;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -118,7 +119,11 @@ public class NettyNetwork extends ComponentDefinition {
         LOG = LoggerFactory.getLogger("NettyNetwork@" + self.getPort());
 
         // CONFIG
-        alternativeBindIf = config().getValue("netty.bindInterface", InetAddress.class);
+        Optional<InetAddress> abiO = config().readValue("netty.bindInterface", InetAddress.class);
+        if (abiO.isPresent()) {
+            alternativeBindIf = abiO.get();
+        }
+        LOG.info("Alternative Bind Interface set to {}", alternativeBindIf);
 
         udtMonitoring = config().getValueOrDefault("netty.udt.monitor", false);
         if (udtMonitoring) {
