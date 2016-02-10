@@ -20,6 +20,7 @@
  */
 package se.sics.kompics.network.data.policies;
 
+import org.jscience.mathematics.number.Rational;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 
@@ -29,6 +30,6 @@ import se.sics.kompics.network.Transport;
  * @param <M> the type of message the policy deals with
  */
 public interface ProtocolSelectionPolicy<M extends Msg> {
-    public void updateRatio(float ratio);
+    public void updateRatio(Rational ratio);
     public Transport select(M msg);
 }

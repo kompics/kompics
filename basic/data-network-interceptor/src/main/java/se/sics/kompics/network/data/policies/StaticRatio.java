@@ -20,6 +20,8 @@
  */
 package se.sics.kompics.network.data.policies;
 
+import org.jscience.mathematics.number.Rational;
+
 /**
  *
  * @author lkroll
@@ -28,26 +30,41 @@ public abstract class StaticRatio {
     public static class TCP implements ProtocolRatioPolicy {
 
         @Override
-        public float update(double throughput, double deliveryLatency) {
-            return -1.0f;
+        public Rational update(double throughput, double deliveryLatency) {
+            return Rational.ONE.opposite();
         }
+
+        @Override
+        public void initialState(Rational initState) {
+            // ignore
+        }
+
         
     }
     
     public static class UDT implements ProtocolRatioPolicy {
 
         @Override
-        public float update(double throughput, double deliveryLatency) {
-            return 1.0f;
+        public Rational update(double throughput, double deliveryLatency) {
+            return Rational.ONE;
         }
         
+        @Override
+        public void initialState(Rational initState) {
+            // ignore
+        }
     }
     
     public static class FiftyFifty implements ProtocolRatioPolicy {
 
         @Override
-        public float update(double throughput, double deliveryLatency) {
-            return 0.0f;
+        public Rational update(double throughput, double deliveryLatency) {
+            return Rational.ZERO;
+        }
+        
+        @Override
+        public void initialState(Rational initState) {
+            // ignore
         }
         
     }

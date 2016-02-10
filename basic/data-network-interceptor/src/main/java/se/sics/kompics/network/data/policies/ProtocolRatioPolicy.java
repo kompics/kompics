@@ -20,6 +20,8 @@
  */
 package se.sics.kompics.network.data.policies;
 
+import org.jscience.mathematics.number.Rational;
+
 /**
  *
  * @author lkroll
@@ -34,5 +36,7 @@ public interface ProtocolRatioPolicy {
      * @param deliveryLatency average delivery latency since last update call
      * @return the ratio between TCP and UDT
      */
-    public float update(double throughput, double deliveryLatency);
+    public Rational update(double throughput, double deliveryLatency);
+    
+    public void initialState(Rational initState);
 }

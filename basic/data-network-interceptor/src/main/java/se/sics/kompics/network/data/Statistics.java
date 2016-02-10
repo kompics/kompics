@@ -28,6 +28,9 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
  */
 public class Statistics {
 
+    public static final double NANOSEC = 1e9;
+    public static final double KILOBYTE = 1024.0;
+    
     private SummaryStatistics delTime = new SummaryStatistics();
     private SummaryStatistics size = new SummaryStatistics();
     private boolean updated = false;
@@ -49,8 +52,8 @@ public class Statistics {
 
         if (lastPrintTS > 0) {
             long diffL = System.nanoTime() - lastPrintTS;
-            double diffD = ((double) diffL) / 10e9;
-            double accumD = ((double) sizeAccum) / 1024.0;
+            double diffD = ((double) diffL) / NANOSEC;
+            double accumD = ((double) sizeAccum) / KILOBYTE;
             double tp = accumD / diffD;
             approxThroughput.addValue(tp);
         }
@@ -82,7 +85,7 @@ public class Statistics {
     }
 
     void update(double delTD, int msgSize) {
-        double sizeD = msgSize / 1024.0; // kb
+        double sizeD = msgSize / KILOBYTE; // kb
         size.addValue(sizeD);
         delTime.addValue(delTD);
         sizeAccum += msgSize;

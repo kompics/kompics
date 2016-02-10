@@ -176,7 +176,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
                     break;
                     case DELIVERED: {
                         LOG.trace("Got a delivery notify: {}", event);
-                        double dt = ((double) event.getDeliveryTime()) / (1e9);
+                        double dt = ((double) event.getDeliveryTime()) / Statistics.NANOSEC;
                         tm.connection.stats.update(dt, event.getSize());
                         if (tm.originalRequest.isPresent()) {
                             MessageNotify.Req or = tm.originalRequest.get();

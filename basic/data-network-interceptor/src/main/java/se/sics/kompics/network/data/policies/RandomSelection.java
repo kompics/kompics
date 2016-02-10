@@ -21,6 +21,7 @@
 package se.sics.kompics.network.data.policies;
 
 import java.util.Random;
+import org.jscience.mathematics.number.Rational;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 
@@ -34,8 +35,8 @@ public class RandomSelection implements ProtocolSelectionPolicy {
     private final Random rand = new Random(1);
 
     @Override
-    public void updateRatio(float ratio) {
-        this.ratio = ((((double) ratio) + 1.0) / 2.0);
+    public void updateRatio(Rational ratio) {
+        this.ratio = (((ratio.doubleValue()) + 1.0) / 2.0);
     }
 
     @Override

@@ -23,6 +23,8 @@ package se.sics.kompics.network.data;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import org.javatuples.Pair;
+import org.jscience.mathematics.number.LargeInteger;
+import org.jscience.mathematics.number.Rational;
 import static se.sics.kompics.network.data.DataStreamInterceptor.LOG;
 import se.sics.kompics.network.data.policies.ProtocolRatioPolicy;
 import se.sics.kompics.network.data.policies.ProtocolSelectionPolicy;
@@ -40,7 +42,7 @@ class ConnectionTracker {
     final Statistics stats = new Statistics();
     final ProtocolRatioPolicy ratioPolicy;
     final ProtocolSelectionPolicy selectionPolicy;
-    private float ratio;
+    private Rational ratio;
 
     ConnectionTracker(InetSocketAddress target, ProtocolSelectionPolicy psp, ProtocolRatioPolicy prp) {
         this.target = target;
@@ -50,12 +52,12 @@ class ConnectionTracker {
         selectionPolicy.updateRatio(ratio);
     }
 
-    ConnectionTracker(InetSocketAddress target, float initialRatio, ProtocolSelectionPolicy psp, ProtocolRatioPolicy prp) {
+    ConnectionTracker(InetSocketAddress target, Rational initialRatio, ProtocolSelectionPolicy psp, ProtocolRatioPolicy prp) {
         this.target = target;
         this.ratioPolicy = prp;
         this.selectionPolicy = psp;
         this.ratio = initialRatio;
-        //ratio = ratioPolicy.update(stats.avgThroughputApproximation(), stats.avgDeliveryTime());
+        ratioPolicy.initialState(ratio);
         selectionPolicy.updateRatio(ratio);
     }
 
@@ -64,7 +66,7 @@ class ConnectionTracker {
             stats.endWindow();
             ratio = ratioPolicy.update(stats.avgThroughputApproximation(), stats.avgDeliveryTime());
             selectionPolicy.updateRatio(ratio);
-            LOG.info("Current Stats to {}: { \n {} \n }", target, stats);
+            LOG.info("Current Stats to {}: ratio={}, { \n {} \n }", new Object[]{target, ratio, stats});
         } else {
             stats.endWindow(); // NOTE: can be an issue with really low throughput (below message size/windowLenth)
         }
@@ -72,21 +74,43 @@ class ConnectionTracker {
 
     void serialise(ByteBuf buf) {
         addrS.socketToBinary(target, buf);
-        buf.writeFloat(ratio);
+        writeRational(buf, ratio);
     }
 
     static ConnectionTracker fromBinary(ByteBuf buf, ProtocolSelectionPolicy psp, ProtocolRatioPolicy prp) {
         InetSocketAddress target = addrS.socketFromBinary(buf);
         ConnectionTracker ct = new ConnectionTracker(target, psp, prp);
-        ct.ratio = buf.readFloat();
+        ct.ratio = readRational(buf);
         ct.selectionPolicy.updateRatio(ct.ratio);
         return ct;
     }
 
-    static Pair<InetSocketAddress, Float> fromBinary(ByteBuf buf) {
+    static Pair<InetSocketAddress, Rational> fromBinary(ByteBuf buf) {
         InetSocketAddress target = addrS.socketFromBinary(buf);
-        float ratio = buf.readFloat();
+        Rational ratio = readRational(buf);
         return Pair.with(target, ratio);
+    }
+    
+    private static Rational readRational(ByteBuf buf) {
+        int length = buf.readInt();
+        byte[] data = new byte[length];
+        buf.readBytes(data);
+        int divisorLength = buf.readInt();
+        LargeInteger divisor = LargeInteger.valueOf(data, 0, divisorLength);
+        LargeInteger dividend = LargeInteger.valueOf(data, divisorLength, length-divisorLength);
+        return Rational.valueOf(dividend, divisor);
+    }
+    
+    private static void writeRational(ByteBuf buf, Rational r) {
+        LargeInteger divisor = r.getDivisor();
+        LargeInteger dividend = r.getDividend();
+        int byteLength = (divisor.bitLength() >> 3) + (dividend.bitLength() >> 3) + 2;
+        byte[] data = new byte[byteLength];
+        int written = divisor.toByteArray(data, 0);
+        int total = dividend.toByteArray(data, written);
+        buf.writeInt(total);
+        buf.writeInt(written);
+        buf.writeBytes(data, 0, total);
     }
 
 }

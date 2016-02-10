@@ -23,6 +23,7 @@ package se.sics.kompics.network.data;
 import com.google.common.base.Optional;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
+import org.jscience.mathematics.number.Rational;
 import se.sics.kompics.network.data.policies.ProtocolRatioPolicy;
 import se.sics.kompics.network.data.policies.ProtocolSelectionPolicy;
 import se.sics.kompics.network.data.policies.RandomSelection;
@@ -41,10 +42,11 @@ class ConnectionFactory {
     private final Class selectionPolicy; // should be Class<ProtocolRatioPolicy> but Java's generics are stupid
 
     ConnectionFactory(Optional<String> ratioPolicyS, Optional<String> selectionPolicyS) {
-        DataStreamInterceptor.LOG.info("RatioPolicy: {}", StaticRatio.FiftyFifty.class.getCanonicalName());
         if (ratioPolicyS.isPresent()) {
             try {
                 ratioPolicy = classLoader.loadClass(ratioPolicyS.get());
+
+                DataStreamInterceptor.LOG.info("Using RatioPolicy: {}", ratioPolicy.getName());
             } catch (Throwable ex) {
                 DataStreamInterceptor.LOG.error("Could not find ratio policy.", ex);
                 throw new RuntimeException(ex);
@@ -56,6 +58,7 @@ class ConnectionFactory {
         if (selectionPolicyS.isPresent()) {
             try {
                 selectionPolicy = classLoader.loadClass(selectionPolicyS.get());
+                DataStreamInterceptor.LOG.info("Using SelectionPolicy: {}", selectionPolicy.getName());
             } catch (Throwable ex) {
                 DataStreamInterceptor.LOG.error("Could not find selection policy.", ex);
                 throw new RuntimeException(ex);
@@ -88,7 +91,7 @@ class ConnectionFactory {
         }
     }
 
-    ConnectionTracker newConnection(InetSocketAddress target, float initialRatio) {
+    ConnectionTracker newConnection(InetSocketAddress target, Rational initialRatio) {
         try {
             ProtocolSelectionPolicy psp = (ProtocolSelectionPolicy) selectionPolicy.newInstance();
             ProtocolRatioPolicy prp = (ProtocolRatioPolicy) ratioPolicy.newInstance();
