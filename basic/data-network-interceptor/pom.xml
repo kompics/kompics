@@ -57,6 +57,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>com.larskroll</groupId>
+            <artifactId>common-utils</artifactId>
+            <version>1.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.ujmp</groupId>
             <artifactId>ujmp-core</artifactId>
             <version>0.3.0</version>

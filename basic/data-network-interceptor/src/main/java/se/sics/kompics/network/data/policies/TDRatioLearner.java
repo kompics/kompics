@@ -20,6 +20,12 @@
  */
 package se.sics.kompics.network.data.policies;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 import org.jscience.mathematics.number.LargeInteger;
 import org.jscience.mathematics.number.Rational;
@@ -41,32 +47,35 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
 
     private static final Logger LOG = LoggerFactory.getLogger(TDRatioLearner.class);
 
-    private final double alpha = 0.1;
-    private final double gamma = 0.1;
+    private final Config config;
+    private final double alpha;
+    private final double gamma;
+    private final double lambda = 0.1;
     private final Rational stepSize;
     private int state;
     private final int[] actions;
-    private final Matrix actionStateValues; // Q(s, a)
-    private final int stateMiddleIndex;  // 50/50 point
-    private final int stateUpperBound; // 1 point
+    private final ActionValueEstimator Q;
     private final DerivedPolicy policy;
     private int lastAction;
     private int lastState;
 
-    public TDRatioLearner(Config config) {
-        this(); // fix later^^
-    }
-
-    public TDRatioLearner() {
+    public TDRatioLearner(Config conf) {
+        config = conf;
+        alpha = config.getValue("kompics.net.data.td.alpha", Double.class);
+        gamma = config.getValue("kompics.net.data.td.gamma", Double.class);
+        long iStepSize = config.getValue("kompics.net.data.td.stepSize", Long.class);
+        stepSize = Rational.valueOf(1, iStepSize);
+        List<Integer> basicActions = config.getValues("kompics.net.data.td.actions", Integer.class);
+        actions = completeActions(basicActions);
+        ActionValueEstimator.Implementation qImpl
+                = ActionValueEstimator.Implementation.valueOf(
+                        config.getValue("kompics.net.data.td.actionValueEstimator", String.class));
+        Q = (new AVEFactory()).getInstance(qImpl, stepSize);
+        LOG.trace("Initialised TD with actions {}, and {} states, stepSize {}",
+                new Object[]{Arrays.toString(actions), Q.numStates(), stepSize});
         policy = new EpsilonGreedy();
-        actions = new int[]{-2, -1, 0, 1, 2};
-        lastAction = 2; // always start off with 0 movement
-        stepSize = Rational.valueOf(1, 5);
-        actionStateValues = initialiseMatrix(actions, stepSize);
-        int rows = (int) actionStateValues.getRowCount();
-        stateMiddleIndex = (int) (rows / 2);
-        stateUpperBound = rows - 1; // adjust for 0-indexing
-        state = stateMiddleIndex;
+        lastAction = actions[actions.length / 2]; // always start off with 0 movement
+        state = Q.middleState();
         lastState = state; // because last action is 0 movement
     }
 
@@ -81,18 +90,17 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         int sPrime = state;
         double r = throughput;
         int aPrime = policy.chooseAction();
-        Matrix Q = actionStateValues;
-        double Qsa = Q.getAsDouble(s, a);
-        double gammaQsPrimeaPrime = gamma * Q.getAsDouble(sPrime, aPrime);
+        double Qsa = Q.at(s, a);
+        double gammaQsPrimeaPrime = gamma * Q.at(sPrime, aPrime);
         double alphaBlock = alpha * (r + gammaQsPrimeaPrime - Qsa);
         double newQsa = Qsa + alphaBlock;
-        Q.setAsDouble(newQsa, s, a);
+        Q.set(newQsa, s, a);
         // update stuff
         lastState = sPrime;
         lastAction = aPrime;
         state = applyAction(aPrime, sPrime);
         Rational ratio = stateToRatio(state);
-        LOG.info("Updated learner: r={}, s={}, a={}, s'={}, a'={}, s''={} ({})", new Object[]{r, s, a, sPrime, aPrime, state, ratio});
+        LOG.info("Updated learner: r={}, s={}, a={}, s'={}, a'={}, s''={} ({}), Q={}", new Object[]{r, s, a, sPrime, aPrime, state, ratio, Q});
         return ratio;
     }
 
@@ -105,7 +113,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
 
         // bound at the edges
         if (ratio.isGreaterThan(Rational.ONE)) {
-            return (int) (stateUpperBound);
+            return (int) (Q.maxState());
         }
         if (ratio.isLessThan(Rational.ONE.inverse())) {
             return 0;
@@ -114,11 +122,11 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         LargeInteger rq = ratio.getDividend().times(stepSize.getDividend());
         Rational rqs = Rational.valueOf(rq, ratio.getDivisor());
         int p = rqs.round().intValue();
-        return p + stateMiddleIndex;
+        return p + Q.middleState();
     }
 
     private Rational stateToRatio(int state) {
-        long directionAdjusted = state - stateMiddleIndex;
+        long directionAdjusted = state - Q.middleState();
         return stepSize.times(directionAdjusted);
     }
 
@@ -127,21 +135,263 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         int newState = state + steps;
         if (newState < 0) {
             return 0;
-        } else if (newState > stateUpperBound) {
-            return stateUpperBound;
+        } else if (newState > Q.maxState()) {
+            return Q.maxState();
         } else {
             return newState;
         }
     }
 
-    private static Matrix initialiseMatrix(int[] actions, Rational stepSize) {
-        int width = actions.length;
-        int height = Rational.valueOf(2, 1).divide(stepSize).intValue() + 1;
-        LOG.trace("Initialising {}x{} Matrix", height, width);
-        if (Math.max(width, height) < 10) { // use dense
-            return DenseMatrix.Factory.zeros(height, width);
-        } else { // use sparse
-            return SparseMatrix.Factory.zeros(height, width);
+    private static int[] completeActions(List<Integer> basicActions) {
+        List<Integer> actionsCompletion = new ArrayList<Integer>(2 * basicActions.size() + 1);
+        boolean sawZero = false;
+        for (Integer action : basicActions) {
+            actionsCompletion.add(action);
+            if (action != 0) {
+                actionsCompletion.add(-action);
+            } else {
+                sawZero = true;
+            }
+        }
+        if (!sawZero) {
+            actionsCompletion.add(0);
+        }
+        int[] actions = new int[actionsCompletion.size()];
+        for (int i = 0; i < actions.length; i++) {
+            actions[i] = actionsCompletion.get(i);
+        }
+        Arrays.sort(actions);
+        return actions;
+    }
+
+    static interface ActionValueEstimator {
+
+        public int numStates();
+
+        public int bestActionAt(int state);
+
+        public int randomActionAt(int state, Random rand);
+
+        public double at(int state, int action);
+
+        public void set(double val, int state, int action);
+
+        public int middleState();
+
+        public int maxState();
+
+        public static enum Implementation {
+
+            MATRIX, COLLAPSED;
+        }
+    }
+
+    class AVEFactory {
+
+        public ActionValueEstimator getInstance(ActionValueEstimator.Implementation impl, Rational stepSize) {
+            switch (impl) {
+                case MATRIX:
+                    return new BasicMatrixEstimator(stepSize);
+                case COLLAPSED:
+                    return new CollapsedMatrixEstimator(stepSize);
+                default:
+                    return null;
+            }
+        }
+    }
+
+    class BasicMatrixEstimator implements ActionValueEstimator {
+
+        private final int stateMiddleIndex;  // 50/50 point
+        private final int height;
+        private final int width;
+        private final Matrix m;
+
+        public BasicMatrixEstimator(Rational stepSize) {
+            width = actions.length;
+            height = Rational.valueOf(2, 1).divide(stepSize).intValue() + 1;
+            LOG.trace("Initialising {}x{} Matrix", height, width);
+            if (Math.max(width, height) < 10) { // use dense
+                m = DenseMatrix.Factory.zeros(height, width);
+            } else { // use sparse
+                m = SparseMatrix.Factory.zeros(height, width);
+            }
+            stateMiddleIndex = height / 2;
+        }
+
+        @Override
+        public int numStates() {
+            return height;
+        }
+
+        @Override
+        public double at(int state, int action) {
+            return m.getAsDouble(state, action);
+        }
+
+        @Override
+        public void set(double val, int state, int action) {
+            m.setAsDouble(val, state, action);
+        }
+
+        @Override
+        public int middleState() {
+            return this.stateMiddleIndex;
+        }
+
+        @Override
+        public int maxState() {
+            return this.height - 1;
+        }
+
+        @Override
+        public String toString() {
+            return "BasicMatrixEstimator with Q=\n" + m;
+        }
+
+        @Override
+        public int bestActionAt(int state) {
+            Matrix stateRow = m.getRowList().get(state);
+            if (stateRow == null) {
+                stateRow = SparseMatrix.Factory.zeros(1, actions.length);
+            }
+            Matrix maxIndex = stateRow.indexOfMax(Calculation.Ret.NEW, Calculation.COLUMN);
+            //LOG.trace("Max is: {}", maxIndex);
+            return maxIndex.getAsInt(0, 0);
+        }
+
+        @Override
+        public int randomActionAt(int state, Random rand) {
+            Multimap<Integer, Integer> stateActions = TreeMultimap.create();
+            for (int i = 0; i < actions.length; i++) {
+                int s = state + actions[i];
+                if (s < 0) {
+                    s = 0;
+                } else if (s >= height) {
+                    s = maxState();
+                }
+                stateActions.put(s, i);
+            }
+            Object[] resultStates = stateActions.keySet().toArray();
+            int target = (int) resultStates[rand.nextInt(resultStates.length)];
+            Collection<Integer> targetActions = stateActions.get(target);
+            int bestAction = Integer.MAX_VALUE;
+            for (Integer action : targetActions) {
+                if (Math.abs(action) < Math.abs(bestAction)) {
+                    bestAction = action;
+                }
+            }
+            return bestAction;
+        }
+    }
+
+    class CollapsedMatrixEstimator implements ActionValueEstimator {
+
+        private final int stateMiddleIndex;  // 50/50 point
+        private final double[] m;
+
+        public CollapsedMatrixEstimator(Rational stepSize) {
+            int height = Rational.valueOf(2, 1).divide(stepSize).intValue() + 1;
+            m = new double[height];
+            Arrays.fill(m, 0.0);
+            stateMiddleIndex = height / 2;
+        }
+
+        @Override
+        public int numStates() {
+            return m.length;
+        }
+
+        @Override
+        public double at(int state, int action) {
+            int s = state + actions[action];
+            if (s < 0) {
+                s = 0;
+            } else if (s >= m.length) {
+                s = m.length - 1;
+            }
+            return m[s];
+        }
+
+        @Override
+        public void set(double val, int state, int action) {
+            int s = state + actions[action];
+            if (s < 0) {
+                s = 0;
+            } else if (s >= m.length) {
+                s = m.length - 1;
+            }
+            m[s] = val;
+        }
+
+        @Override
+        public int middleState() {
+            return stateMiddleIndex;
+        }
+
+        @Override
+        public int maxState() {
+            return m.length - 1;
+        }
+        
+        @Override
+        public int bestActionAt(int state) {
+            Multimap<Integer, Integer> stateActions = TreeMultimap.create();
+            for (int i = 0; i < actions.length; i++) {
+                int s = state + actions[i];
+                if (s < 0) {
+                    s = 0;
+                } else if (s >= m.length) {
+                    s = maxState();
+                }
+                stateActions.put(s, i);
+            }
+            int bestState = state;
+            double bestValue = m[state];
+            for (Integer possibleState : stateActions.keys()) {
+                double val = m[possibleState];
+                if (val < bestValue) {
+                    bestState = possibleState;
+                    bestValue = val;
+                }
+            }
+            Collection<Integer> targetActions = stateActions.get(bestState);
+            int bestAction = Integer.MAX_VALUE;
+            for (Integer action : targetActions) {
+                if (Math.abs(action) < Math.abs(bestAction)) {
+                    bestAction = action;
+                }
+            }
+            return bestAction;
+        }
+
+        @Override
+        public int randomActionAt(int state, Random rand) {
+            Multimap<Integer, Integer> stateActions = TreeMultimap.create();
+            for (int i = 0; i < actions.length; i++) {
+                int s = state + actions[i];
+                if (s < 0) {
+                    s = 0;
+                } else if (s >= m.length) {
+                    s = maxState();
+                }
+                stateActions.put(s, i);
+            }
+            Object[] resultStates = stateActions.keySet().toArray();
+            int target = (int) resultStates[rand.nextInt(resultStates.length)];
+            Collection<Integer> targetActions = stateActions.get(target);
+            int bestAction = Integer.MAX_VALUE;
+            for (Integer action : targetActions) {
+                if (Math.abs(action) < Math.abs(bestAction)) {
+                    bestAction = action;
+                }
+            }
+            return bestAction;
+        }
+        
+        @Override
+        public String toString() {
+            return "CollapsedMatrixEstimator with Q=\n" + Arrays.toString(m);
         }
     }
 
@@ -152,34 +402,30 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
 
     class EpsilonGreedy implements DerivedPolicy {
 
-        private double epsilon = 0.5;
-        private final double epsilonDelta = 0.01;
-        private final double minEpsilon = 0.05;
+        private double epsilon;
+        private final double epsilonDelta;
+        private final double minEpsilon;
         private final Random RAND = new Random(1);
+
+        EpsilonGreedy() {
+            epsilon = config.getValue("kompics.net.data.td.epsilonGreedy.epsilon", Double.class);
+            epsilonDelta = config.getValue("kompics.net.data.td.epsilonGreedy.epsilonDelta", Double.class);
+            minEpsilon = config.getValue("kompics.net.data.td.epsilonGreedy.minEpsilon", Double.class);
+        }
 
         @Override
         public int chooseAction() {
             if (epsilon > minEpsilon) { // decay temperature over time
-                epsilon -= epsilonDelta;
+                epsilon = Math.max(epsilon - epsilonDelta, minEpsilon);
             }
             if (RAND.nextDouble() < epsilon) { // select at random
-                int action = RAND.nextInt(actions.length);
+                int action = Q.randomActionAt(state, RAND);
                 LOG.trace("Selected {} randomly.", actions[action]);
                 return action;
             } else { // select greedy
-                Matrix stateRow = actionStateValues.getRowList().get(state);
-                if (stateRow != null) {
-                    LOG.trace("Selecting greedily from: {}", stateRow);
-                    Matrix maxIndex = stateRow.indexOfMax(Calculation.Ret.NEW, Calculation.COLUMN);
-                    LOG.trace("Max is: {}", maxIndex);
-                    int action = maxIndex.getAsInt(0, 0);
-                    LOG.trace("Selected {}", actions[action]);
-                    return action;
-                } else { // can't pick greedy if no data...pick random
-                    int action = RAND.nextInt(actions.length);
-                    LOG.trace("Selected {} randomly (due to lack of data).", actions[action]);
-                    return action;
-                }
+                int action = Q.bestActionAt(state);
+                LOG.trace("Selected {} greedily", actions[action]);
+                return action;
             }
         }
 

@@ -20,11 +20,17 @@
  */
 package se.sics.kompics.network.data;
 
+import com.larskroll.common.Either;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.UUID;
 import org.javatuples.Pair;
 import org.jscience.mathematics.number.LargeInteger;
 import org.jscience.mathematics.number.Rational;
+import se.sics.kompics.network.MessageNotify;
+import se.sics.kompics.network.Msg;
 import static se.sics.kompics.network.data.DataStreamInterceptor.LOG;
 import se.sics.kompics.network.data.policies.ProtocolRatioPolicy;
 import se.sics.kompics.network.data.policies.ProtocolSelectionPolicy;
@@ -43,6 +49,8 @@ class ConnectionTracker {
     final ProtocolRatioPolicy ratioPolicy;
     final ProtocolSelectionPolicy selectionPolicy;
     private Rational ratio;
+    private long inFlightMessages = 0;
+    private final Queue<Either<MessageNotify.Req, Msg>> outstanding = new LinkedList<>();
 
     ConnectionTracker(InetSocketAddress target, ProtocolSelectionPolicy psp, ProtocolRatioPolicy prp) {
         this.target = target;
@@ -59,6 +67,29 @@ class ConnectionTracker {
         this.ratio = initialRatio;
         ratioPolicy.initialState(ratio);
         selectionPolicy.updateRatio(ratio);
+    }
+
+    Either<MessageNotify.Req, Msg> dequeue() {
+        inFlightMessages++;
+        return outstanding.poll();
+    }
+
+    void enqueue(MessageNotify.Req msg) {
+        Either<MessageNotify.Req, Msg> e = Either.left(msg);
+        outstanding.add(e);
+    }
+    
+    void enqueue(Msg msg) {
+        Either<MessageNotify.Req, Msg> e = Either.right(msg);
+        outstanding.add(e);
+    }
+    
+    void sent(UUID id) {
+        inFlightMessages--;
+    }
+
+    boolean canSend(long maxInFlight) {
+        return !outstanding.isEmpty() && (inFlightMessages < maxInFlight);
     }
 
     void update() {
@@ -90,17 +121,17 @@ class ConnectionTracker {
         Rational ratio = readRational(buf);
         return Pair.with(target, ratio);
     }
-    
+
     private static Rational readRational(ByteBuf buf) {
         int length = buf.readInt();
         byte[] data = new byte[length];
         buf.readBytes(data);
         int divisorLength = buf.readInt();
         LargeInteger divisor = LargeInteger.valueOf(data, 0, divisorLength);
-        LargeInteger dividend = LargeInteger.valueOf(data, divisorLength, length-divisorLength);
+        LargeInteger dividend = LargeInteger.valueOf(data, divisorLength, length - divisorLength);
         return Rational.valueOf(dividend, divisor);
     }
-    
+
     private static void writeRational(ByteBuf buf, Rational r) {
         LargeInteger divisor = r.getDivisor();
         LargeInteger dividend = r.getDividend();

@@ -187,7 +187,7 @@ public interface Config {
                 if (v != null) {
                     return v;
                 } else {
-                    throw new ClassCastException("Can't cast or convert " + cv.unwrap() + " to " + type);
+                    throw new ClassCastException("Can't cast or convert " + cv.unwrap() + " ("+cv.unwrap().getClass()+") to " + type);
                 }
             }
             cv = baseline.getValue(key);
@@ -196,7 +196,7 @@ public interface Config {
                 if (v != null) {
                     return v;
                 } else {
-                    throw new ClassCastException("Can't cast or convert " + cv.unwrap() + " to " + type);
+                    throw new ClassCastException("Can't cast or convert " + cv.unwrap() + " ("+cv.unwrap().getClass()+") to " + type);
                 }
             }
             return null;

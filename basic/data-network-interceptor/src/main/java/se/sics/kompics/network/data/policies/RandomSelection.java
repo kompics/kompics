@@ -36,15 +36,15 @@ public class RandomSelection implements ProtocolSelectionPolicy {
 
     @Override
     public void updateRatio(Rational ratio) {
-        this.ratio = (((ratio.doubleValue()) + 1.0) / 2.0);
+        this.ratio = (ratio.doubleValue() + 1.0)/2.0;
     }
 
     @Override
     public Transport select(Msg msg) {
         if (rand.nextDouble() < ratio) {
-            return Transport.TCP;
-        } else {
             return Transport.UDT;
+        } else {
+            return Transport.TCP;
         }
     }
 

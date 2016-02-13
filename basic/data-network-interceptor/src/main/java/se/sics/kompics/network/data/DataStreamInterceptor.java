@@ -21,6 +21,7 @@
 package se.sics.kompics.network.data;
 
 import com.google.common.base.Optional;
+import com.larskroll.common.Either;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,19 +52,21 @@ public class DataStreamInterceptor extends ComponentDefinition {
 
     static final Logger LOG = LoggerFactory.getLogger(DataStreamInterceptor.class);
 
+    final Positive<Timer> timer = requires(Timer.class);
     final Positive<Network> netDown = requires(Network.class);
     final Negative<Network> netUp = provides(Network.class);
-    final Positive<Timer> timer = requires(Timer.class);
 
     private final Map<UUID, TrackedMessage> outstanding = new HashMap<>();
     private UUID timeoutId = null;
     private final ConnectionFactory factory;
     private final HashMap<InetSocketAddress, ConnectionTracker> connections = new HashMap<>();
+    private final long maxQueueLength;
 
     public DataStreamInterceptor() {
+        maxQueueLength = config().getValue("kompics.net.data.queueLength", Long.class);
         Optional<String> ratioPolicy = config().readValue("kompics.net.data.ratioPolicy", String.class);
         Optional<String> selectionPolicy = config().readValue("kompics.net.data.selectionPolicy", String.class);
-        factory = new ConnectionFactory(ratioPolicy, selectionPolicy);
+        factory = new ConnectionFactory(config(), ratioPolicy, selectionPolicy);
 
         subscribe(startHandler, control);
         subscribe(msgHandler, netUp);
@@ -95,23 +98,8 @@ public class DataStreamInterceptor extends ComponentDefinition {
                     ct = factory.findConnection(target);
                     connections.put(target, ct);
                 }
-                Transport proto = ct.selectionPolicy.select(event);
-                LOG.trace("Got DATA message over {} to track: {}", proto, event);
-                MessageNotify.Req req = null;
-                TrackedMessage tm = null;
-                long ts = System.currentTimeMillis();
-                Optional<MessageNotify.Req> or = Optional.absent();
-                if (h instanceof DataHeader) { // replace protocol
-                    DataHeader dh = (DataHeader) event.getHeader();
-                    dh.replaceProtocol(proto);
-                    req = MessageNotify.createWithDeliveryNotification(event);
-                } else { // wrap message
-                    Msg wrapped = new DataMsgWrapper(event, proto);
-                    req = MessageNotify.createWithDeliveryNotification(wrapped);                  
-                }
-                tm = new TrackedMessage(event, ts, or, ct);
-                trigger(req, netDown);
-                outstanding.put(req.getMsgId(), tm);
+                ct.enqueue(event);
+                tryToSend(ct);
             } else {
                 throw new RuntimeException("Invalid protocol: " + h.getProtocol());
             }
@@ -130,23 +118,8 @@ public class DataStreamInterceptor extends ComponentDefinition {
                     ct = factory.findConnection(target);
                     connections.put(target, ct);
                 }
-                Transport proto = ct.selectionPolicy.select(event);
-                LOG.trace("Got DATA message over {} to track: {}", proto, event);
-                MessageNotify.Req req = null;
-                TrackedMessage tm = null;
-                long ts = System.currentTimeMillis();
-                Optional<MessageNotify.Req> or = Optional.of(mnr);
-                if (h instanceof DataHeader) { // replace protocol
-                    DataHeader dh = (DataHeader) event.getHeader();
-                    dh.replaceProtocol(proto);
-                    req = MessageNotify.createWithDeliveryNotification(event);
-                } else { // wrap message
-                    Msg wrapped = new DataMsgWrapper(event, proto);
-                    req = MessageNotify.createWithDeliveryNotification(wrapped);                  
-                }
-                tm = new TrackedMessage(event, ts, or, ct);
-                trigger(req, netDown);
-                outstanding.put(req.getMsgId(), tm);
+                ct.enqueue(mnr);
+                tryToSend(ct);
             } else {
                 throw new RuntimeException("Invalid protocol: " + h.getProtocol());
             }
@@ -160,6 +133,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
                 System.out.println("Could not send message: " + event.msgId);
             }
             TrackedMessage tm = outstanding.get(event.msgId);
+            ConnectionTracker ct = tm.connection;
             if (tm != null) {
                 switch (event.getState()) {
                     case SENT: {
@@ -172,6 +146,8 @@ public class DataStreamInterceptor extends ComponentDefinition {
                             or.prepareResponse(event.getTime(), event.isSuccess(), event.getSendTime());
                             answer(or);
                         }
+                        ct.sent(event.msgId);
+                        tryToSend(ct);
                     }
                     break;
                     case DELIVERED: {
@@ -199,6 +175,8 @@ public class DataStreamInterceptor extends ComponentDefinition {
                             answer(or);
                         }
                         outstanding.remove(event.msgId);
+                        ct.sent(event.msgId);
+                        tryToSend(ct);
                     }
                 }
 
@@ -213,10 +191,43 @@ public class DataStreamInterceptor extends ComponentDefinition {
         @Override
         public void handle(StatsTimeout event) {
             for (ConnectionTracker ct : connections.values()) {
-                ct.update();        
+                ct.update();
             }
         }
     };
+
+    private void tryToSend(ConnectionTracker ct) {
+        while (ct.canSend(maxQueueLength)) {
+            Either<MessageNotify.Req, Msg> eMsg = ct.dequeue();
+            Msg event;
+            Optional<MessageNotify.Req> or;
+            if (eMsg.isLeft()) {
+                MessageNotify.Req mnr = eMsg.getLeft();
+                event = mnr.msg;
+                or = Optional.of(mnr);
+            } else {
+                event = eMsg.getRight();
+                or = Optional.absent();
+            }
+            Header h = event.getHeader();
+            Transport proto = ct.selectionPolicy.select(event);
+            ct.stats.updateSelection(proto);
+            LOG.trace("Got DATA message over {} to track: {}", proto, event);
+            long ts = System.currentTimeMillis();
+            MessageNotify.Req req;
+            if (h instanceof DataHeader) { // replace protocol
+                DataHeader dh = (DataHeader) event.getHeader();
+                dh.replaceProtocol(proto);
+                req = MessageNotify.createWithDeliveryNotification(event);
+            } else { // wrap message
+                Msg wrapped = new DataMsgWrapper(event, proto);
+                req = MessageNotify.createWithDeliveryNotification(wrapped);
+            }
+            TrackedMessage tm = new TrackedMessage(event, ts, or, ct);
+            trigger(req, netDown);
+            outstanding.put(req.getMsgId(), tm);
+        }
+    }
 
     @Override
     public void tearDown() {
