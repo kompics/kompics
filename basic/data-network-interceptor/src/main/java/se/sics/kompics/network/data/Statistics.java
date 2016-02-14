@@ -33,7 +33,7 @@ public class Statistics {
 
     public static final double NANOSEC = 1e9;
     public static final double KILOBYTE = 1024.0;
-    public static final int WINDOW_SIZE = 5;
+    public static final int WINDOW_SIZE = 1;
     public static final double ALPHA = 0.1;
     
     private ExponentialMovingAverage delTime = new ExponentialMovingAverage(ALPHA);

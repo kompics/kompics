@@ -27,6 +27,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+import java.util.TreeMap;
+import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
+import org.apache.commons.math3.fitting.PolynomialCurveFitter;
+import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.jscience.mathematics.number.LargeInteger;
 import org.jscience.mathematics.number.Rational;
 import org.slf4j.Logger;
@@ -50,11 +54,12 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
     private final Config config;
     private final double alpha;
     private final double gamma;
-    private final double lambda = 0.1;
+    private final double lambda;
     private final Rational stepSize;
     private int state;
     private final int[] actions;
-    private final ActionValueEstimator Q;
+    private final ActionValueEstimator Q; // reward estimation
+    private final ActionValueEstimator e; // eligibility trace
     private final DerivedPolicy policy;
     private int lastAction;
     private int lastState;
@@ -63,6 +68,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         config = conf;
         alpha = config.getValue("kompics.net.data.td.alpha", Double.class);
         gamma = config.getValue("kompics.net.data.td.gamma", Double.class);
+        lambda = config.getValue("kompics.net.data.td.lambda", Double.class);
         long iStepSize = config.getValue("kompics.net.data.td.stepSize", Long.class);
         stepSize = Rational.valueOf(1, iStepSize);
         List<Integer> basicActions = config.getValues("kompics.net.data.td.actions", Integer.class);
@@ -70,7 +76,9 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         ActionValueEstimator.Implementation qImpl
                 = ActionValueEstimator.Implementation.valueOf(
                         config.getValue("kompics.net.data.td.actionValueEstimator", String.class));
-        Q = (new AVEFactory()).getInstance(qImpl, stepSize);
+        AVEFactory avef = new AVEFactory();
+        Q = avef.getInstance(qImpl, stepSize);
+        e = avef.getInstance(ActionValueEstimator.Implementation.MATRIX, stepSize);
         LOG.trace("Initialised TD with actions {}, and {} states, stepSize {}",
                 new Object[]{Arrays.toString(actions), Q.numStates(), stepSize});
         policy = new EpsilonGreedy();
@@ -91,16 +99,37 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         double r = throughput;
         int aPrime = policy.chooseAction();
         double Qsa = Q.at(s, a);
-        double gammaQsPrimeaPrime = gamma * Q.at(sPrime, aPrime);
-        double alphaBlock = alpha * (r + gammaQsPrimeaPrime - Qsa);
-        double newQsa = Qsa + alphaBlock;
-        Q.set(newQsa, s, a);
+        double delta = r + gamma * Q.at(sPrime, aPrime) - Qsa;
+        // accumulating trace
+        //double esa = e.at(s, a);
+        //e.set(esa + 1.0, s, a); // update eligibility trace
+        // replacting trace (loose)
+        e.set(1.0, s, a);
+        // replaceing trace (strict)
+        for (int j = 0; j < actions.length; j++) {
+            if (a != j) {
+                e.set(0.0, s, j);
+            }
+        }
+        for (int i = 0; i < Q.numStates(); i++) {
+            for (int j = 0; j < actions.length; j++) {
+                double eij = e.at(i, j);
+                double Qij = Q.at(i, j);
+                double newQij = Qij + alpha * delta * eij;
+                double neweij = gamma * lambda * eij;
+                Q.set(newQij, i, j);
+                e.set(neweij, i, j);
+            }
+        }
+        //double alphaBlock = alpha * (r + gammaQsPrimeaPrime - Qsa);
+        //double newQsa = Qsa + alphaBlock;
+        //Q.set(newQsa, s, a);
         // update stuff
         lastState = sPrime;
         lastAction = aPrime;
         state = applyAction(aPrime, sPrime);
         Rational ratio = stateToRatio(state);
-        LOG.info("Updated learner: r={}, s={}, a={}, s'={}, a'={}, s''={} ({}), Q={}", new Object[]{r, s, a, sPrime, aPrime, state, ratio, Q});
+        LOG.info("Updated learner: r={}, s={}, a={}, s'={}, a'={}, s''={} ({}), \n Q={} \n e={}", new Object[]{r, s, a, sPrime, aPrime, state, ratio, Q, e});
         return ratio;
     }
 
@@ -182,7 +211,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
 
         public static enum Implementation {
 
-            MATRIX, COLLAPSED;
+            MATRIX, COLLAPSED, FUNCTION;
         }
     }
 
@@ -194,6 +223,8 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
                     return new BasicMatrixEstimator(stepSize);
                 case COLLAPSED:
                     return new CollapsedMatrixEstimator(stepSize);
+                case FUNCTION:
+                    return new FunctionApproximationEstimator(stepSize);
                 default:
                     return null;
             }
@@ -333,7 +364,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         public int maxState() {
             return m.length - 1;
         }
-        
+
         @Override
         public int bestActionAt(int state) {
             Multimap<Integer, Integer> stateActions = TreeMultimap.create();
@@ -350,11 +381,12 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
             double bestValue = m[state];
             for (Integer possibleState : stateActions.keys()) {
                 double val = m[possibleState];
-                if (val < bestValue) {
+                if (val > bestValue) {
                     bestState = possibleState;
                     bestValue = val;
                 }
             }
+            LOG.trace("Of the target states {}, the best is {} (val: {}) in {}", new Object[]{stateActions, bestState, bestValue, Arrays.toString(m)});
             Collection<Integer> targetActions = stateActions.get(bestState);
             int bestAction = Integer.MAX_VALUE;
             for (Integer action : targetActions) {
@@ -388,7 +420,167 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
             }
             return bestAction;
         }
-        
+
+        @Override
+        public String toString() {
+            return "CollapsedMatrixEstimator with Q=\n" + Arrays.toString(m);
+        }
+    }
+
+    class FunctionApproximationEstimator implements ActionValueEstimator {
+
+        private final int stateMiddleIndex;  // 50/50 point
+        private final double[] m;
+        private PolynomialFunction approxFunction;
+
+        public FunctionApproximationEstimator(Rational stepSize) {
+            int height = Rational.valueOf(2, 1).divide(stepSize).intValue() + 1;
+            m = new double[height];
+            Arrays.fill(m, 0.0);
+            stateMiddleIndex = height / 2;
+            approxFunction = new PolynomialFunction(new double[]{0.0}); // f(x) = 0
+        }
+
+        private void updateFunction() {
+            final WeightedObservedPoints obs = new WeightedObservedPoints();
+            int nonZeroValues = 0;
+            double highestValue = 0.0;
+            for (int i = 0; i < m.length; i++) {
+                double v = m[i];
+                if (v != 0.0) {
+                    nonZeroValues++;
+                    obs.add((double) i, v);
+                    if (v > highestValue) {
+                        highestValue = v;
+                    }
+                }
+            }
+            if (nonZeroValues == 0) {
+                return; //can't do anything without data
+            }
+            if (nonZeroValues == 1) {
+                // not enough data points for anything but a constant line (which doesn't help)
+                // => cheat and force the algorithm to greedily explore
+                obs.add(-1.0, 2 * highestValue);
+                nonZeroValues++;
+            }
+            if (nonZeroValues == 2) {
+                // not enough for a quadratic function, but enough for a line
+                final PolynomialCurveFitter fitter = PolynomialCurveFitter.create(1);
+                final double[] coeff = fitter.fit(obs.toList());
+                approxFunction = new PolynomialFunction(coeff);
+                return;
+            }
+            // fit a quadratic function
+            final PolynomialCurveFitter fitter = PolynomialCurveFitter.create(2);
+            final double[] coeff = fitter.fit(obs.toList());
+            approxFunction = new PolynomialFunction(coeff);
+        }
+
+        @Override
+        public int numStates() {
+            return m.length;
+        }
+
+        @Override
+        public double at(int state, int action) {
+            int s = state + actions[action];
+            if (s < 0) {
+                s = 0;
+            } else if (s >= m.length) {
+                s = m.length - 1;
+            }
+            return m[s];
+        }
+
+        @Override
+        public void set(double val, int state, int action) {
+            int s = state + actions[action];
+            if (s < 0) {
+                s = 0;
+            } else if (s >= m.length) {
+                s = m.length - 1;
+            }
+            m[s] = val;
+        }
+
+        @Override
+        public int middleState() {
+            return stateMiddleIndex;
+        }
+
+        @Override
+        public int maxState() {
+            return m.length - 1;
+        }
+
+        @Override
+        public int bestActionAt(int state) {
+            boolean functionUpdated = false;
+            
+            Multimap<Integer, Integer> stateActions = TreeMultimap.create();
+            for (int i = 0; i < actions.length; i++) {
+                int s = state + actions[i];
+                if (s < 0) {
+                    s = 0;
+                } else if (s >= m.length) {
+                    s = maxState();
+                }
+                stateActions.put(s, i);
+            }
+            int bestState = state;
+            double bestValue = m[state];
+            TreeMap<Integer, Double> approxValues = new TreeMap<>();
+            for (Integer possibleState : stateActions.keys()) {
+                double val = m[possibleState];
+                if (val == 0.0) {
+                    if (!functionUpdated) {
+                        updateFunction();
+                        functionUpdated = true;
+                    }
+                    val = approxFunction.value(possibleState);
+                }
+                approxValues.put(possibleState, val);
+                if (val > bestValue) {
+                    bestState = possibleState;
+                    bestValue = val;
+                }
+            }
+            LOG.trace("Of the target states {} with values {}, the best is {} (val: {}) in {}", new Object[]{stateActions, approxValues, bestState, bestValue, Arrays.toString(m)});
+            Collection<Integer> targetActions = stateActions.get(bestState);
+            int bestAction = Integer.MAX_VALUE;
+            for (Integer action : targetActions) {
+                if (Math.abs(action) < Math.abs(bestAction)) {
+                    bestAction = action;
+                }
+            }
+            return bestAction;
+        }
+
+        @Override
+        public int randomActionAt(int state, Random rand) {
+            Multimap<Integer, Integer> stateActions = TreeMultimap.create();
+            for (int i = 0; i < actions.length; i++) {
+                int s = state + actions[i];
+                if (s < 0) {
+                    s = 0;
+                } else if (s >= m.length) {
+                    s = maxState();
+                }
+                stateActions.put(s, i);
+            }
+            Object[] resultStates = stateActions.keySet().toArray();
+            int target = (int) resultStates[rand.nextInt(resultStates.length)];
+            Collection<Integer> targetActions = stateActions.get(target);
+            int bestAction = Integer.MAX_VALUE;
+            for (Integer action : targetActions) {
+                if (Math.abs(action) < Math.abs(bestAction)) {
+                    bestAction = action;
+                }
+            }
+            return bestAction;
+        }
+
         @Override
         public String toString() {
             return "CollapsedMatrixEstimator with Q=\n" + Arrays.toString(m);
