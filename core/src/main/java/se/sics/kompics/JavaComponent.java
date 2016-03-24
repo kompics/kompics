@@ -446,12 +446,12 @@ public class JavaComponent extends ComponentCore {
                     break;
                 case IGNORE:
                     Kompics.logger.info("Fault {} was declared to be ignored by user. Resuming component...", event);
-                    event.source.markSubtreeAs(State.PASSIVE);
+                    markSubtreeAtAs(event.source, State.PASSIVE);
                     event.source.control().doTrigger(Start.event, wid, JavaComponent.this);
                     break;
                 case DESTROY:
                     Kompics.logger.info("User declared that Fault {} should destroy component tree...", event);
-                    event.source.parent.destroyTree(event.source);
+                    destroyTreeAtParentOf(event.source);
                     Kompics.logger.info("finished destroying the subtree.");
                     break;
                 default:

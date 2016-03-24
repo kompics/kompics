@@ -47,7 +47,7 @@ public class ChannelSelectorSet implements Iterable<ChannelCore<?>> {
     // return filtersByChannel.containsKey(channel);
     // }
     @SuppressWarnings("unchecked")
-    public void addChannelFilter(ChannelCore<?> channel, ChannelSelector<?, ?> filter) {
+    public void addChannelSelector(ChannelCore<?> channel, ChannelSelector<?, ?> filter) {
         Class<? extends KompicsEvent> eventType = filter.getEventType();
         Class<? extends ChannelSelector<?, ?>> filterType = (Class<? extends ChannelSelector<?, ?>>) filter
                 .getClass();
@@ -217,7 +217,7 @@ public class ChannelSelectorSet implements Iterable<ChannelCore<?>> {
         return filtersByChannel.isEmpty();
     }
 
-    void clear() {
+    public void clear() {
         this.filterTypesByEventType.clear();
         this.filtersByChannel.clear();
         this.filtersByFilterType.clear();

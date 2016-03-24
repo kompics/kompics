@@ -28,7 +28,7 @@ public final class Stopped implements KompicsEvent {
 
     public final Component component;
 
-    protected Stopped(Component c) {
+    public Stopped(Component c) {
         component = c;
     }
 }

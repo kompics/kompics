@@ -110,7 +110,7 @@ public abstract class ComponentCore implements Component {
 
     public abstract Negative<ControlPort> createControlPort();
 
-    void doDestroy(Component component) {
+    protected void doDestroy(Component component) {
         ComponentCore child = (ComponentCore) component;
         child.cleanPorts();
         if ((child.state != State.PASSIVE) && (child.state != State.FAULTY)) {
@@ -119,14 +119,14 @@ public abstract class ComponentCore implements Component {
         child.state = State.DESTROYED;
         try {
             childrenLock.writeLock().lock();
+            
             children.remove(child);
-
         } finally {
             childrenLock.writeLock().unlock();
         }
     }
 
-    void destroyTree(ComponentCore child) {
+    protected void destroyTree(ComponentCore child) {
         try {
             childrenLock.writeLock().lock();
             child.childrenLock.writeLock().lock();
@@ -143,7 +143,7 @@ public abstract class ComponentCore implements Component {
 
     abstract void setInactive(Component child);
 
-    void markSubtreeAs(State s) {
+    protected void markSubtreeAs(State s) {
         this.state = s;
         if (s == State.FAULTY || s == State.DESTROYED || s == State.PASSIVE) {
             if (parent != null) {
@@ -193,6 +193,7 @@ public abstract class ComponentCore implements Component {
             if (scheduler == null) {
                 scheduler = Kompics.getScheduler();
             }
+            //Kompics.logger.trace("Scheduling {} due to new event", this);
             scheduler.schedule(this, wid);
         }
     }
@@ -239,4 +240,20 @@ public abstract class ComponentCore implements Component {
         return state;
     }
 
+    
+    /*
+    * === Relaying for package fields to Scala
+    */
+    
+    protected void escalateFaultToKompics(Fault fault) {
+        Kompics.handleFault(fault);
+    }
+    
+    protected void markSubtreeAtAs(ComponentCore source, State s) {
+        source.markSubtreeAs(s);
+    }
+    
+    protected void destroyTreeAtParentOf(ComponentCore source) {
+        source.parent.destroyTree(source);
+    }
 }

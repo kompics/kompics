@@ -41,7 +41,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class JavaPort<P extends PortType> extends PortCore<P> {
 
     private JavaPort<P> pair;
-    private ReentrantReadWriteLock rwLock;
+    private final ReentrantReadWriteLock rwLock;
     private final ArrayListMultimap<Class<? extends KompicsEvent>, Handler<?>> subs = ArrayListMultimap.create();
     private final HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>> matchers = new HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>>();
     private ArrayList<ChannelCore<P>> normalChannels = new ArrayList<ChannelCore<P>>();
@@ -91,10 +91,10 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     }
 
     @Override
-    public void addChannel(ChannelCore<P> channel, ChannelSelector<?, ?> filter) {
+    public void addChannel(ChannelCore<P> channel, ChannelSelector<?, ?> selector) {
         rwLock.writeLock().lock();
         try {
-            selectorChannels.addChannelFilter(channel, filter);
+            selectorChannels.addChannelSelector(channel, selector);
         } finally {
             rwLock.writeLock().unlock();
         }

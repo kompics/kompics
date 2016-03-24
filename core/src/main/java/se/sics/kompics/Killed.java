@@ -13,7 +13,7 @@ package se.sics.kompics;
 public class Killed implements KompicsEvent {
     public final Component component;
     
-    protected Killed(Component c) {
+    public Killed(Component c) {
         component = c;
     }
 }

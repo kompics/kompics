@@ -21,6 +21,7 @@
 package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
+import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.UUID;
 import se.sics.kompics.Fault.ResolveAction;
@@ -208,7 +209,7 @@ public abstract class ComponentDefinition {
             Class<T> definition, Init.None initEvent) {
         return core.doCreate(definition, null);
     }
-    
+
     /**
      * Creates the.
      *
@@ -378,8 +379,10 @@ public abstract class ComponentDefinition {
     }
 
     public final void suicide() {
-        if (core.state == Component.State.ACTIVE) {
+        if (core.state == Component.State.ACTIVE || core.state == Component.State.STARTING) {
             trigger(Kill.event, control.getPair());
+        } else {
+            Kompics.logger.warn("Could not commit suicide as (non-active) state was " + core.state);
         }
     }
 
@@ -573,11 +576,20 @@ public abstract class ComponentDefinition {
 
     protected ComponentDefinition(Class<? extends ComponentCore> coreClass) {
         try {
-            core = coreClass.newInstance();
+            Constructor[] constrs = coreClass.getConstructors();
+            for (Constructor constr : constrs) {
+                Class[] paramTypes = constr.getParameterTypes();
+                if ((paramTypes.length) == 1 && paramTypes[0].isInstance(this)) {
+                    core = (ComponentCore) constr.newInstance(this);
+                }
+            }
+            if (core == null) {
+                core = coreClass.newInstance();
+            }
         } catch (Exception e) {
             //e.printStackTrace();
             //System.out.println(e + ": " + e.getMessage());
-            throw new ConfigurationException(e.getMessage());
+            throw new ConfigurationException(e);
         }
         control = core.createControlPort();
         loopback = core.createNegativePort(LoopbackPort.class);

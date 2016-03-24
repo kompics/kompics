@@ -29,7 +29,7 @@ public final class Started implements KompicsEvent {
     public final Component component;
 
     /**
-     * Instantiates a new start event.
+     * Instantiates a new started event.
      */
     public Started(Component c) {
         component = c;

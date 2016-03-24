@@ -11,10 +11,10 @@ package se.sics.kompics;
  * @author lkroll
  */
 public class KompicsException extends RuntimeException {
-    KompicsException(String msg) {
+    public KompicsException(String msg) {
         this(msg, null);
     }
-    KompicsException(String msg, Throwable cause) {
+    public KompicsException(String msg, Throwable cause) {
         super(msg, cause);
     }
 }

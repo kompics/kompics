@@ -44,13 +44,13 @@ public class UpdateAction {
     
     public static final UpdateAction DEFAULT = UpdateAction.create().finalise();
     
-    final Propagation upStrategy;
-    final Mapper upMapper;
-    final Propagation selfStrategy;
-    final Mapper selfMapper;
-    final Propagation downStrategy;
-    final Mapper downMapper;
-    final Optional<ValueMerger> merger;
+    public final Propagation upStrategy;
+    public final Mapper upMapper;
+    public final Propagation selfStrategy;
+    public final Mapper selfMapper;
+    public final Propagation downStrategy;
+    public final Mapper downMapper;
+    public final Optional<ValueMerger> merger;
 
     private UpdateAction(Propagation upStrategy, Mapper upMapper,
             Propagation selfStrategy, Mapper selfMapper,
