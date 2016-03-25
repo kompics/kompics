@@ -31,6 +31,7 @@ import se.sics.kompics.PortType;
  */
 public final class NetworkControl extends PortType {
 	{
-		positive(NetworkException.class);
+		indication(NetworkException.class);
+                indication(ConnectionStatus.class);
 	}
 }

@@ -24,7 +24,6 @@ import com.google.common.base.Optional;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.netty.serialization.Serializers;
 
@@ -55,7 +54,7 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
             AckRequestMsg arm = (AckRequestMsg) o;
             component.LOG.trace("Got AckRequest for {}. Replying...", arm.id);
             NotifyAck an = arm.reply();
-            ctx.channel().writeAndFlush(MessageNotify.create(an));
+            ctx.channel().writeAndFlush(new MessageWrapper(an));
             return arm.content;
         } else if (o instanceof Msg) {
             return o;

@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
@@ -64,6 +65,7 @@ public class NetworkTest {
     private static final String FAIL = "FAIL";
     private static final int NUM_MESSAGES = 100;
     private static final int NUM_FR_MESSAGES = 10;
+    private static final boolean sendFakes = true;
     private static final int BATCH_SIZE = 10;
     private static final AtomicInteger WAIT_FOR = new AtomicInteger(NUM_MESSAGES);
     private static NetworkGenerator nGen;
@@ -82,13 +84,26 @@ public class NetworkTest {
 
         msgId.set(0);
         messageStatus.clear();
-        TestUtil.reset("Stream test ("+Arrays.toString(NetworkTest.protos)+") Nodes #"+numNodes, 100000); //10 sec timeout for all the connections to be dropped properly
+        TestUtil.reset("Stream test (" + Arrays.toString(NetworkTest.protos) + ") Nodes #" + numNodes, 100000); //10 sec timeout for all the connections to be dropped properly
 
         Kompics.createAndStart(LauncherComponent.class, 8, 50);
 
         for (int i = 0; i < numNodes; i++) {
             LOG.info("Waiting for {}/{} STOPPED.", i + 1, numNodes);
-            TestUtil.waitFor(STOPPED);
+            try {
+                TestUtil.waitFor(STOPPED);
+            } finally {
+                StringBuilder sb = new StringBuilder();
+                sb.append("MessageStatus {\n");
+                for (Entry<Integer, String> e : messageStatus.entrySet()) {
+                    sb.append(e.getKey());
+                    sb.append(" -> ");
+                    sb.append(e.getValue());
+                    sb.append("\n");
+                }
+                sb.append("}");
+                LOG.debug(sb.toString());
+            }
             LOG.info("Got {}/{} STOPPED.", i + 1, numNodes);
         }
 
@@ -104,9 +119,8 @@ public class NetworkTest {
             LOG.info("\n******************** Running Fail-Recovery Test for {} ********************\n", proto);
             messageStatus.clear();
             NetworkTest.protos = new Transport[]{proto};
-            
-            TestUtil.reset("FR test ("+Arrays.toString(NetworkTest.protos)+")",100000); //10 sec timeout for all the connections to be dropped properly
-            
+
+            TestUtil.reset("FR test (" + Arrays.toString(NetworkTest.protos) + ")", 100000); //10 sec timeout for all the connections to be dropped properly
 
             Kompics.createAndStart(FRLauncher.class, 8, 50);
 
@@ -128,8 +142,7 @@ public class NetworkTest {
             LOG.info("\n******************** Running Fail-Recovery Test for {} -> {} ********************\n", protoRow[0], protoRow[1]);
             messageStatus.clear();
             NetworkTest.protos = protoRow;
-            TestUtil.reset("FR test ("+Arrays.toString(NetworkTest.protos)+")", 100000); //10 sec timeout for all the connections to be dropped properly
-            
+            TestUtil.reset("FR test (" + Arrays.toString(NetworkTest.protos) + ")", 100000); //10 sec timeout for all the connections to be dropped properly
 
             Kompics.createAndStart(FRLauncher.class, 8, 50);
 
@@ -154,7 +167,7 @@ public class NetworkTest {
 
         msgId.set(0);
         messageStatus.clear();
-        TestUtil.reset("Datagram test ("+Arrays.toString(NetworkTest.protos)+") Nodes #"+numNodes, 10000); //10 sec timeout for all the connections to be dropped properly
+        TestUtil.reset("Datagram test (" + Arrays.toString(NetworkTest.protos) + ") Nodes #" + numNodes, 10000); //10 sec timeout for all the connections to be dropped properly
 
         Kompics.createAndStart(LauncherComponent.class, 8, 50);
 
@@ -361,12 +374,18 @@ public class NetworkTest {
                 TestUtil.submit(FAIL);
             }
             Transport proto = NetworkTest.protos[rand.nextInt(NetworkTest.protos.length)];
-            TestMessage msg = new TestMessage(self, nodes[rand.nextInt(nodes.length)], id, proto);
-            TestMessage fakemsg = new TestMessage(self, fakeNodes[rand.nextInt(nodes.length)], id, proto); // send this as well
+            TestAddress dest = nodes[rand.nextInt(nodes.length)];
+            //while (dest.sameHostAs(self)) {
+            //    dest = nodes[rand.nextInt(nodes.length)];
+            //}
+            TestMessage msg = new TestMessage(self, dest, id, proto);
             MessageNotify.Req req = MessageNotify.create(msg);
             pending.put(req.getMsgId(), id);
             trigger(req, net);
-            trigger(fakemsg, net); // see fakeNodes in LauncherComponent
+            if (sendFakes) {
+                TestMessage fakemsg = new TestMessage(self, fakeNodes[rand.nextInt(nodes.length)], id, proto); // send this as well
+                trigger(fakemsg, net); // see fakeNodes in LauncherComponent
+            }
             msgCount++;
         }
     }

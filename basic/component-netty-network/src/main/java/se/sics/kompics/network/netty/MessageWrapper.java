@@ -1,4 +1,4 @@
-/* 
+/*
  * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
@@ -20,23 +20,41 @@
  */
 package se.sics.kompics.network.netty;
 
-import se.sics.kompics.KompicsEvent;
-import se.sics.kompics.network.Address;
-import se.sics.kompics.network.Transport;
+import com.google.common.base.Optional;
+import se.sics.kompics.network.MessageNotify;
+import se.sics.kompics.network.Msg;
 
 /**
- * Just a notification event
  *
  * @author lkroll
  */
-class SendDelayed implements KompicsEvent {
+class MessageWrapper {
+
+    public final Msg msg;
+    public final Optional<MessageNotify.Req> notify;
     
-    public final Address peer;
-    public final Transport protocol;
-    
-    public SendDelayed(Address peer, Transport protocol) {
-        this.peer = peer;
-        this.protocol = protocol;
+    MessageWrapper(MessageNotify.Req notify) {
+        this.msg = notify.msg;
+        this.notify = Optional.of(notify);
     }
     
+    MessageWrapper(Msg msg) {
+        this.msg = msg;
+        this.notify = Optional.absent();
+    }
+
+    void injectSize(int diff, long startTS) {
+        if (notify.isPresent()) {
+            notify.get().injectSize(diff, startTS);
+        }
+    }
+    
+    @Override
+    public String toString() {
+        if (notify.isPresent()) {
+            return "MessageWrapper(" + notify.get() + ")";
+        } else {
+            return "MessageWrapper(" + msg + ")";
+        }
+    }
 }

@@ -20,8 +20,8 @@
  */
 package se.sics.kompics.network.netty;
 
-import java.net.InetSocketAddress;
 import se.sics.kompics.KompicsEvent;
+import se.sics.kompics.network.Address;
 import se.sics.kompics.network.Transport;
 
 /**
@@ -29,11 +29,11 @@ import se.sics.kompics.network.Transport;
  * @author lkroll
  */
 public class DropDelayed implements KompicsEvent {
-    public final InetSocketAddress isa;
+    public final Address peer;
     public final Transport protocol;
     
-    public DropDelayed(InetSocketAddress isa, Transport protocol) {
-        this.isa = isa;
+    public DropDelayed(Address peer, Transport protocol) {
+        this.peer = peer;
         this.protocol = protocol;
     }
 }

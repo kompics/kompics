@@ -27,7 +27,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.AdaptiveRecvByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -43,12 +42,8 @@ import io.netty.channel.udt.nio.NioUdtProvider;
 import io.netty.util.concurrent.Future;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -59,6 +54,7 @@ import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
+import se.sics.kompics.network.ConnectionStatus;
 import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Network;
@@ -84,15 +80,16 @@ public class NettyNetwork extends ComponentDefinition {
     Negative<NetworkControl> netC = provides(NetworkControl.class);
     // Network
     private ServerBootstrap bootstrapTCP;
-    private Bootstrap bootstrapTCPClient;
+    final Bootstrap bootstrapTCPClient;
     private Bootstrap bootstrapUDP;
     private ServerBootstrap bootstrapUDT;
-    private Bootstrap bootstrapUDTClient;
-    private final LinkedList<Msg> delayedMessages = new LinkedList<Msg>();
-    private final LinkedList<MessageNotify.Req> delayedNotifies = new LinkedList<MessageNotify.Req>();
-    private final HashSet<DisambiguateConnection> delayedDisambs = new HashSet<DisambiguateConnection>();
-    private final HashMap<UUID, MessageNotify.Req> awaitingDelivery = new HashMap<UUID, MessageNotify.Req>();
+    final Bootstrap bootstrapUDTClient;
+//    private final LinkedList<Msg> delayedMessages = new LinkedList<Msg>();
+//    private final LinkedList<MessageNotify.Req> delayedNotifies = new LinkedList<MessageNotify.Req>();
+//    private final HashSet<DisambiguateConnection> delayedDisambs = new HashSet<DisambiguateConnection>();
+//    private final HashMap<UUID, MessageNotify.Req> awaitingDelivery = new HashMap<UUID, MessageNotify.Req>();
     final ChannelManager channels = new ChannelManager(this);
+    final MessageQueueManager messages = new MessageQueueManager(this);
     private DatagramChannel udpChannel;
     // Info
     final NettyAddress self;
@@ -220,17 +217,7 @@ public class NettyNetwork extends ComponentDefinition {
                 return;
             }
 
-            if (sendMessage(new MessageNotify.Req(event)) == null) {
-                if (event instanceof DisambiguateConnection) {
-                    DisambiguateConnection dc = (DisambiguateConnection) event;
-                    if (delayedDisambs.add(dc)) {
-                        LOG.info("Couldn't find channel for {}. Delaying message while establishing connection!", event);
-                    }
-                    return;
-                }
-                LOG.info("Couldn't find channel for {}. Delaying message while establishing connection!", event);
-                delayedMessages.offer(event);
-            }
+            messages.send(event);
         }
     };
 
@@ -245,13 +232,7 @@ public class NettyNetwork extends ComponentDefinition {
                 answer(notify);
                 return;
             }
-            ChannelFuture f = sendMessage(notify);
-            if (f == null) {
-                LOG.info("Couldn't find channel for {} (with notify). Delaying message while establishing connection!", event);
-                delayedNotifies.offer(notify);
-                return; // Assume message got delayed or some error occurred
-            }
-            f.addListener(new NotifyListener(notify));
+            messages.send(notify);
         }
     };
 
@@ -259,27 +240,7 @@ public class NettyNetwork extends ComponentDefinition {
 
         @Override
         public void handle(SendDelayed event) {
-            if (delayedMessages.isEmpty() && delayedNotifies.isEmpty()) { // At least stop early if nothing to do
-                return;
-            }
-            LOG.info("Trying to send delayed messages.");
-            Iterator<Msg> mit = delayedMessages.listIterator();
-            while (mit.hasNext()) {
-                Msg m = mit.next();
-                if (sendMessage(new MessageNotify.Req(m)) != null) {
-                    mit.remove();
-                }
-            }
-
-            Iterator<MessageNotify.Req> mnit = delayedNotifies.listIterator();
-            while (mnit.hasNext()) {
-                MessageNotify.Req m = mnit.next();
-                ChannelFuture f = sendMessage(m);
-                if (f != null) {
-                    mnit.remove();
-                    f.addListener(new NotifyListener(m));
-                }
-            }
+            messages.retry(event);
         }
     };
 
@@ -287,24 +248,7 @@ public class NettyNetwork extends ComponentDefinition {
 
         @Override
         public void handle(DropDelayed event) {
-            LOG.info("Cleaning delayed messages.");
-            for (Iterator<Msg> it = delayedMessages.iterator(); it.hasNext();) {
-                Msg m = it.next();
-                if (m.getDestination().asSocket().equals(event.isa) && event.protocol == m.getProtocol()) {
-                    LOG.warn("Dropping message {} because connection could not be established.", m);
-                    it.remove();
-                }
-            }
-            for (Iterator<MessageNotify.Req> it = delayedNotifies.iterator(); it.hasNext();) {
-                MessageNotify.Req notify = it.next();
-                Msg m = notify.msg;
-                if (m.getDestination().asSocket().equals(event.isa) && event.protocol == m.getProtocol()) {
-                    LOG.warn("Dropping message {} (with notify) because connection could not be established.", m);
-                    it.remove();
-                    notify.prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
-                    answer(notify);
-                }
-            }
+            messages.drop(event);
         }
     };
 
@@ -417,15 +361,18 @@ public class NettyNetwork extends ComponentDefinition {
     protected void networkException(NetworkException networkException) {
         trigger(networkException, netC);
     }
+    
+    protected void networkStatus(ConnectionStatus status) {
+        trigger(status, netC);
+    }
 
     protected void deliverMessage(Msg message, Channel c) {
         if (message instanceof DisambiguateConnection) {
             DisambiguateConnection msg = (DisambiguateConnection) message;
             channels.disambiguate(msg, c);
             if (msg.reply) {
-                c.writeAndFlush(new MessageNotify.Req(new DisambiguateConnection(self, msg.getSource(), msg.getProtocol(), boundUDTPort, false)));
+                c.writeAndFlush(new MessageWrapper(new DisambiguateConnection(self, msg.getSource(), msg.getProtocol(), boundUDTPort, false)));
             }
-            //trigger(SendDelayed.event, onSelf);
             return;
         }
         if (message instanceof CheckChannelActive) {
@@ -441,12 +388,7 @@ public class NettyNetwork extends ComponentDefinition {
         if (message instanceof NotifyAck) {
             NotifyAck ack = (NotifyAck) message;
             LOG.trace("Got NotifyAck for {}", ack.id);
-            MessageNotify.Req req = awaitingDelivery.get(ack.id);
-            if (req != null) {
-                answer(req, req.deliveryResponse(System.currentTimeMillis(), true, System.nanoTime()));
-            } else {
-                LOG.warn("Could not find MessageNotify.Req with id: {}!", ack.id);
-            }
+            messages.ack(ack);
             return;
         }
         LOG.debug(
@@ -455,76 +397,27 @@ public class NettyNetwork extends ComponentDefinition {
                     message.getDestination(), message.getProtocol()});
         trigger(message, net);
     }
-
-    private ChannelFuture sendMessage(MessageNotify.Req message) {
-        switch (message.msg.getProtocol()) {
-            case TCP:
-                return sendTcpMessage(message);
-            case UDT:
-                return sendUdtMessage(message);
-            case UDP:
-                return sendUdpMessage(message);
-            default:
-                throw new Error("Unknown Transport type");
-        }
-    }
-
-    private ChannelFuture sendUdpMessage(MessageNotify.Req message) {
+    
+    ChannelFuture sendUdpMessage(MessageWrapper msgw) {
         ByteBuf buf = udpChannel.alloc().ioBuffer(INITIAL_BUFFER_SIZE, SEND_BUFFER_SIZE);
         try {
-            if (message.notifyOfDelivery) {
-                AckRequestMsg arm = new AckRequestMsg(message.msg, message.getMsgId());
+            if (msgw.notify.isPresent() && msgw.notify.get().notifyOfDelivery) {
+                MessageNotify.Req msgr = msgw.notify.get();
+                AckRequestMsg arm = new AckRequestMsg(msgw.msg, msgr.getMsgId());
                 Serializers.toBinary(arm, buf);
             } else {
-                Serializers.toBinary(message.msg, buf);
+                Serializers.toBinary(msgw.msg, buf);
             }
-            message.injectSize(buf.readableBytes(), System.nanoTime());
-            DatagramPacket pack = new DatagramPacket(buf, message.msg.getDestination().asSocket());
-            LOG.debug("Sending Datagram message {} ({}bytes)", message.msg, buf.readableBytes());
+            msgw.injectSize(buf.readableBytes(), System.nanoTime());
+            DatagramPacket pack = new DatagramPacket(buf, msgw.msg.getDestination().asSocket());
+            LOG.debug("Sending Datagram message {} ({}bytes)", msgw.msg, buf.readableBytes());
             return udpChannel.writeAndFlush(pack);
         } catch (Exception e) { // serialization might fail horribly with size bounded buff
-            LOG.warn("Could not send Datagram message {}, error was: {}", message.msg, e);
+            LOG.warn("Could not send Datagram message {}, error was: {}", msgw, e);
             return null;
         }
     }
 
-    private ChannelFuture sendUdtMessage(MessageNotify.Req message) {
-        Channel c = channels.getUDTChannel(message.msg.getDestination());
-        if (c == null) {
-            c = channels.createUDTChannel(message.msg.getDestination(), bootstrapUDTClient);
-        }
-        if (c == null) {
-            return null;
-        }
-        ChannelFuture cf = c.writeAndFlush(message);
-        LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{message.msg, c.localAddress(), c.remoteAddress()});
-        return cf;
-    }
-
-    private ChannelFuture sendTcpMessage(MessageNotify.Req message) {
-        Channel c = channels.getTCPChannel(message.msg.getDestination());
-        if (c == null) {
-            c = channels.createTCPChannel(message.msg.getDestination(), bootstrapTCPClient);
-        }
-        if (c == null) {
-            return null;
-        }
-        LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{message.msg, c.localAddress(), c.remoteAddress()});
-        return c.writeAndFlush(message);
-    }
-
-//    void addLocalSocket(InetSocketAddress localAddress, DatagramChannel channel) {
-//        udpChannels.put(localAddress, channel); // Not sure how this makes sense...but at least the pipeline is there
-//    }
-//    void addLocalSocket(InetSocketAddress remoteAddress, SocketChannel channel) {
-//        tcpChannels.put(remoteAddress, channel);
-//        trigger(new NetworkSessionOpened(remoteAddress, Transport.TCP), netC);
-//    }
-//
-//    void addLocalSocket(InetSocketAddress remoteAddress, UdtChannel channel) {
-//        udtChannels.put(remoteAddress, channel);
-//        trigger(new NetworkSessionOpened(remoteAddress, Transport.UDT), netC);
-//    }
     private void clearConnections() {
 
         long tstart = System.currentTimeMillis();
@@ -539,10 +432,7 @@ public class NettyNetwork extends ComponentDefinition {
             }
         }
 
-        delayedMessages.clear();
-        delayedNotifies.clear();
-        delayedDisambs.clear();
-        awaitingDelivery.clear();
+        messages.clear();
 
         long tend = System.currentTimeMillis();
 
@@ -556,7 +446,7 @@ public class NettyNetwork extends ComponentDefinition {
         clearConnections();
 
         LOG.info("Shutting down handler groups...");
-        List<Future> gfutures = new LinkedList<Future>();
+        List<Future> gfutures = new LinkedList<>();
         gfutures.add(bootstrapUDTClient.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         if (bindTCP) {
             gfutures.add(bootstrapTCP.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
@@ -573,9 +463,9 @@ public class NettyNetwork extends ComponentDefinition {
         for (Future f : gfutures) {
             f.syncUninterruptibly();
         }
-        bootstrapUDTClient = null;
+        //bootstrapUDTClient = null;
         bootstrapTCP = null;
-        bootstrapTCPClient = null;
+        //bootstrapTCPClient = null;
         bootstrapUDP = null;
         bootstrapUDT = null;
 
@@ -585,35 +475,20 @@ public class NettyNetwork extends ComponentDefinition {
 
     }
 
-    public void trigger(KompicsEvent event) {
+    void trigger(KompicsEvent event) {
         if (event instanceof Msg) {
-            trigger(event, net.getPair());
+            throw new RuntimeException("Not support anymore!");
+            //trigger(event, net.getPair());
         } else {
             trigger(event, onSelf);
         }
     }
 
-    class NotifyListener implements ChannelFutureListener {
-
-        public final MessageNotify.Req notify;
-
-        NotifyListener(MessageNotify.Req notify) {
-            this.notify = notify;
-        }
-
-        @Override
-        public void operationComplete(ChannelFuture future) throws Exception {
-            if (future.isSuccess()) {
-                notify.prepareResponse(System.currentTimeMillis(), true, System.nanoTime());
-                if (notify.notifyOfDelivery) {
-                    awaitingDelivery.put(notify.getMsgId(), notify);
-                }
-            } else {
-                LOG.warn("Sending of message {} did not succeed :( : {}", notify.msg, future.cause());
-                notify.prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
-            }
-            answer(notify);
-        }
-
+    void notify(MessageNotify.Req notify) {
+        answer(notify);
+    }
+    
+    void notify(MessageNotify.Req notify, MessageNotify.Resp response) {
+        answer(notify, response);
     }
 }

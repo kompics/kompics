@@ -32,7 +32,7 @@ import se.sics.kompics.network.netty.serialization.Serializers;
  *
  * @author Lars Kroll <lkroll@kth.se>
  */
-public class MessageEncoder extends MessageToMessageEncoder<MessageNotify.Req> {
+public class MessageEncoder extends MessageToMessageEncoder<MessageWrapper> {
     
     private static final byte[] LENGTH_PLACEHOLDER = new byte[2];
     
@@ -59,24 +59,25 @@ public class MessageEncoder extends MessageToMessageEncoder<MessageNotify.Req> {
 //        NettyNetwork.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
 //    }
     @Override
-    protected void encode(ChannelHandlerContext ctx, MessageNotify.Req msgr, List<Object> outL) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, MessageWrapper msgw, List<Object> outL) throws Exception {
         long startTS = System.nanoTime(); // start measuring here to avoid overestimating the throuhgput
-        Msg msg = msgr.msg;
+        Msg msg = msgw.msg;
         ByteBuf out = ctx.alloc().buffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
-        component.LOG.trace("Trying to encode outgoing data to {} from {}: {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress(), msgr.msg.getClass());
+        component.LOG.trace("Trying to encode outgoing data to {} from {}: {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress(), msgw.msg.getClass());
         int startIdx = out.writerIndex();
         out.writeBytes(LENGTH_PLACEHOLDER);
         
         try {
-            if (msgr.notifyOfDelivery) {
+            if (msgw.notify.isPresent() && msgw.notify.get().notifyOfDelivery) {
+                MessageNotify.Req msgr = msgw.notify.get();
                 component.LOG.trace("Serialising message with AckRequest: {}", msgr.getMsgId());
-                AckRequestMsg arm = new AckRequestMsg(msgr.msg, msgr.getMsgId());
+                AckRequestMsg arm = new AckRequestMsg(msgw.msg, msgr.getMsgId());
                 Serializers.toBinary(arm, out);
             } else {
-                Serializers.toBinary(msgr.msg, out);
+                Serializers.toBinary(msgw.msg, out);
             }
         } catch (Throwable e) {
-            component.LOG.warn("There was a problem serialising {}: \n --> {}", msgr, e);
+            component.LOG.warn("There was a problem serialising {}: \n --> {}", msgw, e);
             e.printStackTrace(System.err);
             throw e;
         }
@@ -88,7 +89,7 @@ public class MessageEncoder extends MessageToMessageEncoder<MessageNotify.Req> {
         }
         out.setShort(startIdx, diff);
         //component.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
-        msgr.injectSize(diff, startTS);
+        msgw.injectSize(diff, startTS);
         outL.add(out);
     }
     

@@ -20,12 +20,14 @@
  */
 package se.sics.kompics.network.netty;
 
+import com.google.common.base.Optional;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import se.sics.kompics.network.Address;
 import se.sics.kompics.network.NetworkException;
 import se.sics.kompics.network.Transport;
 
@@ -58,7 +60,8 @@ public abstract class BaseHandler<M> extends SimpleChannelInboundHandler<M> {
 
         if (address != null && address instanceof InetSocketAddress) {
             inetAddress = (InetSocketAddress) address;
-            component.networkException(new NetworkException(inetAddress, protocol));
+            Address addr = new NettyAddress(inetAddress);
+            component.networkException(new NetworkException("Error in Channel handler to " + addr, addr, protocol, Optional.of(cause)));
         }
 
         component.LOG.error("Error in channel.", cause);

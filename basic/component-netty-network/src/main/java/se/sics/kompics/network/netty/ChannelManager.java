@@ -34,6 +34,7 @@ import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.nio.NioUdtProvider;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,6 +44,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import se.sics.kompics.network.Address;
+import se.sics.kompics.network.ConnectionStatus;
 import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
@@ -52,23 +54,26 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  *
  * @author lkroll
  */
-public class ChannelManager {
+class ChannelManager {
 
-    private final ConcurrentMap<InetSocketAddress, SocketChannel> tcpActiveChannels = new ConcurrentHashMap<InetSocketAddress, SocketChannel>();
-    private final ConcurrentMap<InetSocketAddress, UdtChannel> udtActiveChannels = new ConcurrentHashMap<InetSocketAddress, UdtChannel>();
+    private final ConcurrentMap<InetSocketAddress, SocketChannel> tcpActiveChannels = new ConcurrentHashMap<>();
+    private final ConcurrentMap<InetSocketAddress, UdtChannel> udtActiveChannels = new ConcurrentHashMap<>();
+
+    private final ConcurrentMap<InetSocketAddress, DisambiguateConnection> waitingDisambs = new ConcurrentHashMap<>();
+    private final Set<InetSocketAddress> waitingForCreationUDT = Collections.newSetFromMap(new ConcurrentHashMap<InetSocketAddress, Boolean>());
 
     private final HashMultimap<InetSocketAddress, SocketChannel> tcpChannels = HashMultimap.create();
     private final HashMultimap<InetSocketAddress, UdtChannel> udtChannels = HashMultimap.create();
 
-    private final Map<InetSocketAddress, SocketChannel> tcpChannelsByRemote = new HashMap<InetSocketAddress, SocketChannel>();
-    private final Map<InetSocketAddress, UdtChannel> udtChannelsByRemote = new HashMap<InetSocketAddress, UdtChannel>();
+    private final Map<InetSocketAddress, SocketChannel> tcpChannelsByRemote = new HashMap<>();
+    private final Map<InetSocketAddress, UdtChannel> udtChannelsByRemote = new HashMap<>();
 
-    private final Map<InetSocketAddress, InetSocketAddress> address4Remote = new HashMap<InetSocketAddress, InetSocketAddress>();
+    private final Map<InetSocketAddress, InetSocketAddress> address4Remote = new HashMap<>();
 
-    private final Map<InetSocketAddress, InetSocketAddress> udtBoundPorts = new HashMap<InetSocketAddress, InetSocketAddress>();
+    private final Map<InetSocketAddress, InetSocketAddress> udtBoundPorts = new HashMap<>();
 
-    private final Map<InetSocketAddress, ChannelFuture> udtIncompleteChannels = new HashMap<InetSocketAddress, ChannelFuture>();
-    private final Map<InetSocketAddress, ChannelFuture> tcpIncompleteChannels = new HashMap<InetSocketAddress, ChannelFuture>();
+    private final Map<InetSocketAddress, ChannelFuture> udtIncompleteChannels = new HashMap<>();
+    private final Map<InetSocketAddress, ChannelFuture> tcpIncompleteChannels = new HashMap<>();
 
     private final NettyNetwork component;
 
@@ -79,20 +84,34 @@ public class ChannelManager {
     void disambiguate(DisambiguateConnection msg, Channel c) {
         synchronized (this) {
             if (c.isActive()) { // might have been closed by the time we get the lock?
-
+                component.LOG.debug("Handling Disamb: {} on {}", msg, c);
                 if (c instanceof SocketChannel) {
                     SocketChannel sc = (SocketChannel) c;
                     address4Remote.put(sc.remoteAddress(), msg.getSource().asSocket());
                     tcpChannels.put(msg.getSource().asSocket(), sc);
+                    component.networkStatus(ConnectionStatus.established(msg.getSource(), Transport.TCP));
+
+                    if (!tcpChannels.get(msg.getSource().asSocket()).isEmpty()) { // don't add if we don't have a TCP channel since host is most likely dead
+                        udtBoundPorts.put(msg.getSource().asSocket(), new InetSocketAddress(msg.getSource().getIp(), msg.udtPort));
+                    }
+
+                    component.trigger(new SendDelayed(msg.getSource(), Transport.TCP));
+                    if (waitingForCreationUDT.remove(msg.getSource().asSocket())) {
+                        component.LOG.debug("Requesting creation of outstanding UDT channel to {}", msg.getSource());
+                        createUDTChannel(msg.getSource(), component.bootstrapUDTClient);
+                    }
                 } else if (c instanceof UdtChannel) {
                     UdtChannel uc = (UdtChannel) c;
                     address4Remote.put(uc.remoteAddress(), msg.getSource().asSocket());
                     udtChannels.put(msg.getSource().asSocket(), uc);
+                    component.networkStatus(ConnectionStatus.established(msg.getSource(), Transport.UDT));
+
+                    if (!tcpChannels.get(msg.getSource().asSocket()).isEmpty()) { // don't add if we don't have a TCP channel since host is most likely dead
+                        udtBoundPorts.put(msg.getSource().asSocket(), new InetSocketAddress(msg.getSource().getIp(), msg.udtPort));
+                    }
+
+                    component.trigger(new SendDelayed(msg.getSource(), Transport.UDT));
                 }
-                if (!tcpChannels.get(msg.getSource().asSocket()).isEmpty()) { // don't add if we don't have a TCP channel since host is most likely dead
-                    udtBoundPorts.put(msg.getSource().asSocket(), new InetSocketAddress(msg.getSource().getIp(), msg.udtPort));
-                }
-                component.trigger(SendDelayed.event);
             }
         }
     }
@@ -215,7 +234,7 @@ public class ChannelManager {
 
                 }
             }
-            component.trigger(SendDelayed.event);
+            component.trigger(new SendDelayed(msg.getSource(), Transport.TCP));
         }
     }
 
@@ -246,7 +265,7 @@ public class ChannelManager {
 
                 }
             }
-            component.trigger(SendDelayed.event);
+            component.trigger(new SendDelayed(msg.getSource(), Transport.UDT));
         }
     }
 
@@ -299,6 +318,7 @@ public class ChannelManager {
                 component.LOG.trace("TCP channel to {} is already being created.", destination.asSocket());
                 return null; // already establishing connection but not done, yet
             }
+            component.networkStatus(ConnectionStatus.requested(destination, Transport.TCP));
             component.LOG.trace("Creating new TCP channel to {}.", destination.asSocket());
             f = bootstrapTCPClient.connect(destination.asSocket());
             tcpIncompleteChannels.put(destination.asSocket(), f);
@@ -314,11 +334,19 @@ public class ChannelManager {
                             tcpChannels.put(destination.asSocket(), sc);
                             tcpChannelsByRemote.put(sc.remoteAddress(), sc);
                             address4Remote.put(sc.remoteAddress(), destination.asSocket());
-                            component.trigger(SendDelayed.event);
+                            DisambiguateConnection dc = waitingDisambs.remove(destination.asSocket());
+                            if (dc != null) {
+                                component.LOG.trace("Finally sending Disamb: {}", dc);
+                                waitingForCreationUDT.add(destination.asSocket());
+                                sc.writeAndFlush(new MessageWrapper(dc));
+                            }
+                            component.trigger(new SendDelayed(destination, Transport.TCP));
                             component.LOG.trace("New TCP channel to {} was created!.", destination.asSocket());
+                            component.networkStatus(ConnectionStatus.established(destination, Transport.TCP));
                         } else {
                             component.LOG.error("Error while trying to connect to {}! Error was {}", destination, future.cause());
-                            component.trigger(new DropDelayed(destination.asSocket(), Transport.TCP));
+                            component.networkStatus(ConnectionStatus.dropped(destination, Transport.TCP));
+                            component.trigger(new DropDelayed(destination, Transport.TCP));
                         }
                     }
                 }
@@ -341,12 +369,23 @@ public class ChannelManager {
             }
             InetSocketAddress isa = udtBoundPorts.get(destination.asSocket());
             if (isa == null) { // We have to ask for the UDT port first, since it's random
-                DisambiguateConnection r = new DisambiguateConnection(component.self, new NettyAddress(destination), Transport.TCP, component.boundUDTPort, true);
-                component.trigger(r);
                 component.LOG.trace("Need to find UDT port at {} before creating channel.", destination.asSocket());
+                DisambiguateConnection r = new DisambiguateConnection(component.self, new NettyAddress(destination), Transport.TCP, component.boundUDTPort, true);
+                SocketChannel tcpC = this.getTCPChannel(destination);
+                if (tcpC == null) {
+                    tcpC = this.createTCPChannel(destination, component.bootstrapTCPClient);
+                }
+                if (tcpC == null) {
+                    component.LOG.debug("Putting disamb on hold until TCP channel is created: {}", r);
+                    waitingDisambs.put(destination.asSocket(), r);
+                    return null;
+                }
+                waitingForCreationUDT.add(destination.asSocket());
+                tcpC.writeAndFlush(new MessageWrapper(r));
                 return null;
             }
             component.LOG.trace("Creating new UDT channel to {}.", destination.asSocket());
+            component.networkStatus(ConnectionStatus.requested(destination, Transport.UDT));
             f = bootstrapUDTClient.connect(isa);
             udtIncompleteChannels.put(destination.asSocket(), f);
             f.addListener(new ChannelFutureListener() {
@@ -361,7 +400,7 @@ public class ChannelManager {
                             udtChannels.put(destination.asSocket(), sc);
                             udtChannelsByRemote.put(sc.remoteAddress(), sc);
                             address4Remote.put(sc.remoteAddress(), destination.asSocket());
-                            component.trigger(SendDelayed.event);
+                            component.trigger(new SendDelayed(destination, Transport.UDT));
                             SocketUDT socket = NioUdtProvider.socketUDT(sc);
 //                            if (component.udtBufferSizes > 0) {
 //                                socket.setSendBufferSize(component.udtBufferSizes);
@@ -370,11 +409,14 @@ public class ChannelManager {
                             if (component.udtMSS > 0) {
                                 socket.setOption(OptionUDT.Maximum_Transfer_Unit, component.udtMSS);
                             }
+                            component.trigger(new SendDelayed(destination, Transport.UDT));
                             component.LOG.debug("New UDT channel to {} was created! Properties: \n {} \n {}",
                                     new Object[]{destination.asSocket(), socket.toStringOptions(), socket.toStringMonitor()});
+                            component.networkStatus(ConnectionStatus.established(destination, Transport.UDT));
                         } else {
                             component.LOG.error("Error while trying to connect to {}! Error was {}", destination, future.cause());
-                            component.trigger(new DropDelayed(destination.asSocket(), Transport.UDT));
+                            component.networkStatus(ConnectionStatus.dropped(destination, Transport.UDT));
+                            component.trigger(new DropDelayed(destination, Transport.UDT));
                         }
                     }
                 }
@@ -408,6 +450,7 @@ public class ChannelManager {
                             }
                             tcpChannelsByRemote.remove(remoteAddress);
                             component.LOG.debug("TCP Channel {} ({}) closed: {}", new Object[]{realAddress, remoteAddress, c});
+                            component.networkStatus(ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.TCP));
                             printStuff();
                             if (tcpChannels.get(realAddress).isEmpty()) {
                                 component.LOG.info("Last TCP Channel to {} dropped. "
@@ -419,6 +462,7 @@ public class ChannelManager {
                                     udtChannelsByRemote.remove(uc.remoteAddress());
                                     uc.close();
                                     component.LOG.debug("   UDT Channel {} ({}) closed.", udtRealAddr, uc.remoteAddress());
+                                    component.networkStatus(ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT));
                                 }
                                 udtChannels.removeAll(realAddress);
 
@@ -452,6 +496,7 @@ public class ChannelManager {
                             }
                             udtChannelsByRemote.remove(remoteAddress);
                             component.LOG.debug("UDT Channel {} ({}) closed.", realAddress, remoteAddress);
+                            component.networkStatus(ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT));
                             printStuff();
                         } else {
                             udtChannelsByRemote.remove(remoteAddress);

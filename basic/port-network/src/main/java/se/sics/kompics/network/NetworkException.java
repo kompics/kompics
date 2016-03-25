@@ -1,6 +1,6 @@
 /**
  * This file is part of the Kompics component model runtime.
- * 
+ * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
@@ -11,58 +11,44 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics.network;
 
-import java.net.InetSocketAddress;
-
-import se.sics.kompics.Event;
+import com.google.common.base.Optional;
+import se.sics.kompics.KompicsEvent;
 
 /**
  * The <code>NetworkException</code> class.
- * 
+ * <p>
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
- * @author Jim Dowling <jdowling@sics.se>
- * @version $Id: NetworkException.java 636 2009-02-08 01:41:23Z Cosmin $
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-public final class NetworkException extends Event {
+public final class NetworkException implements KompicsEvent {
 
-	private final InetSocketAddress remoteAddress;
-	private final Transport protocol;
+    public final Address peer;
+    public final Transport protocol;
+    public final String message;
+    public final Optional<Throwable> cause;
 
-	/**
-	 * Instantiates a new network exception.
-	 * 
-	 * @param remoteAddress
-	 *            the remote address
-	 */
-	public NetworkException(InetSocketAddress remoteAddress, Transport protocol) {
-		super();
-		this.remoteAddress = remoteAddress;
-		this.protocol = protocol;
-	}
+    public NetworkException(String message, Address peer, Transport protocol) {
+        this.message = message;
+        this.peer = peer;
+        this.protocol = protocol;
+        this.cause = Optional.absent();
+    }
 
-	/**
-	 * Gets the remote address.
-	 * 
-	 * @return the remote address
-	 */
-	public final InetSocketAddress getRemoteAddress() {
-		return remoteAddress;
-	}
+    public NetworkException(String message, Address peer, Transport protocol, Optional<Throwable> cause) {
+        this.message = message;
+        this.peer = peer;
+        this.protocol = protocol;
+        this.cause = cause;
+    }
 
-	/**
-	 * Gets the protocol
-	 * 
-	 * @return the protocol
-	 */
-	public final Transport getProtocol() {
-		return protocol;
-	}
 }

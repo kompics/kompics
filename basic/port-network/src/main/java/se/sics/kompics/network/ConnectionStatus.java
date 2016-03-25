@@ -1,4 +1,4 @@
-/* 
+/*
  * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
@@ -18,25 +18,42 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package se.sics.kompics.network.netty;
+package se.sics.kompics.network;
 
 import se.sics.kompics.KompicsEvent;
-import se.sics.kompics.network.Address;
-import se.sics.kompics.network.Transport;
 
 /**
- * Just a notification event
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-class SendDelayed implements KompicsEvent {
-    
+public class ConnectionStatus implements KompicsEvent {
+
+    public static enum State {
+
+        REQUESTED,
+        ESTABLISHED,
+        DROPPED;
+    }
+
+    public final State state;
     public final Address peer;
     public final Transport protocol;
-    
-    public SendDelayed(Address peer, Transport protocol) {
+
+    private ConnectionStatus(State state, Address peer, Transport protocol) {
+        this.state = state;
         this.peer = peer;
         this.protocol = protocol;
     }
-    
+
+    public static ConnectionStatus requested(Address peer, Transport protocol) {
+        return new ConnectionStatus(State.REQUESTED, peer, protocol);
+    }
+
+    public static ConnectionStatus established(Address peer, Transport protocol) {
+        return new ConnectionStatus(State.ESTABLISHED, peer, protocol);
+    }
+
+    public static ConnectionStatus dropped(Address peer, Transport protocol) {
+        return new ConnectionStatus(State.DROPPED, peer, protocol);
+    }
 }

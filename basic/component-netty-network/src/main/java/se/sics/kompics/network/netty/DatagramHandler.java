@@ -20,13 +20,11 @@
  */
 package se.sics.kompics.network.netty;
 
-import com.google.common.base.Optional;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
-import java.util.UUID;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 import se.sics.kompics.network.netty.serialization.Serializers;
@@ -45,22 +43,19 @@ public class DatagramHandler extends BaseHandler<DatagramPacket> {
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         try {
-            UUID id = (UUID) Serializers.fromBinary(msg.content(), Optional.absent());
             Object o = Serializers.fromBinary(msg.content(), msg);
 
             if (o instanceof AckRequestMsg) {
                 AckRequestMsg arm = (AckRequestMsg) o;
+                ByteBuf buf = ctx.alloc().ioBuffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
                 component.deliverMessage(arm.content, ctx.channel());
-                if (id != null) {
-                    ByteBuf buf = ctx.alloc().ioBuffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
-                    NotifyAck ack = arm.reply();
-                    Serializers.toBinary(ack, buf);
-                    DatagramPacket pack = new DatagramPacket(buf, ack.getDestination().asSocket());
-                    component.LOG.trace("Sending Datagram ACK {} ({}bytes)", ack, buf.readableBytes());
-                    ctx.writeAndFlush(pack);
-                }
-            }
-            if (o instanceof Msg) {
+                component.LOG.trace("Got AckRequest for {}. Replying...", arm.id);
+                NotifyAck ack = arm.reply();
+                Serializers.toBinary(ack, buf);
+                DatagramPacket pack = new DatagramPacket(buf, ack.getDestination().asSocket());
+                component.LOG.trace("Sending Datagram ACK {} ({}bytes)", ack, buf.readableBytes());
+                ctx.writeAndFlush(pack);
+            } else if (o instanceof Msg) {
                 Msg m = (Msg) o;
                 component.deliverMessage(m, ctx.channel());
             } else {
