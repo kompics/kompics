@@ -593,7 +593,7 @@ public class JavaComponent extends ComponentCore {
      */
 
     @Override
-    void setInactive(Component child) {
+    protected void setInactive(Component child) {
         activeSet.remove(child);
     }
     private Set<Component> activeSet = new HashSet<Component>();

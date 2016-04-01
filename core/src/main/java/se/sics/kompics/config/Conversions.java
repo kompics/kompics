@@ -275,4 +275,8 @@ public abstract class Conversions {
     public static void register(Converter c) {
         converters.put(c.type(), c);
     }
+    
+    public static String asString() {
+        return "Converters: \n" + converters.toString();
+    }
 }

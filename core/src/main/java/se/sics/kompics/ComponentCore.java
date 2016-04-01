@@ -141,7 +141,7 @@ public abstract class ComponentCore implements Component {
         }
     }
 
-    abstract void setInactive(Component child);
+    protected abstract void setInactive(Component child);
 
     protected void markSubtreeAs(State s) {
         this.state = s;
