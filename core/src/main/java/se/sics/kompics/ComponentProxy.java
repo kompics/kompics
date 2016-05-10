@@ -29,6 +29,10 @@ import java.util.UUID;
 public interface ComponentProxy {
 
     public <P extends PortType> void trigger(KompicsEvent e, Port<P> p);
+    
+    public <P extends PortType> void answer(Direct.Request event);
+
+    public <P extends PortType> void answer(Direct.Request req, Direct.Response resp);
 
     public <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent);
 
