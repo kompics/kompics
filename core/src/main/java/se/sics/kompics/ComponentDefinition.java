@@ -457,6 +457,16 @@ public abstract class ComponentDefinition {
         public <P extends PortType> void trigger(KompicsEvent e, Port<P> p) {
             ComponentDefinition.this.trigger(e, p);
         }
+        
+        @Override
+        public <P extends PortType> void answer(Direct.Request event) {
+            ComponentDefinition.this.answer(event);
+        }
+
+        @Override
+        public <P extends PortType> void answer(Direct.Request req, Direct.Response resp) {
+            ComponentDefinition.this.answer(req, resp);
+        }
 
         @Override
         public <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent) {
@@ -558,7 +568,6 @@ public abstract class ComponentDefinition {
         public <P extends PortType> Negative<P> getNegative(Class<P> portType) {
             return ComponentDefinition.this.getComponentCore().getNegative(portType);
         }
-
     };
 
     /* === PRIVATE === */
