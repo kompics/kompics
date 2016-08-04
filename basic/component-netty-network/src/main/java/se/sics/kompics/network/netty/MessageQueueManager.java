@@ -65,9 +65,18 @@ class MessageQueueManager {
             case UDT:
                 sendUDT(msg);
                 break;
-            case UDP:
-                component.sendUdpMessage(msg);
-                break;
+            case UDP: {
+                ChannelFuture cf = component.sendUdpMessage(msg);
+                if (msg.notify.isPresent()) {
+                    if (cf != null) {
+                        cf.addListener(new NotifyListener(msg.notify.get()));
+                    } else {
+                        msg.notify.get().prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
+                        component.notify(msg.notify.get());
+                    }
+                }
+            }
+            break;
             default:
                 throw new Error("Unknown Transport type");
         }

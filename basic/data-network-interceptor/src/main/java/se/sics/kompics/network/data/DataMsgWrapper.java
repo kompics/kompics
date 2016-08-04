@@ -79,4 +79,9 @@ public class DataMsgWrapper implements Msg {
 
     }
 
+    @Override
+    public String toString() {
+        return String.format("DataMsgWrapper(msg: %s, proto: %s)", msg, proto);
+    }
+    
 }
