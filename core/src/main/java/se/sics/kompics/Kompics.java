@@ -186,7 +186,7 @@ public final class Kompics {
 
             if (scheduler == null) {
                 // scheduler = new WorkStealingScheduler(workers);
-                scheduler = new ThreadPoolScheduler();
+                scheduler = new ThreadPoolScheduler(workers);
             }
 
             Kompics.maxNumOfExecutedEvents.lazySet(maxEventExecuteNumber);
