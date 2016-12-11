@@ -63,22 +63,31 @@ public class PatternTest {
         // even
         runPatternWith(Rational.valueOf(0, 1), "QP"); // will be 1/1
         // with rest
-        runPatternWith(Rational.valueOf(1, 3), "QPQPQ"); // will be 2/3
+        runPatternWith(Rational.valueOf(1, 5), "QPQPQ"); // will be 2/3
     }
 
     @Test
     public void p1Test() {
         // even
-        runPatternWith(Rational.valueOf(3, 4), "QQPQQ"); // will be 1/4
+        runPatternWith(Rational.valueOf(3, 5), "QQPQQ"); // will be 1/4
         // with rest
-        runPatternWith(Rational.valueOf(2, 3), "QPQQ"); // will be 1/3
+        runPatternWith(Rational.valueOf(1, 2), "QPQQ"); // will be 1/3
+    }
+
+    @Test
+    public void otherTest() {
+        runPatternWith(Rational.valueOf(1, 3), "QPQ"); // will be 1/2
+        runPatternWith(Rational.valueOf(1, 4), "QPQPQPQQ"); // will be 3/5
     }
 
     public void runPatternWith(Rational ratio, String expectedPattern) {
-        Rational r = Rational.ONE.minus(ratio.abs());
         AlternatingSelection as = new AlternatingSelection();
         as.updateRatio(ratio);
-        long pq = r.getDividend().longValue() + r.getDivisor().longValue();
+        Rational posRatio = ratio.abs(); // fold into [0, 1]
+        long n = posRatio.getDividend().longValue();
+        long m = posRatio.getDivisor().longValue();
+        Rational r = Rational.valueOf(m - n, m + n);
+        long pq = r.getDivisor().longValue() + r.getDividend().longValue();
         // performance test
         long start, end;
         start = System.nanoTime();
@@ -107,6 +116,7 @@ public class PatternTest {
             }
 
             if ((np + nq) % pq == 0) {
+                //System.out.println("Checking string: " + sb.toString());
                 assertEquals(expectedPattern, sb.toString());
                 sb = new StringBuilder();
                 assertEquals(r, Rational.valueOf(np, nq));

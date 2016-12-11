@@ -32,7 +32,7 @@ import se.sics.kompics.network.Transport;
 public class RandomSelection implements ProtocolSelectionPolicy {
 
     private double ratio = 0.5;
-    private final Random rand = new Random(1);
+    private final Random rand = new Random();
 
     @Override
     public void updateRatio(Rational ratio) {

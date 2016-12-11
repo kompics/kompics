@@ -51,7 +51,9 @@ public class AlternatingSelection implements ProtocolSelectionPolicy {
             emissionTranslation[1] = Transport.UDT;
         } // if it's exactly zero the assignment doesn't matter, since it's 50/50 anyway
         Rational posRatio = ratio.abs(); // fold into [0, 1]
-        Rational r = Rational.ONE.minus(posRatio); // flip direction such that 0 is 100% and 1 is 50/50
+        long n = posRatio.getDividend().longValue();
+        long m = posRatio.getDivisor().longValue();
+        Rational r = Rational.valueOf(m-n, m+n);
         if (r.equals(Rational.ZERO)) {
             currentPattern = new ConstantPattern(Emission.Q);
             LOG.trace("Updating to {} ({}), using ConstantPattern of {}", new Object[]{ratio, r, emissionTranslation[Emission.Q.ordinal()]});
@@ -153,7 +155,7 @@ public class AlternatingSelection implements ProtocolSelectionPolicy {
                 np = 0;
                 nq = 1;
                 return Emission.Q;
-            } else if (nq == (b * (np + 1))) {
+            } else if ((nq == (b * (np + 1))) && (np < p)) {
                 //System.out.println("P: np="+np+", nq="+nq+" selecting P");
                 np++;
                 return Emission.P;
