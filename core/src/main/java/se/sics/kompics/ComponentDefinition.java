@@ -568,6 +568,16 @@ public abstract class ComponentDefinition {
         public <P extends PortType> Negative<P> getNegative(Class<P> portType) {
             return ComponentDefinition.this.getComponentCore().getNegative(portType);
         }
+
+        @Override
+        public <P extends PortType> Positive<P> requires(Class<P> portType) {
+            return ComponentDefinition.this.requires(portType);
+        }
+
+        @Override
+        public <P extends PortType> Negative<P> provides(Class<P> portType) {
+            return ComponentDefinition.this.provides(portType);
+        }
     };
 
     /* === PRIVATE === */

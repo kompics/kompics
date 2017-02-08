@@ -81,4 +81,8 @@ public interface ComponentProxy {
     public <P extends PortType> Positive<P> getPositive(Class<P> portType);
 
     public <P extends PortType> Negative<P> getNegative(Class<P> portType);
+    
+    public <P extends PortType> Positive<P> requires(Class<P> portType);
+    
+    public <P extends PortType> Negative<P> provides(Class<P> portType);
 }
