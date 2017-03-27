@@ -172,9 +172,13 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     @Override
     public void doSubscribe(MatchedHandler handler) {
+       
         if (handler instanceof ClassMatchedHandler) {
+          Object matchType = handler.pattern();
+          if(matchType == null) {
             ClassMatchedHandler cmh = (ClassMatchedHandler) handler;
             reflectCMHType(cmh);
+          }
         }
         Class cxtType = handler.getCxtType();
         if (cxtType == null) {

@@ -29,6 +29,19 @@ public abstract class ClassMatchedHandler<V, E extends KompicsEvent & PatternExt
 
     private Class matchType = null;
 
+    protected ClassMatchedHandler() {
+    }
+    
+    protected ClassMatchedHandler(Class matchType) {
+      super();
+      this.matchType = matchType;
+    }
+    
+    protected ClassMatchedHandler(Class<E> cxtType, Class matchType) {
+      super(cxtType);
+      this.matchType = matchType;
+    }
+    
     @Override
     public Class pattern() {
         return this.matchType;
