@@ -1,6 +1,6 @@
 /**
  * This file is part of the Kompics component model runtime.
- * 
+ * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
@@ -11,12 +11,12 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics;
 
@@ -29,28 +29,35 @@ package se.sics.kompics;
  */
 public abstract class MatchedHandler<P, V, E extends KompicsEvent & PatternExtractor<P, ? super V>> {
 
-    Class<E> cxtType = null;
+  Class<E> cxtType = null;
 
-    public abstract P pattern();
+  protected MatchedHandler() {
+  }
 
-    public abstract void handle(V content, E context);
+  protected MatchedHandler(Class<E> cxtType) {
+    cxtType = cxtType;
+  }
 
-    /**
-     * Sets the event type.
-     * <p>
-     * @param eventType
-     * the new event type
-     */
-    public void setCxtType(Class<E> cxtType) {
-        this.cxtType = cxtType;
-    }
+  public abstract P pattern();
 
-    /**
-     * Gets the event type.
-     * <p>
-     * @return the event type
-     */
-    public Class<E> getCxtType() {
-        return cxtType;
-    }
+  public abstract void handle(V content, E context);
+
+  /**
+   * Sets the event type.
+   * <p>
+   * @param eventType
+   * the new event type
+   */
+  public void setCxtType(Class<E> cxtType) {
+    this.cxtType = cxtType;
+  }
+
+  /**
+   * Gets the event type.
+   * <p>
+   * @return the event type
+   */
+  public Class<E> getCxtType() {
+    return cxtType;
+  }
 }
