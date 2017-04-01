@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import se.sics.kompics.Fault.ResolveAction;
@@ -97,6 +98,11 @@ public class JavaComponent extends ComponentCore {
         return positiveControl;
     }
 
+    Map<Class<? extends PortType>, JavaPort<? extends PortType>> getNegativePorts() {
+        return negativePorts;
+    }
+
+
     /*
      * (non-Javadoc)
      *
@@ -116,6 +122,10 @@ public class JavaComponent extends ComponentCore {
     @Override
     public <P extends PortType> Negative<P> required(Class<P> portType) {
         return getNegative(portType);
+    }
+
+    Map<Class<? extends PortType>, JavaPort<? extends PortType>> getPositivePorts() {
+        return positivePorts;
     }
 
     /*

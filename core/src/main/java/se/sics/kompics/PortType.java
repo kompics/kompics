@@ -165,6 +165,14 @@ public abstract class PortType {
 				: hasNegative(eventType));
 	}
 
+	Set<Class<? extends KompicsEvent>> getPositiveEvents() {
+		return positive;
+	}
+
+	Set<Class<? extends KompicsEvent>> getNegativeEvents() {
+		return negative;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
