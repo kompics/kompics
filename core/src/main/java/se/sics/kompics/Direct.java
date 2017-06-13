@@ -13,7 +13,7 @@ public class Direct {
 
     public static class Request<R extends Response> implements KompicsEvent {
 
-        private Port origin;
+        Port origin;
         private R response;
 
         void setOrigin(Port origin) {
