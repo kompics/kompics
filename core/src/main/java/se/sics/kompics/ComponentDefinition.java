@@ -22,8 +22,13 @@ package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
 import java.lang.reflect.Constructor;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import se.sics.kompics.Fault.ResolveAction;
 import se.sics.kompics.config.Config;
 import se.sics.kompics.config.ConfigUpdate;
@@ -85,7 +90,7 @@ public abstract class ComponentDefinition {
         if (event instanceof Direct.Request) {
             Direct.Request r = (Direct.Request) event;
             r.setOrigin(port.getPair());
-            Kompics.logger.trace("Set port on request {} to {}", r, r.getOrigin());
+            logger.trace("Set port on request {} to {}", r, r.getOrigin());
         } else if (event instanceof Direct.Response) {
             throw new KompicsException("Direct.Response can not be \"trigger\"ed. It has to \"answer\" a Direct.Request!");
         }
@@ -95,7 +100,7 @@ public abstract class ComponentDefinition {
 
     protected final <P extends PortType> void answer(Direct.Request event) {
         if (!event.hasResponse()) {
-            Kompics.logger.warn("Can't trigger a response for {} since none was given!", event);
+            logger.warn("Can't trigger a response for {} since none was given!", event);
             return;
         }
         event.getOrigin().doTrigger(event.getResponse(), core.wid, core);
@@ -382,7 +387,7 @@ public abstract class ComponentDefinition {
         if (core.state == Component.State.ACTIVE || core.state == Component.State.STARTING) {
             trigger(Kill.event, control.getPair());
         } else {
-            Kompics.logger.warn("Could not commit suicide as (non-active) state was " + core.state);
+            logger.warn("Could not commit suicide as state is non-active");
         }
     }
 
@@ -457,7 +462,7 @@ public abstract class ComponentDefinition {
         public <P extends PortType> void trigger(KompicsEvent e, Port<P> p) {
             ComponentDefinition.this.trigger(e, p);
         }
-        
+
         @Override
         public <P extends PortType> void answer(Direct.Request event) {
             ComponentDefinition.this.answer(event);
@@ -580,6 +585,107 @@ public abstract class ComponentDefinition {
         }
     };
 
+    /* Logging Related */
+    /**
+     * Pre-configured MDC key for the unique component id.
+     * 
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     */
+    public static final String MDC_KEY_CID = "kcomponent-id";
+    /**
+     * Pre-configured MDC key for the current component lifecycle state.
+     * 
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     */
+    public static final String MDC_KEY_CSTATE = "kcomponent-state";
+
+    /**
+     * Kompics provided slf4j logger with managed diagnostic context.
+     * 
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     */
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    private final Map<String, String> mdcState = new HashMap<>();
+    private final Map<String, String> mdcReset = new HashMap<>();
+
+    void setMDC() {
+        MDC.setContextMap(mdcState);
+    }
+
+    /**
+     * Associate key with value in the logging diagnostic context.
+     * 
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     *
+     * @param key
+     * @param value 
+     */
+    protected void loggingCtxPut(String key, String value) {
+        mdcState.put(key, value);
+        MDC.put(key, value);
+    }
+    
+    /**
+     * Associate key permanently with value in the logging diagnostic context.
+     * 
+     * Keys set in this way are not removed by {@link #loggingCtxReset()} or {@link #loggingCtxRemove()}.
+     * 
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     *
+     * @param key
+     * @param value 
+     */
+    protected void loggingCtxPutAlways(String key, String value) {
+        mdcReset.put(key, value);
+        mdcState.put(key, value);
+        MDC.put(key, value);
+    }
+
+    /**
+     * Disassociate any value with the key in the logging diagnostic context.
+     * 
+     * @param key
+     */
+    protected void loggingCtxRemove(String key) {
+        mdcState.remove(key);
+        MDC.remove(key);
+    }
+
+    /**
+     * Get the value associated with key in the current logging diagnostic context.
+     * 
+     * @param key
+     * @return the value associated with key
+     */
+    protected String loggingCtxGet(String key) {
+        return mdcState.get(key);
+    }
+
+    /**
+     * Reset the current logging diagnostic context.
+     * 
+     * Removes all items added to context by the user that weren't set with {@link #loggingCtxPutAlways(String, String)}
+     * 
+     */
+    protected void loggingCtxReset() {
+        String state = MDC.get(MDC_KEY_CSTATE);
+        mdcState.clear();
+        mdcState.putAll(mdcReset);
+        MDC.setContextMap(mdcState);
+        if (state != null) {
+            MDC.put(MDC_KEY_CSTATE, state);
+        }
+    }
+
+    private void loggingCtxInit() {
+//        if (!mdcState.isEmpty()) {
+//            mdcReset.putAll(mdcState);
+//        }
+        mdcReset.put(MDC_KEY_CID, this.id().toString());
+        loggingCtxReset();
+    }
+
     /* === PRIVATE === */
     private ComponentCore core;
 
@@ -591,6 +697,7 @@ public abstract class ComponentDefinition {
         control = core.createControlPort();
         loopback = core.createNegativePort(LoopbackPort.class);
         onSelf = loopback.getPair();
+        loggingCtxInit();
     }
 
     protected ComponentDefinition(Class<? extends ComponentCore> coreClass) {
@@ -613,5 +720,6 @@ public abstract class ComponentDefinition {
         control = core.createControlPort();
         loopback = core.createNegativePort(LoopbackPort.class);
         onSelf = loopback.getPair();
+        loggingCtxInit();
     }
 }

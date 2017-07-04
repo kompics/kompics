@@ -24,6 +24,7 @@ import com.google.common.base.Optional;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import org.slf4j.MDC;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.netty.serialization.Serializers;
 
@@ -46,22 +47,26 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
         if (frame == null) {
             return null;
         }
-
-        component.LOG.trace("Trying to decode incoming {} bytes of data from {} to {}.", new Object[]{frame.readableBytes(), ctx.channel().remoteAddress(), ctx.channel().localAddress()});
-        Object o = Serializers.fromBinary(frame, Optional.absent());
-        component.LOG.trace("Decoded incoming data from {}: {}", ctx.channel().remoteAddress(), o);
-        if (o instanceof AckRequestMsg) {
-            AckRequestMsg arm = (AckRequestMsg) o;
-            component.LOG.trace("Got AckRequest for {}. Replying...", arm.id);
-            NotifyAck an = arm.reply();
-            ctx.channel().writeAndFlush(new MessageWrapper(an));
-            return arm.content;
-        } else if (o instanceof Msg) {
+        component.setCustomMDC();
+        try {
+            component.extLog.trace("Trying to decode incoming {} bytes of data from {} to {}.", new Object[]{frame.readableBytes(), ctx.channel().remoteAddress(), ctx.channel().localAddress()});
+            Object o = Serializers.fromBinary(frame, Optional.absent());
+            component.extLog.trace("Decoded incoming data from {}: {}", ctx.channel().remoteAddress(), o);
+            if (o instanceof AckRequestMsg) {
+                AckRequestMsg arm = (AckRequestMsg) o;
+                component.extLog.trace("Got AckRequest for {}. Replying...", arm.id);
+                NotifyAck an = arm.reply();
+                ctx.channel().writeAndFlush(new MessageWrapper(an));
+                return arm.content;
+            } else if (o instanceof Msg) {
+                return o;
+            } else {
+                component.extLog.warn("Got unexpected Stream message type: {} -> {}", o.getClass().getCanonicalName(), o);
+            }
             return o;
-        } else {
-            component.LOG.warn("Got unexpected Stream message type: {} -> {}", o.getClass().getCanonicalName(), o);
+        } finally {
+            MDC.clear();
         }
-        return o;
     }
 
     @Override

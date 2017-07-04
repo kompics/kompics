@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.MDC;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
@@ -86,7 +87,7 @@ class MessageQueueManager {
         Address peer = msg.msg.getDestination();
         Queue<MessageWrapper> delays = tcpDelays.get(peer.asSocket());
         if (delays != null) {
-            component.LOG.debug("Delaying message while establishing connection: {}", msg);
+            component.extLog.debug("Delaying message while establishing connection: {}", msg);
             delays.add(msg);
             return;
         }
@@ -97,11 +98,11 @@ class MessageQueueManager {
         if (c == null) {
             delays = new LinkedList<>();
             tcpDelays.put(peer.asSocket(), delays);
-            component.LOG.debug("Delaying message while establishing connection: {}", msg);
+            component.extLog.debug("Delaying message while establishing connection: {}", msg);
             delays.add(msg);
             return;
         }
-        component.LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
+        component.extLog.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
         ChannelFuture cf = c.writeAndFlush(msg);
         if (msg.notify.isPresent()) {
             cf.addListener(new NotifyListener(msg.notify.get()));
@@ -112,7 +113,7 @@ class MessageQueueManager {
         Address peer = msg.msg.getDestination();
         Queue<MessageWrapper> delays = udtDelays.get(peer.asSocket());
         if (delays != null) {
-            component.LOG.debug("Delaying message while establishing connection: {}", msg);
+            component.extLog.debug("Delaying message while establishing connection: {}", msg);
             delays.add(msg);
             return;
         }
@@ -123,11 +124,11 @@ class MessageQueueManager {
         if (c == null) {
             delays = new LinkedList<>();
             udtDelays.put(peer.asSocket(), delays);
-            component.LOG.debug("Delaying message while establishing connection: {}", msg);
+            component.extLog.debug("Delaying message while establishing connection: {}", msg);
             delays.add(msg);
             return;
         }
-        component.LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
+        component.extLog.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
         ChannelFuture cf = c.writeAndFlush(msg);
         if (msg.notify.isPresent()) {
             cf.addListener(new NotifyListener(msg.notify.get()));
@@ -135,7 +136,7 @@ class MessageQueueManager {
     }
 
     void retry(SendDelayed event) {
-        component.LOG.info("Trying to send delayed messages: {} on {}", event.peer, event.protocol);
+        component.extLog.info("Trying to send delayed messages: {} on {}", event.peer, event.protocol);
         Address peer = event.peer;
         switch (event.protocol) {
             case TCP:
@@ -156,12 +157,12 @@ class MessageQueueManager {
         }
         Channel c = component.channels.getTCPChannel(peer);
         if (c == null) {
-            component.LOG.warn("Connection to {} still not available. Not retrying anything.", peer);
+            component.extLog.warn("Connection to {} still not available. Not retrying anything.", peer);
             return;
         }
         while (!delays.isEmpty()) {
             MessageWrapper msg = delays.poll();
-            component.LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
+            component.extLog.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
             ChannelFuture cf = c.write(msg);
             if (msg.notify.isPresent()) {
                 cf.addListener(new NotifyListener(msg.notify.get()));
@@ -178,12 +179,12 @@ class MessageQueueManager {
         }
         Channel c = component.channels.getUDTChannel(peer);
         if (c == null) {
-            component.LOG.warn("Connection to {} still not available. Not retrying anything.", peer);
+            component.extLog.warn("Connection to {} still not available. Not retrying anything.", peer);
             return;
         }
         while (!delays.isEmpty()) {
             MessageWrapper msg = delays.poll();
-            component.LOG.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
+            component.extLog.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
             ChannelFuture cf = c.write(msg);
             if (msg.notify.isPresent()) {
                 cf.addListener(new NotifyListener(msg.notify.get()));
@@ -210,7 +211,7 @@ class MessageQueueManager {
             return;
         }
         for (MessageWrapper msgw : delays) {
-            component.LOG.warn("Dropping message {} (with notify) because connection could not be established.", msgw);
+            component.extLog.warn("Dropping message {} (with notify) because connection could not be established.", msgw);
             if (msgw.notify.isPresent()) {
                 MessageNotify.Req notify = msgw.notify.get();
                 notify.prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
@@ -225,12 +226,12 @@ class MessageQueueManager {
         if (req != null) {
             component.notify(req, req.deliveryResponse(System.currentTimeMillis(), true, System.nanoTime()));
         } else {
-            component.LOG.warn("Could not find MessageNotify.Req with id: {}!", ack.id);
+            component.extLog.warn("Could not find MessageNotify.Req with id: {}!", ack.id);
         }
     }
 
     void clear() {
-        component.LOG.info("Cleaning message queues.");
+        component.extLog.info("Cleaning message queues.");
         this.tcpDelays.clear();
         this.udtDelays.clear();
         this.awaitingDelivery.clear();
@@ -246,17 +247,22 @@ class MessageQueueManager {
 
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
-            if (future.isSuccess()) {
-                notify.prepareResponse(System.currentTimeMillis(), true, System.nanoTime());
-                if (notify.notifyOfDelivery) {
-                    awaitingDelivery.put(notify.getMsgId(), notify);
+            component.setCustomMDC();
+            try {
+                if (future.isSuccess()) {
+                    notify.prepareResponse(System.currentTimeMillis(), true, System.nanoTime());
+                    if (notify.notifyOfDelivery) {
+                        awaitingDelivery.put(notify.getMsgId(), notify);
+                    }
+                } else {
+                    component.extLog.warn("Sending of message {} did not succeed :( : {}", notify.msg, future.cause());
+                    notify.prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
                 }
-            } else {
-                component.LOG.warn("Sending of message {} did not succeed :( : {}", notify.msg, future.cause());
-                notify.prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
+                component.notify(notify);
+            } finally {
+                MDC.clear();
             }
-            component.notify(notify);
-        }
 
+        }
     }
 }

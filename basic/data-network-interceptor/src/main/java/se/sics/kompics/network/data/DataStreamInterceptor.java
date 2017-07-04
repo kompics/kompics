@@ -50,8 +50,6 @@ import se.sics.kompics.timer.Timer;
  */
 public class DataStreamInterceptor extends ComponentDefinition {
 
-    static final Logger LOG = LoggerFactory.getLogger(DataStreamInterceptor.class);
-
     final Positive<Timer> timer = requires(Timer.class);
     final Positive<Network> netDown = requires(Network.class);
     final Negative<Network> netUp = provides(Network.class);
@@ -61,6 +59,8 @@ public class DataStreamInterceptor extends ComponentDefinition {
     private final ConnectionFactory factory;
     private final HashMap<InetSocketAddress, ConnectionTracker> connections = new HashMap<>();
     private final long maxQueueLength;
+
+    static final Logger EXT_LOG = LoggerFactory.getLogger(DataStreamInterceptor.class);
 
     public DataStreamInterceptor() {
         maxQueueLength = config().getValue("kompics.net.data.queueLength", Long.class);
@@ -137,7 +137,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
             if (tm != null) {
                 switch (event.getState()) {
                     case SENT: {
-                        LOG.trace("Got a sent notify: {}", event);
+                        logger.trace("Got a sent notify: {}", event);
 //                        double st = ((double) event.getSendTime()) / (1e9);
 //                        stats.update(st, event.getTime() - tm.ts, event.getSize());
                         if (tm.originalRequest.isPresent()) {
@@ -151,7 +151,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
                     }
                     break;
                     case DELIVERED: {
-                        LOG.trace("Got a delivery notify: {}", event);
+                        logger.trace("Got a delivery notify: {}", event);
                         double dt = ((double) event.getDeliveryTime()) / Statistics.NANOSEC;
                         tm.connection.stats.update(dt, event.getSize());
                         if (tm.originalRequest.isPresent()) {
@@ -165,7 +165,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
                     }
                     break;
                     default: {
-                        LOG.trace("Got a notify with a failure state: {}", event);
+                        logger.trace("Got a notify with a failure state: {}", event);
 //                        double st = ((double) event.getSendTime()) / (1e9);
 //                        stats.update(st, event.getTime() - tm.ts, event.getSize());
                         if (tm.originalRequest.isPresent()) {
@@ -181,7 +181,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
                 }
 
             } else {
-                LOG.warn("Got a response for an untracked message...something is probably wrong: \n {}", event);
+                logger.warn("Got a response for an untracked message...something is probably wrong: \n {}", event);
                 //throw new RuntimeException("Got a response for an untracked message...something is wrong!\n" + event);
             }
         }
@@ -212,7 +212,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
             Header h = event.getHeader();
             Transport proto = ct.selectionPolicy.select(event);
             ct.stats.updateSelection(proto);
-            LOG.trace("Got DATA message over {} to track: {}", proto, event);
+            logger.trace("Got DATA message over {} to track: {}", proto, event);
             long ts = System.currentTimeMillis();
             MessageNotify.Req req;
             if (h instanceof DataHeader) { // replace protocol
@@ -231,7 +231,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
 
     @Override
     public void tearDown() {
-        LOG.debug("Cleaning up timeouts.");
+        logger.debug("Cleaning up timeouts.");
         if (timeoutId != null) {
             trigger(new CancelPeriodicTimeout(timeoutId), timer);
         }

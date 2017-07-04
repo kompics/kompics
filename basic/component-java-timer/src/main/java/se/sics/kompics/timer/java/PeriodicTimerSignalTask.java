@@ -21,9 +21,6 @@
 package se.sics.kompics.timer.java;
 
 import java.util.TimerTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import se.sics.kompics.timer.Timeout;
 
 /**
@@ -63,7 +60,8 @@ final class PeriodicTimerSignalTask extends TimerTask {
             try {
                 timerComponent.periodicTimeout((Timeout) timeout.clone());
             } catch (CloneNotSupportedException ex) {
-                JavaTimer.logger.warn("Error during PTST run", ex);
+                // outside of JavaTimer thread...can't leak logger here
+                timerComponent.extLogger.warn("Error during PTST run", ex);
             }
 	}
 }

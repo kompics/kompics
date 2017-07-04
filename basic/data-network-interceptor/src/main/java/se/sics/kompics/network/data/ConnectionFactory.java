@@ -43,32 +43,32 @@ class ConnectionFactory {
     private final Class ratioPolicy; // should be Class<ProtocolSelectionPolicy> but Java's generics are stupid
     private final Class selectionPolicy; // should be Class<ProtocolRatioPolicy> but Java's generics are stupid
     private final Config config;
-    
+
     ConnectionFactory(Config conf, Optional<String> ratioPolicyS, Optional<String> selectionPolicyS) {
         config = conf;
         if (ratioPolicyS.isPresent()) {
             try {
                 ratioPolicy = classLoader.loadClass(ratioPolicyS.get());
 
-                DataStreamInterceptor.LOG.info("Using RatioPolicy: {}", ratioPolicy.getName());
+                DataStreamInterceptor.EXT_LOG.info("Using RatioPolicy: {}", ratioPolicy.getName());
             } catch (Throwable ex) {
-                DataStreamInterceptor.LOG.error("Could not find ratio policy.", ex);
+                DataStreamInterceptor.EXT_LOG.error("Could not find ratio policy.", ex);
                 throw new RuntimeException(ex);
             }
         } else {
-            DataStreamInterceptor.LOG.info("Using default ratio policy: static 50/50");
+            DataStreamInterceptor.EXT_LOG.info("Using default ratio policy: static 50/50");
             ratioPolicy = StaticRatio.FiftyFifty.class;
         }
         if (selectionPolicyS.isPresent()) {
             try {
                 selectionPolicy = classLoader.loadClass(selectionPolicyS.get());
-                DataStreamInterceptor.LOG.info("Using SelectionPolicy: {}", selectionPolicy.getName());
+                DataStreamInterceptor.EXT_LOG.info("Using SelectionPolicy: {}", selectionPolicy.getName());
             } catch (Throwable ex) {
-                DataStreamInterceptor.LOG.error("Could not find selection policy.", ex);
+                DataStreamInterceptor.EXT_LOG.error("Could not find selection policy.", ex);
                 throw new RuntimeException(ex);
             }
         } else {
-            DataStreamInterceptor.LOG.info("Using default selection policy: random");
+            DataStreamInterceptor.EXT_LOG.info("Using default selection policy: random");
             selectionPolicy = RandomSelection.class;
         }
     }
@@ -80,7 +80,7 @@ class ConnectionFactory {
             ProtocolRatioPolicy prp = (ProtocolRatioPolicy) ratioConstructor.newInstance(config);
             return new ConnectionTracker(target, psp, prp);
         } catch (Throwable ex) {
-            DataStreamInterceptor.LOG.error("Could not instantiate policy. Error was: \n {}", ex);
+            DataStreamInterceptor.EXT_LOG.error("Could not instantiate policy. Error was: \n {}", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -92,7 +92,7 @@ class ConnectionFactory {
             ProtocolRatioPolicy prp = (ProtocolRatioPolicy) ratioConstructor.newInstance(config);
             return ConnectionTracker.fromBinary(buf, psp, prp);
         } catch (Throwable ex) {
-            DataStreamInterceptor.LOG.error("Could not instantiate policy. Error was: \n {}", ex);
+            DataStreamInterceptor.EXT_LOG.error("Could not instantiate policy. Error was: \n {}", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -104,7 +104,7 @@ class ConnectionFactory {
             ProtocolRatioPolicy prp = (ProtocolRatioPolicy) ratioConstructor.newInstance(config);
             return new ConnectionTracker(target, initialRatio, psp, prp);
         } catch (Throwable ex) {
-            DataStreamInterceptor.LOG.error("Could not instantiate policy. Error was: \n {}", ex);
+            DataStreamInterceptor.EXT_LOG.error("Could not instantiate policy. Error was: \n {}", ex);
             throw new RuntimeException(ex);
         }
     }

@@ -42,12 +42,14 @@ import io.netty.channel.udt.nio.NioUdtProvider;
 import io.netty.util.concurrent.Future;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.KompicsEvent;
@@ -103,28 +105,47 @@ public class NettyNetwork extends ComponentDefinition {
     private final long monitoringInterval = 1000; //1s
     final int udtBufferSizes;
     final int udtMSS;
-    public final Logger LOG;
+    // LOGGING
+    public static final String MDC_KEY_PORT = "knet-port";
+    public static final String MDC_KEY_IF = "knet-if";
+    public static final String MDC_KEY_ALT_IF = "knet-alt-if";
+    final Logger extLog = this.logger;
+    private final Map<String, String> customLogCtx = new HashMap<>();
+
+    void setCustomMDC() {
+        MDC.setContextMap(customLogCtx);
+    }
+
+    private void initLoggingCtx() {
+        for (Map.Entry<String, String> e : customLogCtx.entrySet()) {
+            loggingCtxPutAlways(e.getKey(), e.getValue());
+        }
+    }
 
     public NettyNetwork(NettyInit init) {
         // probably useless to set here as it won't be re-read in most JVMs after start
         System.setProperty("java.net.preferIPv4Stack", "true");
 
         self = new NettyAddress(init.self);
+        customLogCtx.put(MDC_KEY_PORT, Integer.toString(self.getPort()));
+        customLogCtx.put(MDC_KEY_IF, self.getIp().getHostAddress());
 
         boundPort = self.getPort();
-
-        LOG = LoggerFactory.getLogger("NettyNetwork@" + self.getPort());
 
         // CONFIG
         Optional<InetAddress> abiO = config().readValue("netty.bindInterface", InetAddress.class);
         if (abiO.isPresent()) {
             alternativeBindIf = abiO.get();
+            customLogCtx.put(MDC_KEY_ALT_IF, self.getIp().getHostAddress());
         }
-        LOG.info("Alternative Bind Interface set to {}", alternativeBindIf);
+
+        initLoggingCtx();
+
+        logger.info("Alternative Bind Interface set to {}", alternativeBindIf);
 
         udtMonitoring = config().getValueOrDefault("netty.udt.monitor", false);
         if (udtMonitoring) {
-            LOG.info("UDT monitoring requested.");
+            logger.info("UDT monitoring requested.");
         }
 
         udtBufferSizes = config().getValueOrDefault("netty.udt.buffer", -1);
@@ -159,14 +180,20 @@ public class NettyNetwork extends ComponentDefinition {
                     .option(UdtChannelOption.PROTOCOL_RECEIVE_BUFFER_SIZE, this.udtBufferSizes);
         }
         if (udtMonitoring) {
-            LOG.info("Activating UDT monitoring (client).");
+            logger.info("Activating UDT monitoring (client).");
             bootstrapUDTClient.group().scheduleAtFixedRate(new Runnable() {
 
                 @Override
                 public void run() {
-                    channels.monitor();
+                    setCustomMDC();
+                    try {
+                        channels.monitor();
+                    } finally {
+                        MDC.clear();
+                    }
                 }
-            }, monitoringInterval, monitoringInterval, TimeUnit.MILLISECONDS);
+            }, monitoringInterval, monitoringInterval, TimeUnit.MILLISECONDS
+            );
         }
 
         subscribe(startHandler, control);
@@ -212,7 +239,7 @@ public class NettyNetwork extends ComponentDefinition {
         @Override
         public void handle(Msg event) {
             if (event.getDestination().sameHostAs(self)) {
-                LOG.trace("Delivering message {} locally.", event);
+                logger.trace("Delivering message {} locally.", event);
                 trigger(event, net);
                 return;
             }
@@ -227,7 +254,7 @@ public class NettyNetwork extends ComponentDefinition {
         public void handle(final MessageNotify.Req notify) {
             Msg event = notify.msg;
             if (event.getDestination().sameHostAs(self)) {
-                LOG.trace("Delivering message {} locally.", event);
+                logger.trace("Delivering message {} locally.", event);
                 trigger(event, net);
                 answer(notify);
                 return;
@@ -286,9 +313,9 @@ public class NettyNetwork extends ComponentDefinition {
             udpChannel = (DatagramChannel) bootstrapUDP.bind(iAddr).sync().channel();
 
             //addLocalSocket(iAddr, c);
-            LOG.info("Successfully bound to ip:port {}:{}", addr, port);
+            logger.info("Successfully bound to ip:port {}:{}", addr, port);
         } catch (InterruptedException e) {
-            LOG.error("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
+            logger.error("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             return false;
         }
 
@@ -308,9 +335,9 @@ public class NettyNetwork extends ComponentDefinition {
         try {
             bootstrapTCP.bind(new InetSocketAddress(addr, port)).sync();
 
-            LOG.info("Successfully bound to ip:port {}:{}", addr, port);
+            logger.info("Successfully bound to ip:port {}:{}", addr, port);
         } catch (InterruptedException e) {
-            LOG.error("Problem when trying to bind to {}:{}", addr, port);
+            logger.error("Problem when trying to bind to {}:{}", addr, port);
             return false;
         }
 
@@ -335,12 +362,17 @@ public class NettyNetwork extends ComponentDefinition {
                     .childOption(UdtChannelOption.PROTOCOL_RECEIVE_BUFFER_SIZE, this.udtBufferSizes);
         }
         if (udtMonitoring) {
-            LOG.info("Activating UDT monitoring (server).");
+            logger.info("Activating UDT monitoring (server).");
             bootstrapUDT.childGroup().scheduleAtFixedRate(new Runnable() {
 
                 @Override
                 public void run() {
-                    channels.monitor();
+                    setCustomMDC();
+                    try {
+                        channels.monitor();
+                    } finally {
+                        MDC.clear();
+                    }
                 }
             }, monitoringInterval, monitoringInterval, TimeUnit.MILLISECONDS);
         }
@@ -349,9 +381,9 @@ public class NettyNetwork extends ComponentDefinition {
             InetSocketAddress localAddress = (InetSocketAddress) c.localAddress(); // Should work
             boundUDTPort = localAddress.getPort(); // in case it was 0 -> random port
 
-            LOG.info("Successfully bound UDT to ip:port {}:{} with config: {}", new Object[]{addr, boundUDTPort, c.config().getOptions()});
+            logger.info("Successfully bound UDT to ip:port {}:{} with config: {}", new Object[]{addr, boundUDTPort, c.config().getOptions()});
         } catch (InterruptedException e) {
-            LOG.error("Problem when trying to bind UDT to {}", addr);
+            logger.error("Problem when trying to bind UDT to {}", addr);
             return false;
         }
 
@@ -361,7 +393,7 @@ public class NettyNetwork extends ComponentDefinition {
     protected void networkException(NetworkException networkException) {
         trigger(networkException, netC);
     }
-    
+
     protected void networkStatus(ConnectionStatus status) {
         trigger(status, netC);
     }
@@ -387,17 +419,17 @@ public class NettyNetwork extends ComponentDefinition {
         }
         if (message instanceof NotifyAck) {
             NotifyAck ack = (NotifyAck) message;
-            LOG.trace("Got NotifyAck for {}", ack.id);
+            logger.trace("Got NotifyAck for {}", ack.id);
             messages.ack(ack);
             return;
         }
-        LOG.debug(
+        logger.debug(
                 "Delivering message {} from {} to {} protocol {}",
                 new Object[]{message.toString(), message.getSource(),
                     message.getDestination(), message.getProtocol()});
         trigger(message, net);
     }
-    
+
     ChannelFuture sendUdpMessage(MessageWrapper msgw) {
         ByteBuf buf = udpChannel.alloc().ioBuffer(INITIAL_BUFFER_SIZE, SEND_BUFFER_SIZE);
         try {
@@ -410,10 +442,10 @@ public class NettyNetwork extends ComponentDefinition {
             }
             msgw.injectSize(buf.readableBytes(), System.nanoTime());
             DatagramPacket pack = new DatagramPacket(buf, msgw.msg.getDestination().asSocket());
-            LOG.debug("Sending Datagram message {} ({}bytes)", msgw.msg, buf.readableBytes());
+            logger.debug("Sending Datagram message {} ({}bytes)", msgw.msg, buf.readableBytes());
             return udpChannel.writeAndFlush(pack);
         } catch (Exception e) { // serialization might fail horribly with size bounded buff
-            LOG.warn("Could not send Datagram message {}, error was: {}", msgw, e);
+            logger.warn("Could not send Datagram message {}, error was: {}", msgw, e);
             return null;
         }
     }
@@ -428,7 +460,7 @@ public class NettyNetwork extends ComponentDefinition {
             try {
                 udpChannel.close().syncUninterruptibly();
             } catch (Exception ex) {
-                LOG.warn("Error during Netty shutdown. Messages might have been lost! \n {}", ex);
+                logger.warn("Error during Netty shutdown. Messages might have been lost! \n {}", ex);
             }
         }
 
@@ -436,7 +468,7 @@ public class NettyNetwork extends ComponentDefinition {
 
         long tend = System.currentTimeMillis();
 
-        LOG.info("Closed all connections in {}ms", tend - tstart);
+        logger.info("Closed all connections in {}ms", tend - tstart);
     }
 
     @Override
@@ -445,7 +477,7 @@ public class NettyNetwork extends ComponentDefinition {
 
         clearConnections();
 
-        LOG.info("Shutting down handler groups...");
+        logger.info("Shutting down handler groups...");
         List<Future> gfutures = new LinkedList<>();
         gfutures.add(bootstrapUDTClient.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         if (bindTCP) {
@@ -471,7 +503,7 @@ public class NettyNetwork extends ComponentDefinition {
 
         long tend = System.currentTimeMillis();
 
-        LOG.info("Netty shutdown complete. It took {}ms", tend - tstart);
+        logger.info("Netty shutdown complete. It took {}ms", tend - tstart);
 
     }
 
@@ -487,7 +519,7 @@ public class NettyNetwork extends ComponentDefinition {
     void notify(MessageNotify.Req notify) {
         answer(notify);
     }
-    
+
     void notify(MessageNotify.Req notify, MessageNotify.Resp response) {
         answer(notify, response);
     }

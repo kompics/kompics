@@ -27,6 +27,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import org.slf4j.MDC;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.NetworkException;
 import se.sics.kompics.network.Transport;
@@ -49,24 +50,34 @@ public abstract class BaseHandler<M> extends SimpleChannelInboundHandler<M> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        component.LOG.trace("Channel connected: {} {} => {} ({})", new Object[]{protocol, ctx.channel().localAddress(), ctx.channel().remoteAddress(), ctx.channel()});
+        component.setCustomMDC();
+        try {
+            component.extLog.trace("Channel connected: {} {} => {} ({})", new Object[]{protocol, ctx.channel().localAddress(), ctx.channel().remoteAddress(), ctx.channel()});
+        } finally {
+            MDC.clear();
+        }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        Channel channel = ctx.channel();
-        SocketAddress address = channel.remoteAddress();
-        InetSocketAddress inetAddress = null;
+        component.setCustomMDC();
+        try {
+            Channel channel = ctx.channel();
+            SocketAddress address = channel.remoteAddress();
+            InetSocketAddress inetAddress = null;
 
-        if (address != null && address instanceof InetSocketAddress) {
-            inetAddress = (InetSocketAddress) address;
-            Address addr = new NettyAddress(inetAddress);
-            component.networkException(new NetworkException("Error in Channel handler to " + addr, addr, protocol, Optional.of(cause)));
+            if (address != null && address instanceof InetSocketAddress) {
+                inetAddress = (InetSocketAddress) address;
+                Address addr = new NettyAddress(inetAddress);
+                component.networkException(new NetworkException("Error in Channel handler to " + addr, addr, protocol, Optional.of(cause)));
+            }
+
+            component.extLog.error("Error in channel.", cause);
+            //cause.printStackTrace();
+            component.extLog.error("Closing channel {} due to error.", channel);
+            channel.close();
+        } finally {
+            MDC.clear();
         }
-
-        component.LOG.error("Error in channel.", cause);
-        //cause.printStackTrace();
-        component.LOG.error("Closing channel {} due to error.", channel);
-        channel.close();
     }
 }

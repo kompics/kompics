@@ -25,6 +25,7 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
+import org.slf4j.MDC;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 import se.sics.kompics.network.netty.serialization.Serializers;
@@ -42,6 +43,7 @@ public class DatagramHandler extends BaseHandler<DatagramPacket> {
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
+        component.setCustomMDC();
         try {
             Object o = Serializers.fromBinary(msg.content(), msg);
 
@@ -49,21 +51,23 @@ public class DatagramHandler extends BaseHandler<DatagramPacket> {
                 AckRequestMsg arm = (AckRequestMsg) o;
                 ByteBuf buf = ctx.alloc().ioBuffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
                 component.deliverMessage(arm.content, ctx.channel());
-                component.LOG.trace("Got AckRequest for {}. Replying...", arm.id);
+                component.extLog.trace("Got AckRequest for {}. Replying...", arm.id);
                 NotifyAck ack = arm.reply();
                 Serializers.toBinary(ack, buf);
                 DatagramPacket pack = new DatagramPacket(buf, ack.getDestination().asSocket());
-                component.LOG.trace("Sending Datagram ACK {} ({}bytes)", ack, buf.readableBytes());
+                component.extLog.trace("Sending Datagram ACK {} ({}bytes)", ack, buf.readableBytes());
                 ctx.writeAndFlush(pack);
             } else if (o instanceof Msg) {
                 Msg m = (Msg) o;
                 component.deliverMessage(m, ctx.channel());
             } else {
-                component.LOG.warn("Got unexpected Datagram message type: {} -> {}", o.getClass().getCanonicalName(), o);
+                component.extLog.warn("Got unexpected Datagram message type: {} -> {}", o.getClass().getCanonicalName(), o);
             }
         } catch (Exception e) { // Catch anything...the Serializer could throw any kind of weird exception if you get message that were send by someone else
-            component.LOG.warn("Got weird Datagram message, ignoring it: {}", ByteBufUtil.hexDump(msg.content()));
-            component.LOG.trace("Exception was: \n{}", e);
+            component.extLog.warn("Got weird Datagram message, ignoring it: {}", ByteBufUtil.hexDump(msg.content()));
+            component.extLog.trace("Exception was: \n{}", e);
+        } finally {
+            MDC.clear();
         }
     }
 

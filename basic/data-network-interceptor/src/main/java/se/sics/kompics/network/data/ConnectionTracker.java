@@ -31,7 +31,6 @@ import org.jscience.mathematics.number.LargeInteger;
 import org.jscience.mathematics.number.Rational;
 import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
-import static se.sics.kompics.network.data.DataStreamInterceptor.LOG;
 import se.sics.kompics.network.data.policies.ProtocolRatioPolicy;
 import se.sics.kompics.network.data.policies.ProtocolSelectionPolicy;
 import se.sics.kompics.network.netty.serialization.SpecialSerializers;
@@ -78,12 +77,12 @@ class ConnectionTracker {
         Either<MessageNotify.Req, Msg> e = Either.left(msg);
         outstanding.add(e);
     }
-    
+
     void enqueue(Msg msg) {
         Either<MessageNotify.Req, Msg> e = Either.right(msg);
         outstanding.add(e);
     }
-    
+
     void sent(UUID id) {
         inFlightMessages--;
     }
@@ -97,7 +96,7 @@ class ConnectionTracker {
             stats.endWindow();
             ratio = ratioPolicy.update(stats.avgThroughputApproximation(), stats.avgDeliveryTime());
             selectionPolicy.updateRatio(ratio);
-            LOG.info("Current Stats to {}: ratio={}, { \n {} \n }", new Object[]{target, ratio, stats});
+            DataStreamInterceptor.EXT_LOG.info("Current Stats to {}: ratio={}, { \n {} \n }", new Object[]{target, ratio, stats});
         } else {
             stats.endWindow(); // NOTE: can be an issue with really low throughput (below message size/windowLenth)
         }

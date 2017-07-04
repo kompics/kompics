@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.slf4j.Logger;
 import se.sics.kompics.config.Config;
 import se.sics.kompics.config.ConfigUpdate;
 
@@ -49,6 +50,8 @@ public abstract class ComponentCore implements Component {
     protected Scheduler scheduler;
     protected int wid;
 
+    protected abstract Logger logger();
+    
     public ComponentCore getParent() {
         return parent;
     }
@@ -114,7 +117,7 @@ public abstract class ComponentCore implements Component {
         ComponentCore child = (ComponentCore) component;
         child.cleanPorts();
         if ((child.state != State.PASSIVE) && (child.state != State.FAULTY)) {
-            Kompics.logger.warn("Destroying a component before it has been stopped is not a good idea: " + child.getComponent());
+            logger().warn("Destroying a component before it has been stopped is not a good idea: {}", child.getComponent());
         }
         child.state = State.DESTROYED;
         try {

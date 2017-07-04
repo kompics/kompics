@@ -23,7 +23,6 @@ package se.sics.kompics.timer.java;
 import java.util.HashMap;
 import java.util.UUID;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
@@ -44,9 +43,8 @@ import se.sics.kompics.timer.Timer;
 public final class JavaTimer extends ComponentDefinition {
 
     Negative<Timer> timer = negative(Timer.class);
-
-    static final Logger logger = LoggerFactory
-            .getLogger(JavaTimer.class);
+    
+    final Logger extLogger = this.logger;
 
     // set of active timers
     private final HashMap<UUID, TimerSignalTask> activeTimers;
