@@ -32,28 +32,28 @@ import se.sics.kompics.Scheduler;
 public class ThreadPoolScheduler extends Scheduler {
 
     private final ThreadPoolExecutor threadPool;
-    private final ThreadPoolScheduler self;
 
     public ThreadPoolScheduler(int workers) {
         threadPool = new ThreadPoolExecutor(workers, workers, 60L,
                 TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
                 new KompicsThreadFactory(),
-                new ThreadPoolExecutor.CallerRunsPolicy());
-        self = this;
+                new ThreadPoolExecutor.AbortPolicy());
     }
 
     @Override
     public void schedule(final Component c, int w) {
-        threadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                self.executeComponent(c, 0);
-            }
-        });
+//        threadPool.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                self.executeComponent(c, 0);
+//            }
+//        });
+        threadPool.execute(c);
     }
 
     @Override
     public void proceed() {
+        // Do nothing
     }
 
     @Override

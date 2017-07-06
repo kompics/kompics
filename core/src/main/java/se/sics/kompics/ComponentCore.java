@@ -23,6 +23,7 @@ package se.sics.kompics;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ import se.sics.kompics.config.ConfigUpdate;
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id: $
  */
-public abstract class ComponentCore implements Component {
+public abstract class ComponentCore extends ForkJoinTask<Void> implements Component {
 
     private final UUID id = UUID.randomUUID();
     protected ComponentCore parent;
@@ -51,7 +52,7 @@ public abstract class ComponentCore implements Component {
     protected int wid;
 
     protected abstract Logger logger();
-    
+
     public ComponentCore getParent() {
         return parent;
     }
@@ -122,7 +123,7 @@ public abstract class ComponentCore implements Component {
         child.state = State.DESTROYED;
         try {
             childrenLock.writeLock().lock();
-            
+
             children.remove(child);
         } finally {
             childrenLock.writeLock().unlock();
@@ -166,7 +167,7 @@ public abstract class ComponentCore implements Component {
     abstract void doConfigUpdate(ConfigUpdate update);
 
     public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent);
-    
+
     public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent, ConfigUpdate update);
 
     public abstract <P extends PortType> Negative<P> createNegativePort(Class<P> portType);
@@ -202,6 +203,11 @@ public abstract class ComponentCore implements Component {
     }
 
     public abstract void execute(int wid);
+
+    @Override
+    public void run() {
+        this.execute(0);
+    }
 
     @Override
     public UUID id() {
@@ -243,20 +249,43 @@ public abstract class ComponentCore implements Component {
         return state;
     }
 
-    
     /*
-    * === Relaying for package fields to Scala
-    */
-    
+     * === Relaying for package fields to Scala
+     */
     protected void escalateFaultToKompics(Fault fault) {
         Kompics.handleFault(fault);
     }
-    
+
     protected void markSubtreeAtAs(ComponentCore source, State s) {
         source.markSubtreeAs(s);
     }
-    
+
     protected void destroyTreeAtParentOf(ComponentCore source) {
         source.parent.destroyTree(source);
+    }
+
+    @Override
+    public Void getRawResult() {
+        return null;
+    }
+
+    @Override
+    protected void setRawResult(Void value) {
+        return;
+    }
+
+    @Override
+    protected boolean exec() {
+        try {
+            run();
+            return false;
+//        } catch(InterruptedException ex) {
+//            Thread.currentThread().interrupt();
+//            return false;
+//        }
+        } catch (Throwable e) {
+            Kompics.getFaultHandler().handle(new Fault(e, this, null));
+            throw e;
+        }
     }
 }

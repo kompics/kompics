@@ -42,7 +42,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     private JavaPort<P> pair;
     private final ReentrantReadWriteLock rwLock;
-    private final ArrayListMultimap<Class<? extends KompicsEvent>, Handler<?>> subs = ArrayListMultimap.create();
+    private final HashMap<Class<? extends KompicsEvent>, ArrayList<Handler<?>>> subs = new HashMap<>();
+    // TODO change this one as well.
     private final HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>> matchers = new HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>>();
     private ArrayList<ChannelCore<P>> normalChannels = new ArrayList<ChannelCore<P>>();
     private ChannelSelectorSet selectorChannels = new ChannelSelectorSet();
@@ -163,8 +164,14 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         rwLock.writeLock().lock();
         try {
-            subs.put(handler.getEventType(), handler);
-
+            ArrayList<Handler<?>> handlers = subs.get(handler.getEventType());
+            if (handlers == null) {
+                handlers = new ArrayList<>();
+                handlers.add(handler);
+                subs.put(handler.getEventType(), handlers);
+            } else {
+                handlers.add(handler);
+            }
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -172,13 +179,13 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     @Override
     public void doSubscribe(MatchedHandler handler) {
-       
+
         if (handler instanceof ClassMatchedHandler) {
-          Object matchType = handler.pattern();
-          if(matchType == null) {
-            ClassMatchedHandler cmh = (ClassMatchedHandler) handler;
-            reflectCMHType(cmh);
-          }
+            Object matchType = handler.pattern();
+            if (matchType == null) {
+                ClassMatchedHandler cmh = (ClassMatchedHandler) handler;
+                reflectCMHType(cmh);
+            }
         }
         Class cxtType = handler.getCxtType();
         if (cxtType == null) {
@@ -225,8 +232,14 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         rwLock.writeLock().lock();
         try {
-            subs.put(handler.getEventType(), handler);
-
+            ArrayList<Handler<?>> handlers = subs.get(handler.getEventType());
+            if (handlers == null) {
+                handlers = new ArrayList<>();
+                handlers.add(handler);
+                subs.put(handler.getEventType(), handlers);
+            } else {
+                handlers.add(handler);
+            }
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -241,12 +254,18 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         rwLock.writeLock().lock();
         try {
-            if (!subs.remove(handler.getEventType(), handler)) {
+            ArrayList<Handler<?>> handlers = subs.get(handler.getEventType());
+            if (handlers == null) {
                 throw new RuntimeException("Handler " + handler
                         + " is not subscribed to "
                         + (isPositive ? "positive " : "negative ")
                         + portType.getClass().getCanonicalName() + " for "
                         + eventType.getCanonicalName() + " events.");
+            } else {
+                handlers.remove(handler);
+                if (handlers.isEmpty()) {
+                    subs.remove(handler.getEventType());
+                }
             }
         } finally {
             rwLock.writeLock().unlock();

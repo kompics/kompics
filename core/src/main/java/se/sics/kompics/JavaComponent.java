@@ -45,6 +45,7 @@ import se.sics.kompics.config.ValueMerger;
  */
 public class JavaComponent extends ComponentCore {
 
+    private final int executeNEvents;
     /*
      * outside ports
      */
@@ -74,6 +75,7 @@ public class JavaComponent extends ComponentCore {
         }
         this.component = componentDefinition;
         parentThreadLocal.set(null);
+        executeNEvents = Kompics.maxNumOfExecutedEvents.get();
     }
 
 //    public JavaComponent(JavaComponent other) {
@@ -296,7 +298,6 @@ public class JavaComponent extends ComponentCore {
 
 //		New scheduling code: Run n and move to end of schedule
 //		
-        int n = Kompics.maxNumOfExecutedEvents.get();
         int count = 0;
         int wc = workCount.get();
 
@@ -304,7 +305,7 @@ public class JavaComponent extends ComponentCore {
         MDC.put(ComponentDefinition.MDC_KEY_CSTATE, state.name());
         try {
 
-            while ((count < n) && wc > 0) {
+            while ((count < executeNEvents) && wc > 0) {
                 if (previousState != state) { // state might have changed between iterations
                     if (state == State.FAULTY) {
                         return;
@@ -375,39 +376,15 @@ public class JavaComponent extends ComponentCore {
                 count++;
             }
 
-            if (wc > 0) {
-                if (scheduler == null) {
-                    scheduler = Kompics.getScheduler();
-                }
-                scheduler.schedule(this, wid);
-            }
-
-//		Classic scheduling code: Run once and move to end of schedule
-//		
-//		// 1. pick a port with a non-empty event queue
-//		// 2. execute the first event
-//		// 3. make component ready
-//
-//		JavaPort<?> nextPort = (JavaPort<?>) readyPorts.poll();
-//
-//		Event event = nextPort.pickFirstEvent();
-//
-//		ArrayList<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
-//
-//		if (handlers != null) {
-//			for (int i = 0; i < handlers.size(); i++) {
-//				executeEvent(event, handlers.get(i));
-//			}
-//		}
-//
-//		int wc = workCount.decrementAndGet();
-//		if (wc > 0) {
-//			if (scheduler == null)
-//				scheduler = Kompics.getScheduler();
-//			scheduler.schedule(this, wid);
-//		}
         } finally {
             MDC.clear();
+        }
+
+        if (wc > 0) {
+            if (scheduler == null) {
+                scheduler = Kompics.getScheduler();
+            }
+            scheduler.schedule(this, wid);
         }
     }
 

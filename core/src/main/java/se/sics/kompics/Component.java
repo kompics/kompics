@@ -31,7 +31,7 @@ import java.util.UUID;
  * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
-public interface Component {
+public interface Component extends Runnable {
 
 	/**
 	 * Gets the positive.

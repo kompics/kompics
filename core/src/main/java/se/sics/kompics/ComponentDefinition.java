@@ -609,7 +609,14 @@ public abstract class ComponentDefinition {
     private final Map<String, String> mdcState = new HashMap<>();
     private final Map<String, String> mdcReset = new HashMap<>();
 
-    void setMDC() {
+    /**
+     * Should not be necessary to call usually, as ComponentCore will do it.
+     * 
+     * Protected mainly for use by Kompics Scala. 
+     * 
+     * Can also be used to set component MDC when executing related off-kompics work (check for concurrency issues, though!).
+     */
+    protected void setMDC() {
         MDC.setContextMap(mdcState);
     }
 

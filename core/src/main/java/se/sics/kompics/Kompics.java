@@ -29,7 +29,7 @@ import se.sics.kompics.Component.State;
 import se.sics.kompics.Fault.ResolveAction;
 import se.sics.kompics.config.Config;
 import se.sics.kompics.config.TypesafeConfig;
-import se.sics.kompics.scheduler.ThreadPoolScheduler;
+import se.sics.kompics.scheduler.ForkJoinScheduler;
 import se.sics.kompics.scheduler.WorkStealingScheduler;
 
 /**
@@ -186,7 +186,8 @@ public final class Kompics {
 
             if (scheduler == null) {
                 // scheduler = new WorkStealingScheduler(workers);
-                scheduler = new ThreadPoolScheduler(workers);
+                scheduler = new ForkJoinScheduler(workers);
+                //scheduler = new ThreadPoolScheduler(workers);
             }
 
             Kompics.maxNumOfExecutedEvents.lazySet(maxEventExecuteNumber);
@@ -206,24 +207,9 @@ public final class Kompics {
                 // start Main
                 ((PortCore<ControlPort>) mainCore.getControl()).doTrigger(
                         Start.event, 0, mainCore);
-            } catch (InstantiationException e) {
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
                 throw new RuntimeException("Cannot create main component "
                         + main.getCanonicalName(), e);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException("Cannot create main component "
-                        + main.getCanonicalName(), e);
-            } catch (IllegalArgumentException ex) {
-                throw new RuntimeException("Cannot create main component "
-                        + main.getCanonicalName(), ex);
-            } catch (InvocationTargetException ex) {
-                throw new RuntimeException("Cannot create main component "
-                        + main.getCanonicalName(), ex);
-            } catch (NoSuchMethodException ex) {
-                throw new RuntimeException("Cannot create main component "
-                        + main.getCanonicalName(), ex);
-            } catch (SecurityException ex) {
-                throw new RuntimeException("Cannot create main component "
-                        + main.getCanonicalName(), ex);
             }
 
             scheduler.proceed();
