@@ -152,12 +152,12 @@ public abstract class ComponentDefinition {
                 throw new ConfigurationException(
                         "Cannot subscribe Handlers to other component's ports, "
                         + "since the behaviour of this is unspecifed. "
-                        + "(The handler might be executed on the wrong thrad)");
+                        + "(The handler might be executed on the wrong thread)");
             }
 
         } else {
             throw new ConfigurationException("Port (" + port.toString() + " is not an instance of JavaPort!"
-                    + "Handler subscription only works in Java");
+                    + "Handler subscription only works with matching ports and components");
         }
     }
 
@@ -167,7 +167,7 @@ public abstract class ComponentDefinition {
             p.doUnsubscribe(handler);
         } else {
             throw new ConfigurationException("Port (" + port.toString() + " is not an instance of JavaPort!"
-                    + "Handler subscription only works in Java");
+                    + "Handler unsubscription only works with matching ports and components");
         }
     }
 

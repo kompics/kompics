@@ -194,12 +194,15 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
         readyPorts.offer(port);
         int wc = workCount.getAndIncrement();
         if (wc == 0) {
-            if (scheduler == null) {
-                scheduler = Kompics.getScheduler();
-            }
-            //Kompics.logger.trace("Scheduling {} due to new event", this);
-            scheduler.schedule(this, wid);
+            schedule(wid);
         }
+    }
+
+    protected void schedule(int wid) {
+        if (scheduler == null) {
+            scheduler = Kompics.getScheduler();
+        }
+        scheduler.schedule(this, wid);
     }
 
     public abstract void execute(int wid);

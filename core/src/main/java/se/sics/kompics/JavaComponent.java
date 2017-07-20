@@ -24,13 +24,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import se.sics.kompics.Fault.ResolveAction;
+import se.sics.kompics.HandlerStore.HandlerList;
+import se.sics.kompics.HandlerStore.MatchedHandlerList;
 import se.sics.kompics.config.Config;
 import se.sics.kompics.config.ConfigUpdate;
 import se.sics.kompics.config.ValueMerger;
@@ -326,10 +327,7 @@ public class JavaComponent extends ComponentCore {
                         logger().debug("Not scheduling component.");
                         // try again
                         if (wc > 0) {
-                            if (scheduler == null) {
-                                scheduler = Kompics.getScheduler();
-                            }
-                            scheduler.schedule(this, wid);
+                            schedule(wid);
                         }
                         return; // Don't run anything else
                     }
@@ -352,21 +350,21 @@ public class JavaComponent extends ComponentCore {
                     continue;
                 }
 
-                List<Handler<?>> handlers = nextPort.getSubscribedHandlers(event);
+                HandlerList handlers = nextPort.getSubscribedHandlers(event);
 
-                if (handlers != null) {
-                    for (Handler h : handlers) {
-                        if (executeEvent(event, h)) {
+                if ((handlers != null) && (handlers.length > 0)) {
+                    for (int i = 0; i < handlers.length; i++) {
+                        if (executeEvent(event, handlers.subscriptions[i])) {
                             break; // state changed don't handle the rest of the event
                         }
                     }
                 }
                 if (event instanceof PatternExtractor) {
                     PatternExtractor pe = (PatternExtractor) event;
-                    List<MatchedHandler> mhandlers = nextPort.getSubscribedMatchers(pe);
-                    if (mhandlers != null) {
-                        for (MatchedHandler mh : mhandlers) {
-                            if (executeEvent(pe, mh)) {
+                    MatchedHandlerList mhandlers = nextPort.getSubscribedMatchers(pe);
+                    if ((mhandlers != null) && (mhandlers.length > 0)) {
+                        for (int i = 0; i < mhandlers.length; i++) {
+                            if (executeEvent(pe, mhandlers.subscriptions[i])) {
                                 break; // state changed don't handle the rest of the event
                             }
                         }
@@ -381,10 +379,7 @@ public class JavaComponent extends ComponentCore {
         }
 
         if (wc > 0) {
-            if (scheduler == null) {
-                scheduler = Kompics.getScheduler();
-            }
-            scheduler.schedule(this, wid);
+            schedule(wid);
         }
     }
 

@@ -43,7 +43,6 @@ public class ForkJoinScheduler extends Scheduler {
 
     @Override
     public void schedule(Component c, int w) {
-
         pool.execute((ForkJoinTask<Void>) c);
     }
 
