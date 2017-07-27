@@ -27,7 +27,7 @@ package se.sics.kompics;
  * @param <V> The type of the content value
  * @param <E> The type of context event
  */
-public abstract class MatchedHandler<P, V, E extends KompicsEvent & PatternExtractor<P, ? super V>> {
+public abstract class MatchedHandler<P, V, E extends PatternExtractor<P, ? super V>> {
 
   Class<E> cxtType = null;
 

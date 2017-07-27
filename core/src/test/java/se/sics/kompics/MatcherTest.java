@@ -66,7 +66,7 @@ public class MatcherTest {
 
     }
 
-    public static class DataContainer implements PatternExtractor<Class, Data> {
+    public static class DataContainer implements PatternExtractor<Class<Object>, Data> {
 
         private final Data data;
 
@@ -75,8 +75,9 @@ public class MatcherTest {
         }
 
         @Override
-        public Class extractPattern() {
-            return data.getClass();
+        public Class<Object> extractPattern() {
+            Class c = data.getClass();
+            return (Class<Object>) c;
         }
 
         @Override

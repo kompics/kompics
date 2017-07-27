@@ -1,6 +1,6 @@
 /**
  * This file is part of the Kompics component model runtime.
- * 
+ * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
@@ -11,12 +11,12 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics;
 
@@ -24,30 +24,30 @@ package se.sics.kompics;
  *
  * @author lkroll
  */
-public abstract class ClassMatchedHandler<V, E extends KompicsEvent & PatternExtractor<Class, ? super V>>
-        extends MatchedHandler<Class, V, E> {
+public abstract class ClassMatchedHandler<V, E extends KompicsEvent & PatternExtractor<Class<Object>, ? super V>>
+        extends MatchedHandler<Class<Object>, V, E> {
 
-    private Class matchType = null;
+    private Class<Object> matchType = null;
 
     protected ClassMatchedHandler() {
     }
-    
-    protected ClassMatchedHandler(Class matchType) {
-      super();
-      this.matchType = matchType;
+
+    protected ClassMatchedHandler(Class<?> matchType) {
+        super();
+        this.matchType = (Class<Object>) matchType; // just cast away the generics
     }
-    
+
     protected ClassMatchedHandler(Class<E> cxtType, Class matchType) {
-      super(cxtType);
-      this.matchType = matchType;
+        super(cxtType);
+        this.matchType = matchType;
     }
-    
+
     @Override
-    public Class pattern() {
+    public Class<Object> pattern() {
         return this.matchType;
     }
 
-    void setPattern(Class matchType) {
+    void setPattern(Class<Object> matchType) {
         this.matchType = matchType;
     }
 }

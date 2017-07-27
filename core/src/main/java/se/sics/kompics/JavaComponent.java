@@ -397,9 +397,11 @@ public class JavaComponent extends ComponentCore {
     }
 
     @SuppressWarnings("unchecked")
-    private boolean executeEvent(PatternExtractor event, MatchedHandler handler) {
+    private boolean executeEvent(PatternExtractor<?, ?> event, MatchedHandler<?, ?, ?> handler) {
         try {
-            handler.handle(event.extractValue(), event);
+            PatternExtractor<?, Object> pe = (PatternExtractor<?, Object>) event;
+            MatchedHandler<?, Object, PatternExtractor<?, Object>> h = (MatchedHandler<?, Object, PatternExtractor<?, Object>>) handler;
+            h.handle(pe.extractValue(), pe);
             return false; // no state change
         } catch (Throwable throwable) {
             logger().error("Handling an event caused a fault! Might be handled later...", throwable);

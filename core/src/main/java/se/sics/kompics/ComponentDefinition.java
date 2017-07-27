@@ -143,7 +143,7 @@ public abstract class ComponentDefinition {
         }
     }
 
-    protected final void subscribe(MatchedHandler handler, Port port) {
+    protected final void subscribe(MatchedHandler<?, ?, ?> handler, Port port) {
         if (port instanceof JavaPort) {
             JavaPort p = (JavaPort) port;
             if (p.owner.equals(this.core)) {
@@ -161,7 +161,7 @@ public abstract class ComponentDefinition {
         }
     }
 
-    protected final void unsubscribe(MatchedHandler handler, Port port) {
+    protected final void unsubscribe(MatchedHandler<?, ?, ?> handler, Port port) {
         if (port instanceof JavaPort) {
             JavaPort p = (JavaPort) port;
             p.doUnsubscribe(handler);
