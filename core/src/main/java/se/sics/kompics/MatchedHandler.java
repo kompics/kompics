@@ -35,7 +35,7 @@ public abstract class MatchedHandler<P, V, E extends PatternExtractor<P, ? super
   }
 
   protected MatchedHandler(Class<E> cxtType) {
-    cxtType = cxtType;
+    this.cxtType = cxtType;
   }
 
   public abstract P pattern();
