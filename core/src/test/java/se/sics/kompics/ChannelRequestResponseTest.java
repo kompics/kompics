@@ -1,7 +1,6 @@
 package se.sics.kompics;
 
 import java.util.concurrent.Semaphore;
-
 import org.junit.Test;
 
 public class ChannelRequestResponseTest {
@@ -35,16 +34,27 @@ public class ChannelRequestResponseTest {
 
     static class TestRoot1 extends ComponentDefinition {
 
+        private Component component1;
+        
         public TestRoot1() {
-            Component component1 = create(TestComponent1.class, Init.NONE);
+            component1 = create(TestComponent1.class, Init.NONE);
 
             subscribe(testResponse, component1.getPositive(TestPort.class));
+            subscribe(startHandler, control);
 
-            TestRequest request = new TestRequest(12);
-            // System.err.println("Root triggered request " + request.id);
-
-            trigger(request, component1.getPositive(TestPort.class));
         }
+
+        Handler<Start> startHandler = new Handler<Start>() {
+
+            @Override
+            public void handle(Start event) {
+                TestRequest request = new TestRequest(12);
+                // System.err.println("Root triggered request " + request.id);
+
+                trigger(request, component1.getPositive(TestPort.class));
+            }
+        };
+
         Handler<TestResponse> testResponse = new Handler<TestResponse>() {
             public void handle(TestResponse event) {
                 // System.err.println("Root got response " + event.id);
@@ -74,18 +84,17 @@ public class ChannelRequestResponseTest {
         public TestComponent2() {
             subscribe(testRequest, testPort);
         }
-/* java 8        
-        Handler<TestRequest> h = handle(testPort, TestRequest.class, event -> {
-            TestResponse response = new TestResponse(event, event.id);
-            trigger(response, testPort);
-        });
-*/
+        /* java 8        
+         Handler<TestRequest> h = handle(testPort, TestRequest.class, event -> {
+         TestResponse response = new TestResponse(event, event.id);
+         trigger(response, testPort);
+         });
+         */
         Handler<TestRequest> testRequest = new Handler<TestRequest>() {
             @Override
             public void handle(TestRequest event) {
 
                 // System.err.println("Handling request " + event.id);
-
                 TestResponse response = new TestResponse(event, event.id);
                 trigger(response, testPort);
             }
