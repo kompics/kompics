@@ -55,13 +55,22 @@ public class SubscribeTest {
 
     private static class TestRoot1 extends ComponentDefinition {
 
-        public TestRoot1() {
-            Component component1 = create(TestComponent1.class, Init.NONE);
+        private Component component1;
 
-            for (int i = 0; i < EVENT_COUNT; i++) {
-                trigger(new TestEvent(i), component1.getPositive(TestPort.class));
-            }
+        public TestRoot1() {
+            component1 = create(TestComponent1.class, Init.NONE);
+            subscribe(startHandler, control);
         }
+
+        Handler<Start> startHandler = new Handler<Start>() {
+
+            @Override
+            public void handle(Start event) {
+                for (int i = 0; i < EVENT_COUNT; i++) {
+                    trigger(new TestEvent(i), component1.getPositive(TestPort.class));
+                }
+            }
+        };
     }
 
     private static class TestComponent1 extends ComponentDefinition {
@@ -107,7 +116,7 @@ public class SubscribeTest {
     private static class TestRoot2 extends ComponentDefinition {
 
         private Component component2;
-        
+
         public TestRoot2() {
             component2 = create(TestComponent2.class, Init.NONE);
             subscribe(startHandler, control);
