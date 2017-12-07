@@ -567,8 +567,10 @@ public class JavaComponent extends ComponentCore {
                     forwardedEvent, wid, this);
         }
         // forward up
-        ((PortCore<ControlPort>) parent.getControl()).doTrigger(
-                forwardedEvent, wid, this);
+        if (parent != null) {
+          ((PortCore<ControlPort>) parent.getControl()).doTrigger(
+            forwardedEvent, wid, this);
+        }
         component.postUpdate();
     }
 
