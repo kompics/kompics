@@ -20,6 +20,7 @@
  */
 package se.sics.kompics;
 
+import com.google.common.base.Optional;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -43,10 +44,16 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
     private final UUID id = UUID.randomUUID();
     protected ComponentCore parent;
     protected Config conf;
-    public static ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
-    public static ThreadLocal<ConfigUpdate> childUpdate = new ThreadLocal<ConfigUpdate>();
+    public static final ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal();
+    public static final ThreadLocal<Optional<ConfigUpdate>> childUpdate = new ThreadLocal();
+
+    static {
+        Optional<ConfigUpdate> update = Optional.absent();
+        childUpdate.set(update);
+    }
+
     protected List<ComponentCore> children = new LinkedList<ComponentCore>();
-    ;
+
     protected final ReentrantReadWriteLock childrenLock = new ReentrantReadWriteLock();
     protected Scheduler scheduler;
     protected int wid;
@@ -61,55 +68,6 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
         return conf;
     }
 
-//    public <P extends PortType> Channel<P> doConnect(Positive<P> positive,
-//            Negative<P> negative) {
-//        PortCore<P> positivePort = (PortCore<P>) positive;
-//        PortCore<P> negativePort = (PortCore<P>) negative;
-//        ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
-//                negativePort.getPortType());
-//
-//        positivePort.addChannel(channel);
-//        negativePort.addChannel(channel);
-//
-//        return channel;
-//    }
-//
-//    public <P extends PortType> Channel<P> doConnect(Positive<P> positive,
-//            Negative<P> negative, ChannelSelector<?, ?> filter) {
-//        PortCore<P> positivePort = (PortCore<P>) positive;
-//        PortCore<P> negativePort = (PortCore<P>) negative;
-//        ChannelCore<P> channel = new ChannelCoreImpl<P>(positivePort, negativePort,
-//                negativePort.getPortType());
-//
-//        Class<? extends KompicsEvent> eventType = filter.getEventType();
-//        P portType = positivePort.getPortType();
-//        if (filter.isPositive()) {
-//            if (!portType.hasPositive(eventType)) {
-//                throw new RuntimeException("Port type " + portType
-//                        + " has no positive " + eventType);
-//            }
-//            positivePort.addChannel(channel, filter);
-//            negativePort.addChannel(channel);
-//        } else {
-//            if (!portType.hasNegative(eventType)) {
-//                throw new RuntimeException("Port type " + portType
-//                        + " has no negative " + eventType);
-//            }
-//            positivePort.addChannel(channel);
-//            negativePort.addChannel(channel, filter);
-//        }
-//
-//        return channel;
-//    }
-//
-//    public <P extends PortType> void doDisconnect(Positive<P> positive,
-//            Negative<P> negative) {
-//        PortCore<P> positivePort = (PortCore<P>) positive;
-//        PortCore<P> negativePort = (PortCore<P>) negative;
-//
-//        positivePort.removeChannelTo(negativePort);
-//        negativePort.removeChannelTo(positivePort);
-//    }
     protected abstract void cleanPorts();
 
     public abstract Negative<ControlPort> createControlPort();
@@ -166,9 +124,9 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
 
     abstract void doConfigUpdate(ConfigUpdate update);
 
-    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent);
+    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent);
 
-    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent, ConfigUpdate update);
+    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent, Optional<ConfigUpdate> update);
 
     public abstract <P extends PortType> Negative<P> createNegativePort(Class<P> portType);
 

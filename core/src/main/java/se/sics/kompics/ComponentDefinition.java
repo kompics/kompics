@@ -21,6 +21,7 @@
 package se.sics.kompics;
 
 // TODO: Auto-generated Javadoc
+import com.google.common.base.Optional;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.List;
@@ -199,7 +200,7 @@ public abstract class ComponentDefinition {
      */
     protected final <T extends ComponentDefinition> Component create(
             Class<T> definition, Init<T> initEvent) {
-        return core.doCreate(definition, initEvent);
+        return core.doCreate(definition, Optional.of(initEvent));
     }
 
     /**
@@ -212,7 +213,8 @@ public abstract class ComponentDefinition {
      */
     protected final <T extends ComponentDefinition> Component create(
             Class<T> definition, Init.None initEvent) {
-        return core.doCreate(definition, null);
+        Optional<Init<T>> init = Optional.absent();
+        return core.doCreate(definition, init);
     }
 
     /**
@@ -225,7 +227,7 @@ public abstract class ComponentDefinition {
      */
     protected final <T extends ComponentDefinition> Component create(
             Class<T> definition, Init<T> initEvent, ConfigUpdate update) {
-        return core.doCreate(definition, initEvent, update);
+        return core.doCreate(definition, Optional.of(initEvent), Optional.of(update));
     }
 
     /**
@@ -238,7 +240,8 @@ public abstract class ComponentDefinition {
      */
     protected final <T extends ComponentDefinition> Component create(
             Class<T> definition, Init.None initEvent, ConfigUpdate update) {
-        return core.doCreate(definition, null, update);
+        Optional<Init<T>> init = Optional.absent();
+        return core.doCreate(definition, init, Optional.of(update));
     }
 
     protected final void destroy(Component component) {
@@ -588,21 +591,24 @@ public abstract class ComponentDefinition {
     /* Logging Related */
     /**
      * Pre-configured MDC key for the unique component id.
-     * 
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     * <p>
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
+     * manuel</a> for how to use this with logback.
      */
     public static final String MDC_KEY_CID = "kcomponent-id";
     /**
      * Pre-configured MDC key for the current component lifecycle state.
-     * 
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     * <p>
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
+     * manuel</a> for how to use this with logback.
      */
     public static final String MDC_KEY_CSTATE = "kcomponent-state";
 
     /**
      * Kompics provided slf4j logger with managed diagnostic context.
-     * 
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     * <p>
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
+     * manuel</a> for how to use this with logback.
      */
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -611,10 +617,11 @@ public abstract class ComponentDefinition {
 
     /**
      * Should not be necessary to call usually, as ComponentCore will do it.
-     * 
-     * Protected mainly for use by Kompics Scala. 
-     * 
-     * Can also be used to set component MDC when executing related off-kompics work (check for concurrency issues, though!).
+     * <p>
+     * Protected mainly for use by Kompics Scala.
+     * <p>
+     * Can also be used to set component MDC when executing related off-kompics
+     * work (check for concurrency issues, though!).
      */
     protected void setMDC() {
         MDC.setContextMap(mdcState);
@@ -622,26 +629,29 @@ public abstract class ComponentDefinition {
 
     /**
      * Associate key with value in the logging diagnostic context.
-     * 
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     * <p>
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
+     * manuel</a> for how to use this with logback.
      *
      * @param key
-     * @param value 
+     * @param value
      */
     protected void loggingCtxPut(String key, String value) {
         mdcState.put(key, value);
         MDC.put(key, value);
     }
-    
+
     /**
      * Associate key permanently with value in the logging diagnostic context.
-     * 
-     * Keys set in this way are not removed by {@link #loggingCtxReset()} or {@link #loggingCtxRemove()}.
-     * 
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
+     * <p>
+     * Keys set in this way are not removed by {@link #loggingCtxReset()} or
+     * {@link #loggingCtxRemove()}.
+     * <p>
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
+     * manuel</a> for how to use this with logback.
      *
      * @param key
-     * @param value 
+     * @param value
      */
     protected void loggingCtxPutAlways(String key, String value) {
         mdcReset.put(key, value);
@@ -651,7 +661,7 @@ public abstract class ComponentDefinition {
 
     /**
      * Disassociate any value with the key in the logging diagnostic context.
-     * 
+     * <p>
      * @param key
      */
     protected void loggingCtxRemove(String key) {
@@ -660,8 +670,9 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * Get the value associated with key in the current logging diagnostic context.
-     * 
+     * Get the value associated with key in the current logging diagnostic
+     * context.
+     * <p>
      * @param key
      * @return the value associated with key
      */
@@ -671,9 +682,10 @@ public abstract class ComponentDefinition {
 
     /**
      * Reset the current logging diagnostic context.
-     * 
-     * Removes all items added to context by the user that weren't set with {@link #loggingCtxPutAlways(String, String)}
-     * 
+     * <p>
+     * Removes all items added to context by the user that weren't set with
+     * {@link #loggingCtxPutAlways(String, String)}
+     * <p>
      */
     protected void loggingCtxReset() {
         String state = MDC.get(MDC_KEY_CSTATE);

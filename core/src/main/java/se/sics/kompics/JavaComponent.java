@@ -20,6 +20,7 @@
  */
 package se.sics.kompics;
 
+import com.google.common.base.Optional;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -69,9 +70,10 @@ public class JavaComponent extends ComponentCore {
         } else {
             this.conf = Kompics.getConfig().copy(componentDefinition.separateConfigId());
         }
-        if (childUpdate.get() != null) {
+
+        if (childUpdate.get().isPresent()) {
             Config.Impl ci = (Config.Impl) this.conf;
-            ci.apply(childUpdate.get(), ValueMerger.NONE);
+            ci.apply(childUpdate.get().get(), ValueMerger.NONE);
             childUpdate.set(null);
         }
         this.component = componentDefinition;
@@ -230,12 +232,13 @@ public class JavaComponent extends ComponentCore {
     }
 
     @Override
-    public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent) {
-        return doCreate(definition, initEvent, null);
+    public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent) {
+        Optional<ConfigUpdate> update = Optional.absent();
+        return doCreate(definition, initEvent, update);
     }
 
     @Override
-    public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Init<T> initEvent, ConfigUpdate update) {
+    public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent, Optional<ConfigUpdate> update) {
         // create an instance of the implementing component type
         ComponentDefinition component;
         childrenLock.writeLock().lock();
@@ -268,24 +271,18 @@ public class JavaComponent extends ComponentCore {
         }
     }
 
-    private <T extends ComponentDefinition> T createInstance(Class<T> definition, Init<T> initEvent) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        if (initEvent == null) {
+    private <T extends ComponentDefinition> T createInstance(Class<T> definition, Optional<Init<T>> initEvent) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        if (!initEvent.isPresent()) {
+            return definition.newInstance();
+        }
+        Init<T> init = initEvent.get();
+        if (init instanceof Init.None) {
             return definition.newInstance();
         }
         // look for a constructor that takes a single parameter
         // and is assigment compatible with the given init event
-        Constructor<T> constr = definition.getConstructor(initEvent.getClass());
-        return constr.newInstance(initEvent);
-//        Constructor[] constructors = definition.getConstructors();
-//        for (Constructor constr : constructors) {
-//            Class[] types = constr.getParameterTypes();
-//            if (types.length == 1) {
-//                Class type = types[0];
-//                if (type.isInstance(initEvent)) {
-//                    return constr.newInstance(initEvent);
-//                }
-//            }
-//        }
+        Constructor<T> constr = definition.getConstructor(init.getClass());
+        return constr.newInstance(init);
     }
 
     @Override
