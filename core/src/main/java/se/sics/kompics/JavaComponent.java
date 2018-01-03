@@ -74,7 +74,8 @@ public class JavaComponent extends ComponentCore {
         if (childUpdate.get().isPresent()) {
             Config.Impl ci = (Config.Impl) this.conf;
             ci.apply(childUpdate.get().get(), ValueMerger.NONE);
-            childUpdate.set(null);
+            Optional<ConfigUpdate> resetUpdate = Optional.absent();
+            childUpdate.set(resetUpdate);
         }
         this.component = componentDefinition;
         parentThreadLocal.set(null);
