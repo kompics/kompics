@@ -20,7 +20,6 @@
  */
 package se.sics.kompics;
 
-import com.google.common.base.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -71,8 +70,7 @@ public class TracerTest {
 
         public ParentComponent() {
             Tracer t = new TestTracer();
-            Optional<Tracer> tO = Optional.of(t);
-            ComponentCore.childTracer.set(tO);
+            ComponentCore.childTracer.set(t);
             tc = create(TracingComponent.class, Init.NONE);
 
             subscribe(startHandler, control);

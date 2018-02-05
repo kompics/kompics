@@ -26,6 +26,14 @@ package se.sics.kompics;
  * Since these methods will be called for *every* event, slow implementations
  * case have *significant* performance impact for the runtime.
  *
+ * To use on a new component with a Tracer implementation <code>t</code> call
+ * <code>ComponentCore.childTracer.set(t);</code> BEFORE calling 
+ * <code>create()</code>. 
+ * 
+ * The value will be automatically reset during the 
+ * <code>create()</code> call, so if you want to create multiple children with 
+ * the same tracer you have to manually set it again before each child.
+ * 
  * @author Lars Kroll <lkroll@kth.se>
  */
 public interface Tracer {

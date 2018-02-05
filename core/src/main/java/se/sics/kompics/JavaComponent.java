@@ -65,8 +65,8 @@ public class JavaComponent extends ComponentCore {
         //super();
         this.positivePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
         this.negativePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
-        this.parent = parentThreadLocal.get();
-        this.tracer = childTracer.get();
+        //this.parent = parentThreadLocal.get();
+        //this.tracer = childTracer.get();
         if (this.parent != null) {
             this.conf = parent.conf.copy(componentDefinition.separateConfigId());
         } else {
@@ -185,7 +185,7 @@ public class JavaComponent extends ComponentCore {
     @Override
     public <P extends PortType> Positive<P> createPositivePort(Class<P> portType) {
         JavaPort<P> positivePort = new JavaPort<P>(true,
-                PortType.getPortType(portType), parent, this.tracer);
+                PortType.getPortType(portType), this, this.tracer);
         JavaPort<P> negativePort = new JavaPort<P>(false,
                 PortType.getPortType(portType), parent, null);
 

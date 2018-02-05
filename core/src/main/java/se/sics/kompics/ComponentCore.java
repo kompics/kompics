@@ -42,8 +42,8 @@ import se.sics.kompics.config.ConfigUpdate;
 public abstract class ComponentCore extends ForkJoinTask<Void> implements Component {
 
     private final UUID id = UUID.randomUUID();
-    protected ComponentCore parent;
-    protected Tracer tracer;
+    protected final ComponentCore parent;
+    protected final Tracer tracer;
     protected Config conf;
     public static final ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal();
     public static final ThreadLocal<Optional<ConfigUpdate>> childUpdate = new ThreadLocal();
@@ -60,10 +60,10 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
     protected Scheduler scheduler;
     protected int wid;
 
-//    protected ComponentCore() {
-//        this.parent = parentThreadLocal.get();
-//        this.tracer = childTracer.get().orNull();
-//    }
+    protected ComponentCore() {
+        this.parent = parentThreadLocal.get();
+        this.tracer = childTracer.get();
+    }
     
     protected abstract Logger logger();
 
