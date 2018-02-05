@@ -43,9 +43,11 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
 
     private final UUID id = UUID.randomUUID();
     protected ComponentCore parent;
+    protected Tracer tracer;
     protected Config conf;
     public static final ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal();
     public static final ThreadLocal<Optional<ConfigUpdate>> childUpdate = new ThreadLocal();
+    public static final ThreadLocal<Tracer> childTracer = new ThreadLocal();
 
     static {
         Optional<ConfigUpdate> update = Optional.absent();
@@ -58,6 +60,11 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
     protected Scheduler scheduler;
     protected int wid;
 
+//    protected ComponentCore() {
+//        this.parent = parentThreadLocal.get();
+//        this.tracer = childTracer.get().orNull();
+//    }
+    
     protected abstract Logger logger();
 
     public ComponentCore getParent() {

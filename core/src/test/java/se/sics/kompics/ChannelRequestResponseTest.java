@@ -1,7 +1,7 @@
 package se.sics.kompics;
 
 import java.util.concurrent.Semaphore;
-import org.junit.Test;
+import org.junit.Ignore;
 
 public class ChannelRequestResponseTest {
 
@@ -103,7 +103,7 @@ public class ChannelRequestResponseTest {
     private static final int EVENT_COUNT = 1;
     private static Semaphore semaphore;
 
-    @Test
+    @Ignore
     public void testHandlerRequestResponse() throws Exception {
         semaphore = new Semaphore(0);
 

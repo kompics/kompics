@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-parent-pom</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.0</version>
+	<version>1.1.0-SNAPSHOT</version>
 	<!-- Spacer //-->
 	<name>Kompics</name>
 	<url>http://kompics.sics.se</url>
@@ -270,16 +270,6 @@ by putting together protocols programmed as event-driven components.</descriptio
 		</site>
 		<downloadUrl>http://kompics.i.sics.se/maven/repository</downloadUrl>
 	</distributionManagement>
-	<!-- Spacer //-->
-	<mailingLists>
-		<mailingList>
-			<name>Kompics Mailing List</name>
-			<subscribe>https://list.sics.se/sympa/subscribe/kompics</subscribe>
-			<unsubscribe>https://list.sics.se/sympa/sigrequest/kompics</unsubscribe>
-			<post>kompics@sics.se</post>
-			<archive>https://list.sics.se/sympa/arc/kompics</archive>
-		</mailingList>
-	</mailingLists>
 	<!-- Spacer //-->
 	<developers>
 		<developer>

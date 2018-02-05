@@ -30,6 +30,6 @@ public abstract class Unsafe {
   }
 
   public static <P extends PortType> JavaPort<P> createJavaPort(boolean positive, P portType, ComponentCore owner) {
-       return new JavaPort<P>(positive, portType, owner);
+       return new JavaPort<P>(positive, portType, owner, owner.tracer);
   }
 }

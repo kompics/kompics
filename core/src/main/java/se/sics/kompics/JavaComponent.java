@@ -62,9 +62,11 @@ public class JavaComponent extends ComponentCore {
      * @param componentDefinition the component definition
      */
     public JavaComponent(ComponentDefinition componentDefinition) {
+        //super();
         this.positivePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
         this.negativePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
         this.parent = parentThreadLocal.get();
+        this.tracer = childTracer.get();
         if (this.parent != null) {
             this.conf = parent.conf.copy(componentDefinition.separateConfigId());
         } else {
@@ -79,6 +81,7 @@ public class JavaComponent extends ComponentCore {
         }
         this.component = componentDefinition;
         parentThreadLocal.set(null);
+        childTracer.set(null);
         executeNEvents = Kompics.maxNumOfExecutedEvents.get();
     }
 
@@ -164,9 +167,9 @@ public class JavaComponent extends ComponentCore {
     @Override
     public <P extends PortType> Negative<P> createNegativePort(Class<P> portType) {
         JavaPort<P> negativePort = new JavaPort<P>(false,
-                PortType.getPortType(portType), this);
+                PortType.getPortType(portType), this, this.tracer);
         JavaPort<P> positivePort = new JavaPort<P>(true,
-                PortType.getPortType(portType), parent);
+                PortType.getPortType(portType), parent, null);
 
         negativePort.setPair(positivePort);
         positivePort.setPair(negativePort);
@@ -181,10 +184,10 @@ public class JavaComponent extends ComponentCore {
 
     @Override
     public <P extends PortType> Positive<P> createPositivePort(Class<P> portType) {
-        JavaPort<P> negativePort = new JavaPort<P>(false,
-                PortType.getPortType(portType), parent);
         JavaPort<P> positivePort = new JavaPort<P>(true,
-                PortType.getPortType(portType), this);
+                PortType.getPortType(portType), parent, this.tracer);
+        JavaPort<P> negativePort = new JavaPort<P>(false,
+                PortType.getPortType(portType), parent, null);
 
         negativePort.setPair(positivePort);
         positivePort.setPair(negativePort);
@@ -200,9 +203,9 @@ public class JavaComponent extends ComponentCore {
     @Override
     public Negative<ControlPort> createControlPort() {
         negativeControl = new JavaPort<ControlPort>(false,
-                PortType.getPortType(ControlPort.class), this);
+                PortType.getPortType(ControlPort.class), this, this.tracer);
         positiveControl = new JavaPort<ControlPort>(true,
-                PortType.getPortType(ControlPort.class), parent);
+                PortType.getPortType(ControlPort.class), parent, null);
 
         positiveControl.setPair(negativeControl);
         negativeControl.setPair(positiveControl);
@@ -569,8 +572,8 @@ public class JavaComponent extends ComponentCore {
         }
         // forward up
         if (parent != null) {
-          ((PortCore<ControlPort>) parent.getControl()).doTrigger(
-            forwardedEvent, wid, this);
+            ((PortCore<ControlPort>) parent.getControl()).doTrigger(
+                    forwardedEvent, wid, this);
         }
         component.postUpdate();
     }

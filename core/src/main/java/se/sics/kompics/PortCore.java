@@ -39,6 +39,12 @@ public abstract class PortCore<P extends PortType> implements Negative<P>, Posit
     protected P portType;
 
     protected ComponentCore owner;
+    
+    protected final Tracer tracer;
+    
+    protected PortCore(Tracer tracer) {
+        this.tracer = tracer;
+    }
 
     @Override
     public P getPortType() {
