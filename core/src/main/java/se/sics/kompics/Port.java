@@ -54,6 +54,20 @@ public interface Port<P extends PortType> {
      * @param component that triggered the event
      */
     public void doTrigger(KompicsEvent event, int wid, ComponentCore component);
+    
+    /**
+     * Deliver a previously delayed outgoing event.
+     * 
+     * @param event 
+     */
+    public void deliverOutgoing(KompicsEvent event);
+    
+    /**
+     * Deliver a previously delayed incoming event.
+     * 
+     * @param event 
+     */
+    public void deliverIncoming(KompicsEvent event);
 
     /**
      *

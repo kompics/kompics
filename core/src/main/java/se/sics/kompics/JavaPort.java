@@ -52,8 +52,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     /**
      * Create a pair port.
-     * 
-     * @param other 
+     * <p>
+     * @param other
      */
 //    public JavaPort(JavaPort<P> other) {
 //        super(null); // the pair shouldn't have a tracer, otherwise the direction is meaningless
@@ -66,7 +66,6 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 //        this.pair = other;
 //        other.pair = this;
 //    }
-
     JavaPort(boolean positive, P portType, ComponentCore owner, Tracer tracer) {
         super(tracer);
         this.isPositive = positive;
@@ -298,18 +297,23 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     @Override
     public void doTrigger(KompicsEvent event, int wid, ComponentCore component) {
+        if (event instanceof Request) {
+            Request request = (Request) event;
+            request.pushPathElement(component);
+        }
         boolean process = true;
         if (tracer != null) {
             process = tracer.triggeredOutgoing(event, this);
         }
         if (process) {
             //System.out.println(this.getClass()+": "+event+" triggert from "+component);
-            if (event instanceof Request) {
-                Request request = (Request) event;
-                request.pushPathElement(component);
-            }
             pair.deliver(event, wid);
         }
+    }
+
+    @Override
+    public void deliverOutgoing(KompicsEvent event) {
+        pair.deliver(event, 0); // TODO I think wid is never used and should eventually be removed
     }
 
     private void deliver(KompicsEvent event, int wid) {
@@ -427,6 +431,13 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
             //Kompics.logger.debug("{}: Couldn't deliver {}, no matching subscribers", owner.getComponent(), event);
         }
         return false;
+    }
+
+    @Override
+    public void deliverIncoming(KompicsEvent event) {
+        if (handlers.hasSubscription(event)) {
+            doDeliver(event, 0); // TODO I think wid is never used and should eventually be removed
+        }
     }
 
     private void doDeliver(KompicsEvent event, int wid) {
