@@ -1,8 +1,0 @@
-language: java
-script: "mvn clean test -Pskip-network"
-dist: trusty
-jdk:
-  - oraclejdk8
-  - oraclejdk9
-  - oraclejdk11
-  - openjdk8
