@@ -1,4 +1,3 @@
-
 <!--
 This file is part of the CaracalDB distributed storage system.
 
@@ -30,7 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
     <artifactId>kompics-component-netty-network</artifactId>
     <packaging>jar</packaging>
     <name>Kompics Netty Network</name>
-
     <dependencies>
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
@@ -42,7 +40,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>5.0.0.Alpha3</version>
-            <!-- <version>5.0.0.Alpha3-SNAPSHOT</version> //-->
+            <!-- <version>5.0.0.Alpha3-SNAPSHOT</version>//-->
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -57,11 +55,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             <scope>compile</scope>
             <optional>true</optional>
         </dependency>
-        <!--<dependency>
-            <groupId>javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.12.1.GA</version>
-        </dependency>//-->
+        <!--<dependency><groupId>javassist</groupId><artifactId>javassist</artifactId><version>3.12.1.GA</version></dependency>//-->
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
@@ -70,7 +64,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             <optional>true</optional>
         </dependency>
     </dependencies>
-    
     <build>
         <plugins>
             <plugin>
@@ -126,5 +119,24 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
         </profile>
     </profiles>
 
-</project>
 
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-kompics-Maven</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/kompics/Maven</url>
+        </repository>
+        <!-- this is where the custom Netty implementation is from //-->
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-lkrollcom-maven</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/lkrollcom/maven</url>
+        </repository>
+    </repositories>
+</project>
