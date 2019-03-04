@@ -121,22 +121,22 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
     <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-kompics-Maven</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/kompics/Maven</url>
-        </repository>
-        <!-- this is where the custom Netty implementation is from //-->
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-lkrollcom-maven</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/lkrollcom/maven</url>
-        </repository>
-    </repositories>
+    <repository>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+        <id>bintray-kompics-Maven</id>
+        <name>bintray</name>
+        <url>https://dl.bintray.com/kompics/Maven</url>
+    </repository>
+    <!-- this is where the custom Netty implementation is from //-->
+    <repository>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+        <id>bintray-lkrollcom-maven</id>
+        <name>bintray</name>
+        <url>https://dl.bintray.com/lkrollcom/maven</url>
+    </repository>
+</repositories>
 </project>
