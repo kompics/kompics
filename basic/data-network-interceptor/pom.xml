@@ -59,7 +59,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
         <dependency>
             <groupId>com.larskroll</groupId>
             <artifactId>common-utils</artifactId>
-            <version>1.1</version>
+            <version>1.4.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
