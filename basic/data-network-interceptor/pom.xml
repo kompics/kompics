@@ -1,4 +1,3 @@
-
 <!--
 This file is part of the CaracalDB distributed storage system.
 
@@ -24,24 +23,23 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
     <parent>
         <groupId>se.sics.kompics.basic</groupId>
         <artifactId>kompics-basic-components</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>
     <groupId>se.sics.kompics.basic</groupId>
     <artifactId>kompics-data-network-interceptor</artifactId>
     <packaging>jar</packaging>
     <name>Kompics NetData Interceptor</name>
-
     <dependencies>
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-port-network</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-port-timer</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -59,7 +57,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
         <dependency>
             <groupId>com.larskroll</groupId>
             <artifactId>common-utils</artifactId>
-            <version>1.1</version>
+            <version>1.4.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -75,13 +73,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-netty-network</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-component-java-timer</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -91,7 +89,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             <scope>compile</scope>
         </dependency>
     </dependencies>
-    
     <build>
         <plugins>
             <plugin>
@@ -110,6 +107,23 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             </plugin>
         </plugins>
     </build>
-
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-kompics-Maven</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/kompics/Maven</url>
+        </repository>
+        <!-- this is where the common-utils is from //-->
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-lkrollcom-maven</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/lkrollcom/maven</url>
+        </repository>
+    </repositories>
 </project>
-

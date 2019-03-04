@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-parent-pom</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<!-- Spacer //-->
 	<name>Kompics</name>
 	<url>http://kompics.sics.se</url>
@@ -102,27 +102,29 @@ by putting together protocols programmed as event-driven components.</descriptio
 				</configuration>
 			</plugin>
 			<plugin>
-			    <groupId>org.apache.maven.plugins</groupId>
-			    <artifactId>maven-surefire-plugin</artifactId>
-			    <version>3.0.0-M3</version>
-			    <configuration>
-			        <forkCount>1</forkCount>
-			        <reuseForks>true</reuseForks>
-			        <argLine>-Xmx2024m</argLine>
-			        <forkedProcessExitTimeoutInSeconds>5</forkedProcessExitTimeoutInSeconds>
-			        <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
-			    </configuration>
-		  	</plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M3</version>
+				<configuration>
+					<forkCount>1</forkCount>
+					<reuseForks>true</reuseForks>
+					<argLine>-Xmx2024m</argLine>
+					<forkedProcessExitTimeoutInSeconds>5</forkedProcessExitTimeoutInSeconds>
+					<forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<version>3.0.1</version>
 				<executions>
 					<execution>
-	                    <id>attach-sources</id>
-	                    <phase>package</phase>
-	                    <goals><goal>jar-no-fork</goal></goals>
-                	</execution>
+						<id>attach-sources</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -182,11 +184,11 @@ by putting together protocols programmed as event-driven components.</descriptio
 	</build>
 	<!-- Spacer //-->
 	<distributionManagement>
-	    <repository>
-	        <id>bintray-kompics-Maven</id>
-	        <name>kompics-Maven</name>
-	        <url>https://api.bintray.com/maven/kompics/Maven/kompics/;publish=1</url>
-	    </repository>
+		<repository>
+			<id>bintray-kompics-Maven</id>
+			<name>kompics-Maven</name>
+			<url>https://api.bintray.com/maven/kompics/Maven/kompics/;publish=1</url>
+		</repository>
 	</distributionManagement>
 	<!-- Spacer //-->
 	<reporting>
