@@ -4,26 +4,26 @@
 	<parent>
 		<groupId>se.sics.kompics.basic</groupId>
 		<artifactId>kompics-basic-components</artifactId>
-		<version>1.0.1</version>
+		<version>1.1.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>se.sics.kompics.basic</groupId>
 	<artifactId>kompics-component-java-timer</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.1</version>
+	<version>1.1.0-SNAPSHOT</version>
 	<name>JavaTimer Kompics Component</name>
 
 	<dependencies>
 		<dependency>
 			<groupId>se.sics.kompics</groupId>
 			<artifactId>kompics-core</artifactId>
-			<version>1.0.1</version>
+			<version>1.1.0-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>se.sics.kompics.basic</groupId>
 			<artifactId>kompics-port-timer</artifactId>
-			<version>1.0.1</version>
+			<version>1.1.0-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
