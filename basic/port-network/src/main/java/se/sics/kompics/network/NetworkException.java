@@ -20,7 +20,6 @@
  */
 package se.sics.kompics.network;
 
-import com.google.common.base.Optional;
 import se.sics.kompics.KompicsEvent;
 
 /**
@@ -31,25 +30,25 @@ import se.sics.kompics.KompicsEvent;
  * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-public final class NetworkException implements KompicsEvent {
+@SuppressWarnings("serial")
+public final class NetworkException extends Exception implements KompicsEvent {
 
     public final Address peer;
     public final Transport protocol;
     public final String message;
-    public final Optional<Throwable> cause;
 
     public NetworkException(String message, Address peer, Transport protocol) {
+        super(message + " for " + peer + " via " + protocol);
         this.message = message;
         this.peer = peer;
         this.protocol = protocol;
-        this.cause = Optional.absent();
     }
 
-    public NetworkException(String message, Address peer, Transport protocol, Optional<Throwable> cause) {
+    public NetworkException(String message, Address peer, Transport protocol, Throwable cause) {
+        super(message + " for " + peer + " via " + protocol, cause);
         this.message = message;
         this.peer = peer;
         this.protocol = protocol;
-        this.cause = cause;
     }
 
 }

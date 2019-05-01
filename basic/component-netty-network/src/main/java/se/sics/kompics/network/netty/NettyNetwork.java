@@ -21,6 +21,8 @@
 package se.sics.kompics.network.netty;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -58,6 +60,8 @@ import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 import se.sics.kompics.network.ConnectionStatus;
 import se.sics.kompics.network.Header;
+import se.sics.kompics.network.ListeningStatus;
+import se.sics.kompics.network.ListeningStatus.Request;
 import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Network;
@@ -92,12 +96,16 @@ public class NettyNetwork extends ComponentDefinition {
     private DatagramChannel udpChannel;
     // Info
     final NettyAddress self;
-    private final int boundPort; // TODO use me!
+    private volatile int boundPort = -1; // Unbound
     volatile int boundUDTPort = -1; // Unbound
     private final boolean bindTCP;
     private final boolean bindUDP;
     private final boolean bindUDT;
+    private volatile boolean boundTCP = false;
+    private volatile boolean boundUDP = false;
+    private volatile boolean boundUDT = false;
     private InetAddress alternativeBindIf = null;
+    private InetAddress publicIf = null;
     private boolean udtMonitoring = false;
     private final long monitoringInterval = 1000; // 1s
     final int udtBufferSizes;
@@ -128,6 +136,7 @@ public class NettyNetwork extends ComponentDefinition {
         customLogCtx.put(MDC_KEY_IF, self.getIp().getHostAddress());
 
         boundPort = self.getPort();
+        publicIf = self.getIp();
 
         // CONFIG
         Optional<InetAddress> abiO = config().readValue("netty.bindInterface", InetAddress.class);
@@ -197,6 +206,7 @@ public class NettyNetwork extends ComponentDefinition {
         subscribe(notifyHandler, net);
         subscribe(delayedHandler, loopback);
         subscribe(dropHandler, loopback);
+        subscribe(statusHandler, netC);
     }
 
     Handler<Start> startHandler = new Handler<Start>() {
@@ -208,14 +218,41 @@ public class NettyNetwork extends ComponentDefinition {
             if (alternativeBindIf != null) {
                 bindIp = alternativeBindIf;
             }
-            if (bindTCP) {
-                bindPort(bindIp, self.getPort(), Transport.TCP);
-            }
-            if (bindUDT) {
-                bindPort(bindIp, self.getPort(), Transport.UDT);
-            }
-            if (bindUDP) {
-                bindPort(bindIp, self.getPort(), Transport.UDP);
+            try {
+                if (bindTCP) {
+                    boundTCP = bindPort(bindIp, self.getPort(), Transport.TCP);
+                    if (!boundTCP) {
+                        // fail component instead of leaving it in a useless state
+                        throw new NetworkException("Port would not bind!", self, Transport.TCP);
+                    }
+                }
+                if (bindUDT) {
+                    boundUDT = bindPort(bindIp, self.getPort(), Transport.UDT);
+                    if (!boundUDT) {
+                        // fail component instead of leaving it in a useless state
+                        throw new NetworkException("Port would not bind!", self, Transport.UDT);
+                    }
+                }
+                if (bindUDP) {
+                    boundUDP = bindPort(bindIp, self.getPort(), Transport.UDP);
+                    if (!boundUDP) {
+                        // fail component instead of leaving it in a useless state
+                        throw new NetworkException("Port would not bind!", self, Transport.UDP);
+                    }
+                }
+                ListeningStatus status = describeStatus();
+                trigger(status, netC);
+            } catch (NetworkException ex) {
+                logger.error("Failed during start-up!");
+                bootstrapUDTClient.group().shutdownGracefully();
+                bootstrapTCP.childGroup().shutdownGracefully();
+                bootstrapTCP.group().shutdownGracefully();
+                bootstrapTCPClient.group().shutdownGracefully();
+                bootstrapUDP.group().shutdownGracefully();
+                bootstrapUDT.childGroup().shutdownGracefully();
+                bootstrapUDT.group().shutdownGracefully();
+                // just rethrow to crash the component
+                throw new RuntimeException(ex);
             }
         }
 
@@ -274,6 +311,37 @@ public class NettyNetwork extends ComponentDefinition {
         }
     };
 
+    Handler<ListeningStatus.Request> statusHandler = new Handler<ListeningStatus.Request>() {
+
+        @Override
+        public void handle(Request event) {
+            ListeningStatus status = describeStatus();
+            event.setResponse(status.asResponse());
+            answer(event);
+        }
+
+    };
+
+    private ListeningStatus describeStatus() {
+        ImmutableMap.Builder<Transport, Integer> builder = ImmutableMap.builder();
+        if (boundTCP) {
+            builder.put(Transport.TCP, boundPort);
+        }
+        if (boundUDP) {
+            builder.put(Transport.UDP, boundPort);
+        }
+        if (boundUDT) {
+            builder.put(Transport.UDT, boundUDTPort);
+        }
+        InetAddress boundIf;
+        if (alternativeBindIf == null) {
+            boundIf = publicIf;
+        } else {
+            boundIf = alternativeBindIf;
+        }
+        return new ListeningStatus(builder.build(), boundIf, publicIf);
+    }
+
     private boolean bindPort(InetAddress addr, int port, Transport protocol) {
         switch (protocol) {
         case TCP:
@@ -327,7 +395,9 @@ public class NettyNetwork extends ComponentDefinition {
                 .childHandler((new NettyInitializer<SocketChannel>(handler))).option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            bootstrapTCP.bind(new InetSocketAddress(addr, port)).sync();
+            Channel c = bootstrapTCP.bind(new InetSocketAddress(addr, port)).sync().channel();
+            InetSocketAddress localAddress = (InetSocketAddress) c.localAddress(); // Should work
+            boundPort = localAddress.getPort(); // in case it was 0 -> random port
 
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
         } catch (InterruptedException e) {

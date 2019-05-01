@@ -23,7 +23,7 @@ package se.sics.kompics.network;
 import se.sics.kompics.KompicsEvent;
 
 /**
- *  All subclasses indicate a status change of a connection to the specified {@code peer}.
+ * All subclasses indicate a status change of a connection to the specified {@code peer}.
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */

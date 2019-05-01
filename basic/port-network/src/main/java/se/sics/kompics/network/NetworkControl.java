@@ -36,5 +36,8 @@ public final class NetworkControl extends PortType {
         indication(ConnectionStatus.Requested.class);
         indication(ConnectionStatus.Established.class);
         indication(ConnectionStatus.Dropped.class);
+        indication(ListeningStatus.class);
+        indication(ListeningStatus.Response.class);
+        request(ListeningStatus.Request.class);
     }
 }
