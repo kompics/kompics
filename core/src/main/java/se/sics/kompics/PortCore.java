@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -25,9 +25,10 @@ import java.util.List;
 /**
  * The <code>PortCore</code> class.
  * <p>
+ * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
- * @author Lars Kroll <lkr@lars-kroll.com>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id: $
  */
 public abstract class PortCore<P extends PortType> implements Negative<P>, Positive<P> {

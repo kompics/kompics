@@ -42,9 +42,9 @@ import org.ujmp.core.calculation.Calculation;
 import se.sics.kompics.config.Config;
 
 /**
- * Uses the Sarsa algorithm from Reinforcement Learning: An Introduction, figure
- * 6.9, page 146
+ * Uses the Sarsa algorithm from Reinforcement Learning: An Introduction, figure 6.9, page 146
  * <p>
+ * 
  * @author lkroll
  */
 public class TDRatioLearner implements ProtocolRatioPolicy {
@@ -73,14 +73,13 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         stepSize = Rational.valueOf(1, iStepSize);
         List<Integer> basicActions = config.getValues("kompics.net.data.td.actions", Integer.class);
         actions = completeActions(basicActions);
-        ActionValueEstimator.Implementation qImpl
-                = ActionValueEstimator.Implementation.valueOf(
-                        config.getValue("kompics.net.data.td.actionValueEstimator", String.class));
+        ActionValueEstimator.Implementation qImpl = ActionValueEstimator.Implementation
+                .valueOf(config.getValue("kompics.net.data.td.actionValueEstimator", String.class));
         AVEFactory avef = new AVEFactory();
         Q = avef.getInstance(qImpl, stepSize);
         e = avef.getInstance(ActionValueEstimator.Implementation.MATRIX, stepSize);
         LOG.trace("Initialised TD with actions {}, and {} states, stepSize {}",
-                new Object[]{Arrays.toString(actions), Q.numStates(), stepSize});
+                new Object[] { Arrays.toString(actions), Q.numStates(), stepSize });
         policy = new EpsilonGreedy();
         lastAction = actions[actions.length / 2]; // always start off with 0 movement
         state = Q.middleState();
@@ -101,8 +100,8 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         double Qsa = Q.at(s, a);
         double delta = r + gamma * Q.at(sPrime, aPrime) - Qsa;
         // accumulating trace
-        //double esa = e.at(s, a);
-        //e.set(esa + 1.0, s, a); // update eligibility trace
+        // double esa = e.at(s, a);
+        // e.set(esa + 1.0, s, a); // update eligibility trace
         // replacting trace (loose)
         e.set(1.0, s, a);
         // replaceing trace (strict)
@@ -121,15 +120,16 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
                 e.set(neweij, i, j);
             }
         }
-        //double alphaBlock = alpha * (r + gammaQsPrimeaPrime - Qsa);
-        //double newQsa = Qsa + alphaBlock;
-        //Q.set(newQsa, s, a);
+        // double alphaBlock = alpha * (r + gammaQsPrimeaPrime - Qsa);
+        // double newQsa = Qsa + alphaBlock;
+        // Q.set(newQsa, s, a);
         // update stuff
         lastState = sPrime;
         lastAction = aPrime;
         state = applyAction(aPrime, sPrime);
         Rational ratio = stateToRatio(state);
-        LOG.info("Updated learner: r={}, s={}, a={}, s'={}, a'={}, s''={} ({}), \n Q={} \n e={}", new Object[]{r, s, a, sPrime, aPrime, state, ratio, Q, e});
+        LOG.info("Updated learner: r={}, s={}, a={}, s'={}, a'={}, s''={} ({}), \n Q={} \n e={}",
+                new Object[] { r, s, a, sPrime, aPrime, state, ratio, Q, e });
         return ratio;
     }
 
@@ -219,21 +219,21 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
 
         public ActionValueEstimator getInstance(ActionValueEstimator.Implementation impl, Rational stepSize) {
             switch (impl) {
-                case MATRIX:
-                    return new BasicMatrixEstimator(stepSize);
-                case COLLAPSED:
-                    return new CollapsedMatrixEstimator(stepSize);
-                case FUNCTION:
-                    return new FunctionApproximationEstimator(stepSize);
-                default:
-                    return null;
+            case MATRIX:
+                return new BasicMatrixEstimator(stepSize);
+            case COLLAPSED:
+                return new CollapsedMatrixEstimator(stepSize);
+            case FUNCTION:
+                return new FunctionApproximationEstimator(stepSize);
+            default:
+                return null;
             }
         }
     }
 
     class BasicMatrixEstimator implements ActionValueEstimator {
 
-        private final int stateMiddleIndex;  // 50/50 point
+        private final int stateMiddleIndex; // 50/50 point
         private final int height;
         private final int width;
         private final Matrix m;
@@ -287,7 +287,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
                 stateRow = SparseMatrix.Factory.zeros(1, actions.length);
             }
             Matrix maxIndex = stateRow.indexOfMax(Calculation.Ret.NEW, Calculation.COLUMN);
-            //LOG.trace("Max is: {}", maxIndex);
+            // LOG.trace("Max is: {}", maxIndex);
             return maxIndex.getAsInt(0, 0);
         }
 
@@ -318,7 +318,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
 
     class CollapsedMatrixEstimator implements ActionValueEstimator {
 
-        private final int stateMiddleIndex;  // 50/50 point
+        private final int stateMiddleIndex; // 50/50 point
         private final double[] m;
 
         public CollapsedMatrixEstimator(Rational stepSize) {
@@ -386,7 +386,8 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
                     bestValue = val;
                 }
             }
-            LOG.trace("Of the target states {}, the best is {} (val: {}) in {}", new Object[]{stateActions, bestState, bestValue, Arrays.toString(m)});
+            LOG.trace("Of the target states {}, the best is {} (val: {}) in {}",
+                    new Object[] { stateActions, bestState, bestValue, Arrays.toString(m) });
             Collection<Integer> targetActions = stateActions.get(bestState);
             int bestAction = Integer.MAX_VALUE;
             for (Integer action : targetActions) {
@@ -429,7 +430,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
 
     class FunctionApproximationEstimator implements ActionValueEstimator {
 
-        private final int stateMiddleIndex;  // 50/50 point
+        private final int stateMiddleIndex; // 50/50 point
         private final double[] m;
         private PolynomialFunction approxFunction;
 
@@ -438,7 +439,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
             m = new double[height];
             Arrays.fill(m, 0.0);
             stateMiddleIndex = height / 2;
-            approxFunction = new PolynomialFunction(new double[]{0.0}); // f(x) = 0
+            approxFunction = new PolynomialFunction(new double[] { 0.0 }); // f(x) = 0
         }
 
         private void updateFunction() {
@@ -456,7 +457,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
                 }
             }
             if (nonZeroValues == 0) {
-                return; //can't do anything without data
+                return; // can't do anything without data
             }
             if (nonZeroValues == 1) {
                 // not enough data points for anything but a constant line (which doesn't help)
@@ -517,7 +518,7 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
         @Override
         public int bestActionAt(int state) {
             boolean functionUpdated = false;
-            
+
             Multimap<Integer, Integer> stateActions = TreeMultimap.create();
             for (int i = 0; i < actions.length; i++) {
                 int s = state + actions[i];
@@ -546,7 +547,8 @@ public class TDRatioLearner implements ProtocolRatioPolicy {
                     bestValue = val;
                 }
             }
-            LOG.trace("Of the target states {} with values {}, the best is {} (val: {}) in {}", new Object[]{stateActions, approxValues, bestState, bestValue, Arrays.toString(m)});
+            LOG.trace("Of the target states {} with values {}, the best is {} (val: {}) in {}",
+                    new Object[] { stateActions, approxValues, bestState, bestValue, Arrays.toString(m) });
             Collection<Integer> targetActions = stateActions.get(bestState);
             int bestAction = Integer.MAX_VALUE;
             for (Integer action : targetActions) {

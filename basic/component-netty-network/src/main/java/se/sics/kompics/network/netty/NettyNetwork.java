@@ -57,6 +57,7 @@ import se.sics.kompics.Negative;
 import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 import se.sics.kompics.network.ConnectionStatus;
+import se.sics.kompics.network.Header;
 import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Network;
@@ -67,7 +68,7 @@ import se.sics.kompics.network.netty.serialization.Serializers;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class NettyNetwork extends ComponentDefinition {
 
@@ -86,23 +87,23 @@ public class NettyNetwork extends ComponentDefinition {
     private Bootstrap bootstrapUDP;
     private ServerBootstrap bootstrapUDT;
     final Bootstrap bootstrapUDTClient;
-//    private final LinkedList<Msg> delayedMessages = new LinkedList<Msg>();
-//    private final LinkedList<MessageNotify.Req> delayedNotifies = new LinkedList<MessageNotify.Req>();
-//    private final HashSet<DisambiguateConnection> delayedDisambs = new HashSet<DisambiguateConnection>();
-//    private final HashMap<UUID, MessageNotify.Req> awaitingDelivery = new HashMap<UUID, MessageNotify.Req>();
+    // private final LinkedList<Msg> delayedMessages = new LinkedList<Msg>();
+    // private final LinkedList<MessageNotify.Req> delayedNotifies = new LinkedList<MessageNotify.Req>();
+    // private final HashSet<DisambiguateConnection> delayedDisambs = new HashSet<DisambiguateConnection>();
+    // private final HashMap<UUID, MessageNotify.Req> awaitingDelivery = new HashMap<UUID, MessageNotify.Req>();
     final ChannelManager channels = new ChannelManager(this);
     final MessageQueueManager messages = new MessageQueueManager(this);
     private DatagramChannel udpChannel;
     // Info
     final NettyAddress self;
-    private final int boundPort;
+    private final int boundPort; // TODO use me!
     volatile int boundUDTPort = -1; // Unbound
     private final boolean bindTCP;
     private final boolean bindUDP;
     private final boolean bindUDT;
     private InetAddress alternativeBindIf = null;
     private boolean udtMonitoring = false;
-    private final long monitoringInterval = 1000; //1s
+    private final long monitoringInterval = 1000; // 1s
     final int udtBufferSizes;
     final int udtMSS;
     // LOGGING
@@ -151,10 +152,10 @@ public class NettyNetwork extends ComponentDefinition {
         udtBufferSizes = config().getValueOrDefault("netty.udt.buffer", -1);
         udtMSS = config().getValueOrDefault("netty.udt.mss", -1);
 
-//        if (!self.equals(init.self)) {
-//            LOG.error("Do NOT bind Netty to a virtual address!");
-//            System.exit(1);
-//        }
+        // if (!self.equals(init.self)) {
+        // LOG.error("Do NOT bind Netty to a virtual address!");
+        // System.exit(1);
+        // }
         bindTCP = init.protocols.contains(Transport.TCP);
         bindUDP = init.protocols.contains(Transport.UDP);
         bindUDT = init.protocols.contains(Transport.UDT);
@@ -169,8 +170,7 @@ public class NettyNetwork extends ComponentDefinition {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
                 .option(ChannelOption.SO_REUSEADDR, true);
         bootstrapUDTClient = new Bootstrap();
-        NioEventLoopGroup groupUDT = new NioEventLoopGroup(0, (Executor) null,
-                NioUdtProvider.BYTE_PROVIDER);
+        NioEventLoopGroup groupUDT = new NioEventLoopGroup(0, (Executor) null, NioUdtProvider.BYTE_PROVIDER);
         bootstrapUDTClient.group(groupUDT).channelFactory(NioUdtProvider.BYTE_CONNECTOR)
                 .handler(new NettyInitializer<SocketChannel>(new StreamHandler(this, Transport.UDT)))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
@@ -192,8 +192,7 @@ public class NettyNetwork extends ComponentDefinition {
                         MDC.clear();
                     }
                 }
-            }, monitoringInterval, monitoringInterval, TimeUnit.MILLISECONDS
-            );
+            }, monitoringInterval, monitoringInterval, TimeUnit.MILLISECONDS);
         }
 
         subscribe(startHandler, control);
@@ -234,11 +233,11 @@ public class NettyNetwork extends ComponentDefinition {
         }
     };
 
-    Handler<Msg> msgHandler = new Handler<Msg>() {
+    Handler<Msg<?, ?>> msgHandler = new Handler<Msg<?, ?>>() {
 
         @Override
-        public void handle(Msg event) {
-            if (event.getDestination().sameHostAs(self)) {
+        public void handle(Msg<?, ?> event) {
+            if (event.getHeader().getDestination().sameHostAs(self)) {
                 logger.trace("Delivering message {} locally.", event);
                 trigger(event, net);
                 return;
@@ -252,8 +251,8 @@ public class NettyNetwork extends ComponentDefinition {
 
         @Override
         public void handle(final MessageNotify.Req notify) {
-            Msg event = notify.msg;
-            if (event.getDestination().sameHostAs(self)) {
+            Msg<?, ?> event = notify.msg;
+            if (event.getHeader().getDestination().sameHostAs(self)) {
                 logger.trace("Delivering message {} locally.", event);
                 trigger(event, net);
                 answer(notify);
@@ -281,14 +280,14 @@ public class NettyNetwork extends ComponentDefinition {
 
     private boolean bindPort(InetAddress addr, int port, Transport protocol) {
         switch (protocol) {
-            case TCP:
-                return bindTcpPort(addr, port);
-            case UDP:
-                return bindUdpPort(addr, port);
-            case UDT:
-                return bindUdtPort(addr); // bind to random port instead (bad netty UDT implementation -.-)
-            default:
-                throw new Error("Unknown Transport type");
+        case TCP:
+            return bindTcpPort(addr, port);
+        case UDP:
+            return bindUdpPort(addr, port);
+        case UDT:
+            return bindUdtPort(addr); // bind to random port instead (bad netty UDT implementation -.-)
+        default:
+            throw new Error("Unknown Transport type");
         }
     }
 
@@ -296,10 +295,10 @@ public class NettyNetwork extends ComponentDefinition {
 
         EventLoopGroup group = new NioEventLoopGroup();
         bootstrapUDP = new Bootstrap();
-        bootstrapUDP.group(group).channel(NioDatagramChannel.class)
-                .handler(new DatagramHandler(this, Transport.UDP));
+        bootstrapUDP.group(group).channel(NioDatagramChannel.class).handler(new DatagramHandler(this, Transport.UDP));
 
-        bootstrapUDP.option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1500, 1500, RECV_BUFFER_SIZE));
+        bootstrapUDP.option(ChannelOption.RCVBUF_ALLOCATOR,
+                new AdaptiveRecvByteBufAllocator(1500, 1500, RECV_BUFFER_SIZE));
         bootstrapUDP.option(ChannelOption.SO_RCVBUF, RECV_BUFFER_SIZE);
         bootstrapUDP.option(ChannelOption.SO_SNDBUF, SEND_BUFFER_SIZE);
         // bootstrap.setOption("trafficClass", trafficClass);
@@ -312,7 +311,7 @@ public class NettyNetwork extends ComponentDefinition {
             InetSocketAddress iAddr = new InetSocketAddress(addr, port);
             udpChannel = (DatagramChannel) bootstrapUDP.bind(iAddr).sync().channel();
 
-            //addLocalSocket(iAddr, c);
+            // addLocalSocket(iAddr, c);
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
         } catch (InterruptedException e) {
             logger.error("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
@@ -329,8 +328,7 @@ public class NettyNetwork extends ComponentDefinition {
         TCPServerHandler handler = new TCPServerHandler(this);
         bootstrapTCP = new ServerBootstrap();
         bootstrapTCP.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
-                .childHandler((new NettyInitializer<SocketChannel>(handler)))
-                .option(ChannelOption.SO_REUSEADDR, true);
+                .childHandler((new NettyInitializer<SocketChannel>(handler))).option(ChannelOption.SO_REUSEADDR, true);
 
         try {
             bootstrapTCP.bind(new InetSocketAddress(addr, port)).sync();
@@ -341,20 +339,17 @@ public class NettyNetwork extends ComponentDefinition {
             return false;
         }
 
-        //InetSocketAddress iAddr = new InetSocketAddress(addr, port);
+        // InetSocketAddress iAddr = new InetSocketAddress(addr, port);
         return true;
     }
 
     private boolean bindUdtPort(final InetAddress addr) {
-        NioEventLoopGroup bossGroup = new NioEventLoopGroup(0, (Executor) null,
-                NioUdtProvider.BYTE_PROVIDER);
-        NioEventLoopGroup workerGroup = new NioEventLoopGroup(0, (Executor) null,
-                NioUdtProvider.BYTE_PROVIDER);
+        NioEventLoopGroup bossGroup = new NioEventLoopGroup(0, (Executor) null, NioUdtProvider.BYTE_PROVIDER);
+        NioEventLoopGroup workerGroup = new NioEventLoopGroup(0, (Executor) null, NioUdtProvider.BYTE_PROVIDER);
         UDTServerHandler handler = new UDTServerHandler(this);
         bootstrapUDT = new ServerBootstrap();
         bootstrapUDT.group(bossGroup, workerGroup).channelFactory(NioUdtProvider.BYTE_ACCEPTOR)
-                .childHandler(new NettyInitializer<UdtChannel>(handler))
-                .option(ChannelOption.SO_REUSEADDR, true);
+                .childHandler(new NettyInitializer<UdtChannel>(handler)).option(ChannelOption.SO_REUSEADDR, true);
         if (this.udtBufferSizes > 0) {
             bootstrapUDT.option(UdtChannelOption.PROTOCOL_SEND_BUFFER_SIZE, this.udtBufferSizes)
                     .option(UdtChannelOption.PROTOCOL_RECEIVE_BUFFER_SIZE, this.udtBufferSizes);
@@ -381,7 +376,8 @@ public class NettyNetwork extends ComponentDefinition {
             InetSocketAddress localAddress = (InetSocketAddress) c.localAddress(); // Should work
             boundUDTPort = localAddress.getPort(); // in case it was 0 -> random port
 
-            logger.info("Successfully bound UDT to ip:port {}:{} with config: {}", new Object[]{addr, boundUDTPort, c.config().getOptions()});
+            logger.info("Successfully bound UDT to ip:port {}:{} with config: {}",
+                    new Object[] { addr, boundUDTPort, c.config().getOptions() });
         } catch (InterruptedException e) {
             logger.error("Problem when trying to bind UDT to {}", addr);
             return false;
@@ -398,12 +394,13 @@ public class NettyNetwork extends ComponentDefinition {
         trigger(status, netC);
     }
 
-    protected void deliverMessage(Msg message, Channel c) {
+    protected void deliverMessage(Msg<?, ?> message, Channel c) {
         if (message instanceof DisambiguateConnection) {
             DisambiguateConnection msg = (DisambiguateConnection) message;
             channels.disambiguate(msg, c);
             if (msg.reply) {
-                c.writeAndFlush(new MessageWrapper(new DisambiguateConnection(self, msg.getSource(), msg.getProtocol(), boundUDTPort, false)));
+                c.writeAndFlush(new MessageWrapper(
+                        new DisambiguateConnection(self, msg.getSource(), msg.getProtocol(), boundUDTPort, false)));
             }
             return;
         }
@@ -423,10 +420,9 @@ public class NettyNetwork extends ComponentDefinition {
             messages.ack(ack);
             return;
         }
-        logger.debug(
-                "Delivering message {} from {} to {} protocol {}",
-                new Object[]{message.toString(), message.getSource(),
-                    message.getDestination(), message.getProtocol()});
+        Header<?> h = message.getHeader();
+        logger.debug("Delivering message {} from {} to {} protocol {}",
+                new Object[] { message.toString(), h.getSource(), h.getDestination(), h.getProtocol() });
         trigger(message, net);
     }
 
@@ -441,10 +437,10 @@ public class NettyNetwork extends ComponentDefinition {
                 Serializers.toBinary(msgw.msg, buf);
             }
             msgw.injectSize(buf.readableBytes(), System.nanoTime());
-            DatagramPacket pack = new DatagramPacket(buf, msgw.msg.getDestination().asSocket());
+            DatagramPacket pack = new DatagramPacket(buf, msgw.msg.getHeader().getDestination().asSocket());
             logger.debug("Sending Datagram message {} ({}bytes)", msgw.msg, buf.readableBytes());
             return udpChannel.writeAndFlush(pack);
-        } catch (Exception e) { // serialization might fail horribly with size bounded buff
+        } catch (Exception e) { // serialisation might fail horribly with size bounded buff
             logger.warn("Could not send Datagram message {}, error was: {}", msgw, e);
             return null;
         }
@@ -478,7 +474,7 @@ public class NettyNetwork extends ComponentDefinition {
         clearConnections();
 
         logger.info("Shutting down handler groups...");
-        List<Future> gfutures = new LinkedList<>();
+        List<Future<?>> gfutures = new LinkedList<>();
         gfutures.add(bootstrapUDTClient.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         if (bindTCP) {
             gfutures.add(bootstrapTCP.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
@@ -492,12 +488,12 @@ public class NettyNetwork extends ComponentDefinition {
             gfutures.add(bootstrapUDT.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
             gfutures.add(bootstrapUDT.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         }
-        for (Future f : gfutures) {
+        for (Future<?> f : gfutures) {
             f.syncUninterruptibly();
         }
-        //bootstrapUDTClient = null;
+        // bootstrapUDTClient = null;
         bootstrapTCP = null;
-        //bootstrapTCPClient = null;
+        // bootstrapTCPClient = null;
         bootstrapUDP = null;
         bootstrapUDT = null;
 
@@ -510,7 +506,7 @@ public class NettyNetwork extends ComponentDefinition {
     void trigger(KompicsEvent event) {
         if (event instanceof Msg) {
             throw new RuntimeException("Not support anymore!");
-            //trigger(event, net.getPair());
+            // trigger(event, net.getPair());
         } else {
             trigger(event, onSelf);
         }

@@ -30,9 +30,7 @@ public class ConnectionStatus implements KompicsEvent {
 
     public static enum State {
 
-        REQUESTED,
-        ESTABLISHED,
-        DROPPED;
+        REQUESTED, ESTABLISHED, DROPPED;
     }
 
     public final State state;

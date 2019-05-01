@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -35,134 +35,134 @@ import se.sics.kompics.SpinlockQueue;
  */
 public class Worker extends Thread {
 
-	private final WorkStealingScheduler scheduler;
+    private final WorkStealingScheduler scheduler;
 
-	private final int wid;
+    private final int wid;
 
-	private final SpinlockQueue<ComponentCore> workQueue;
+    private final SpinlockQueue<ComponentCore> workQueue;
 
-	private final AtomicInteger workCount;
+    private final AtomicInteger workCount;
 
-	private final AtomicBoolean workAvailable = new AtomicBoolean(false);
+    private final AtomicBoolean workAvailable = new AtomicBoolean(false);
 
-	private final AtomicBoolean shouldQuit;
+    private final AtomicBoolean shouldQuit;
 
-	int executionCount, workStealingCount, sleepCount;
+    int executionCount, workStealingCount, sleepCount;
 
-	/**
-	 * Instantiates a new worker.
-	 * 
-	 * @param scheduler
-	 *            the scheduler
-	 * @param wid
-	 *            the wid
-	 */
-	public Worker(WorkStealingScheduler scheduler, int wid) {
-		super();
-		this.scheduler = scheduler;
-		this.wid = wid;
-		this.workQueue = new SpinlockQueue<ComponentCore>();
-		this.workCount = new AtomicInteger(0);
-		this.shouldQuit = new AtomicBoolean(false);
-		super.setName("Kompics worker-" + wid);
-	}
+    /**
+     * Instantiates a new worker.
+     * 
+     * @param scheduler
+     *            the scheduler
+     * @param wid
+     *            the wid
+     */
+    public Worker(WorkStealingScheduler scheduler, int wid) {
+        super();
+        this.scheduler = scheduler;
+        this.wid = wid;
+        this.workQueue = new SpinlockQueue<ComponentCore>();
+        this.workCount = new AtomicInteger(0);
+        this.shouldQuit = new AtomicBoolean(false);
+        super.setName("Kompics worker-" + wid);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Thread#run()
-	 */
-	@Override
-	public final void run() {
-		while (true) {
-			try {
-				boolean stillOn = executeComponent();
-				if (!stillOn) {
-					return;
-				}
-			} finally {
-				// run forever
-			}
-		}
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Thread#run()
+     */
+    @Override
+    public final void run() {
+        while (true) {
+            try {
+                boolean stillOn = executeComponent();
+                if (!stillOn) {
+                    return;
+                }
+            } finally {
+                // run forever
+            }
+        }
+    }
 
-	private final boolean executeComponent() {
-		ComponentCore core = null;
-		do {
-			// try to do local work
-			core = workQueue.poll();
-			if (core == null) {
-				// got no more work; should I quit?
-				if (shouldQuit.get()) {
-					return false;
-				}
+    private final boolean executeComponent() {
+        ComponentCore core = null;
+        do {
+            // try to do local work
+            core = workQueue.poll();
+            if (core == null) {
+                // got no more work; should I quit?
+                if (shouldQuit.get()) {
+                    return false;
+                }
 
-				// try to steal work from other workers
-				workStealingCount++;
-				core = scheduler.stealWork(wid);
-				if (core == null) {
-					// there is no work in the system
-					sleepCount++;
-					scheduler.waitForWork(this);
-				}
-			} else {
-				workCount.decrementAndGet();
-			}
-		} while (core == null);
+                // try to steal work from other workers
+                workStealingCount++;
+                core = scheduler.stealWork(wid);
+                if (core == null) {
+                    // there is no work in the system
+                    sleepCount++;
+                    scheduler.waitForWork(this);
+                }
+            } else {
+                workCount.decrementAndGet();
+            }
+        } while (core == null);
 
-		executionCount++;
-		scheduler.execute(core, wid);
-		// core.execute(wid);
+        executionCount++;
+        scheduler.execute(core, wid);
+        // core.execute(wid);
 
-		return true;
-	}
+        return true;
+    }
 
-	final ComponentCore getWork() {
-		ComponentCore core = workQueue.poll();
-		if (core != null) {
-			workCount.decrementAndGet();
-		}
-		return core;
-	}
+    final ComponentCore getWork() {
+        ComponentCore core = workQueue.poll();
+        if (core != null) {
+            workCount.decrementAndGet();
+        }
+        return core;
+    }
 
-	final void addWork(ComponentCore core) {
-		workQueue.offer(core);
-		workCount.incrementAndGet();
-		workAvailable.set(true);
-	}
+    final void addWork(ComponentCore core) {
+        workQueue.offer(core);
+        workCount.incrementAndGet();
+        workAvailable.set(true);
+    }
 
-	/**
-	 * Gets the work count.
-	 * 
-	 * @return the work count
-	 */
-	public final int getWorkCount() {
-		return workCount.get();
-	}
+    /**
+     * Gets the work count.
+     * 
+     * @return the work count
+     */
+    public final int getWorkCount() {
+        return workCount.get();
+    }
 
-	/**
-	 * Gets the wid.
-	 * 
-	 * @return the wid
-	 */
-	public final int getWid() {
-		return wid;
-	}
+    /**
+     * Gets the wid.
+     * 
+     * @return the wid
+     */
+    public final int getWid() {
+        return wid;
+    }
 
-	final void quitWhenNoMoreWork() {
-		shouldQuit.set(true);
-	}
-	
-	/**
-	 * The caller is expected to hold the object lock on entry
-	 */
-	void waitForWork() {
-		try {
-			if (!workAvailable.compareAndSet(true, false)) {
-				this.wait();
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
+    final void quitWhenNoMoreWork() {
+        shouldQuit.set(true);
+    }
+
+    /**
+     * The caller is expected to hold the object lock on entry
+     */
+    void waitForWork() {
+        try {
+            if (!workAvailable.compareAndSet(true, false)) {
+                this.wait();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

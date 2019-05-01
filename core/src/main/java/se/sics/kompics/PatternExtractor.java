@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -23,11 +23,14 @@ package se.sics.kompics;
 /**
  * This interface must be implemented by classes that act as context for MatchedHandlers.
  * 
- * @author lkroll
- * @param <P> The type pattern to match against
- * @param <V> The type of the value to extract if the pattern is matched
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
+ * @param <P>
+ *            The type pattern to match against
+ * @param <V>
+ *            The type of the value to extract if the pattern is matched
  */
 public interface PatternExtractor<P, V> extends KompicsEvent {
     public P extractPattern();
+
     public V extractValue();
 }

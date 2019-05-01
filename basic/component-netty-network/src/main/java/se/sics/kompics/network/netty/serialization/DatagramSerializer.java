@@ -25,7 +25,7 @@ import io.netty.channel.socket.DatagramPacket;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface DatagramSerializer extends Serializer {
     public Object fromBinary(ByteBuf buf, DatagramPacket datagram);

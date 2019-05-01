@@ -1,7 +1,22 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This file is part of the Kompics component model runtime.
+ *
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 package se.sics.kompics;
 
@@ -18,7 +33,7 @@ import se.sics.kompics.Fault.ResolveAction;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @RunWith(JUnit4.class)
 public class FaultTest {
@@ -33,7 +48,7 @@ public class FaultTest {
     private static final String PARENT_HANDLED = "PARENT_HANDLED";
     private static final String TOP_HANDLED = "TOP_HANDLED";
     private static final String GC_STARTED = "GC_STARTED";
-    //private static final String TMSG = "TMSG";
+    // private static final String TMSG = "TMSG";
 
     @Test
     public void escalateTest() {
@@ -157,12 +172,13 @@ public class FaultTest {
         @Override
         public ResolveAction handleFault(Fault fault) {
             switch (type) {
-                case ESCALATE:
-                    return ResolveAction.ESCALATE;
-                case IGNORE:
-                    return ResolveAction.IGNORE;
+            case ESCALATE:
+                return ResolveAction.ESCALATE;
+            case IGNORE:
+                return ResolveAction.IGNORE;
+            default:
+                return ResolveAction.RESOLVED;
             }
-            return ResolveAction.RESOLVED;
         }
     }
 
@@ -209,6 +225,7 @@ public class FaultTest {
 
     }
 
+    @SuppressWarnings("serial")
     public static class TestError extends RuntimeException {
 
     }

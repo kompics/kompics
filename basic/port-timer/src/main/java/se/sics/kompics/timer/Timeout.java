@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -27,52 +27,55 @@ import se.sics.kompics.Response;
 /**
  * The <code>Timeout</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
+@SuppressWarnings("deprecation")
 public abstract class Timeout extends Response implements Cloneable {
 
-	private UUID timeoutId;
+    private UUID timeoutId;
 
-	/**
-	 * Instantiates a new timeout.
-	 * 
-	 * @param request
-	 *            the request
-	 */
-	protected Timeout(ScheduleTimeout request) {
-		super(request);
-		timeoutId = UUID.randomUUID();
-	}
+    /**
+     * Instantiates a new timeout.
+     * 
+     * @param request
+     *            the request
+     */
+    protected Timeout(ScheduleTimeout request) {
+        super(request);
+        timeoutId = UUID.randomUUID();
+    }
 
-	/**
-	 * Instantiates a new timeout.
-	 * 
-	 * @param request
-	 *            the request
-	 */
-	protected Timeout(SchedulePeriodicTimeout request) {
-		super(request);
-		timeoutId = UUID.randomUUID();
-	}
+    /**
+     * Instantiates a new timeout.
+     * 
+     * @param request
+     *            the request
+     */
+    protected Timeout(SchedulePeriodicTimeout request) {
+        super(request);
+        timeoutId = UUID.randomUUID();
+    }
 
-	/**
-	 * Gets the timeout id.
-	 * 
-	 * @return the timeout id
-	 */
-	public final UUID getTimeoutId() {
-		return timeoutId;
-	}
-	
-	/* (non-Javadoc)
-	 * @see se.sics.kompics.Response#clone()
-	 */
-	@Override
-	public final Object clone() throws CloneNotSupportedException {
-		Timeout timeout = (Timeout) super.clone();
-		timeout.timeoutId = timeoutId;
-		return timeout;
-	}
+    /**
+     * Gets the timeout id.
+     * 
+     * @return the timeout id
+     */
+    public final UUID getTimeoutId() {
+        return timeoutId;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see se.sics.kompics.Response#clone()
+     */
+    @Override
+    public final Object clone() throws CloneNotSupportedException {
+        Timeout timeout = (Timeout) super.clone();
+        timeout.timeoutId = timeoutId;
+        return timeout;
+    }
 }

@@ -26,12 +26,12 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class DropDelayed implements KompicsEvent {
     public final Address peer;
     public final Transport protocol;
-    
+
     public DropDelayed(Address peer, Transport protocol) {
         this.peer = peer;
         this.protocol = protocol;

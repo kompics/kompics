@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -21,9 +21,8 @@
 package se.sics.kompics.util;
 
 /**
- * @author Alex Ormenisan <aaor@kth.se>
+ * @author Alex Ormenisan {@literal <aaor@kth.se>}
  */
 public interface Identifiable<I extends Identifier> {
     public I getId();
 }
-

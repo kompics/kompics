@@ -28,7 +28,7 @@ import java.util.List;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class TypesafeConfig implements BaselineConfig {
 

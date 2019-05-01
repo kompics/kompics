@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
@@ -24,15 +24,15 @@ import java.util.UUID;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface ComponentProxy {
 
     public <P extends PortType> void trigger(KompicsEvent e, Port<P> p);
-    
-    public <P extends PortType> void answer(Direct.Request event);
 
-    public <P extends PortType> void answer(Direct.Request req, Direct.Response resp);
+    public <P extends PortType> void answer(Direct.Request<?> event);
+
+    public <P extends PortType> void answer(Direct.Request<?> req, Direct.Response resp);
 
     public <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent);
 
@@ -53,26 +53,27 @@ public interface ComponentProxy {
     public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative);
 
     @Deprecated
-    public <P extends PortType> Channel<P> connect(Positive<P> positive,
-            Negative<P> negative, ChannelSelector<?, ?> filter);
+    public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative,
+            ChannelSelector<?, ?> filter);
 
     @Deprecated
-    public <P extends PortType> Channel<P> connect(Negative<P> negative,
-            Positive<P> positive, ChannelSelector<?, ?> filter);
+    public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive,
+            ChannelSelector<?, ?> filter);
 
     public Negative<ControlPort> getControlPort();
 
     public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelFactory factory);
 
-    public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelSelector<?, ?> selector, ChannelFactory factory);
+    public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative,
+            ChannelSelector<?, ?> selector, ChannelFactory factory);
 
     public <P extends PortType> void disconnect(Channel<P> c);
 
     public <E extends KompicsEvent, P extends PortType> void subscribe(Handler<E> handler, Port<P> port);
 
-    public void subscribe(MatchedHandler handler, Port port);
+    public void subscribe(MatchedHandler<?, ?, ?> handler, Port<?> port);
 
-    public void unsubscribe(MatchedHandler handler, Port port);
+    public void unsubscribe(MatchedHandler<?, ?, ?> handler, Port<?> port);
 
     public <E extends KompicsEvent, P extends PortType> void unsubscribe(Handler<E> handler, Port<P> port);
 
@@ -81,8 +82,8 @@ public interface ComponentProxy {
     public <P extends PortType> Positive<P> getPositive(Class<P> portType);
 
     public <P extends PortType> Negative<P> getNegative(Class<P> portType);
-    
+
     public <P extends PortType> Positive<P> requires(Class<P> portType);
-    
+
     public <P extends PortType> Negative<P> provides(Class<P> portType);
 }

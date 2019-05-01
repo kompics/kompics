@@ -33,7 +33,7 @@ import se.sics.kompics.network.netty.serialization.SpecialSerializers;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class NettySerializer implements DatagramSerializer {
 
@@ -100,36 +100,41 @@ public class NettySerializer implements DatagramSerializer {
     public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
         byte type = buf.readByte();
         switch (type) {
-            case DIS: {
-                SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil.msgFromBinary(buf);
-                // Port 2 byte
-                byte portUpper = buf.readByte();
-                byte portLower = buf.readByte();
-                int udtPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-                return new DisambiguateConnection(fields.src, fields.dst, fields.proto, udtPort, fields.flag1);
-            }
-            case ACK: {
-                SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil.msgFromBinary(buf);
-                UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
-                return new NotifyAck(fields.src, fields.dst, fields.proto, id);
-            }
-            case ACK_REQ: {
-                UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
-                Msg msg = (Msg) Serializers.fromBinary(buf, Optional.absent());
-                return new AckRequestMsg(msg, id);
-            }
-            case CHECK: {
-                SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil.msgFromBinary(buf);
-                return new CheckChannelActive(fields.src, fields.dst, fields.proto);
-            }
-            case CLOSE: {
-                SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil.msgFromBinary(buf);
-                return new CloseChannel(fields.src, fields.dst, fields.proto);
-            }
-            case CLOSED: {
-                SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil.msgFromBinary(buf);
-                return new ChannelClosed(fields.src, fields.dst, fields.proto);
-            }
+        case DIS: {
+            SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil
+                    .msgFromBinary(buf);
+            // Port 2 byte
+            byte portUpper = buf.readByte();
+            byte portLower = buf.readByte();
+            int udtPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
+            return new DisambiguateConnection(fields.src, fields.dst, fields.proto, udtPort, fields.flag1);
+        }
+        case ACK: {
+            SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil
+                    .msgFromBinary(buf);
+            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            return new NotifyAck(fields.src, fields.dst, fields.proto, id);
+        }
+        case ACK_REQ: {
+            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            Msg<?, ?> msg = (Msg<?, ?>) Serializers.fromBinary(buf, Optional.absent());
+            return new AckRequestMsg(msg, id);
+        }
+        case CHECK: {
+            SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil
+                    .msgFromBinary(buf);
+            return new CheckChannelActive(fields.src, fields.dst, fields.proto);
+        }
+        case CLOSE: {
+            SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil
+                    .msgFromBinary(buf);
+            return new CloseChannel(fields.src, fields.dst, fields.proto);
+        }
+        case CLOSED: {
+            SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil
+                    .msgFromBinary(buf);
+            return new ChannelClosed(fields.src, fields.dst, fields.proto);
+        }
         }
         return null;
     }
@@ -137,24 +142,27 @@ public class NettySerializer implements DatagramSerializer {
     @Override
     public Object fromBinary(ByteBuf buf, DatagramPacket datagram) {
         byte type = buf.readByte();
-        SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil.msgFromBinary(buf);
+        SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil
+                .msgFromBinary(buf);
         switch (type) {
-            case DIS: {
-                // Port 2 byte
-                byte portUpper = buf.readByte();
-                byte portLower = buf.readByte();
-                int udtPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-                return new DisambiguateConnection(new NettyAddress(datagram.sender()), new NettyAddress(datagram.recipient()), Transport.UDP, udtPort, fields.flag1);
-            }
-            case ACK: {
-                UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
-                return new NotifyAck(new NettyAddress(datagram.sender()), new NettyAddress(datagram.recipient()), Transport.UDP, id);
-            }
-            case ACK_REQ: {
-                UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
-                Msg msg = (Msg) Serializers.fromBinary(buf, datagram);
-                return new AckRequestMsg(msg, id);
-            }
+        case DIS: {
+            // Port 2 byte
+            byte portUpper = buf.readByte();
+            byte portLower = buf.readByte();
+            int udtPort = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
+            return new DisambiguateConnection(new NettyAddress(datagram.sender()),
+                    new NettyAddress(datagram.recipient()), Transport.UDP, udtPort, fields.flag1);
+        }
+        case ACK: {
+            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            return new NotifyAck(new NettyAddress(datagram.sender()), new NettyAddress(datagram.recipient()),
+                    Transport.UDP, id);
+        }
+        case ACK_REQ: {
+            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            Msg<?, ?> msg = (Msg<?, ?>) Serializers.fromBinary(buf, datagram);
+            return new AckRequestMsg(msg, id);
+        }
         }
         return null;
     }

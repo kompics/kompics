@@ -27,10 +27,11 @@ import se.sics.kompics.network.Address;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class TestAddress implements Address, Serializable {
 
+    private static final long serialVersionUID = -4007185296173296725L;
     private final InetSocketAddress isa;
 
     public TestAddress(InetSocketAddress isa) {

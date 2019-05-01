@@ -158,22 +158,22 @@ public class Sender {
                 Data dm = outstanding.get(event.msgId);
                 if (dm != null) {
                     switch (event.getState()) {
-                        case SENT: {
-                            System.out.println("Message #" + dm.pos + " was sent.");
-                        }
+                    case SENT: {
+                        System.out.println("Message #" + dm.pos + " was sent.");
+                    }
                         break;
-                        case DELIVERED: {
-                            System.out.println("Message #" + dm.pos + " was delivered.");
-                            outstanding.remove(event.msgId);
-                        }
+                    case DELIVERED: {
+                        System.out.println("Message #" + dm.pos + " was delivered.");
+                        outstanding.remove(event.msgId);
+                    }
                         break;
-                        default: {
-                            System.out.println("Message #" + dm.pos + " encountered a problem!");
-                            outstanding.remove(event.msgId);
-                        }
+                    default: {
+                        System.out.println("Message #" + dm.pos + " encountered a problem!");
+                        outstanding.remove(event.msgId);
+                    }
                         break;
                     }
-                    
+
                     if (outstanding.isEmpty()) {
                         long endTS = System.currentTimeMillis();
                         double diff = ((double) endTS - startTS) / 1000.0;

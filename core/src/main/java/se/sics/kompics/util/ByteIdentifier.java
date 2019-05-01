@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -23,54 +23,54 @@ package se.sics.kompics.util;
 import com.google.common.io.BaseEncoding;
 
 /**
- * @author Alex Ormenisan <aaor@kth.se>
+ * @author Alex Ormenisan {@literal <aaor@kth.se>}
  */
 public class ByteIdentifier implements Identifier {
 
-  public final byte id;
+    public final byte id;
 
-  public ByteIdentifier(byte id) {
-    this.id = id;
-  }
-
-  @Override
-  public int partition(int nrPartitions) {
-    return hashCode() % nrPartitions;
-  }
-
-  @Override
-  public int compareTo(Identifier o) {
-    ByteIdentifier that = (ByteIdentifier) o;
-    if (this.id == that.id) {
-      return 0;
+    public ByteIdentifier(byte id) {
+        this.id = id;
     }
-    return this.id < that.id ? -1 : 1;
-  }
 
-  @Override
-  public int hashCode() {
-    int hash = 3;
-    hash = 67 * hash + this.id;
-    return hash;
-  }
+    @Override
+    public int partition(int nrPartitions) {
+        return hashCode() % nrPartitions;
+    }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == null) {
-      return false;
+    @Override
+    public int compareTo(Identifier o) {
+        ByteIdentifier that = (ByteIdentifier) o;
+        if (this.id == that.id) {
+            return 0;
+        }
+        return this.id < that.id ? -1 : 1;
     }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    final ByteIdentifier other = (ByteIdentifier) obj;
-    if (this.id != other.id) {
-      return false;
-    }
-    return true;
-  }
 
-  @Override
-  public String toString() {
-    return BaseEncoding.base16().encode(new byte[]{id});
-  }
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 67 * hash + this.id;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ByteIdentifier other = (ByteIdentifier) obj;
+        if (this.id != other.id) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return BaseEncoding.base16().encode(new byte[] { id });
+    }
 }

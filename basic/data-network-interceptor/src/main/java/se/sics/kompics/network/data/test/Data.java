@@ -41,7 +41,7 @@ public class Data extends DataMessage {
         this.data = data;
     }
 
-    Data(DataHeader header, int pos, int total, byte[] data) {
+    Data(DataHeader<Address> header, int pos, int total, byte[] data) {
         super(header);
         this.pos = pos;
         this.total = total;

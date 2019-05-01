@@ -25,7 +25,7 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class DisambiguateConnection extends DirectMessage {
 
@@ -77,10 +77,12 @@ public class DisambiguateConnection extends DirectMessage {
             return false;
         }
         final DisambiguateConnection other = (DisambiguateConnection) obj;
-        if (this.getSource() != other.getSource() && (this.getSource() == null || !this.getSource().equals(other.getSource()))) {
+        if (this.getSource() != other.getSource()
+                && (this.getSource() == null || !this.getSource().equals(other.getSource()))) {
             return false;
         }
-        if (this.getDestination() != other.getDestination() && (this.getDestination() == null || !this.getDestination().equals(other.getDestination()))) {
+        if (this.getDestination() != other.getDestination()
+                && (this.getDestination() == null || !this.getDestination().equals(other.getDestination()))) {
             return false;
         }
         if (this.getProtocol() != other.getProtocol()) {

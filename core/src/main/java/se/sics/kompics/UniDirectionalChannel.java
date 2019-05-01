@@ -1,20 +1,34 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This file is part of the Kompics component model runtime.
+ *
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
+ * 2009 Royal Institute of Technology (KTH)
+ *
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.kompics;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class UniDirectionalChannel<PT extends PortType> extends SimpleChannel<PT> {
 
     public static enum Direction {
 
-        TO_POSITIVE,
-        TO_NEGATIVE;
+        TO_POSITIVE, TO_NEGATIVE;
     }
 
     private final Direction direction;
@@ -48,20 +62,20 @@ public class UniDirectionalChannel<PT extends PortType> extends SimpleChannel<PT
 
         @Override
         public <P extends PortType> Channel<P> connect(PortCore<P> positivePort, PortCore<P> negativePort) {
-            UniDirectionalChannel<P> c = new UniDirectionalChannel(positivePort, negativePort, direction);
+            UniDirectionalChannel<P> c = new UniDirectionalChannel<P>(positivePort, negativePort, direction);
             positivePort.addChannel(c);
             negativePort.addChannel(c);
             return c;
         }
 
         @Override
-        public <P extends PortType> Channel<P> connect(PortCore<P> positivePort, PortCore<P> negativePort, ChannelSelector selector) {
-            UniDirectionalChannel<P> c = new UniDirectionalChannel(positivePort, negativePort, direction);
-             Class<? extends KompicsEvent> eventType = selector.getEventType();
+        public <P extends PortType, E extends KompicsEvent, F> Channel<P> connect(PortCore<P> positivePort,
+                PortCore<P> negativePort, ChannelSelector<E, F> selector) {
+            UniDirectionalChannel<P> c = new UniDirectionalChannel<P>(positivePort, negativePort, direction);
+            Class<E> eventType = selector.getEventType();
             if (selector.isPositive()) {
                 if (!c.portType.hasPositive(eventType)) {
-                    throw new RuntimeException("Port type " + c.portType
-                            + " has no positive " + eventType);
+                    throw new RuntimeException("Port type " + c.portType + " has no positive " + eventType);
                 }
                 if (this.direction != Direction.TO_NEGATIVE) {
                     throw new RuntimeException("Selectors have to be added to the sending side of a one-way channel!");
@@ -70,8 +84,7 @@ public class UniDirectionalChannel<PT extends PortType> extends SimpleChannel<PT
                 negativePort.addChannel(c);
             } else {
                 if (!c.portType.hasNegative(eventType)) {
-                    throw new RuntimeException("Port type " + c.portType
-                            + " has no negative " + eventType);
+                    throw new RuntimeException("Port type " + c.portType + " has no negative " + eventType);
                 }
                 if (this.direction != Direction.TO_POSITIVE) {
                     throw new RuntimeException("Selectors have to be added to the sending side of a one-way channel!");

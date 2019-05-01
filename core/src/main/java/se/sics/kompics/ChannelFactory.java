@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -22,9 +22,11 @@ package se.sics.kompics;
 
 /**
  *
- * @author lkroll
+ * Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface ChannelFactory {
     public <P extends PortType> Channel<P> connect(PortCore<P> positivePort, PortCore<P> negativePort);
-    public <P extends PortType> Channel<P> connect(PortCore<P> positivePort, PortCore<P> negativePort, ChannelSelector selector);
+
+    public <P extends PortType, E extends KompicsEvent, F> Channel<P> connect(PortCore<P> positivePort,
+            PortCore<P> negativePort, ChannelSelector<E, F> selector);
 }

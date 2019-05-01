@@ -25,12 +25,12 @@ import se.sics.kompics.config.ConfigUpdate;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class Update implements KompicsEvent {
     public final ConfigUpdate update;
     public final UUID forwarder;
-    
+
     public Update(ConfigUpdate update, UUID forwarder) {
         this.update = update;
         this.forwarder = forwarder;

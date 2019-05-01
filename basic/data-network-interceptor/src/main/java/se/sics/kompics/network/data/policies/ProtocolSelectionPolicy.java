@@ -27,9 +27,11 @@ import se.sics.kompics.network.Transport;
 /**
  *
  * @author lkroll
- * @param <M> the type of message the policy deals with
+ * @param <M>
+ *            the type of message the policy deals with
  */
-public interface ProtocolSelectionPolicy<M extends Msg> {
+public interface ProtocolSelectionPolicy<M extends Msg<?, ?>> {
     public void updateRatio(Rational ratio);
+
     public Transport select(M msg);
 }

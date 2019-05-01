@@ -28,12 +28,12 @@ import io.netty.buffer.ByteBuf;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class ProtobufSerializer implements Serializer {
-    
+
     private static final boolean HAS_PARSER;
-    
+
     static {
         boolean hasParser = false;
         try {
@@ -43,17 +43,17 @@ public class ProtobufSerializer implements Serializer {
         } catch (Throwable t) {
             // Ignore
         }
-        
+
         HAS_PARSER = hasParser;
     }
-    
+
     private final MessageLite prototype;
     private final ExtensionRegistry extensionRegistry;
-    
+
     public ProtobufSerializer(MessageLite prototype) {
         this(prototype, null);
     }
-    
+
     public ProtobufSerializer(MessageLite prototype, ExtensionRegistry extensionRegistry) {
         if (prototype == null) {
             throw new NullPointerException("prototype");
@@ -61,12 +61,12 @@ public class ProtobufSerializer implements Serializer {
         this.prototype = prototype.getDefaultInstanceForType();
         this.extensionRegistry = extensionRegistry;
     }
-    
+
     @Override
     public int identifier() {
         return 4;
     }
-    
+
     @Override
     public void toBinary(Object msg, ByteBuf buf) {
         if (msg instanceof MessageLite) {
@@ -80,7 +80,7 @@ public class ProtobufSerializer implements Serializer {
             return;
         }
     }
-    
+
     @Override
     public Object fromBinary(ByteBuf msg, Optional<Object> hint) {
         final byte[] array;
@@ -94,7 +94,7 @@ public class ProtobufSerializer implements Serializer {
             msg.getBytes(msg.readerIndex(), array, 0, length);
             offset = 0;
         }
-        
+
         Object o = null;
         try {
             if (extensionRegistry == null) {
@@ -113,8 +113,8 @@ public class ProtobufSerializer implements Serializer {
         } catch (InvalidProtocolBufferException ex) {
             Serializers.LOG.error("ProtobufSerializer: Couldn't deserialize object.", ex);
         }
-        
-        return o;        
+
+        return o;
     }
-    
+
 }

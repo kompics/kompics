@@ -33,15 +33,17 @@ import se.sics.kompics.network.data.policies.StaticRatio;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
+@SuppressWarnings("rawtypes") // TODO fix this at some point maybe
 class ConnectionFactory {
 
-    //private final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    private final ClassLoader classLoader = getClass().getClassLoader(); // TODO write some better class loader selection logic
+    // private final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    private final ClassLoader classLoader = getClass().getClassLoader(); // TODO write some better class loader
+                                                                         // selection logic
 
-    private final Class ratioPolicy; // should be Class<ProtocolSelectionPolicy> but Java's generics are stupid
-    private final Class selectionPolicy; // should be Class<ProtocolRatioPolicy> but Java's generics are stupid
+    private final Class<?> ratioPolicy; // should be Class<ProtocolSelectionPolicy> but Java's generics are stupid
+    private final Class<?> selectionPolicy; // should be Class<ProtocolRatioPolicy> but Java's generics are stupid
     private final Config config;
 
     ConnectionFactory(Config conf, Optional<String> ratioPolicyS, Optional<String> selectionPolicyS) {
@@ -73,10 +75,11 @@ class ConnectionFactory {
         }
     }
 
+    @SuppressWarnings("unchecked")
     ConnectionTracker newConnection(InetSocketAddress target) {
         try {
-            Constructor ratioConstructor = ratioPolicy.getConstructor(Config.class);
-            ProtocolSelectionPolicy psp = (ProtocolSelectionPolicy) selectionPolicy.newInstance();
+            Constructor<?> ratioConstructor = ratioPolicy.getConstructor(Config.class);
+            ProtocolSelectionPolicy<?> psp = (ProtocolSelectionPolicy<?>) selectionPolicy.newInstance();
             ProtocolRatioPolicy prp = (ProtocolRatioPolicy) ratioConstructor.newInstance(config);
             return new ConnectionTracker(target, psp, prp);
         } catch (Throwable ex) {
@@ -87,8 +90,8 @@ class ConnectionFactory {
 
     ConnectionTracker deserialiseConnection(ByteBuf buf) {
         try {
-            Constructor ratioConstructor = ratioPolicy.getConstructor(Config.class);
-            ProtocolSelectionPolicy psp = (ProtocolSelectionPolicy) selectionPolicy.newInstance();
+            Constructor<?> ratioConstructor = ratioPolicy.getConstructor(Config.class);
+            ProtocolSelectionPolicy<?> psp = (ProtocolSelectionPolicy<?>) selectionPolicy.newInstance();
             ProtocolRatioPolicy prp = (ProtocolRatioPolicy) ratioConstructor.newInstance(config);
             return ConnectionTracker.fromBinary(buf, psp, prp);
         } catch (Throwable ex) {
@@ -97,10 +100,11 @@ class ConnectionFactory {
         }
     }
 
+    @SuppressWarnings("unchecked")
     ConnectionTracker newConnection(InetSocketAddress target, Rational initialRatio) {
         try {
-            Constructor ratioConstructor = ratioPolicy.getConstructor(Config.class);
-            ProtocolSelectionPolicy psp = (ProtocolSelectionPolicy) selectionPolicy.newInstance();
+            Constructor<?> ratioConstructor = ratioPolicy.getConstructor(Config.class);
+            ProtocolSelectionPolicy<?> psp = (ProtocolSelectionPolicy<?>) selectionPolicy.newInstance();
             ProtocolRatioPolicy prp = (ProtocolRatioPolicy) ratioConstructor.newInstance(config);
             return new ConnectionTracker(target, initialRatio, psp, prp);
         } catch (Throwable ex) {

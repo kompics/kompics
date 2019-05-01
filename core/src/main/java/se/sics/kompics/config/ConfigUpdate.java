@@ -27,7 +27,7 @@ import java.util.UUID;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class ConfigUpdate implements Iterable<Entry<String, ConfigValue>> {
 
@@ -49,7 +49,7 @@ public class ConfigUpdate implements Iterable<Entry<String, ConfigValue>> {
     public ConfigUpdateFactory modify(UUID creator) {
         return new Factory(creator);
     }
-    
+
     public class Factory implements ConfigUpdateFactory {
 
         private final HashMap<String, ConfigValue> updates = new HashMap<>();
@@ -66,7 +66,8 @@ public class ConfigUpdate implements Iterable<Entry<String, ConfigValue>> {
 
         @Override
         public void replace(String key, ConfigValue original, Object replacement) {
-            ConfigValue newCV = Config.Builder.CVFactory.INSTANCE.create(replacement, original.version(), original.options());
+            ConfigValue newCV = Config.Builder.CVFactory.INSTANCE.create(replacement, original.version(),
+                    original.options());
             updates.put(key, newCV);
         }
 

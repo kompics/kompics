@@ -31,7 +31,7 @@ import se.sics.kompics.Scheduler;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class ForkJoinScheduler extends Scheduler {
 
@@ -41,6 +41,7 @@ public class ForkJoinScheduler extends Scheduler {
         pool = new ForkJoinPool(workers, new KompicsThreadFactory(), new KompicsUncaughtExceptionHandler(), true);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void schedule(Component c, int w) {
         pool.execute((ForkJoinTask<Void>) c);

@@ -49,11 +49,10 @@ import se.sics.kompics.network.ConnectionStatus;
 import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 class ChannelManager {
 
@@ -61,7 +60,8 @@ class ChannelManager {
     private final ConcurrentMap<InetSocketAddress, UdtChannel> udtActiveChannels = new ConcurrentHashMap<>();
 
     private final ConcurrentMap<InetSocketAddress, DisambiguateConnection> waitingDisambs = new ConcurrentHashMap<>();
-    private final Set<InetSocketAddress> waitingForCreationUDT = Collections.newSetFromMap(new ConcurrentHashMap<InetSocketAddress, Boolean>());
+    private final Set<InetSocketAddress> waitingForCreationUDT = Collections
+            .newSetFromMap(new ConcurrentHashMap<InetSocketAddress, Boolean>());
 
     private final HashMultimap<InetSocketAddress, SocketChannel> tcpChannels = HashMultimap.create();
     private final HashMultimap<InetSocketAddress, UdtChannel> udtChannels = HashMultimap.create();
@@ -94,13 +94,17 @@ class ChannelManager {
                         tcpChannels.put(msg.getSource().asSocket(), sc);
                         component.networkStatus(ConnectionStatus.established(msg.getSource(), Transport.TCP));
 
-                        if (!tcpChannels.get(msg.getSource().asSocket()).isEmpty()) { // don't add if we don't have a TCP channel since host is most likely dead
-                            udtBoundPorts.put(msg.getSource().asSocket(), new InetSocketAddress(msg.getSource().getIp(), msg.udtPort));
+                        if (!tcpChannels.get(msg.getSource().asSocket()).isEmpty()) { // don't add if we don't have a
+                                                                                      // TCP channel since host is most
+                                                                                      // likely dead
+                            udtBoundPorts.put(msg.getSource().asSocket(),
+                                    new InetSocketAddress(msg.getSource().getIp(), msg.udtPort));
                         }
 
                         component.trigger(new SendDelayed(msg.getSource(), Transport.TCP));
                         if (waitingForCreationUDT.remove(msg.getSource().asSocket())) {
-                            component.extLog.debug("Requesting creation of outstanding UDT channel to {}", msg.getSource());
+                            component.extLog.debug("Requesting creation of outstanding UDT channel to {}",
+                                    msg.getSource());
                             createUDTChannel(msg.getSource(), component.bootstrapUDTClient);
                         }
                     } else if (c instanceof UdtChannel) {
@@ -109,8 +113,11 @@ class ChannelManager {
                         udtChannels.put(msg.getSource().asSocket(), uc);
                         component.networkStatus(ConnectionStatus.established(msg.getSource(), Transport.UDT));
 
-                        if (!tcpChannels.get(msg.getSource().asSocket()).isEmpty()) { // don't add if we don't have a TCP channel since host is most likely dead
-                            udtBoundPorts.put(msg.getSource().asSocket(), new InetSocketAddress(msg.getSource().getIp(), msg.udtPort));
+                        if (!tcpChannels.get(msg.getSource().asSocket()).isEmpty()) { // don't add if we don't have a
+                                                                                      // TCP channel since host is most
+                                                                                      // likely dead
+                            udtBoundPorts.put(msg.getSource().asSocket(),
+                                    new InetSocketAddress(msg.getSource().getIp(), msg.udtPort));
                         }
 
                         component.trigger(new SendDelayed(msg.getSource(), Transport.UDT));
@@ -135,9 +142,12 @@ class ChannelManager {
                     } else {
                         for (SocketChannel channel : tcpChannels.get(msg.getSource().asSocket())) {
                             if (!channel.equals(activeC)) {
-                                component.extLog.warn("Preparing to close duplicate TCP channel between {} and {}: local {}, remote {}",
-                                        new Object[]{msg.getSource(), msg.getDestination(), channel.localAddress(), channel.remoteAddress()});
-                                channel.writeAndFlush(new MessageNotify.Req(new CloseChannel(component.self, msg.getSource(), Transport.TCP)));
+                                component.extLog.warn(
+                                        "Preparing to close duplicate TCP channel between {} and {}: local {}, remote {}",
+                                        new Object[] { msg.getSource(), msg.getDestination(), channel.localAddress(),
+                                                channel.remoteAddress() });
+                                channel.writeAndFlush(new MessageNotify.Req(
+                                        new CloseChannel(component.self, msg.getSource(), Transport.TCP)));
                             }
                         }
                     }
@@ -150,9 +160,12 @@ class ChannelManager {
                     } else {
                         for (UdtChannel channel : udtChannels.get(msg.getSource().asSocket())) {
                             if (!channel.equals(activeC)) {
-                                component.extLog.warn("Preparing to close duplicate UDT channel between {} and {}: local {}, remote {}",
-                                        new Object[]{msg.getSource(), msg.getDestination(), channel.localAddress(), channel.remoteAddress()});
-                                channel.writeAndFlush(new MessageNotify.Req(new CloseChannel(component.self, msg.getSource(), Transport.UDT)));
+                                component.extLog.warn(
+                                        "Preparing to close duplicate UDT channel between {} and {}: local {}, remote {}",
+                                        new Object[] { msg.getSource(), msg.getDestination(), channel.localAddress(),
+                                                channel.remoteAddress() });
+                                channel.writeAndFlush(new MessageNotify.Req(
+                                        new CloseChannel(component.self, msg.getSource(), Transport.UDT)));
                             }
                         }
                     }
@@ -173,10 +186,13 @@ class ChannelManager {
                     tcpChannels.put(msg.getSource().asSocket(), sc); // just to make sure
                     Set<SocketChannel> channels = tcpChannels.get(msg.getSource().asSocket());
                     if (channels.size() < 2) {
-                        component.extLog.warn("Can't close TCP channel between {} and {}: local {}, remote {} -- it's the only channel!",
-                                new Object[]{msg.getSource(), msg.getDestination(), sc.localAddress(), sc.remoteAddress()});
+                        component.extLog.warn(
+                                "Can't close TCP channel between {} and {}: local {}, remote {} -- it's the only channel!",
+                                new Object[] { msg.getSource(), msg.getDestination(), sc.localAddress(),
+                                        sc.remoteAddress() });
                         tcpActiveChannels.put(msg.getSource().asSocket(), sc);
-                        sc.writeAndFlush(new MessageNotify.Req(new CheckChannelActive(component.self, msg.getSource(), Transport.TCP)));
+                        sc.writeAndFlush(new MessageNotify.Req(
+                                new CheckChannelActive(component.self, msg.getSource(), Transport.TCP)));
                     } else {
                         if (activeC.equals(sc)) { // pick any channel as active
                             for (SocketChannel channel : channels) {
@@ -186,10 +202,12 @@ class ChannelManager {
                                 }
                             }
                         }
-                        ChannelFuture f = sc.writeAndFlush(new MessageNotify.Req(new ChannelClosed(component.self, msg.getSource(), Transport.TCP)));
+                        ChannelFuture f = sc.writeAndFlush(new MessageNotify.Req(
+                                new ChannelClosed(component.self, msg.getSource(), Transport.TCP)));
                         f.addListener(ChannelFutureListener.CLOSE);
                         component.extLog.info("Closing duplicate TCP channel between {} and {}: local {}, remote {}",
-                                new Object[]{msg.getSource(), msg.getDestination(), sc.localAddress(), sc.remoteAddress()});
+                                new Object[] { msg.getSource(), msg.getDestination(), sc.localAddress(),
+                                        sc.remoteAddress() });
 
                     }
                 } else if (c instanceof UdtChannel) {
@@ -198,10 +216,13 @@ class ChannelManager {
                     udtChannels.put(msg.getSource().asSocket(), uc); // just to make sure
                     Set<UdtChannel> channels = udtChannels.get(msg.getSource().asSocket());
                     if (channels.size() < 2) {
-                        component.extLog.warn("Can't close UDT channel between {} and {}: local {}, remote {} -- it's the only channel!",
-                                new Object[]{msg.getSource(), msg.getDestination(), uc.localAddress(), uc.remoteAddress()});
+                        component.extLog.warn(
+                                "Can't close UDT channel between {} and {}: local {}, remote {} -- it's the only channel!",
+                                new Object[] { msg.getSource(), msg.getDestination(), uc.localAddress(),
+                                        uc.remoteAddress() });
                         udtActiveChannels.put(msg.getSource().asSocket(), uc);
-                        uc.writeAndFlush(new MessageNotify.Req(new CheckChannelActive(component.self, msg.getSource(), Transport.UDT)));
+                        uc.writeAndFlush(new MessageNotify.Req(
+                                new CheckChannelActive(component.self, msg.getSource(), Transport.UDT)));
                     } else {
                         if (activeC.equals(uc)) { // pick any channel as active
                             for (UdtChannel channel : channels) {
@@ -211,10 +232,12 @@ class ChannelManager {
                                 }
                             }
                         }
-                        ChannelFuture f = uc.writeAndFlush(new MessageNotify.Req(new ChannelClosed(component.self, msg.getSource(), Transport.UDT)));
+                        ChannelFuture f = uc.writeAndFlush(new MessageNotify.Req(
+                                new ChannelClosed(component.self, msg.getSource(), Transport.UDT)));
                         f.addListener(ChannelFutureListener.CLOSE);
                         component.extLog.info("Closing duplicate UDT channel between {} and {}: local {}, remote {}",
-                                new Object[]{msg.getSource(), msg.getDestination(), uc.localAddress(), uc.remoteAddress()});
+                                new Object[] { msg.getSource(), msg.getDestination(), uc.localAddress(),
+                                        uc.remoteAddress() });
 
                     }
                 }
@@ -224,7 +247,7 @@ class ChannelManager {
         }
     }
 
-    void checkTCPChannel(Msg msg, SocketChannel c) {
+    void checkTCPChannel(Msg<?, ?> msg, SocketChannel c) {
         // Ignore some messages
         if (msg instanceof CheckChannelActive) {
             return;
@@ -235,31 +258,33 @@ class ChannelManager {
         if (msg instanceof ChannelClosed) {
             return;
         }
-        if (!c.equals(tcpActiveChannels.get(msg.getSource().asSocket()))) {
+        if (!c.equals(tcpActiveChannels.get(msg.getHeader().getSource().asSocket()))) {
             synchronized (this) {
                 component.setCustomMDC();
                 try {
-                    SocketChannel activeC = tcpActiveChannels.get(msg.getSource().asSocket());
-                    tcpActiveChannels.put(msg.getSource().asSocket(), c);
-                    tcpChannels.put(msg.getSource().asSocket(), c);
+                    SocketChannel activeC = tcpActiveChannels.get(msg.getHeader().getSource().asSocket());
+                    tcpActiveChannels.put(msg.getHeader().getSource().asSocket(), c);
+                    tcpChannels.put(msg.getHeader().getSource().asSocket(), c);
                     if (activeC != null && !activeC.equals(c)) {
                         component.extLog.warn("Duplicate TCP channel between {} and {}: local {}, remote {}",
-                                new Object[]{msg.getSource(), msg.getDestination(), c.localAddress(), c.remoteAddress()});
+                                new Object[] { msg.getHeader().getSource(), msg.getHeader().getDestination(),
+                                        c.localAddress(), c.remoteAddress() });
 
-                        SocketChannel minsc = minChannel(tcpChannels.get(msg.getSource().asSocket()));
+                        SocketChannel minsc = minChannel(tcpChannels.get(msg.getHeader().getSource().asSocket()));
 
-                        minsc.writeAndFlush(new MessageNotify.Req(new CheckChannelActive(component.self, msg.getSource(), Transport.TCP)));
+                        minsc.writeAndFlush(new MessageNotify.Req(
+                                new CheckChannelActive(component.self, msg.getHeader().getSource(), Transport.TCP)));
 
                     }
                 } finally {
                     MDC.clear();
                 }
             }
-            component.trigger(new SendDelayed(msg.getSource(), Transport.TCP));
+            component.trigger(new SendDelayed(msg.getHeader().getSource(), Transport.TCP));
         }
     }
 
-    void checkUDTChannel(Msg msg, UdtChannel c) {
+    void checkUDTChannel(Msg<?, ?> msg, UdtChannel c) {
         // Ignore some messages
         if (msg instanceof CheckChannelActive) {
             return;
@@ -270,28 +295,30 @@ class ChannelManager {
         if (msg instanceof ChannelClosed) {
             return;
         }
-        if (!c.equals(udtActiveChannels.get(msg.getSource().asSocket()))) {
+        if (!c.equals(udtActiveChannels.get(msg.getHeader().getSource().asSocket()))) {
             synchronized (this) {
                 component.setCustomMDC();
                 try {
-                    UdtChannel activeC = udtActiveChannels.get(msg.getSource().asSocket());
+                    UdtChannel activeC = udtActiveChannels.get(msg.getHeader().getSource().asSocket());
 
-                    udtActiveChannels.put(msg.getSource().asSocket(), c);
-                    udtChannels.put(msg.getSource().asSocket(), c);
+                    udtActiveChannels.put(msg.getHeader().getSource().asSocket(), c);
+                    udtChannels.put(msg.getHeader().getSource().asSocket(), c);
                     if (activeC != null && !activeC.equals(c)) {
                         component.extLog.warn("Duplicate TCP channel between {} and {}: local {}, remote {}",
-                                new Object[]{msg.getSource(), msg.getDestination(), c.localAddress(), c.remoteAddress()});
+                                new Object[] { msg.getHeader().getSource(), msg.getHeader().getDestination(),
+                                        c.localAddress(), c.remoteAddress() });
 
-                        UdtChannel minsc = minChannel(udtChannels.get(msg.getSource().asSocket()));
+                        UdtChannel minsc = minChannel(udtChannels.get(msg.getHeader().getSource().asSocket()));
 
-                        minsc.writeAndFlush(new MessageNotify.Req(new CheckChannelActive(component.self, msg.getSource(), Transport.UDT)));
+                        minsc.writeAndFlush(new MessageNotify.Req(
+                                new CheckChannelActive(component.self, msg.getHeader().getSource(), Transport.UDT)));
 
                     }
                 } finally {
                     MDC.clear();
                 }
             }
-            component.trigger(new SendDelayed(msg.getSource(), Transport.UDT));
+            component.trigger(new SendDelayed(msg.getHeader().getSource(), Transport.UDT));
         }
     }
 
@@ -314,7 +341,7 @@ class ChannelManager {
         if (c instanceof UdtChannel) {
             return channel2Id((UdtChannel) c);
         }
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException("Not implemented!");
     }
 
     private int channel2Id(SocketChannel c) {
@@ -372,7 +399,8 @@ class ChannelManager {
                                 component.extLog.trace("New TCP channel to {} was created!.", destination.asSocket());
                                 component.networkStatus(ConnectionStatus.established(destination, Transport.TCP));
                             } else {
-                                component.extLog.error("Error while trying to connect to {}! Error was {}", destination, future.cause());
+                                component.extLog.error("Error while trying to connect to {}! Error was {}", destination,
+                                        future.cause());
                                 component.networkStatus(ConnectionStatus.dropped(destination, Transport.TCP));
                                 component.trigger(new DropDelayed(destination, Transport.TCP));
                             }
@@ -401,7 +429,8 @@ class ChannelManager {
             InetSocketAddress isa = udtBoundPorts.get(destination.asSocket());
             if (isa == null) { // We have to ask for the UDT port first, since it's random
                 component.extLog.trace("Need to find UDT port at {} before creating channel.", destination.asSocket());
-                DisambiguateConnection r = new DisambiguateConnection(component.self, new NettyAddress(destination), Transport.TCP, component.boundUDTPort, true);
+                DisambiguateConnection r = new DisambiguateConnection(component.self, new NettyAddress(destination),
+                        Transport.TCP, component.boundUDTPort, true);
                 SocketChannel tcpC = this.getTCPChannel(destination);
                 if (tcpC == null) {
                     tcpC = this.createTCPChannel(destination, component.bootstrapTCPClient);
@@ -435,19 +464,21 @@ class ChannelManager {
                                 address4Remote.put(sc.remoteAddress(), destination.asSocket());
                                 component.trigger(new SendDelayed(destination, Transport.UDT));
                                 SocketUDT socket = NioUdtProvider.socketUDT(sc);
-//                            if (component.udtBufferSizes > 0) {
-//                                socket.setSendBufferSize(component.udtBufferSizes);
-//                                socket.setReceiveBufferSize(component.udtBufferSizes);
-//                            }
+                                // if (component.udtBufferSizes > 0) {
+                                // socket.setSendBufferSize(component.udtBufferSizes);
+                                // socket.setReceiveBufferSize(component.udtBufferSizes);
+                                // }
                                 if (component.udtMSS > 0) {
                                     socket.setOption(OptionUDT.Maximum_Transfer_Unit, component.udtMSS);
                                 }
                                 component.trigger(new SendDelayed(destination, Transport.UDT));
                                 component.extLog.debug("New UDT channel to {} was created! Properties: \n {} \n {}",
-                                        new Object[]{destination.asSocket(), socket.toStringOptions(), socket.toStringMonitor()});
+                                        new Object[] { destination.asSocket(), socket.toStringOptions(),
+                                                socket.toStringMonitor() });
                                 component.networkStatus(ConnectionStatus.established(destination, Transport.UDT));
                             } else {
-                                component.extLog.error("Error while trying to connect to {}! Error was {}", destination, future.cause());
+                                component.extLog.error("Error while trying to connect to {}! Error was {}", destination,
+                                        future.cause());
                                 component.networkStatus(ConnectionStatus.dropped(destination, Transport.UDT));
                                 component.trigger(new DropDelayed(destination, Transport.UDT));
                             }
@@ -474,76 +505,86 @@ class ChannelManager {
                     InetSocketAddress remoteAddress = (InetSocketAddress) addr;
                     InetSocketAddress realAddress = address4Remote.remove(remoteAddress);
                     switch (protocol) {
-                        case TCP:
-                            if (realAddress != null) {
-                                tcpChannels.remove(realAddress, c);
-                                SocketChannel curChannel = tcpActiveChannels.get(realAddress);
-                                if ((curChannel != null) && curChannel.equals(c)) {
-                                    SocketChannel newActive = minChannel(tcpChannels.get(realAddress));
-                                    if (newActive != null) {
-                                        tcpActiveChannels.put(realAddress, newActive);
-                                    } else {
-                                        tcpActiveChannels.remove(realAddress);
-                                    }
-                                }
-                                tcpChannelsByRemote.remove(remoteAddress);
-                                component.extLog.debug("TCP Channel {} ({}) closed: {}", new Object[]{realAddress, remoteAddress, c});
-                                component.networkStatus(ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.TCP));
-                                printStuff();
-                                if (tcpChannels.get(realAddress).isEmpty()) {
-                                    component.extLog.info("Last TCP Channel to {} dropped. "
-                                            + "Also dropping all UDT channels under "
-                                            + "the assumption that the host is dead.", realAddress);
-                                    UdtChannel uac = udtActiveChannels.remove(realAddress);
-                                    for (UdtChannel uc : udtChannels.get(realAddress)) {
-                                        InetSocketAddress udtRealAddr = address4Remote.remove(uc.remoteAddress());
-                                        udtChannelsByRemote.remove(uc.remoteAddress());
-                                        uc.close();
-                                        component.extLog.debug("   UDT Channel {} ({}) closed.", udtRealAddr, uc.remoteAddress());
-                                        component.networkStatus(ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT));
-                                    }
-                                    udtChannels.removeAll(realAddress);
-
-                                    udtBoundPorts.remove(realAddress);
+                    case TCP:
+                        if (realAddress != null) {
+                            tcpChannels.remove(realAddress, c);
+                            SocketChannel curChannel = tcpActiveChannels.get(realAddress);
+                            if ((curChannel != null) && curChannel.equals(c)) {
+                                SocketChannel newActive = minChannel(tcpChannels.get(realAddress));
+                                if (newActive != null) {
+                                    tcpActiveChannels.put(realAddress, newActive);
                                 } else {
-                                    component.extLog.trace("There are still {} TCP channel(s) remaining: [", tcpChannels.get(realAddress).size(), realAddress);
-                                    for (SocketChannel sc : tcpChannels.get(realAddress)) {
-                                        component.extLog.trace("TCP channel: {}", sc);
-                                    }
-                                    component.extLog.trace("]. Not closing UDT channels for {}", tcpChannels.get(realAddress).size(), realAddress);
+                                    tcpActiveChannels.remove(realAddress);
+                                }
+                            }
+                            tcpChannelsByRemote.remove(remoteAddress);
+                            component.extLog.debug("TCP Channel {} ({}) closed: {}",
+                                    new Object[] { realAddress, remoteAddress, c });
+                            component.networkStatus(
+                                    ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.TCP));
+                            printStuff();
+                            if (tcpChannels.get(realAddress).isEmpty()) {
+                                component.extLog.info(
+                                        "Last TCP Channel to {} dropped. " + "Also dropping all UDT channels under "
+                                                + "the assumption that the host is dead.",
+                                        realAddress);
+                                @SuppressWarnings("unused")
+                                UdtChannel uac = udtActiveChannels.remove(realAddress);
+                                for (UdtChannel uc : udtChannels.get(realAddress)) {
+                                    InetSocketAddress udtRealAddr = address4Remote.remove(uc.remoteAddress());
+                                    udtChannelsByRemote.remove(uc.remoteAddress());
+                                    uc.close();
+                                    component.extLog.debug("   UDT Channel {} ({}) closed.", udtRealAddr,
+                                            uc.remoteAddress());
+                                    component.networkStatus(
+                                            ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT));
+                                }
+                                udtChannels.removeAll(realAddress);
 
-                                }
-                                printStuff();
+                                udtBoundPorts.remove(realAddress);
                             } else {
-                                tcpChannelsByRemote.remove(remoteAddress);
-                                component.extLog.debug("TCP Channel {} was already closed.", remoteAddress);
-                                printStuff();
-                            }
-                            return;
-                        case UDT:
-                            if (realAddress != null) {
-                                udtChannels.remove(realAddress, c);
-                                UdtChannel curChannel = udtActiveChannels.get(realAddress);
-                                if ((curChannel != null) && curChannel.equals(c)) {
-                                    UdtChannel newActive = minChannel(udtChannels.get(realAddress));
-                                    if (newActive != null) {
-                                        udtActiveChannels.put(realAddress, newActive);
-                                    } else {
-                                        udtActiveChannels.remove(realAddress);
-                                    }
+                                component.extLog.trace("There are still {} TCP channel(s) remaining: [",
+                                        tcpChannels.get(realAddress).size(), realAddress);
+                                for (SocketChannel sc : tcpChannels.get(realAddress)) {
+                                    component.extLog.trace("TCP channel: {}", sc);
                                 }
-                                udtChannelsByRemote.remove(remoteAddress);
-                                component.extLog.debug("UDT Channel {} ({}) closed.", realAddress, remoteAddress);
-                                component.networkStatus(ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT));
-                                printStuff();
-                            } else {
-                                udtChannelsByRemote.remove(remoteAddress);
-                                component.extLog.debug("UDT Channel {} was already closed.\n", remoteAddress);
-                                printStuff();
+                                component.extLog.trace("]. Not closing UDT channels for {}",
+                                        tcpChannels.get(realAddress).size(), realAddress);
+
                             }
-                            return;
-                        default:
-                            component.extLog.error("Was supposed to close channel {}, but don't know transport {}", remoteAddress, protocol);
+                            printStuff();
+                        } else {
+                            tcpChannelsByRemote.remove(remoteAddress);
+                            component.extLog.debug("TCP Channel {} was already closed.", remoteAddress);
+                            printStuff();
+                        }
+                        return;
+                    case UDT:
+                        if (realAddress != null) {
+                            udtChannels.remove(realAddress, c);
+                            UdtChannel curChannel = udtActiveChannels.get(realAddress);
+                            if ((curChannel != null) && curChannel.equals(c)) {
+                                UdtChannel newActive = minChannel(udtChannels.get(realAddress));
+                                if (newActive != null) {
+                                    udtActiveChannels.put(realAddress, newActive);
+                                } else {
+                                    udtActiveChannels.remove(realAddress);
+                                }
+                            }
+                            udtChannelsByRemote.remove(remoteAddress);
+                            component.extLog.debug("UDT Channel {} ({}) closed.", realAddress, remoteAddress);
+                            component.networkStatus(
+                                    ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT));
+                            printStuff();
+                        } else {
+                            udtChannelsByRemote.remove(remoteAddress);
+                            component.extLog.debug("UDT Channel {} was already closed.\n", remoteAddress);
+                            printStuff();
+                        }
+                        return;
+                    default:
+                        component.extLog.error("Was supposed to close channel {}, but don't know transport {}",
+                                remoteAddress, protocol);
                     }
                 }
             } finally {
@@ -554,6 +595,7 @@ class ChannelManager {
     }
 
     private void printStuff() {
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         List<Map.Entry<Address, InetSocketAddress>> udtstuff = new LinkedList(udtBoundPorts.entrySet());
         StringBuilder sb = new StringBuilder();
         sb.append("ChannelManagerState:\n");
@@ -630,7 +672,7 @@ class ChannelManager {
             SocketUDT socket = NioUdtProvider.socketUDT(c);
             if (socket != null) {
                 component.extLog.debug("UDT Stats: \n {} \n {}",
-                        new Object[]{socket.toStringMonitor(), socket.toStringOptions()});
+                        new Object[] { socket.toStringMonitor(), socket.toStringOptions() });
                 try {
                     socket.updateMonitor(true); // reset statistics
                 } catch (ExceptionUDT ex) {

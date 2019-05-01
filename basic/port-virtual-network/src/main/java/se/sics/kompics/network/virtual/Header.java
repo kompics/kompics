@@ -20,11 +20,11 @@
  */
 package se.sics.kompics.network.virtual;
 
-
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @param <Adr>
+ *            The address type used by the header
  */
 public interface Header<Adr extends Address> extends se.sics.kompics.network.Header<Adr> {
     public byte[] getDstId();

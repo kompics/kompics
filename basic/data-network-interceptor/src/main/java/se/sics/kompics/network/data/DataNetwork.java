@@ -30,12 +30,12 @@ import se.sics.kompics.network.Network;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class DataNetwork extends ComponentDefinition {
 
     final Negative<Network> net = provides(Network.class);
-    
+
     public DataNetwork(Init init) {
         Component dataInterceptorC = create(DataStreamInterceptor.class, Init.NONE);
         Component networkC = init.hook.setupNetwork(proxy);
@@ -50,10 +50,10 @@ public class DataNetwork extends ComponentDefinition {
         connect(nettyPort, net, new NotDataNotifySelector(), Channel.ONE_WAY_POS);
         connect(nettyPort, net, Channel.ONE_WAY_NEG);
     }
-    
+
     public static class Init extends se.sics.kompics.Init<DataNetwork> {
         public final NetHook hook;
-        
+
         public Init(NetHook hook) {
             this.hook = hook;
         }
@@ -62,6 +62,7 @@ public class DataNetwork extends ComponentDefinition {
     public static interface NetHook {
 
         public Component setupNetwork(ComponentProxy proxy);
+
         public void connectTimer(ComponentProxy proxy, Component c);
     }
 }

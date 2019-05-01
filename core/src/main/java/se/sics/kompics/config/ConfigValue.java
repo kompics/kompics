@@ -22,11 +22,14 @@ package se.sics.kompics.config;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface ConfigValue {
     public Object unwrap();
+
     public Class<?> type();
+
     public long version();
+
     public ValueOptions options();
 }

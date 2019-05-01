@@ -26,9 +26,11 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class Message implements Msg<TestAddress, TestHeader>, Serializable {
+
+    private static final long serialVersionUID = 5315693883280561287L;
 
     public final TestHeader header;
 

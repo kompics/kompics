@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -20,25 +20,38 @@
  */
 package se.sics.kompics;
 
-// TODO: Auto-generated Javadoc
 /**
  * The <code>Channel</code> class.
  * <p>
+ * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public interface Channel<P extends PortType> {
 
+    /**
+     * Factory for bidirectional channels.
+     */
     public static ChannelFactory TWO_WAY = new BiDirectionalChannel.Factory();
-    public static ChannelFactory ONE_WAY_POS = new UniDirectionalChannel.Factory(UniDirectionalChannel.Direction.TO_POSITIVE);
-    public static ChannelFactory ONE_WAY_NEG = new UniDirectionalChannel.Factory(UniDirectionalChannel.Direction.TO_NEGATIVE);
-    
+    /**
+     * Factory for unidirectional channels from negative to positive.
+     */
+    public static ChannelFactory ONE_WAY_POS = new UniDirectionalChannel.Factory(
+            UniDirectionalChannel.Direction.TO_POSITIVE);
+    /**
+     * Factory for unidirectional channels from positive to negative.
+     */
+    public static ChannelFactory ONE_WAY_NEG = new UniDirectionalChannel.Factory(
+            UniDirectionalChannel.Direction.TO_NEGATIVE);
+
     public void disconnect();
 
     /**
      * Gets the port type.
      * <p>
+     * 
      * @return the port type
      */
     public P getPortType();

@@ -26,7 +26,7 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @param <Adr>
  */
 public interface DataHeader<Adr extends Address> extends Header<Adr> {

@@ -63,11 +63,12 @@ public class AvroSerializer implements Serializer {
 
     private static final ReflectData rData = ReflectData.get();
 
-    public static synchronized void register(int id, Class type) throws KeyExistsException, InvalidKeyException {
+    public static synchronized void register(int id, Class<?> type) throws KeyExistsException, InvalidKeyException {
         register(id, type, false);
     }
 
-    public static synchronized void register(int id, Class type, boolean force) throws KeyExistsException, InvalidKeyException {
+    public static synchronized void register(int id, Class<?> type, boolean force)
+            throws KeyExistsException, InvalidKeyException {
         String typeName = type.getName();
         if (!force) {
             // Check first once, since schema generation is expensive
@@ -89,11 +90,13 @@ public class AvroSerializer implements Serializer {
         Serializers.register(type, MY_ID);
     }
 
-    public static synchronized void register(int id, Class type, Schema schema) throws KeyExistsException, InvalidKeyException {
+    public static synchronized void register(int id, Class<?> type, Schema schema)
+            throws KeyExistsException, InvalidKeyException {
         register(id, type, schema, false);
     }
 
-    public static synchronized void register(int id, Class type, Schema schema, boolean force) throws KeyExistsException, InvalidKeyException {
+    public static synchronized void register(int id, Class<?> type, Schema schema, boolean force)
+            throws KeyExistsException, InvalidKeyException {
         String typeName = type.getName();
         if (!force) {
             // Check first once, since schema generation is expensive
@@ -121,7 +124,7 @@ public class AvroSerializer implements Serializer {
 
     @Override
     public void toBinary(Object o, ByteBuf buf) {
-        Class type = o.getClass();
+        Class<?> type = o.getClass();
         String typeName = type.getName();
         SchemaEntry se = classMap.get(typeName);
         if (se == null) {
@@ -146,11 +149,11 @@ public class AvroSerializer implements Serializer {
             try {
                 ByteBufOutputStream out = closer.register(new ByteBufOutputStream(buf));
                 BinaryEncoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
-                DatumWriter writer;
+                DatumWriter<Object> writer;
                 if (se.generated) {
-                    writer = new SpecificDatumWriter(se.schema);
+                    writer = new SpecificDatumWriter<Object>(se.schema);
                 } else {
-                    writer = new ReflectDatumWriter(se.schema);
+                    writer = new ReflectDatumWriter<Object>(se.schema);
                 }
                 writer.write(o, encoder);
                 encoder.flush();
@@ -165,20 +168,22 @@ public class AvroSerializer implements Serializer {
         }
     }
 
-    private void toBinaryNoSchema(Object o, Class type, ByteBuf buf) {
-        LOG.info("Prepending schema to object of type {}. This is not efficient. It's recommended to register the class instead.", type);
+    private void toBinaryNoSchema(Object o, Class<?> type, ByteBuf buf) {
+        LOG.info(
+                "Prepending schema to object of type {}. This is not efficient. It's recommended to register the class instead.",
+                type);
         Schema s;
         BitBuffer flags;
-        DatumWriter refWriter;
+        DatumWriter<Object> refWriter;
         if (o instanceof GenericContainer) {
             GenericContainer ag = (GenericContainer) o;
             s = ag.getSchema();
             flags = BitBuffer.create(false, true); // no schema and generated
-            refWriter = new SpecificDatumWriter(s);
+            refWriter = new SpecificDatumWriter<>(s);
         } else {
             s = rData.getSchema(type);
             flags = BitBuffer.create(false, false); // no schema and not generated
-            refWriter = new ReflectDatumWriter(s);
+            refWriter = new ReflectDatumWriter<>(s);
         }
         byte[] flagsB = flags.finalise();
         buf.writeBytes(flagsB);
@@ -186,7 +191,8 @@ public class AvroSerializer implements Serializer {
             Closer closer = Closer.create(); // Did I mention how much java6 sucks?
             try {
                 ByteBufOutputStream out = closer.register(new ByteBufOutputStream(buf));
-                DataFileWriter writer = closer.register(new DataFileWriter(refWriter).create(s, out));
+                @SuppressWarnings("resource")
+                DataFileWriter<Object> writer = closer.register(new DataFileWriter<>(refWriter).create(s, out));
                 writer.append(o);
                 writer.flush();
             } catch (Throwable ex) {
@@ -221,17 +227,17 @@ public class AvroSerializer implements Serializer {
     }
 
     private Object fromBinaryNoSchema(ByteBuf buf, boolean generated) {
-        DatumReader refReader;
+        DatumReader<Object> refReader;
         if (generated) {
-            refReader = new SpecificDatumReader();
+            refReader = new SpecificDatumReader<>();
         } else {
-            refReader = new ReflectDatumReader();
+            refReader = new ReflectDatumReader<>();
         }
         try {
             Closer closer = Closer.create();
             try {
                 ByteBufInputStream in = closer.register(new ByteBufInputStream(buf));
-                DataFileStream reader = closer.register(new DataFileStream(in, refReader));
+                DataFileStream<Object> reader = closer.register(new DataFileStream<>(in, refReader));
                 return reader.next(); // there should only be one
             } catch (Throwable ex) {
                 LOG.error("Couldn't deserialise object.", ex);
@@ -247,11 +253,11 @@ public class AvroSerializer implements Serializer {
     }
 
     private Object fromBinaryWithSchema(ByteBuf buf, SchemaEntry se, boolean generated) {
-        DatumReader refReader;
+        DatumReader<Object> refReader;
         if (generated) {
-            refReader = new SpecificDatumReader(se.schema);
+            refReader = new SpecificDatumReader<>(se.schema);
         } else {
-            refReader = new ReflectDatumReader(se.schema);
+            refReader = new ReflectDatumReader<>(se.schema);
         }
         try {
             Closer closer = Closer.create();
@@ -275,11 +281,12 @@ public class AvroSerializer implements Serializer {
     private static class SchemaEntry {
 
         public final Schema schema;
-        public final Class type;
+        @SuppressWarnings("unused")
+        public final Class<?> type;
         public final int id;
         public final boolean generated;
 
-        public SchemaEntry(Schema schema, Class type, int id, boolean generated) {
+        public SchemaEntry(Schema schema, Class<?> type, int id, boolean generated) {
             this.schema = schema;
             this.type = type;
             this.id = id;
@@ -287,6 +294,7 @@ public class AvroSerializer implements Serializer {
         }
     }
 
+    @SuppressWarnings("serial")
     public static class KeyExistsException extends Exception {
 
         private final Object key;
@@ -301,6 +309,7 @@ public class AvroSerializer implements Serializer {
         }
     }
 
+    @SuppressWarnings("serial")
     public static class InvalidKeyException extends Exception {
 
         private final int key;

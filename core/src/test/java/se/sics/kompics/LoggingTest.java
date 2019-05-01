@@ -27,7 +27,7 @@ import org.junit.runners.JUnit4;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @RunWith(JUnit4.class)
 public class LoggingTest {
@@ -41,7 +41,7 @@ public class LoggingTest {
             Kompics.createAndStart(LoggingComponent.class);
             Kompics.waitForTermination();
         } catch (InterruptedException ex) {
-            //System.err.println(ex.getMessage());
+            // System.err.println(ex.getMessage());
             Kompics.shutdown();
             Assert.fail(ex.getMessage());
         }
@@ -49,13 +49,12 @@ public class LoggingTest {
 
     static class LoggingComponent extends ComponentDefinition {
 
-        
         public LoggingComponent() {
             subscribe(startHandler, control);
-            
+
             loggingCtxPutAlways("customAlways", "testv");
         }
-        
+
         protected final Handler<Start> startHandler = new Handler<Start>() {
 
             @Override

@@ -37,7 +37,7 @@ import se.sics.kompics.config.ValueMerger;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @RunWith(JUnit4.class)
 public class ConfigUpdateTest {
@@ -54,7 +54,7 @@ public class ConfigUpdateTest {
         cb.setValue("testValue", "NOTEST");
         Config.Impl ci = (Config.Impl) Kompics.getConfig();
         ci.apply(cb.finalise(), ValueMerger.NONE);
-        Kompics.setFaultHandler(new FaultHandler(){
+        Kompics.setFaultHandler(new FaultHandler() {
 
             @Override
             public Fault.ResolveAction handle(Fault f) {
@@ -73,8 +73,9 @@ public class ConfigUpdateTest {
 
     public static class Parent extends ComponentDefinition {
 
+        Component updater = null;
         {
-            Component updater = create(Updater.class, Init.NONE);
+            updater = create(Updater.class, Init.NONE);
         }
 
         @Override
@@ -91,9 +92,9 @@ public class ConfigUpdateTest {
     }
 
     public static class Updater extends ComponentDefinition {
-
+        Component child = null;
         {
-            Component child = create(Child.class, Init.NONE);
+            child = create(Child.class, Init.NONE);
 
             Handler<Start> startHandler = new Handler<Start>() {
 

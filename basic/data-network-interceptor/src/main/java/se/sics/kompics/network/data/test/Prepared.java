@@ -32,8 +32,8 @@ public class Prepared extends DataMessage {
     public Prepared(Address src, Address dst, Transport proto) {
         super(src, dst, proto);
     }
-    
-    Prepared(DataHeader header) {
+
+    Prepared(DataHeader<Address> header) {
         super(header);
     }
 }

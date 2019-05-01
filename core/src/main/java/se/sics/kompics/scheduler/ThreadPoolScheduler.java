@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
@@ -29,25 +29,27 @@ import se.sics.kompics.Component;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.Scheduler;
 
+/**
+ * 
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
+ */
 public class ThreadPoolScheduler extends Scheduler {
 
     private final ThreadPoolExecutor threadPool;
 
     public ThreadPoolScheduler(int workers) {
-        threadPool = new ThreadPoolExecutor(workers, workers, 60L,
-                TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-                new KompicsThreadFactory(),
-                new ThreadPoolExecutor.AbortPolicy());
+        threadPool = new ThreadPoolExecutor(workers, workers, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<Runnable>(), new KompicsThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
     }
 
     @Override
     public void schedule(final Component c, int w) {
-//        threadPool.execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                self.executeComponent(c, 0);
-//            }
-//        });
+        // threadPool.execute(new Runnable() {
+        // @Override
+        // public void run() {
+        // self.executeComponent(c, 0);
+        // }
+        // });
         threadPool.execute(c);
     }
 
@@ -84,8 +86,7 @@ public class ThreadPoolScheduler extends Scheduler {
 
         @Override
         public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, namePrefix
-                    + threadNumber.getAndIncrement());
+            Thread t = new Thread(r, namePrefix + threadNumber.getAndIncrement());
             if (t.isDaemon()) {
                 t.setDaemon(false);
             }

@@ -22,7 +22,7 @@ package se.sics.kompics.config;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface Cloner {
     /**
@@ -30,7 +30,8 @@ public interface Cloner {
      * <p>
      * Use for custom value cloning logic.
      * 
-     * @param o Source object
+     * @param o
+     *            Source object
      * @return Copy of the source
      */
     public Object clone(Object o);

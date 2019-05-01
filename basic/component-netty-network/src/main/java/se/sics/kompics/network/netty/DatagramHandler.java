@@ -32,7 +32,7 @@ import se.sics.kompics.network.netty.serialization.Serializers;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @ChannelHandler.Sharable
 public class DatagramHandler extends BaseHandler<DatagramPacket> {
@@ -58,12 +58,14 @@ public class DatagramHandler extends BaseHandler<DatagramPacket> {
                 component.extLog.trace("Sending Datagram ACK {} ({}bytes)", ack, buf.readableBytes());
                 ctx.writeAndFlush(pack);
             } else if (o instanceof Msg) {
-                Msg m = (Msg) o;
+                Msg<?, ?> m = (Msg<?, ?>) o;
                 component.deliverMessage(m, ctx.channel());
             } else {
-                component.extLog.warn("Got unexpected Datagram message type: {} -> {}", o.getClass().getCanonicalName(), o);
+                component.extLog.warn("Got unexpected Datagram message type: {} -> {}", o.getClass().getCanonicalName(),
+                        o);
             }
-        } catch (Exception e) { // Catch anything...the Serializer could throw any kind of weird exception if you get message that were send by someone else
+        } catch (Exception e) { // Catch anything...the Serializer could throw any kind of weird exception if you get
+                                // message that were send by someone else
             component.extLog.warn("Got weird Datagram message, ignoring it: {}", ByteBufUtil.hexDump(msg.content()));
             component.extLog.trace("Exception was: \n{}", e);
         } finally {

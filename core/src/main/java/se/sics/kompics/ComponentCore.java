@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
@@ -34,18 +34,20 @@ import se.sics.kompics.config.ConfigUpdate;
 /**
  * The <code>ComponentCore</code> class.
  * <p>
+ * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id: $
  */
+@SuppressWarnings("serial")
 public abstract class ComponentCore extends ForkJoinTask<Void> implements Component {
 
     private final UUID id = UUID.randomUUID();
     protected ComponentCore parent;
     protected Config conf;
-    public static final ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal();
-    public static final ThreadLocal<Optional<ConfigUpdate>> childUpdate = new ThreadLocal();
+    public static final ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
+    public static final ThreadLocal<Optional<ConfigUpdate>> childUpdate = new ThreadLocal<Optional<ConfigUpdate>>();
 
     static {
         Optional<ConfigUpdate> update = Optional.absent();
@@ -76,7 +78,8 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
         ComponentCore child = (ComponentCore) component;
         child.cleanPorts();
         if ((child.state != State.PASSIVE) && (child.state != State.FAULTY)) {
-            logger().warn("Destroying a component before it has been stopped is not a good idea: {}", child.getComponent());
+            logger().warn("Destroying a component before it has been stopped is not a good idea: {}",
+                    child.getComponent());
         }
         child.state = State.DESTROYED;
         try {
@@ -124,13 +127,16 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
 
     abstract void doConfigUpdate(ConfigUpdate update);
 
-    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent);
+    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition,
+            Optional<Init<T>> initEvent);
 
-    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent, Optional<ConfigUpdate> update);
+    public abstract <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent,
+            Optional<ConfigUpdate> update);
 
     public abstract <P extends PortType> Negative<P> createNegativePort(Class<P> portType);
 
     public abstract <P extends PortType> Positive<P> createPositivePort(Class<P> portType);
+
     /*
      * === SCHEDULING ===
      */
@@ -140,14 +146,17 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
     /**
      * Sets the scheduler.
      * <p>
-     * @param scheduler the new scheduler
+     * 
+     * @param scheduler
+     *            the new scheduler
      */
     public void setScheduler(Scheduler scheduler) {
         this.scheduler = scheduler;
     }
 
     public void eventReceived(PortCore<?> port, KompicsEvent event, int wid) {
-        //System.err.println("Received event " + event + " on " + port.getPortType().portTypeClass + " work " + workCount.get());
+        // System.err.println("Received event " + event + " on " + port.getPortType().portTypeClass + " work " +
+        // workCount.get());
         port.enqueue(event);
         readyPorts.offer(port);
         int wc = workCount.getAndIncrement();
@@ -200,6 +209,7 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
         sb.append(getComponent());
         return sb.toString();
     }
+
     /*
      * === LIFECYCLE ===
      */
@@ -240,10 +250,10 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
         try {
             run();
             return false;
-//        } catch(InterruptedException ex) {
-//            Thread.currentThread().interrupt();
-//            return false;
-//        }
+            // } catch(InterruptedException ex) {
+            // Thread.currentThread().interrupt();
+            // return false;
+            // }
         } catch (Throwable e) {
             Kompics.getFaultHandler().handle(new Fault(e, this, null));
             throw e;

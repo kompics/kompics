@@ -30,6 +30,7 @@ import org.javatuples.Pair;
 import org.jscience.mathematics.number.LargeInteger;
 import org.jscience.mathematics.number.Rational;
 import se.sics.kompics.network.MessageNotify;
+import se.sics.kompics.network.MessageNotify.Req;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.data.policies.ProtocolRatioPolicy;
 import se.sics.kompics.network.data.policies.ProtocolSelectionPolicy;
@@ -37,21 +38,21 @@ import se.sics.kompics.network.netty.serialization.SpecialSerializers;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-class ConnectionTracker {
+class ConnectionTracker<M extends Msg<?, ?>> {
 
     private static final SpecialSerializers.AddressSerializer addrS = SpecialSerializers.AddressSerializer.INSTANCE;
 
     final InetSocketAddress target;
     final Statistics stats = new Statistics();
     final ProtocolRatioPolicy ratioPolicy;
-    final ProtocolSelectionPolicy selectionPolicy;
+    final ProtocolSelectionPolicy<?> selectionPolicy;
     private Rational ratio;
     private long inFlightMessages = 0;
-    private final Queue<Either<MessageNotify.Req, Msg>> outstanding = new LinkedList<>();
+    private final Queue<Either<MessageNotify.Req, M>> outstanding = new LinkedList<>();
 
-    ConnectionTracker(InetSocketAddress target, ProtocolSelectionPolicy psp, ProtocolRatioPolicy prp) {
+    ConnectionTracker(InetSocketAddress target, ProtocolSelectionPolicy<M> psp, ProtocolRatioPolicy prp) {
         this.target = target;
         this.ratioPolicy = prp;
         this.selectionPolicy = psp;
@@ -59,7 +60,8 @@ class ConnectionTracker {
         selectionPolicy.updateRatio(ratio);
     }
 
-    ConnectionTracker(InetSocketAddress target, Rational initialRatio, ProtocolSelectionPolicy psp, ProtocolRatioPolicy prp) {
+    ConnectionTracker(InetSocketAddress target, Rational initialRatio, ProtocolSelectionPolicy<M> psp,
+            ProtocolRatioPolicy prp) {
         this.target = target;
         this.ratioPolicy = prp;
         this.selectionPolicy = psp;
@@ -68,18 +70,18 @@ class ConnectionTracker {
         selectionPolicy.updateRatio(ratio);
     }
 
-    Either<MessageNotify.Req, Msg> dequeue() {
+    Either<MessageNotify.Req, M> dequeue() {
         inFlightMessages++;
         return outstanding.poll();
     }
 
     void enqueue(MessageNotify.Req msg) {
-        Either<MessageNotify.Req, Msg> e = Either.left(msg);
+        Either<MessageNotify.Req, M> e = Either.left(msg);
         outstanding.add(e);
     }
 
-    void enqueue(Msg msg) {
-        Either<MessageNotify.Req, Msg> e = Either.right(msg);
+    void enqueue(M msg) {
+        Either<Req, M> e = Either.right(msg);
         outstanding.add(e);
     }
 
@@ -96,9 +98,11 @@ class ConnectionTracker {
             stats.endWindow();
             ratio = ratioPolicy.update(stats.avgThroughputApproximation(), stats.avgDeliveryTime());
             selectionPolicy.updateRatio(ratio);
-            DataStreamInterceptor.EXT_LOG.info("Current Stats to {}: ratio={}, { \n {} \n }", new Object[]{target, ratio, stats});
+            DataStreamInterceptor.EXT_LOG.info("Current Stats to {}: ratio={}, { \n {} \n }",
+                    new Object[] { target, ratio, stats });
         } else {
-            stats.endWindow(); // NOTE: can be an issue with really low throughput (below message size/windowLenth)
+            stats.endWindow(); // NOTE: can be an issue with really low throughput (below message
+                               // size/windowLenth)
         }
     }
 
@@ -107,9 +111,10 @@ class ConnectionTracker {
         writeRational(buf, ratio);
     }
 
-    static ConnectionTracker fromBinary(ByteBuf buf, ProtocolSelectionPolicy psp, ProtocolRatioPolicy prp) {
+    static <M extends Msg<?, ?>> ConnectionTracker<M> fromBinary(ByteBuf buf, ProtocolSelectionPolicy<M> psp,
+            ProtocolRatioPolicy prp) {
         InetSocketAddress target = addrS.socketFromBinary(buf);
-        ConnectionTracker ct = new ConnectionTracker(target, psp, prp);
+        ConnectionTracker<M> ct = new ConnectionTracker<M>(target, psp, prp);
         ct.ratio = readRational(buf);
         ct.selectionPolicy.updateRatio(ct.ratio);
         return ct;

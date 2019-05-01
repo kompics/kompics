@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -23,15 +23,16 @@ package se.sics.kompics;
 /**
  * The <code>LoopbackPort</code> class.
  * 
- * Components can trigger any type of event in any direction on themselves.
- * This is mostly useful for delaying handling (e.g. batching) of events
- * and for interfacing with external systems with their own threads.
- * (Triggering events on ports is thread-safe.)
+ * Components can trigger any type of event in any direction on themselves. This is mostly useful for delaying handling
+ * (e.g. batching) of events and for interfacing with external systems with their own threads. (Triggering events on
+ * ports is thread-safe.)
  * 
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
-public class LoopbackPort extends PortType {{
-    request(KompicsEvent.class);
-    indication(KompicsEvent.class);
-}}
+public class LoopbackPort extends PortType {
+    {
+        request(KompicsEvent.class);
+        indication(KompicsEvent.class);
+    }
+}

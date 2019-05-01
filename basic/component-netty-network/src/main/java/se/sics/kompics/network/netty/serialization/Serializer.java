@@ -25,7 +25,7 @@ import io.netty.buffer.ByteBuf;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface Serializer {
     /*
@@ -36,22 +36,21 @@ public interface Serializer {
      * Make sure to configure serializers to use enough bytes for your ID to be uniqe!
      */
     public int identifier();
-    
+
     /**
      * Serialize o into buf.
      * 
      * @param o
-     * @param buf 
+     * @param buf
      */
     public void toBinary(Object o, ByteBuf buf);
-    
+
     /**
-     * Deserialize from buf.
-     * Optionally use hint to decide what to deserialize.
+     * Deserialize from buf. Optionally use hint to decide what to deserialize.
      * 
      * @param buf
      * @param hint
-     * @return 
+     * @return
      */
     public Object fromBinary(ByteBuf buf, Optional<Object> hint); // see comment at Serializers.fromBinary
 }

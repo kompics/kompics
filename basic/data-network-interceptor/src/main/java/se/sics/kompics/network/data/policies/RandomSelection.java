@@ -29,18 +29,18 @@ import se.sics.kompics.network.Transport;
  *
  * @author lkroll
  */
-public class RandomSelection implements ProtocolSelectionPolicy {
+public class RandomSelection implements ProtocolSelectionPolicy<Msg<?, ?>> {
 
     private double ratio = 0.5;
     private final Random rand = new Random();
 
     @Override
     public void updateRatio(Rational ratio) {
-        this.ratio = (ratio.doubleValue() + 1.0)/2.0;
+        this.ratio = (ratio.doubleValue() + 1.0) / 2.0;
     }
 
     @Override
-    public Transport select(Msg msg) {
+    public Transport select(Msg<?, ?> msg) {
         if (rand.nextDouble() < ratio) {
             return Transport.UDT;
         } else {

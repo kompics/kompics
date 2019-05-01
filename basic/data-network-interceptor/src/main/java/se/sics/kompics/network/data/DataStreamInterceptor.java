@@ -46,8 +46,9 @@ import se.sics.kompics.timer.Timer;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
+@SuppressWarnings("rawtypes")
 public class DataStreamInterceptor extends ComponentDefinition {
 
     final Positive<Timer> timer = requires(Timer.class);
@@ -88,6 +89,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
     };
     Handler<Msg> msgHandler = new Handler<Msg>() {
 
+        @SuppressWarnings("unchecked")
         @Override
         public void handle(Msg event) {
             Header h = event.getHeader();
@@ -127,6 +129,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
     };
     Handler<MessageNotify.Resp> respHandler = new Handler<MessageNotify.Resp>() {
 
+        @SuppressWarnings("unused")
         @Override
         public void handle(MessageNotify.Resp event) {
             if (!event.isSuccess()) {
@@ -136,53 +139,55 @@ public class DataStreamInterceptor extends ComponentDefinition {
             ConnectionTracker ct = tm.connection;
             if (tm != null) {
                 switch (event.getState()) {
-                    case SENT: {
-                        logger.trace("Got a sent notify: {}", event);
-//                        double st = ((double) event.getSendTime()) / (1e9);
-//                        stats.update(st, event.getTime() - tm.ts, event.getSize());
-                        if (tm.originalRequest.isPresent()) {
-                            MessageNotify.Req or = tm.originalRequest.get();
-                            or.injectSize(event.getSize(), 0);
-                            or.prepareResponse(event.getTime(), event.isSuccess(), event.getSendTime());
-                            answer(or);
-                        }
-                        ct.sent(event.msgId);
-                        tryToSend(ct);
+                case SENT: {
+                    logger.trace("Got a sent notify: {}", event);
+                    // double st = ((double) event.getSendTime()) / (1e9);
+                    // stats.update(st, event.getTime() - tm.ts, event.getSize());
+                    if (tm.originalRequest.isPresent()) {
+                        MessageNotify.Req or = tm.originalRequest.get();
+                        or.injectSize(event.getSize(), 0);
+                        or.prepareResponse(event.getTime(), event.isSuccess(), event.getSendTime());
+                        answer(or);
                     }
+                    ct.sent(event.msgId);
+                    tryToSend(ct);
+                }
                     break;
-                    case DELIVERED: {
-                        logger.trace("Got a delivery notify: {}", event);
-                        double dt = ((double) event.getDeliveryTime()) / Statistics.NANOSEC;
-                        tm.connection.stats.update(dt, event.getSize());
-                        if (tm.originalRequest.isPresent()) {
-                            MessageNotify.Req or = tm.originalRequest.get();
-                            if (or.notifyOfDelivery) {
-                                or.injectSize(event.getSize(), 0);
-                                answer(or, or.deliveryResponse(event.getTime(), event.isSuccess(), event.getDeliveryTime()));
-                            }
-                        }
-                        outstanding.remove(event.msgId);
-                    }
-                    break;
-                    default: {
-                        logger.trace("Got a notify with a failure state: {}", event);
-//                        double st = ((double) event.getSendTime()) / (1e9);
-//                        stats.update(st, event.getTime() - tm.ts, event.getSize());
-                        if (tm.originalRequest.isPresent()) {
-                            MessageNotify.Req or = tm.originalRequest.get();
+                case DELIVERED: {
+                    logger.trace("Got a delivery notify: {}", event);
+                    double dt = ((double) event.getDeliveryTime()) / Statistics.NANOSEC;
+                    tm.connection.stats.update(dt, event.getSize());
+                    if (tm.originalRequest.isPresent()) {
+                        MessageNotify.Req or = tm.originalRequest.get();
+                        if (or.notifyOfDelivery) {
                             or.injectSize(event.getSize(), 0);
-                            or.prepareResponse(event.getTime(), event.isSuccess(), event.getSendTime());
-                            answer(or);
+                            answer(or,
+                                    or.deliveryResponse(event.getTime(), event.isSuccess(), event.getDeliveryTime()));
                         }
-                        outstanding.remove(event.msgId);
-                        ct.sent(event.msgId);
-                        tryToSend(ct);
                     }
+                    outstanding.remove(event.msgId);
+                }
+                    break;
+                default: {
+                    logger.trace("Got a notify with a failure state: {}", event);
+                    // double st = ((double) event.getSendTime()) / (1e9);
+                    // stats.update(st, event.getTime() - tm.ts, event.getSize());
+                    if (tm.originalRequest.isPresent()) {
+                        MessageNotify.Req or = tm.originalRequest.get();
+                        or.injectSize(event.getSize(), 0);
+                        or.prepareResponse(event.getTime(), event.isSuccess(), event.getSendTime());
+                        answer(or);
+                    }
+                    outstanding.remove(event.msgId);
+                    ct.sent(event.msgId);
+                    tryToSend(ct);
+                }
                 }
 
             } else {
                 logger.warn("Got a response for an untracked message...something is probably wrong: \n {}", event);
-                //throw new RuntimeException("Got a response for an untracked message...something is wrong!\n" + event);
+                // throw new RuntimeException("Got a response for an untracked message...something is wrong!\n" +
+                // event);
             }
         }
     };
@@ -198,6 +203,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
 
     private void tryToSend(ConnectionTracker ct) {
         while (ct.canSend(maxQueueLength)) {
+            @SuppressWarnings("unchecked")
             Either<MessageNotify.Req, Msg> eMsg = ct.dequeue();
             Msg event;
             Optional<MessageNotify.Req> or;
@@ -210,6 +216,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
                 or = Optional.absent();
             }
             Header h = event.getHeader();
+            @SuppressWarnings("unchecked")
             Transport proto = ct.selectionPolicy.select(event);
             ct.stats.updateSelection(proto);
             logger.trace("Got DATA message over {} to track: {}", proto, event);

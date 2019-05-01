@@ -25,16 +25,16 @@ import se.sics.kompics.PortType;
 /**
  * The <code>Timer</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 public final class Timer extends PortType {
-	{
-		positive(Timeout.class);
-		negative(ScheduleTimeout.class);
-		negative(CancelTimeout.class);
-		negative(SchedulePeriodicTimeout.class);
-		negative(CancelPeriodicTimeout.class);
-	}
+    {
+        positive(Timeout.class);
+        negative(ScheduleTimeout.class);
+        negative(CancelTimeout.class);
+        negative(SchedulePeriodicTimeout.class);
+        negative(CancelPeriodicTimeout.class);
+    }
 }

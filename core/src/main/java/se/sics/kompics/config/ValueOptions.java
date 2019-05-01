@@ -22,7 +22,7 @@ package se.sics.kompics.config;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class ValueOptions {
 
@@ -30,9 +30,9 @@ public class ValueOptions {
 
     public static enum Copy {
 
-        SHALLOW,
-        DEEP;
+        SHALLOW, DEEP;
     }
+
     public final Copy copy;
     public final Cloner cloner;
     public final ValueMerger merger;
@@ -58,12 +58,15 @@ public class ValueOptions {
     public static ValueOptions deepCopy(Cloner cloner) {
         return new ValueOptions(cloner);
     }
+
     public ValueOptions withCloner(Cloner cloner) {
         return new ValueOptions(cloner, merger);
     }
+
     public static ValueOptions usingMerger(ValueMerger vm) {
         return new ValueOptions(null, vm);
     }
+
     public ValueOptions withMerger(ValueMerger vm) {
         return new ValueOptions(cloner, vm);
     }

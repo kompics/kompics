@@ -1,8 +1,8 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  *
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
- * 2009 Royal Institute of Technology (KTH)
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
  * Kompics is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -28,10 +28,8 @@ import se.sics.kompics.Kompics;
 import se.sics.kompics.Scheduler;
 import se.sics.kompics.SpinlockQueue;
 
-// TODO: Auto-generated Javadoc
 /**
- * The
- * <code>Scheduler</code> class.
+ * The <code>Scheduler</code> class.
  *
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
@@ -48,7 +46,8 @@ public final class WorkStealingScheduler extends Scheduler {
     /**
      * Instantiates a new scheduler.
      *
-     * @param wc the wc
+     * @param wc
+     *            the wc
      */
     public WorkStealingScheduler(int wc) {
         workerCount = wc;
@@ -131,16 +130,16 @@ public final class WorkStealingScheduler extends Scheduler {
         synchronized (w) {
             sleepingWorkers.offer(w);
             sleepingWorkerCount.incrementAndGet();
-//			try {
-//				// Kompics.logger.debug("{} sleeping.", w.getWid());
-//				if (!on[w.getWid()]) {
-//					// do not wait when the worker is supposed to quit
-//					return;
-//				}
-//
-//				w.wait();
-//			} catch (InterruptedException e) {
-//			}
+            // try {
+            // // Kompics.logger.debug("{} sleeping.", w.getWid());
+            // if (!on[w.getWid()]) {
+            // // do not wait when the worker is supposed to quit
+            // return;
+            // }
+            //
+            // w.wait();
+            // } catch (InterruptedException e) {
+            // }
             // Kompics.logger.debug("{} sleeping.", w.getWid());
             if (!on[w.getWid()]) {
                 // do not wait when the worker is supposed to quit
@@ -157,14 +156,10 @@ public final class WorkStealingScheduler extends Scheduler {
             ex += workers[i].executionCount;
             ws += workers[i].workStealingCount;
             sl += workers[i].sleepCount;
-            Kompics.logger
-                    .error("Worker {}: executed {}, stole {}, slept {}",
-                    new Object[]{i, workers[i].executionCount,
-                        workers[i].workStealingCount,
-                        workers[i].sleepCount});
+            Kompics.logger.error("Worker {}: executed {}, stole {}, slept {}",
+                    new Object[] { i, workers[i].executionCount, workers[i].workStealingCount, workers[i].sleepCount });
         }
-        Kompics.logger.error("TOTAL: executed {}, stole {}, slept {}",
-                new Object[]{ex, ws, sl});
+        Kompics.logger.error("TOTAL: executed {}, stole {}, slept {}", new Object[] { ex, ws, sl });
     }
 
     final void execute(Component component, int w) {

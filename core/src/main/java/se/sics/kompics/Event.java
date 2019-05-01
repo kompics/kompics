@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -23,8 +23,7 @@ package se.sics.kompics;
 /**
  * The <code>Event</code> class.
  * 
- * @deprecated
- * Use {@link se.sics.kompics.KompicsEvent KompicsEvent} instead.
+ * @deprecated Use {@link se.sics.kompics.KompicsEvent KompicsEvent} instead.
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
@@ -33,12 +32,12 @@ package se.sics.kompics;
 @Deprecated
 public abstract class Event implements Cloneable, KompicsEvent {
 
-	@Override
-	public Object clone() {
-		try {
-			return super.clone();
-		} catch (CloneNotSupportedException e) {
-			throw new RuntimeException("Cannot clone event", e);
-		}
-	}
+    @Override
+    public Object clone() {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Cannot clone event", e);
+        }
+    }
 }

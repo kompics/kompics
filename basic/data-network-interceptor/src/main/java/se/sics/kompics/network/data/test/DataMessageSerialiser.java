@@ -51,7 +51,7 @@ public class DataMessageSerialiser implements Serializer {
         if (o instanceof DataMessage) {
             DataMessage msg = (DataMessage) o;
             // HEADER
-            DataHeader h = msg.getHeader();
+            DataHeader<Address> h = msg.getHeader();
             addrS.toBinary(h.getSource(), buf);
             addrS.toBinary(h.getDestination(), buf);
             buf.writeShort(h.getProtocol().ordinal());
@@ -68,7 +68,7 @@ public class DataMessageSerialiser implements Serializer {
                 buf.writeByte(PREPARE);
                 buf.writeInt(p.volume);
             } else if (o instanceof Prepared) {
-                Prepared p = (Prepared) o;
+                // Prepared p = (Prepared) o;
                 buf.writeByte(PREPARED);
             }
         }
@@ -80,25 +80,25 @@ public class DataMessageSerialiser implements Serializer {
         Address srcAddr = (Address) addrS.fromBinary(buf, Optional.absent());
         Address destAddr = (Address) addrS.fromBinary(buf, Optional.absent());
         Transport proto = Transport.values()[buf.readUnsignedShort()];
-        DataHeader h = new DataHeaderImpl(srcAddr, destAddr, proto);
+        DataHeader<Address> h = new DataHeaderImpl(srcAddr, destAddr, proto);
         // CONTENT
         byte type = buf.readByte();
         switch (type) {
-            case DATA: {
-                int pos = buf.readInt();
-                int total = buf.readInt();
-                int length = buf.readInt();
-                byte[] data = new byte[length];
-                buf.readBytes(data);
-                return new Data(h, pos, total, data);
-            }
-            case PREPARE: {
-                int volume = buf.readInt();
-                return new Prepare(h, volume);
-            }
-            case PREPARED: {
-                return new Prepared(h);
-            }
+        case DATA: {
+            int pos = buf.readInt();
+            int total = buf.readInt();
+            int length = buf.readInt();
+            byte[] data = new byte[length];
+            buf.readBytes(data);
+            return new Data(h, pos, total, data);
+        }
+        case PREPARE: {
+            int volume = buf.readInt();
+            return new Prepare(h, volume);
+        }
+        case PREPARED: {
+            return new Prepared(h);
+        }
         }
         return null;
     }

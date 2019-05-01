@@ -26,19 +26,19 @@ import se.sics.kompics.network.Msg;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 class MessageWrapper {
 
-    public final Msg msg;
+    public final Msg<?, ?> msg;
     public final Optional<MessageNotify.Req> notify;
-    
+
     MessageWrapper(MessageNotify.Req notify) {
         this.msg = notify.msg;
         this.notify = Optional.of(notify);
     }
-    
-    MessageWrapper(Msg msg) {
+
+    MessageWrapper(Msg<?, ?> msg) {
         this.msg = msg;
         this.notify = Optional.absent();
     }
@@ -48,7 +48,7 @@ class MessageWrapper {
             notify.get().injectSize(diff, startTS);
         }
     }
-    
+
     @Override
     public String toString() {
         if (notify.isPresent()) {

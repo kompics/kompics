@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -25,52 +25,53 @@ package se.sics.kompics;
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public abstract class Handler<E extends KompicsEvent> {
 
-	Class<E> eventType = null;
+    Class<E> eventType = null;
 
-	/**
-	 * Instantiates a new handler.
-	 */
-	public Handler() {
-	}
+    /**
+     * Instantiates a new handler.
+     */
+    public Handler() {
+    }
 
-	/**
-	 * Instantiates a new handler.
-	 * 
-	 * @param eventType
-	 *            the event type
-	 */
-	public Handler(Class<E> eventType) {
-		this.eventType = eventType;
-	}
+    /**
+     * Instantiates a new handler.
+     * 
+     * @param eventType
+     *            the event type
+     */
+    public Handler(Class<E> eventType) {
+        this.eventType = eventType;
+    }
 
-	/**
-	 * Handle.
-	 * 
-	 * @param event
-	 *            the event
-	 */
-	public abstract void handle(E event);
+    /**
+     * Handle.
+     * 
+     * @param event
+     *            the event
+     */
+    public abstract void handle(E event);
 
-	/**
-	 * Sets the event type.
-	 * 
-	 * @param eventType
-	 *            the new event type
-	 */
-	public void setEventType(Class<E> eventType) {
-		this.eventType = eventType;
-	}
+    /**
+     * Sets the event type.
+     * 
+     * @param eventType
+     *            the new event type
+     */
+    public void setEventType(Class<E> eventType) {
+        this.eventType = eventType;
+    }
 
-	/**
-	 * Gets the event type.
-	 * 
-	 * @return the event type
-	 */
-	public Class<E> getEventType() {
-		return eventType;
-	}
+    /**
+     * Gets the event type.
+     * 
+     * @return the event type
+     */
+    public Class<E> getEventType() {
+        return eventType;
+    }
 }

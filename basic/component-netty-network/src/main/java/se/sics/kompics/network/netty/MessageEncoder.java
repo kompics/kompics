@@ -31,7 +31,7 @@ import se.sics.kompics.network.netty.serialization.Serializers;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class MessageEncoder extends MessageToMessageEncoder<MessageWrapper> {
 
@@ -43,31 +43,34 @@ public class MessageEncoder extends MessageToMessageEncoder<MessageWrapper> {
         this.component = component;
     }
 
-//    @Override
-//    protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
-//        NettyNetwork.LOG.trace("Trying to encode outgoing data to {} from {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress());
-//        int startIdx = out.writerIndex();
-//        out.writeBytes(LENGTH_PLACEHOLDER);
-//
-//        Serializers.toBinary(msg, out);
-//
-//        int endIdx = out.writerIndex();
-//        int diff = endIdx - startIdx - LENGTH_PLACEHOLDER.length;
-//        if (diff > 65532) { //2^16 - 2bytes for the length header (snappy wants no more than 65536 bytes uncompressed)
-//            throw new Exception("Can't encode message longer than 65532 bytes!");
-//        }
-//        out.setShort(startIdx, diff);
-//        NettyNetwork.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
-//    }
+    // @Override
+    // protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
+    // NettyNetwork.LOG.trace("Trying to encode outgoing data to {} from {}.", ctx.channel().remoteAddress(),
+    // ctx.channel().localAddress());
+    // int startIdx = out.writerIndex();
+    // out.writeBytes(LENGTH_PLACEHOLDER);
+    //
+    // Serializers.toBinary(msg, out);
+    //
+    // int endIdx = out.writerIndex();
+    // int diff = endIdx - startIdx - LENGTH_PLACEHOLDER.length;
+    // if (diff > 65532) { //2^16 - 2bytes for the length header (snappy wants no more than 65536 bytes uncompressed)
+    // throw new Exception("Can't encode message longer than 65532 bytes!");
+    // }
+    // out.setShort(startIdx, diff);
+    // NettyNetwork.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff,
+    // ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
+    // }
     @Override
     protected void encode(ChannelHandlerContext ctx, MessageWrapper msgw, List<Object> outL) throws Exception {
         component.setCustomMDC();
         try {
 
-            long startTS = System.nanoTime(); // start measuring here to avoid overestimating the throuhgput
-            Msg msg = msgw.msg;
+            long startTS = System.nanoTime(); // start measuring here to avoid overestimating the throughput
+            Msg<?, ?> msg = msgw.msg;
             ByteBuf out = ctx.alloc().buffer(NettyNetwork.INITIAL_BUFFER_SIZE, NettyNetwork.SEND_BUFFER_SIZE);
-            component.extLog.trace("Trying to encode outgoing data to {} from {}: {}.", ctx.channel().remoteAddress(), ctx.channel().localAddress(), msgw.msg.getClass());
+            component.extLog.trace("Trying to encode outgoing data to {} from {}: {}.", ctx.channel().remoteAddress(),
+                    ctx.channel().localAddress(), msg.getClass());
             int startIdx = out.writerIndex();
             out.writeBytes(LENGTH_PLACEHOLDER);
 
@@ -75,10 +78,10 @@ public class MessageEncoder extends MessageToMessageEncoder<MessageWrapper> {
                 if (msgw.notify.isPresent() && msgw.notify.get().notifyOfDelivery) {
                     MessageNotify.Req msgr = msgw.notify.get();
                     component.extLog.trace("Serialising message with AckRequest: {}", msgr.getMsgId());
-                    AckRequestMsg arm = new AckRequestMsg(msgw.msg, msgr.getMsgId());
+                    AckRequestMsg arm = new AckRequestMsg(msg, msgr.getMsgId());
                     Serializers.toBinary(arm, out);
                 } else {
-                    Serializers.toBinary(msgw.msg, out);
+                    Serializers.toBinary(msg, out);
                 }
             } catch (Throwable e) {
                 component.extLog.warn("There was a problem serialising {}: \n --> {}", msgw, e);
@@ -88,11 +91,13 @@ public class MessageEncoder extends MessageToMessageEncoder<MessageWrapper> {
 
             int endIdx = out.writerIndex();
             int diff = endIdx - startIdx - LENGTH_PLACEHOLDER.length;
-            if (diff > 65532) { //2^16 - 2bytes for the length header (snappy wants no more than 65536 bytes uncompressed)
+            if (diff > 65532) { // 2^16 - 2bytes for the length header (snappy wants no more than 65536 bytes
+                                // uncompressed)
                 throw new Exception("Can't encode message longer than 65532 bytes!");
             }
             out.setShort(startIdx, diff);
-            //component.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff, ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
+            // component.LOG.trace("Encoded outgoing {} bytes of data to {}: {}.", new Object[]{diff,
+            // ctx.channel().remoteAddress(), ByteBufUtil.hexDump(out)});
             msgw.injectSize(diff, startTS);
             outL.add(out);
         } finally {

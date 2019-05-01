@@ -29,7 +29,7 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @ChannelHandler.Sharable
 public class TCPServerHandler extends StreamHandler {
@@ -39,18 +39,19 @@ public class TCPServerHandler extends StreamHandler {
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Msg msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
         component.channels.checkTCPChannel(msg, (SocketChannel) ctx.channel());
-        super.messageReceived(ctx, msg);        
+        super.messageReceived(ctx, msg);
     }
-    
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         super.channelActive(ctx);
         SocketChannel channel = (SocketChannel) ctx.channel();
         component.channels.addLocalSocket(channel);
         InetSocketAddress other = channel.remoteAddress();
-        DisambiguateConnection r = new DisambiguateConnection(component.self, new NettyAddress(other), protocol, component.boundUDTPort, true);
+        DisambiguateConnection r = new DisambiguateConnection(component.self, new NettyAddress(other), protocol,
+                component.boundUDTPort, true);
         channel.writeAndFlush(r);
     }
 }

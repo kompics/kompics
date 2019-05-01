@@ -37,7 +37,7 @@ import se.sics.kompics.network.netty.NettyAddress;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public abstract class SpecialSerializers {
 
@@ -72,7 +72,8 @@ public abstract class SpecialSerializers {
             byte[] bytes = (byte[]) o;
             int code = buf.ensureWritable(bytes.length + 4, true);
             if (code == 1 || code == 3) {
-                Serializers.LOG.error("ByteSerializer: Not enough space left on buffer to serialize " + bytes.length + " bytes.");
+                Serializers.LOG.error(
+                        "ByteSerializer: Not enough space left on buffer to serialize " + bytes.length + " bytes.");
                 return;
             }
             buf.writeInt(bytes.length);
@@ -104,7 +105,7 @@ public abstract class SpecialSerializers {
         public void toBinary(Object o, ByteBuf buf) {
             Address addr = (Address) o;
             if (addr == null) {
-                buf.writeInt(0); //simply put four 0 bytes since 0.0.0.0 is not a valid host ip
+                buf.writeInt(0); // simply put four 0 bytes since 0.0.0.0 is not a valid host ip
                 return;
             }
 
@@ -128,11 +129,10 @@ public abstract class SpecialSerializers {
             byte portUpper = buf.readByte();
             byte portLower = buf.readByte();
             int port = Ints.fromBytes((byte) 0, (byte) 0, portUpper, portLower);
-            
 
             return new NettyAddress(ip, port);
         }
-        
+
         public void socketToBinary(InetSocketAddress isa, ByteBuf buf) {
             buf.writeBytes(isa.getAddress().getAddress());
             // Write ports as 2 bytes instead of 4
@@ -140,7 +140,7 @@ public abstract class SpecialSerializers {
             buf.writeByte(portBytes[2]);
             buf.writeByte(portBytes[3]);
         }
-        
+
         public InetSocketAddress socketFromBinary(ByteBuf buf) {
             byte[] ipBytes = new byte[4];
             buf.readBytes(ipBytes);
@@ -187,11 +187,10 @@ public abstract class SpecialSerializers {
     public static abstract class MessageSerializationUtil {
 
         public static void msgToBinary(DirectMessage msg, ByteBuf buf, boolean flag1, boolean flag2) {
-            BitBuffer bbuf = BitBuffer.create(flag1, flag2, // good that a byte has so many bits... can compress it more if more protocols are necessary
-                    msg.getProtocol() == Transport.UDP,
-                    msg.getProtocol() == Transport.TCP,
-                    msg.getProtocol() == Transport.MULTICAST_UDP,
-                    msg.getProtocol() == Transport.UDT,
+            BitBuffer bbuf = BitBuffer.create(flag1, flag2, // good that a byte has so many bits... can compress it more
+                                                            // if more protocols are necessary
+                    msg.getProtocol() == Transport.UDP, msg.getProtocol() == Transport.TCP,
+                    msg.getProtocol() == Transport.MULTICAST_UDP, msg.getProtocol() == Transport.UDT,
                     msg.getProtocol() == Transport.LEDBAT);
             byte[] bbufb = bbuf.finalise();
             buf.writeBytes(bbufb);
@@ -246,7 +245,7 @@ public abstract class SpecialSerializers {
     static class BitBuffer {
 
         private static final int ZERO = 0;
-        private static final int[] POS = {1, 2, 4, 8, 16, 32, 64, 128};
+        private static final int[] POS = { 1, 2, 4, 8, 16, 32, 64, 128 };
 
         private final ArrayList<Boolean> buffer = new ArrayList<Boolean>();
 

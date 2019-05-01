@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -24,33 +24,34 @@ import java.util.Optional;
 import se.sics.kompics.PatternExtractor;
 
 /**
- * @author Alex Ormenisan <aaor@kth.se>
+ * @author Alex Ormenisan {@literal <aaor@kth.se>}
  */
 public class PatternExtractorHelper {
 
-  public static Object peelAllLayers(PatternExtractor obj) {
-    PatternExtractor o = obj;
-    while (o.extractValue() instanceof PatternExtractor) {
-      o = (PatternExtractor) o.extractValue();
+    public static Object peelAllLayers(PatternExtractor<?, ?> obj) {
+        PatternExtractor<?, ?> o = obj;
+        while (o.extractValue() instanceof PatternExtractor) {
+            o = (PatternExtractor<?, ?>) o.extractValue();
+        }
+        return o.extractValue();
     }
-    return o.extractValue();
-  }
-  
-  public static Object peelOneLayer(PatternExtractor obj) {
-    return obj.extractValue();
-  }
 
-  public static Optional<PatternExtractor> peelToLayer(PatternExtractor obj, Object patternType) {
-    PatternExtractor o = obj;
-    while(true) {
-      if(o.extractPattern().equals(patternType)) {
-        return Optional.of(o);
-      }
-      Object value = o.extractValue();
-      if(!(value instanceof PatternExtractor)) {
-        return Optional.empty();
-      }
-      o = (PatternExtractor)value;
+    public static Object peelOneLayer(PatternExtractor<?, ?> obj) {
+        return obj.extractValue();
     }
-  }
+
+    @SuppressWarnings("rawtypes") // Can't tell if this is in any way sound @Alex (Lars)
+    public static Optional<PatternExtractor> peelToLayer(PatternExtractor obj, Object patternType) {
+        PatternExtractor o = obj;
+        while (true) {
+            if (o.extractPattern().equals(patternType)) {
+                return Optional.of(o);
+            }
+            Object value = o.extractValue();
+            if (!(value instanceof PatternExtractor)) {
+                return Optional.empty();
+            }
+            o = (PatternExtractor) value;
+        }
+    }
 }

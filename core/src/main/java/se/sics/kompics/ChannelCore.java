@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -23,18 +23,18 @@ package se.sics.kompics;
 /**
  * The <code>ChannelCore</code> class.
  * 
- * @author Lars Kroll <lkroll@sics.se
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public interface ChannelCore<P extends PortType> extends Channel<P> {
-	
-	public boolean isDestroyed();
 
-	public boolean hasPositivePort(Port<P> port);
+    public boolean isDestroyed();
 
-	public boolean hasNegativePort(Port<P> port);
+    public boolean hasPositivePort(Port<P> port);
 
-	public void forwardToPositive(KompicsEvent event, int wid);
+    public boolean hasNegativePort(Port<P> port);
 
-	public void forwardToNegative(KompicsEvent event, int wid);
+    public void forwardToPositive(KompicsEvent event, int wid);
+
+    public void forwardToNegative(KompicsEvent event, int wid);
 }

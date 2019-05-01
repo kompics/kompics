@@ -26,17 +26,18 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
+@SuppressWarnings("rawtypes")
 public class NotDataSelector extends ChannelSelector<Msg, Boolean> {
 
     public NotDataSelector() {
         super(Msg.class, true, false);
     }
-    
+
     @Override
     public Boolean getValue(Msg event) {
         return event.getHeader().getProtocol() != Transport.DATA;
     }
-    
+
 }

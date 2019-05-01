@@ -26,18 +26,18 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
+@SuppressWarnings("rawtypes")
 public class DataSelector extends ChannelSelector<Msg, Transport> {
 
     public DataSelector() {
         super(Msg.class, Transport.DATA, false);
     }
-    
+
     @Override
     public Transport getValue(Msg event) {
         return event.getHeader().getProtocol();
     }
 
-    
 }

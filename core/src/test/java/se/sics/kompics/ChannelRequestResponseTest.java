@@ -1,10 +1,30 @@
+/*
+ * This file is part of the Kompics component model runtime.
+ *
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package se.sics.kompics;
 
 import java.util.concurrent.Semaphore;
 import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public class ChannelRequestResponseTest {
-
     static class TestRequest extends Request {
 
         final int id;
@@ -35,7 +55,7 @@ public class ChannelRequestResponseTest {
     static class TestRoot1 extends ComponentDefinition {
 
         private Component component1;
-        
+
         public TestRoot1() {
             component1 = create(TestComponent1.class, Init.NONE);
 
@@ -73,7 +93,7 @@ public class ChannelRequestResponseTest {
 
             connect(testPort, child.getPositive(TestPort.class));
 
-            //trigger(new TestRequest(13), child.getPositive(TestPort.class));
+            // trigger(new TestRequest(13), child.getPositive(TestPort.class));
         }
     }
 
@@ -84,11 +104,10 @@ public class ChannelRequestResponseTest {
         public TestComponent2() {
             subscribe(testRequest, testPort);
         }
-        /* java 8        
-         Handler<TestRequest> h = handle(testPort, TestRequest.class, event -> {
-         TestResponse response = new TestResponse(event, event.id);
-         trigger(response, testPort);
-         });
+
+        /*
+         * java 8 Handler<TestRequest> h = handle(testPort, TestRequest.class, event -> { TestResponse response = new
+         * TestResponse(event, event.id); trigger(response, testPort); });
          */
         Handler<TestRequest> testRequest = new Handler<TestRequest>() {
             @Override
@@ -100,6 +119,7 @@ public class ChannelRequestResponseTest {
             }
         };
     }
+
     private static final int EVENT_COUNT = 1;
     private static Semaphore semaphore;
 

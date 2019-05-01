@@ -22,28 +22,29 @@ package se.sics.kompics.network;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface Header<Adr extends Address> {
     /**
      * Where does the message come from.
      * 
-     * @return 
+     * @return
      */
     public Adr getSource();
+
     /**
      * Where is the message supposed to go.
      * 
-     * @return 
+     * @return
      */
     public Adr getDestination();
+
     /**
      * What protocol should be used to send the message.
      * 
-     * Note that not all network implementations have to implement 
-     * all the available protocols.
+     * Note that not all network implementations have to implement all the available protocols.
      * 
-     * @return 
+     * @return
      */
     public Transport getProtocol();
 }

@@ -26,7 +26,7 @@ import java.net.UnknownHostException;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public abstract class Conversions {
 
@@ -178,28 +178,28 @@ public abstract class Conversions {
                 if (o instanceof String) {
                     String s = (String) o;
                     switch (s.toLowerCase()) {
-                        case "true":
-                            return true;
-                        case "yes":
-                            return true;
-                        case "t":
-                            return true;
-                        case "y":
-                            return true;
-                        case "1":
-                            return true;
-                        case "false":
-                            return false;
-                        case "no":
-                            return false;
-                        case "f":
-                            return false;
-                        case "n":
-                            return false;
-                        case "0":
-                            return false;
-                        default:
-                            return null;
+                    case "true":
+                        return true;
+                    case "yes":
+                        return true;
+                    case "t":
+                        return true;
+                    case "y":
+                        return true;
+                    case "1":
+                        return true;
+                    case "false":
+                        return false;
+                    case "no":
+                        return false;
+                    case "f":
+                        return false;
+                    case "n":
+                        return false;
+                    case "0":
+                        return false;
+                    default:
+                        return null;
                     }
                 }
                 if (o instanceof Number) {
@@ -252,30 +252,32 @@ public abstract class Conversions {
         converters.put(inetConv.type(), inetConv);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T convert(Object o, Class<T> type) {
-//        System.out.println("Converters: \n" + converters.toString());
-//        System.out.println("Trying to convert " + o + "(" + o.getClass() + ") to " + type);
+        // System.out.println("Converters: \n" + converters.toString());
+        // System.out.println("Trying to convert " + o + "(" + o.getClass() + ") to " +
+        // type);
         if (type.isInstance(o)) {
             return type.cast(o);
         }
         T val = null;
-        for (Converter c : converters.get(type)) {
-            //System.out.println("Trying converter " + c + " with type " + c.type());
-            Converter<T> tc = c; // must be possible because it was at type in converters
+        for (Converter<?> c : converters.get(type)) {
+            // System.out.println("Trying converter " + c + " with type " + c.type());
+            Converter<T> tc = (Converter<T>) c; // must be possible because it was at type in converters
             try {
                 val = tc.convert(o);
             } catch (Exception ex) {
                 // do nothing, simply assume this converter didn't work
             }
         }
-        //System.out.println("Final value is " + val);
+        // System.out.println("Final value is " + val);
         return val; // last write wins
     }
 
-    public static void register(Converter c) {
+    public static void register(Converter<?> c) {
         converters.put(c.type(), c);
     }
-    
+
     public static String asString() {
         return "Converters: \n" + converters.toString();
     }

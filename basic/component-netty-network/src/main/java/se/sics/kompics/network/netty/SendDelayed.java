@@ -27,16 +27,16 @@ import se.sics.kompics.network.Transport;
 /**
  * Just a notification event
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 class SendDelayed implements KompicsEvent {
-    
+
     public final Address peer;
     public final Transport protocol;
-    
+
     public SendDelayed(Address peer, Transport protocol) {
         this.peer = peer;
         this.protocol = protocol;
     }
-    
+
 }

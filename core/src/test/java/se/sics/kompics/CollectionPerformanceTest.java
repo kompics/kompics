@@ -34,7 +34,7 @@ import org.junit.Test;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class CollectionPerformanceTest {
 
@@ -86,7 +86,8 @@ public class CollectionPerformanceTest {
     public void guavaArrayListMultimapTest() {
         TimedTest test = new TimedTest() {
 
-            private final ArrayListMultimap<Class<? extends KompicsEvent>, Handler<?>> subs = ArrayListMultimap.create();
+            private final ArrayListMultimap<Class<? extends KompicsEvent>, Handler<?>> subs = ArrayListMultimap
+                    .create();
 
             @Override
             public void runMeasurement() {
@@ -161,48 +162,42 @@ public class CollectionPerformanceTest {
         }
 
         @SuppressWarnings("unchecked")
-        protected <E extends KompicsEvent> Class<E> reflectEventType(Class handlerC) {
+        protected <E extends KompicsEvent> Class<E> reflectEventType(Class<?> handlerC) {
             Class<E> eventType = null;
             try {
                 Method declared[] = handlerC.getDeclaredMethods();
-                // The JVM in Java 7 wrongly reflects the "handle" methods for some 
+                // The JVM in Java 7 wrongly reflects the "handle" methods for some
                 // handlers: e.g. both `handle(Event e)` and `handle(Message m)` are
                 // reflected as "declared" methods when only the second is actually
                 // declared in the handler. A workaround is to reflect all `handle`
                 // methods and pick the one with the most specific event type.
                 // This sorted set stores the event types of all reflected handler
                 // methods topologically ordered by the event type relationships.
-                TreeSet<Class<? extends KompicsEvent>> relevant
-                        = new TreeSet<Class<? extends KompicsEvent>>(
-                                new Comparator<Class<? extends KompicsEvent>>() {
-                                    @Override
-                                    public int compare(Class<? extends KompicsEvent> e1,
-                                            Class<? extends KompicsEvent> e2) {
-                                        if (e1.isAssignableFrom(e2)) {
-                                            return 1;
-                                        } else if (e2.isAssignableFrom(e1)) {
-                                            return -1;
-                                        }
-                                        return 0;
-                                    }
-                                });
+                TreeSet<Class<? extends KompicsEvent>> relevant = new TreeSet<Class<? extends KompicsEvent>>(
+                        new Comparator<Class<? extends KompicsEvent>>() {
+                            @Override
+                            public int compare(Class<? extends KompicsEvent> e1, Class<? extends KompicsEvent> e2) {
+                                if (e1.isAssignableFrom(e2)) {
+                                    return 1;
+                                } else if (e2.isAssignableFrom(e1)) {
+                                    return -1;
+                                }
+                                return 0;
+                            }
+                        });
                 for (Method m : declared) {
                     if (m.getName().equals("handle")) {
-                        relevant.add(
-                                (Class<? extends KompicsEvent>) m.getParameterTypes()[0]);
+                        relevant.add((Class<? extends KompicsEvent>) m.getParameterTypes()[0]);
                     }
                 }
                 eventType = (Class<E>) relevant.first();
             } catch (Exception e) {
-                throw new RuntimeException("Cannot reflect handler event type for "
-                        + "handler " + handlerC + ". Please specify it "
-                        + "as an argument to the handler constructor.", e);
+                throw new RuntimeException("Cannot reflect handler event type for " + "handler " + handlerC
+                        + ". Please specify it " + "as an argument to the handler constructor.", e);
             }
             if (eventType == null) {
-                throw new RuntimeException(
-                        "Cannot reflect handler event type for handler "
-                        + handlerC + ". Please specify it "
-                        + "as an argument to the handler constructor.");
+                throw new RuntimeException("Cannot reflect handler event type for handler " + handlerC
+                        + ". Please specify it " + "as an argument to the handler constructor.");
             } else {
                 return eventType;
             }
@@ -248,6 +243,7 @@ public class CollectionPerformanceTest {
         private TestEvent5() {
         }
     }
+
     static final Handler<TestEvent> testHandler1 = new Handler<TestEvent>() {
 
         @Override

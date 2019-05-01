@@ -37,7 +37,7 @@ import java.io.StreamCorruptedException;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class JavaSerializer implements Serializer {
 
@@ -104,28 +104,25 @@ public class JavaSerializer implements Serializer {
         protected void readStreamHeader() throws IOException {
             int version = readByte() & 0xFF;
             if (version != STREAM_VERSION) {
-                throw new StreamCorruptedException(
-                        "Unsupported version: " + version);
+                throw new StreamCorruptedException("Unsupported version: " + version);
             }
         }
 
         @Override
-        protected ObjectStreamClass readClassDescriptor()
-                throws IOException, ClassNotFoundException {
+        protected ObjectStreamClass readClassDescriptor() throws IOException, ClassNotFoundException {
             int type = read();
             if (type < 0) {
                 throw new EOFException();
             }
             switch (type) {
-                case CompactObjectOutputStream.TYPE_FAT_DESCRIPTOR:
-                    return super.readClassDescriptor();
-                case CompactObjectOutputStream.TYPE_THIN_DESCRIPTOR:
-                    String className = readUTF();
-                    Class<?> clazz = classResolver.resolve(className);
-                    return ObjectStreamClass.lookupAny(clazz);
-                default:
-                    throw new StreamCorruptedException(
-                            "Unexpected class descriptor type: " + type);
+            case CompactObjectOutputStream.TYPE_FAT_DESCRIPTOR:
+                return super.readClassDescriptor();
+            case CompactObjectOutputStream.TYPE_THIN_DESCRIPTOR:
+                String className = readUTF();
+                Class<?> clazz = classResolver.resolve(className);
+                return ObjectStreamClass.lookupAny(clazz);
+            default:
+                throw new StreamCorruptedException("Unexpected class descriptor type: " + type);
             }
         }
 
@@ -160,8 +157,7 @@ public class JavaSerializer implements Serializer {
         @Override
         protected void writeClassDescriptor(ObjectStreamClass desc) throws IOException {
             Class<?> clazz = desc.forClass();
-            if (clazz.isPrimitive() || clazz.isArray() || clazz.isInterface()
-                    || desc.getSerialVersionUID() == 0) {
+            if (clazz.isPrimitive() || clazz.isArray() || clazz.isInterface() || desc.getSerialVersionUID() == 0) {
                 writeByte(TYPE_FAT_DESCRIPTOR);
                 super.writeClassDescriptor(desc);
             } else {

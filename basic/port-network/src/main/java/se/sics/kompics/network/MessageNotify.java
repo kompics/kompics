@@ -1,7 +1,22 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* 
+ * This file is part of the Kompics component model runtime.
+ *
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 package se.sics.kompics.network;
 
@@ -10,37 +25,35 @@ import se.sics.kompics.Direct;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class MessageNotify {
 
     public static enum State {
 
         IN_PROGRESS, // internal only
-        SENT,
-        DELIVERED,
-        FAILED;
+        SENT, DELIVERED, FAILED;
     }
 
-    public static Req create(Msg msg) {
+    public static Req create(Msg<?, ?> msg) {
         Req req = new Req(msg);
         return req;
     }
 
-    public static Req createWithDeliveryNotification(Msg msg) {
+    public static Req createWithDeliveryNotification(Msg<?, ?> msg) {
         return new Req(msg, true);
     }
 
     public static class Req extends Direct.Request<Resp> {
 
-        public final Msg msg;
+        public final Msg<?, ?> msg;
         public final boolean notifyOfDelivery;
 
-        public Req(Msg msg) {
+        public Req(Msg<?, ?> msg) {
             this(msg, false);
         }
 
-        public Req(Msg msg, boolean notifyOfDelivery) {
+        public Req(Msg<?, ?> msg, boolean notifyOfDelivery) {
             this.msg = msg;
             this.notifyOfDelivery = notifyOfDelivery;
             this.setResponse(new Resp());
@@ -73,7 +86,7 @@ public class MessageNotify {
                 throw new RuntimeException(ex); // shouldn't be thrown in the first place
             }
         }
-        
+
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
@@ -148,7 +161,7 @@ public class MessageNotify {
         public long getDeliveryTime() {
             return this.deliveryTime;
         }
-        
+
         void setDeliveryTime(long deliveryTime) {
             this.deliveryTime = deliveryTime;
         }
@@ -180,7 +193,7 @@ public class MessageNotify {
             sb.append(this.state);
             sb.append(")");
         }
-        
+
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();

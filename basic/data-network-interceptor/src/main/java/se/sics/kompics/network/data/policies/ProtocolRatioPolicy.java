@@ -32,11 +32,13 @@ public interface ProtocolRatioPolicy {
      * 
      * Returns r in [-1, 1], the ratio between TCP (-1.0) and UDT (1.0) where 0.0 is 50/50
      * 
-     * @param throughput average throughput estimate since last update call
-     * @param deliveryLatency average delivery latency since last update call
+     * @param throughput
+     *            average throughput estimate since last update call
+     * @param deliveryLatency
+     *            average delivery latency since last update call
      * @return the ratio between TCP and UDT
      */
     public Rational update(double throughput, double deliveryLatency);
-    
+
     public void initialState(Rational initState);
 }

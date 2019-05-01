@@ -31,15 +31,15 @@ import se.sics.kompics.network.data.DataHeader;
 public class Prepare extends DataMessage {
 
     public final int volume;
-    
+
     public Prepare(Address src, Address dst, Transport proto, int volume) {
         super(src, dst, proto);
         this.volume = volume;
     }
-    
-    Prepare(DataHeader header, int volume) {
+
+    Prepare(DataHeader<Address> header, int volume) {
         super(header);
         this.volume = volume;
     }
-    
+
 }

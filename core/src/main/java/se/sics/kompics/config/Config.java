@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -32,31 +32,36 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface Config {
 
     /**
-     * Returns an {@code Optional} of the value at {@code key} as {@code T} or
-     * {@code Absent<T>} if none.
+     * Returns an {@code Optional} of the value at {@code key} as {@code T} or {@code Absent<T>} if none.
      * <p>
      * Does not perform checked casting!
      * <p>
-     * @param <T> The requested type of the value
-     * @param key The location of the value
+     * 
+     * @param <T>
+     *            The requested type of the value
+     * @param key
+     *            The location of the value
      * @return {@code Optional.of(T)} if present or {@code Absent<T>} otherwise
      */
     public <T> Optional<T> readValue(String key);
 
     /**
-     * Returns an {@code Optional} of the value at {@code key} as {@code T} or
-     * {@code Absent<T>} if none.
+     * Returns an {@code Optional} of the value at {@code key} as {@code T} or {@code Absent<T>} if none.
      * <p>
      * Performs checked casting against {@code type}.
      * <p>
-     * @param <T> The requested type of the value
-     * @param key The location of the value
-     * @param type The type to cast the value to
+     * 
+     * @param <T>
+     *            The requested type of the value
+     * @param key
+     *            The location of the value
+     * @param type
+     *            The type to cast the value to
      * @return {@code Optional.of(T)} if present or {@code Absent<T>} otherwise
      */
     public <T> Optional<T> readValue(String key, Class<T> type);
@@ -66,38 +71,46 @@ public interface Config {
      * <p>
      * Performs checked casting against {@code type}.
      * <p>
-     * @param <T> The requested type of the value
-     * @param key The location of the value
-     * @param type The type to cast the value to
+     * 
+     * @param <T>
+     *            The requested type of the value
+     * @param key
+     *            The location of the value
+     * @param type
+     *            The type to cast the value to
      * @return The value as {@code T} if present or {@code null} otherwise
-     * @throws ClassCastException if the value can not be cast to {@code type}
+     * @throws ClassCastException
+     *             if the value can not be cast to {@code type}
      */
     public <T> T getValue(String key, Class<T> type) throws ClassCastException;
 
     /**
-     * Return the value at {@code key} as {@code T} or {@code defaultValue} if
-     * none.
+     * Return the value at {@code key} as {@code T} or {@code defaultValue} if none.
      * <p>
      * Performs checked casting against the type of {@code defaultValue}.
      * <p>
-     * @param <T> The requested type of the value
-     * @param key The location of the value
-     * @param defaultValue Returned if there is not value of the right type at
-     * {@code key}
-     * @return The value as {@code T} if present or {@code defaultValue}
-     * otherwise
+     * 
+     * @param <T>
+     *            The requested type of the value
+     * @param key
+     *            The location of the value
+     * @param defaultValue
+     *            Returned if there is not value of the right type at {@code key}
+     * @return The value as {@code T} if present or {@code defaultValue} otherwise
      */
     public <T extends Object> T getValueOrDefault(String key, T defaultValue);
 
     /**
      * Returns a list of values at @{code key}.
      * <p>
-     * The casts to {@code T} are unchecked in this method.
-     * Use {@link #getValues(java.lang.String, java.lang.Class) } if you don't
-     * want this behaviour.
+     * The casts to {@code T} are unchecked in this method. Use {@link #getValues(java.lang.String, java.lang.Class) }
+     * if you don't want this behaviour.
      * <p>
-     * @param <T> The list value type
-     * @param key The location of the values
+     * 
+     * @param <T>
+     *            The list value type
+     * @param key
+     *            The location of the values
      * @return A list of values at @{code key}
      */
     public <T> List<T> getValues(String key);
@@ -105,13 +118,16 @@ public interface Config {
     /**
      * Returns a list of values at @{code key}.
      * <p>
-     * Value casts are checked against {@code type}.
-     * May throw a @{link se.sics.kompics.config.ConfigValueException } if a
-     * value can't be cast.
+     * Value casts are checked against {@code type}. May throw a @{link se.sics.kompics.config.ConfigValueException } if
+     * a value can't be cast.
      * <p>
-     * @param <T> The list value type
-     * @param key The location of the values
-     * @param type The type to cast the values to
+     * 
+     * @param <T>
+     *            The list value type
+     * @param key
+     *            The location of the values
+     * @param type
+     *            The type to cast the values to
      * @return A list of values at @{code key}
      */
     public <T> List<T> getValues(String key, Class<T> type);
@@ -137,6 +153,7 @@ public interface Config {
             this.versionFactory = versionFactory;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T> Optional<T> readValue(String key) {
             ConfigValue cv = values.get(key);
@@ -187,7 +204,8 @@ public interface Config {
                 if (v != null) {
                     return v;
                 } else {
-                    throw new ClassCastException("Can't cast or convert " + cv.unwrap() + " ("+cv.unwrap().getClass()+") to " + type);
+                    throw new ClassCastException(
+                            "Can't cast or convert " + cv.unwrap() + " (" + cv.unwrap().getClass() + ") to " + type);
                 }
             }
             cv = baseline.getValue(key);
@@ -196,12 +214,14 @@ public interface Config {
                 if (v != null) {
                     return v;
                 } else {
-                    throw new ClassCastException("Can't cast or convert " + cv.unwrap() + " ("+cv.unwrap().getClass()+") to " + type);
+                    throw new ClassCastException(
+                            "Can't cast or convert " + cv.unwrap() + " (" + cv.unwrap().getClass() + ") to " + type);
                 }
             }
             return null;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T extends Object> T getValueOrDefault(String key, T defaultValue) {
             Class<T> type = (Class<T>) defaultValue.getClass();
@@ -226,13 +246,14 @@ public interface Config {
             return new Config.Builder(this, author);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T> List<T> getValues(String key) {
             ConfigValue cv = values.get(key);
             if (cv != null) {
                 Object o = cv.unwrap();
                 if (o instanceof Collection) {
-                    Collection c = (Collection) o;
+                    Collection<?> c = (Collection<?>) o;
                     List<T> ts = new LinkedList<T>();
                     for (Object obj : c) {
                         T t = (T) obj;
@@ -248,7 +269,7 @@ public interface Config {
                 return null;
             }
             if (cvs.isEmpty()) {
-                List l = cvs;
+                List<?> l = cvs;
                 return (List<T>) l; // empty list can simply be cast^^
             } else {
                 List<T> ts = new LinkedList<T>();
@@ -260,13 +281,14 @@ public interface Config {
             }
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T> List<T> getValues(String key, Class<T> type) {
             ConfigValue cv = values.get(key);
             if (cv != null) {
                 Object o = cv.unwrap();
                 if (o instanceof Collection) {
-                    Collection c = (Collection) o;
+                    Collection<?> c = (Collection<?>) o;
                     List<T> ts = new LinkedList<T>();
                     for (Object obj : c) {
                         T t = Conversions.convert(obj, type);
@@ -286,7 +308,7 @@ public interface Config {
                 return null;
             }
             if (cvs.isEmpty()) {
-                List l = cvs;
+                List<?> l = cvs;
                 return (List<T>) l; // empty list can simply be cast^^
             } else {
                 List<T> ts = new LinkedList<T>();
@@ -314,14 +336,14 @@ public interface Config {
                 if (e.getValue() instanceof Builder.CV) {
                     Builder.CV cv = (Builder.CV) e.getValue();
                     switch (cv.options.copy) {
-                        case SHALLOW:
-                            copy.values.put(e.getKey(), cv);
-                            break;
-                        case DEEP: {
-                            Object ocopy = cv.options.cloner.clone(cv.unwrap());
-                            Builder.CV newCV = new Builder.CV(ocopy, cv.version, cv.options);
-                            copy.values.put(e.getKey(), newCV);
-                        }
+                    case SHALLOW:
+                        copy.values.put(e.getKey(), cv);
+                        break;
+                    case DEEP: {
+                        Object ocopy = cv.options.cloner.clone(cv.unwrap());
+                        Builder.CV newCV = new Builder.CV(ocopy, cv.version, cv.options);
+                        copy.values.put(e.getKey(), newCV);
+                    }
                         break;
                     }
                 } else {
@@ -342,10 +364,12 @@ public interface Config {
                     values.put(e.getKey(), e.getValue());
                 } else {
                     if (customMergeLogic.isPresent()) {
-                        ConfigValue cv = customMergeLogic.get().merge(e.getKey(), oldCV, e.getValue(), Builder.CVFactory.INSTANCE);
+                        ConfigValue cv = customMergeLogic.get().merge(e.getKey(), oldCV, e.getValue(),
+                                Builder.CVFactory.INSTANCE);
                         values.put(e.getKey(), cv);
                     } else {
-                        ConfigValue cv = e.getValue().options().merger.merge(e.getKey(), oldCV, e.getValue(), Builder.CVFactory.INSTANCE);
+                        ConfigValue cv = e.getValue().options().merger.merge(e.getKey(), oldCV, e.getValue(),
+                                Builder.CVFactory.INSTANCE);
                         values.put(e.getKey(), cv);
                     }
                 }
@@ -375,6 +399,7 @@ public interface Config {
             this.creator = creator;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T> Optional<T> readValue(String key) {
             ConfigValue cv = updates.get(key);
@@ -420,6 +445,7 @@ public interface Config {
             }
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T> T getValueOrDefault(String key, T defaultValue) {
             Class<T> type = (Class<T>) defaultValue.getClass();
@@ -441,13 +467,14 @@ public interface Config {
             return this;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T> List<T> getValues(String key) {
             ConfigValue cv = updates.get(key);
             if (cv != null) {
                 Object o = cv.unwrap();
                 if (o instanceof Collection) {
-                    Collection c = (Collection) o;
+                    Collection<?> c = (Collection<?>) o;
                     List<T> ts = new LinkedList<T>();
                     for (Object obj : c) {
                         T t = (T) obj;
@@ -467,7 +494,7 @@ public interface Config {
             if (cv != null) {
                 Object o = cv.unwrap();
                 if (o instanceof Collection) {
-                    Collection c = (Collection) o;
+                    Collection<?> c = (Collection<?>) o;
                     List<T> ts = new LinkedList<T>();
                     for (Object obj : c) {
                         T t = Conversions.convert(obj, type);
@@ -491,8 +518,11 @@ public interface Config {
          * <p>
          * Uses {@link ValueOptions.DEFAULT}.
          * <p>
-         * @param key The location of the target
-         * @param o The new value of the target
+         * 
+         * @param key
+         *            The location of the target
+         * @param o
+         *            The new value of the target
          */
         public void setValue(String key, Object o) {
             if (finalised) {
@@ -505,9 +535,13 @@ public interface Config {
         /**
          * Sets the value at {@code key} to {@code o}.
          * <p>
-         * @param key The location of the target
-         * @param o The new value of the target
-         * @param opts The options associated with the new value
+         * 
+         * @param key
+         *            The location of the target
+         * @param o
+         *            The new value of the target
+         * @param opts
+         *            The options associated with the new value
          */
         public void setValue(String key, Object o, ValueOptions opts) {
             if (finalised) {
@@ -520,12 +554,15 @@ public interface Config {
         /**
          * Adds {@code o} to the collection at {@code key}.
          * <p>
-         * Starts a new collection if the value doesn't exists or the value
-         * isn't currently a collection.
+         * Starts a new collection if the value doesn't exists or the value isn't currently a collection.
          * <p>
-         * @param key The location of the target collection
-         * @param o The value to add to the target collection
+         * 
+         * @param key
+         *            The location of the target collection
+         * @param o
+         *            The value to add to the target collection
          */
+        @SuppressWarnings("unchecked")
         public void addValue(String key, Object o) {
             if (finalised) {
                 throw new ConfigException("Config Builder has been finalised. No further writes allowed!");
@@ -534,10 +571,10 @@ public interface Config {
             if (cv != null) {
                 Object co = cv.unwrap();
                 if (co instanceof Collection) {
-                    Collection c = (Collection) co;
+                    Collection<Object> c = (Collection<Object>) co;
                     c.add(o);
                 } else {
-                    ArrayList l = new ArrayList();
+                    ArrayList<Object> l = new ArrayList<Object>();
                     l.add(co);
                     l.add(o);
                     CV newCv = new CV(l, versionId, ValueOptions.DEFAULT);
@@ -545,19 +582,19 @@ public interface Config {
                 }
             } else {
                 try {
-                    List l = conf.getValues(key);
+                    List<Object> l = conf.getValues(key);
                     if (l != null) {
                         l.add(o);
                         CV newCv = new CV(l, versionId, ValueOptions.DEFAULT);
                         updates.put(key, newCv);
                     } else {
-                        l = new ArrayList();
+                        l = new ArrayList<Object>();
                         l.add(o);
                         CV newCv = new CV(l, versionId, ValueOptions.DEFAULT);
                         updates.put(key, newCv);
                     }
                 } catch (ConfigValueException ex) {
-                    ArrayList l = new ArrayList();
+                    ArrayList<Object> l = new ArrayList<Object>();
                     l.add(conf.readValue(key).get());
                     l.add(o);
                     CV newCv = new CV(l, versionId, ValueOptions.DEFAULT);
@@ -569,12 +606,15 @@ public interface Config {
         /**
          * Adds all values in {@code o} to the collection at {@code key}.
          * <p>
-         * Starts a new collection if the value doesn't exists or the value
-         * isn't currently a collection.
+         * Starts a new collection if the value doesn't exists or the value isn't currently a collection.
          * <p>
-         * @param key The location of the target collection
-         * @param os The collection of values to add to the target collection
+         * 
+         * @param key
+         *            The location of the target collection
+         * @param os
+         *            The collection of values to add to the target collection
          */
+        @SuppressWarnings("unchecked")
         public void addValues(String key, Collection<Object> os) {
             if (finalised) {
                 throw new ConfigException("Config Builder has been finalised. No further writes allowed!");
@@ -583,10 +623,10 @@ public interface Config {
             if (cv != null) {
                 Object co = cv.unwrap();
                 if (co instanceof Collection) {
-                    Collection c = (Collection) co;
+                    Collection<Object> c = (Collection<Object>) co;
                     c.addAll(os);
                 } else {
-                    ArrayList l = new ArrayList();
+                    ArrayList<Object> l = new ArrayList<Object>();
                     l.add(co);
                     l.addAll(os);
                     CV newCv = new CV(l, versionId, ValueOptions.DEFAULT);
@@ -594,19 +634,19 @@ public interface Config {
                 }
             } else {
                 try {
-                    List l = conf.getValues(key);
+                    List<Object> l = conf.getValues(key);
                     if (l != null) {
                         l.addAll(os);
                         CV newCv = new CV(l, versionId, ValueOptions.DEFAULT);
                         updates.put(key, newCv);
                     } else {
-                        l = new ArrayList();
+                        l = new ArrayList<Object>();
                         l.addAll(os);
                         CV newCv = new CV(l, versionId, ValueOptions.DEFAULT);
                         updates.put(key, newCv);
                     }
                 } catch (ConfigValueException ex) {
-                    ArrayList l = new ArrayList();
+                    ArrayList<Object> l = new ArrayList<Object>();
                     l.add(conf.readValue(key).get());
                     l.addAll(os);
                     CV newCv = new CV(l, versionId, ValueOptions.DEFAULT);
@@ -622,7 +662,7 @@ public interface Config {
 
         @Override
         public Config copy(boolean newVersionLine) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         private static class CV implements ConfigValue {

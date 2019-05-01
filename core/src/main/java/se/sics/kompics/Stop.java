@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -20,7 +20,6 @@
  */
 package se.sics.kompics;
 
-// TODO: Auto-generated Javadoc
 /**
  * The <code>Stop</code> class.
  * 
@@ -30,11 +29,11 @@ package se.sics.kompics;
  */
 public final class Stop implements KompicsEvent {
 
-	public static Stop event = new Stop();
+    public static Stop event = new Stop();
 
-	/**
-	 * Instantiates a new stop.
-	 */
-	public Stop() {
-	}
+    /**
+     * Instantiates a new stop.
+     */
+    public Stop() {
+    }
 }

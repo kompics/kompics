@@ -27,20 +27,20 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @Sharable
-public class StreamHandler extends BaseHandler<Msg> {
-    
+public class StreamHandler extends BaseHandler<Msg<?, ?>> {
+
     public StreamHandler(NettyNetwork component, Transport protocol) {
         super(component, protocol);
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Msg msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
         component.deliverMessage(msg, ctx.channel());
     }
-    
+
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         component.channels.channelInactive(ctx, protocol);

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -22,42 +22,43 @@ package se.sics.kompics.timer;
 
 import java.util.UUID;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 
 /**
  * The <code>CancelTimeout</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
-public class CancelTimeout extends Event {
+public class CancelTimeout implements KompicsEvent {
 
-	private UUID timeoutId;
+    private UUID timeoutId;
 
-	public StackTraceElement[] stackTrace;
-	
-	/**
-	 * Instantiates a new cancel timeout.
-	 * 
-	 * @param timeoutId
-	 *            the timeout id
-	 */
-	public CancelTimeout(UUID timeoutId) {
-		this.timeoutId = timeoutId;
-		stackTrace = Thread.currentThread().getStackTrace();
-	}
+    public StackTraceElement[] stackTrace;
 
-	/**
-	 * Gets the timeout id.
-	 * 
-	 * @return the timeout id
-	 */
-	public final UUID getTimeoutId() {
-		return timeoutId;
-	}
-	
-	public StackTraceElement[] getStackTrace() {
-		return stackTrace;
-	}
+    /**
+     * Instantiates a new cancel timeout.
+     * 
+     * @param timeoutId
+     *            the timeout id
+     */
+    public CancelTimeout(UUID timeoutId) {
+        this.timeoutId = timeoutId;
+        stackTrace = Thread.currentThread().getStackTrace();
+    }
+
+    /**
+     * Gets the timeout id.
+     * 
+     * @return the timeout id
+     */
+    public final UUID getTimeoutId() {
+        return timeoutId;
+    }
+
+    public StackTraceElement[] getStackTrace() {
+        return stackTrace;
+    }
 }

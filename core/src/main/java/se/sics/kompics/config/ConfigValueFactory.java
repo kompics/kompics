@@ -22,7 +22,7 @@ package se.sics.kompics.config;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface ConfigValueFactory {
     public ConfigValue create(Object o, long versionId, ValueOptions opts);

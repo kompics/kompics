@@ -26,7 +26,7 @@ import se.sics.kompics.network.Address;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class NettyAddress implements Address {
 

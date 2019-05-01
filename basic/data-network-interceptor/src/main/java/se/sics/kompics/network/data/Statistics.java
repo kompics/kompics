@@ -27,7 +27,7 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class Statistics {
 
@@ -35,9 +35,9 @@ public class Statistics {
     public static final double KILOBYTE = 1024.0;
     public static final int WINDOW_SIZE = 1;
     public static final double ALPHA = 0.1;
-    
+
     private ExponentialMovingAverage delTime = new ExponentialMovingAverage(ALPHA);
-    //private DescriptiveStatistics size = new DescriptiveStatistics(WINDOW_SIZE);
+    // private DescriptiveStatistics size = new DescriptiveStatistics(WINDOW_SIZE);
     private boolean updated = false;
     private long lastPrintTS = -1;
     private long sizeAccum = 0;
@@ -47,7 +47,7 @@ public class Statistics {
 
     void reset() {
         delTime = new ExponentialMovingAverage(ALPHA);
-        //size = new DescriptiveStatistics(WINDOW_SIZE);
+        // size = new DescriptiveStatistics(WINDOW_SIZE);
         lastPrintTS = -1;
         sizeAccum = 0;
         approxThroughput.clear();
@@ -71,23 +71,23 @@ public class Statistics {
         selectionRatio = new SummaryStatistics();
         lastPrintTS = System.nanoTime();
     }
-    
+
     public double avgDeliveryTime() {
         return delTime.getMean();
     }
-    
+
     public double avgThroughputApproximation() {
         return approxThroughput.getMean();
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Delivery Time: ");
         sb.append(delTime);
         sb.append('\n');
-        //sb.append("Message Size: ");
-        //sb.append(size);
+        // sb.append("Message Size: ");
+        // sb.append(size);
         sb.append('\n');
         sb.append("Approximate Throughput: ");
         sb.append(approxThroughput);
@@ -99,22 +99,27 @@ public class Statistics {
     }
 
     void update(double delTD, int msgSize) {
-        double sizeD = msgSize / KILOBYTE; // kb
-        //size.addValue(sizeD);
+        // double sizeD = msgSize / KILOBYTE; // kb
+        // size.addValue(sizeD);
         delTime.addValue(delTD);
         sizeAccum += msgSize;
 
         updated = true;
     }
-    
-    void updateSelection( Transport selection) {
+
+    void updateSelection(Transport selection) {
         switch (selection) {
-            case TCP: selectionRatio.addValue(-1.0); break;
-            case UDT: selectionRatio.addValue(1.0); break;
-            default: throw new RuntimeException("How the fuck?");
+        case TCP:
+            selectionRatio.addValue(-1.0);
+            break;
+        case UDT:
+            selectionRatio.addValue(1.0);
+            break;
+        default:
+            throw new RuntimeException("How the fuck?");
         }
     }
-    
+
     public boolean isUpdated() {
         return this.updated;
     }

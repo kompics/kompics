@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
@@ -33,11 +33,11 @@ import se.sics.kompics.scheduler.ForkJoinScheduler;
 import se.sics.kompics.scheduler.WorkStealingScheduler;
 
 /**
- * The
- * <code>Kompics</code> class.
+ * The <code>Kompics</code> class.
  *
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public final class Kompics {
@@ -134,50 +134,57 @@ public final class Kompics {
     /**
      * Creates the and start.
      *
-     * @param main the main
+     * @param main
+     *            the main
      */
-    public static void createAndStart(Class<? extends ComponentDefinition> main) {
+    @SuppressWarnings("unchecked")
+    public static <C extends ComponentDefinition> void createAndStart(Class<C> main) {
         // createAndStart(main, Runtime.getRuntime().availableProcessors());
-        createAndStart(main, Init.NONE, 1);
+        createAndStart(main, (Init<C>) Init.NONE, 1);
     }
 
-    public static void createAndStart(Class<? extends ComponentDefinition> main, Init initEvent) {
+    public static <C extends ComponentDefinition> void createAndStart(Class<C> main, Init<C> initEvent) {
         createAndStart(main, initEvent, 1);
     }
 
     /**
      * Creates the and start.
      *
-     * @param main the main
-     * @param workers the workers
+     * @param main
+     *            the main
+     * @param workers
+     *            the workers
      */
-    public static void createAndStart(
-            Class<? extends ComponentDefinition> main, int workers) {
-        createAndStart(main, Init.NONE, workers, 1);
+    @SuppressWarnings("unchecked")
+    public static <C extends ComponentDefinition> void createAndStart(Class<C> main, int workers) {
+        createAndStart(main, (Init<C>) Init.NONE, workers, 1);
     }
 
-    public static void createAndStart(
-            Class<? extends ComponentDefinition> main, Init initEvent, int workers) {
+    public static <C extends ComponentDefinition> void createAndStart(Class<C> main, Init<C> initEvent, int workers) {
         createAndStart(main, initEvent, workers, 1);
     }
 
-    public static void createAndStart(
-            Class<? extends ComponentDefinition> main, int workers, int maxEventExecuteNumber) {
-        createAndStart(main, Init.NONE, workers, maxEventExecuteNumber);
+    @SuppressWarnings("unchecked")
+    public static <C extends ComponentDefinition> void createAndStart(Class<C> main, int workers,
+            int maxEventExecuteNumber) {
+        createAndStart(main, (Init<C>) Init.NONE, workers, maxEventExecuteNumber);
     }
 
     /**
      * Creates the main component and starts it.
      * <p>
+     * 
      * @param <T>
      *
-     * @param main the main
+     * @param main
+     *            the main
      * @param initEvent
-     * @param workers the workers
+     * @param workers
+     *            the workers
      * @param maxEventExecuteNumber
      */
-    public static <T extends ComponentDefinition> void createAndStart(
-            Class<T> main, Init initEvent, int workers, int maxEventExecuteNumber) {
+    public static <C extends ComponentDefinition> void createAndStart(Class<C> main, Init<C> initEvent, int workers,
+            int maxEventExecuteNumber) {
         synchronized (obj) {
             if (on) {
                 throw new RuntimeException("Kompics already created");
@@ -187,7 +194,7 @@ public final class Kompics {
             if (scheduler == null) {
                 // scheduler = new WorkStealingScheduler(workers);
                 scheduler = new ForkJoinScheduler(workers);
-                //scheduler = new ThreadPoolScheduler(workers);
+                // scheduler = new ThreadPoolScheduler(workers);
             }
 
             Kompics.maxNumOfExecutedEvents.lazySet(maxEventExecuteNumber);
@@ -197,19 +204,18 @@ public final class Kompics {
                 if (initEvent == Init.NONE) { // NONE instance
                     mainComponent = main.newInstance();
                 } else {
-                    Constructor<T> constr = main.getConstructor(initEvent.getClass());
+                    Constructor<C> constr = main.getConstructor(initEvent.getClass());
                     mainComponent = constr.newInstance(initEvent);
                 }
                 mainCore = mainComponent.getComponentCore();
                 mainCore.setScheduler(scheduler);
 
-                //mainCore.workCount.incrementAndGet();
+                // mainCore.workCount.incrementAndGet();
                 // start Main
-                ((PortCore<ControlPort>) mainCore.getControl()).doTrigger(
-                        Start.event, 0, mainCore);
-            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-                throw new RuntimeException("Cannot create main component "
-                        + main.getCanonicalName(), e);
+                ((PortCore<ControlPort>) mainCore.getControl()).doTrigger(Start.event, 0, mainCore);
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                    | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                throw new RuntimeException("Cannot create main component " + main.getCanonicalName(), e);
             }
 
             scheduler.proceed();
@@ -224,7 +230,8 @@ public final class Kompics {
 
             @Override
             public void run() {
-                Kompics.shutdown();;
+                Kompics.shutdown();
+                ;
             }
         };
         Thread t = new Thread(r);
@@ -291,30 +298,29 @@ public final class Kompics {
             public void run() {
                 ResolveAction ra = fh.handle(f);
                 switch (ra) {
-                    case RESOLVED:
-                        Kompics.logger.info("Fault {} was resolved by user.", f);
-                        break;
-                    case IGNORE:
-                        Kompics.logger.info("Fault {} was declared to be ignored by user. Resuming component...", f);
-                        f.source.markSubtreeAs(Component.State.PASSIVE);
-                        f.source.control().doTrigger(Start.event, 0, mainCore);
-                        break;
-                    case DESTROY:
-                        Kompics.logger.info("User declared that Fault {} should quit Kompics...", f);
-                        Kompics.forceShutdown();
-                         {
-                            try {
-                                Kompics.waitForTermination();
-                            } catch (InterruptedException ex) {
-                                Kompics.logger.error("Interrupted while waiting for Kompics termination...");
-                                System.exit(1);
-                            }
-                        }
-                        Kompics.logger.info("finished quitting Kompics.");
-                        break;
-                    default:
-                        Kompics.logger.info("User declared that Fault {} should quit JVM...", f);
+                case RESOLVED:
+                    Kompics.logger.info("Fault {} was resolved by user.", f);
+                    break;
+                case IGNORE:
+                    Kompics.logger.info("Fault {} was declared to be ignored by user. Resuming component...", f);
+                    f.source.markSubtreeAs(Component.State.PASSIVE);
+                    f.source.control().doTrigger(Start.event, 0, mainCore);
+                    break;
+                case DESTROY:
+                    Kompics.logger.info("User declared that Fault {} should quit Kompics...", f);
+                    Kompics.forceShutdown(); {
+                    try {
+                        Kompics.waitForTermination();
+                    } catch (InterruptedException ex) {
+                        Kompics.logger.error("Interrupted while waiting for Kompics termination...");
                         System.exit(1);
+                    }
+                }
+                    Kompics.logger.info("finished quitting Kompics.");
+                    break;
+                default:
+                    Kompics.logger.info("User declared that Fault {} should quit JVM...", f);
+                    System.exit(1);
                 }
             }
 

@@ -22,9 +22,10 @@ package se.sics.kompics.config;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface Converter<T> {
     public T convert(Object o);
+
     public Class<T> type();
 }

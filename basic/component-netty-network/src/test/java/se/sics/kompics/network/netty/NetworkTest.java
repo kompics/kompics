@@ -1,5 +1,5 @@
 /* 
- * This file is part of the CaracalDB distributed storage system.
+ * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
@@ -34,7 +34,7 @@ import se.sics.kompics.network.test.NetworkGenerator;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @RunWith(JUnit4.class)
 public class NetworkTest {
@@ -43,7 +43,7 @@ public class NetworkTest {
 
     @Test
     public void streamTest() {
-        final Transport[] protos = new Transport[]{Transport.TCP, Transport.UDT};
+        final Transport[] protos = new Transport[] { Transport.TCP, Transport.UDT };
 
         NetworkGenerator netGen = new NetworkGenerator() {
 
@@ -54,7 +54,7 @@ public class NetworkTest {
             }
 
         };
-        //Transport[] protos = new Transport[]{Transport.TCP};
+        // Transport[] protos = new Transport[]{Transport.TCP};
 
         LOG.info("********* 2 Node Network Test ***********");
         se.sics.kompics.network.test.NetworkTest.runTests(netGen, 2, protos);
@@ -66,7 +66,7 @@ public class NetworkTest {
     @Test
     public void datagramTest() {
 
-        final Transport[] protos = new Transport[]{Transport.UDP};
+        final Transport[] protos = new Transport[] { Transport.UDP };
 
         NetworkGenerator netGen = new NetworkGenerator() {
 

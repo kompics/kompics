@@ -20,10 +20,9 @@
  */
 package se.sics.kompics.network.virtual;
 
-
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface Address extends se.sics.kompics.network.Address {
     /**

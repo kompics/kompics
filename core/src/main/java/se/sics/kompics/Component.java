@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -20,8 +20,6 @@
  */
 package se.sics.kompics;
 
-// TODO: Auto-generated Javadoc
-
 import java.util.UUID;
 
 /**
@@ -29,74 +27,70 @@ import java.util.UUID;
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public interface Component extends Runnable {
 
-	/**
-	 * Gets the positive.
-	 * 
-	 * @param portType
-	 *            the port type
-	 * 
-	 * @return the positive
-	 */
-	public <P extends PortType> Positive<P> getPositive(Class<P> portType);
+    /**
+     * Gets the positive.
+     * 
+     * @param portType
+     *            the port type
+     * 
+     * @return the positive
+     */
+    public <P extends PortType> Positive<P> getPositive(Class<P> portType);
 
-	/**
-	 * returns the <code>portType</code> port provided by the component. 
-	 * 
-	 * @param <P>
-	 * @param portType
-	 * @return
-	 */
-	public <P extends PortType> Positive<P> provided(Class<P> portType);
+    /**
+     * returns the <code>portType</code> port provided by the component.
+     * 
+     * @param <P>
+     * @param portType
+     * @return
+     */
+    public <P extends PortType> Positive<P> provided(Class<P> portType);
 
-	/**
-	 * Gets the negative.
-	 * 
-	 * @param portType
-	 *            the port type
-	 * 
-	 * @return the negative
-	 */
-	public <P extends PortType> Negative<P> getNegative(Class<P> portType);
+    /**
+     * Gets the negative.
+     * 
+     * @param portType
+     *            the port type
+     * 
+     * @return the negative
+     */
+    public <P extends PortType> Negative<P> getNegative(Class<P> portType);
 
-	/**
-	 * returns the <code>portType</code> port required by the component. 
+    /**
+     * returns the <code>portType</code> port required by the component.
+     * 
+     * @param <P>
+     * @param portType
+     * @return
+     */
+    public <P extends PortType> Negative<P> required(Class<P> portType);
 
-	 * @param <P>
-	 * @param portType
-	 * @return
-	 */
-	public <P extends PortType> Negative<P> required(Class<P> portType);
+    /**
+     * Gets the control.
+     * 
+     * @return the control port
+     */
+    public Positive<ControlPort> getControl();
 
-	/**
-	 * Gets the control.
-	 * 
-	 * @return the control port
-	 */
-	public Positive<ControlPort> getControl();
+    /**
+     * @return the component's control port.
+     */
+    public Positive<ControlPort> control();
 
-	/**
-	 * @return the component's control port.
-	 */
-	public Positive<ControlPort> control();
-	
-	public ComponentDefinition getComponent();
-	
-	public void escalateFault(Fault fault);
-        
-        public UUID id();
-        
-        public State state();
-        
-        public static enum State {
-            PASSIVE,
-            STARTING,
-            ACTIVE,
-            STOPPING,
-            FAULTY,
-            DESTROYED;
-        }
+    public ComponentDefinition getComponent();
+
+    public void escalateFault(Fault fault);
+
+    public UUID id();
+
+    public State state();
+
+    public static enum State {
+        PASSIVE, STARTING, ACTIVE, STOPPING, FAULTY, DESTROYED;
+    }
 }

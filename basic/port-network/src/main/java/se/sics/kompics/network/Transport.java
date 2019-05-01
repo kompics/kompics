@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -25,8 +25,9 @@ package se.sics.kompics.network;
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id: Transport.java 2826 2010-05-26 15:09:05Z Cosmin $
  */
 public enum Transport {
-	UDP, TCP, MULTICAST_UDP, UDT, LEDBAT, DATA;
+    UDP, TCP, MULTICAST_UDP, UDT, LEDBAT, DATA;
 }

@@ -22,12 +22,13 @@ package se.sics.kompics.config;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
+@SuppressWarnings("serial")
 public class ConfigException extends RuntimeException {
 
     ConfigException(String msg) {
         super(msg);
     }
-    
+
 }

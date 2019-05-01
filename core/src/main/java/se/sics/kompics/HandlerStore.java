@@ -26,6 +26,7 @@ import java.util.HashMap;
  *
  * @author Lars Kroll <lkroll@kth.se>
  */
+@SuppressWarnings({ "unchecked", "rawtypes" })
 class HandlerStore {
 
     private HandlerEntry[] handlers = new HandlerEntry[0];
@@ -75,7 +76,8 @@ class HandlerStore {
             if (handlers[i].eventType.equals(eventType)) {
                 if (handlers[i].remove(h)) {
                     found = true;
-                    totalSubscriptions--; // might be wrong if the same handler was subscribed more than once...but how would that make any sense?
+                    totalSubscriptions--; // might be wrong if the same handler was subscribed more than once...but how
+                                          // would that make any sense?
                     if (handlers[i].isEmpty()) {
                         empties++;
                         handlers[i] = null;
@@ -255,7 +257,7 @@ class HandlerStore {
         void add(MatchedHandler h) {
             MatchedHandler[] handlers = subscriptions.get(h.pattern());
             if (handlers == null) {
-                handlers = new MatchedHandler[]{h};
+                handlers = new MatchedHandler[] { h };
                 subscriptions.put(h.pattern(), handlers);
             } else {
                 MatchedHandler[] newHandlers = new MatchedHandler[handlers.length + 1];

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -27,11 +27,12 @@ import se.sics.kompics.PortType;
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling <jdowling@sics.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id: NetworkControl.java 3881 2010-12-17 16:19:47Z Cosmin $
  */
 public final class NetworkControl extends PortType {
-	{
-		indication(NetworkException.class);
-                indication(ConnectionStatus.class);
-	}
+    {
+        indication(NetworkException.class);
+        indication(ConnectionStatus.class);
+    }
 }

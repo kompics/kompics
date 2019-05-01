@@ -36,7 +36,7 @@ import org.junit.runners.JUnit4;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @RunWith(JUnit4.class)
 public class ConfigTest {
@@ -52,9 +52,11 @@ public class ConfigTest {
             Long lll = lval.get();
             assertEquals(Long.valueOf(5), lll);
         } catch (ClassCastException ex) { // Typesafe might read this as an integer instead
+            @SuppressWarnings("rawtypes")
             Optional oval = (Optional) lval;
+            @SuppressWarnings("unchecked")
             Optional<Integer> ival = oval;
-            assertEquals(Integer.valueOf(5), ival.get()); 
+            assertEquals(Integer.valueOf(5), ival.get());
         }
         lval = conf.readValue("config.testl", Long.class);
         assertTrue(lval.isPresent());
@@ -110,13 +112,13 @@ public class ConfigTest {
         assertEquals(1l, s.longValue());
 
     }
-    
+
     @Test
     public void modifyTests() {
         Config conf = TypesafeConfig.load();
         long ll = conf.getValue("config.testl", Long.class);
         assertEquals(5l, ll);
-        
+
         Config.Builder builder = conf.modify(UUID.randomUUID());
         builder.setValue("config.testl", 10l);
         ConfigUpdate up = builder.finalise();

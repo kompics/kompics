@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
@@ -20,7 +20,6 @@
  */
 package se.sics.kompics;
 
-// TODO: Auto-generated Javadoc
 import com.google.common.base.Optional;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
@@ -39,6 +38,7 @@ import se.sics.kompics.config.ConfigUpdate;
  *
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public abstract class ComponentDefinition {
@@ -46,7 +46,8 @@ public abstract class ComponentDefinition {
     /**
      * Negative.
      *
-     * @param portType the port type
+     * @param portType
+     *            the port type
      *
      * @return the negative < p>
      */
@@ -61,7 +62,8 @@ public abstract class ComponentDefinition {
     /**
      * Positive.
      *
-     * @param portType the port type
+     * @param portType
+     *            the port type
      *
      * @return the positive < p>
      */
@@ -70,8 +72,7 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * specifies that this component requires a port of type
-     * <code>portType</code>.
+     * specifies that this component requires a port of type <code>portType</code>.
      *
      * @param <P>
      * @param portType
@@ -84,22 +85,25 @@ public abstract class ComponentDefinition {
     /**
      * Trigger.
      *
-     * @param event the event
-     * @param port the port
+     * @param event
+     *            the event
+     * @param port
+     *            the port
      */
     protected final <P extends PortType> void trigger(KompicsEvent event, Port<P> port) {
         if (event instanceof Direct.Request) {
-            Direct.Request r = (Direct.Request) event;
+            Direct.Request<?> r = (Direct.Request<?>) event;
             r.setOrigin(port.getPair());
             logger.trace("Set port on request {} to {}", r, r.getOrigin());
         } else if (event instanceof Direct.Response) {
-            throw new KompicsException("Direct.Response can not be \"trigger\"ed. It has to \"answer\" a Direct.Request!");
+            throw new KompicsException(
+                    "Direct.Response can not be \"trigger\"ed. It has to \"answer\" a Direct.Request!");
         }
-//		System.out.println(this.getClass()+": "+event+" triggert on "+port);
+        // System.out.println(this.getClass()+": "+event+" triggert on "+port);
         port.doTrigger(event, core.wid, core);
     }
 
-    protected final <P extends PortType> void answer(Direct.Request event) {
+    protected final <P extends PortType> void answer(Direct.Request<?> event) {
         if (!event.hasResponse()) {
             logger.warn("Can't trigger a response for {} since none was given!", event);
             return;
@@ -107,34 +111,29 @@ public abstract class ComponentDefinition {
         event.getOrigin().doTrigger(event.getResponse(), core.wid, core);
     }
 
-    protected final <P extends PortType> void answer(Direct.Request req, Direct.Response resp) {
+    protected final <P extends PortType> void answer(Direct.Request<?> req, Direct.Response resp) {
         req.getOrigin().doTrigger(resp, core.wid, core);
     }
 
-    /* java8
-     protected final <E extends KompicsEvent, P extends PortType> Handler<E> handle(Port<P> port, Class<E> type, Consumer<E> fun) {
-     Handler<E> handler = new FunctionHandler<>(type, fun);
-     subscribe(handler, port);
-     return handler;
-     }
-
-     protected final Handler<Start> onStart(Consumer<Start> fun) {
-     return handle(control, Start.class, fun);
-     }
-    
-     protected final Handler<Stop> onStop(Consumer<Stop> fun) {
-     return handle(control, Stop.class, fun);
-     }
+    /*
+     * java8 protected final <E extends KompicsEvent, P extends PortType> Handler<E> handle(Port<P> port, Class<E> type,
+     * Consumer<E> fun) { Handler<E> handler = new FunctionHandler<>(type, fun); subscribe(handler, port); return
+     * handler; }
+     * 
+     * protected final Handler<Start> onStart(Consumer<Start> fun) { return handle(control, Start.class, fun); }
+     * 
+     * protected final Handler<Stop> onStop(Consumer<Stop> fun) { return handle(control, Stop.class, fun); }
      */
     /**
      * Subscribe.
      *
-     * @param handler the handler
-     * @param port the port
+     * @param handler
+     *            the handler
+     * @param port
+     *            the port
      * @throws ConfigurationException
      */
-    protected final <E extends KompicsEvent, P extends PortType> void subscribe(
-            Handler<E> handler, Port<P> port) {
+    protected final <E extends KompicsEvent, P extends PortType> void subscribe(Handler<E> handler, Port<P> port) {
         if (port instanceof JavaPort) {
             JavaPort<P> p = (JavaPort<P>) port;
             p.doSubscribe(handler);
@@ -144,14 +143,13 @@ public abstract class ComponentDefinition {
         }
     }
 
-    protected final void subscribe(MatchedHandler<?, ?, ?> handler, Port port) {
+    protected final void subscribe(MatchedHandler<?, ?, ?> handler, Port<?> port) {
         if (port instanceof JavaPort) {
-            JavaPort p = (JavaPort) port;
+            JavaPort<?> p = (JavaPort<?>) port;
             if (p.owner.equals(this.core)) {
                 p.doSubscribe(handler);
             } else {
-                throw new ConfigurationException(
-                        "Cannot subscribe Handlers to other component's ports, "
+                throw new ConfigurationException("Cannot subscribe Handlers to other component's ports, "
                         + "since the behaviour of this is unspecifed. "
                         + "(The handler might be executed on the wrong thread)");
             }
@@ -162,9 +160,9 @@ public abstract class ComponentDefinition {
         }
     }
 
-    protected final void unsubscribe(MatchedHandler<?, ?, ?> handler, Port port) {
+    protected final void unsubscribe(MatchedHandler<?, ?, ?> handler, Port<?> port) {
         if (port instanceof JavaPort) {
-            JavaPort p = (JavaPort) port;
+            JavaPort<?> p = (JavaPort<?>) port;
             p.doUnsubscribe(handler);
         } else {
             throw new ConfigurationException("Port (" + port.toString() + " is not an instance of JavaPort!"
@@ -175,12 +173,14 @@ public abstract class ComponentDefinition {
     /**
      * Unsubscribe.
      *
-     * @param handler the handler
-     * @param port the port
+     * @param handler
+     *            the handler
+     * @param port
+     *            the port
      * @throws ConfigurationException
      */
-    protected final <E extends KompicsEvent, P extends PortType> void unsubscribe(
-            Handler<E> handler, Port<P> port) throws ConfigurationException {
+    protected final <E extends KompicsEvent, P extends PortType> void unsubscribe(Handler<E> handler, Port<P> port)
+            throws ConfigurationException {
         if (port instanceof JavaPort) {
             JavaPort<P> p = (JavaPort<P>) port;
             p.doUnsubscribe(handler);
@@ -193,26 +193,28 @@ public abstract class ComponentDefinition {
     /**
      * Creates the.
      *
-     * @param definition the definition
-     * @param initEvent init event to be passed to constructor
+     * @param definition
+     *            the definition
+     * @param initEvent
+     *            init event to be passed to constructor
      *
      * @return the component
      */
-    protected final <T extends ComponentDefinition> Component create(
-            Class<T> definition, Init<T> initEvent) {
+    protected final <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent) {
         return core.doCreate(definition, Optional.of(initEvent));
     }
 
     /**
      * Creates the.
      *
-     * @param definition the definition
-     * @param initEvent none
+     * @param definition
+     *            the definition
+     * @param initEvent
+     *            none
      *
      * @return the component
      */
-    protected final <T extends ComponentDefinition> Component create(
-            Class<T> definition, Init.None initEvent) {
+    protected final <T extends ComponentDefinition> Component create(Class<T> definition, Init.None initEvent) {
         Optional<Init<T>> init = Optional.absent();
         return core.doCreate(definition, init);
     }
@@ -220,26 +222,30 @@ public abstract class ComponentDefinition {
     /**
      * Creates the.
      *
-     * @param definition the definition
-     * @param initEvent init event to be passed to constructor
+     * @param definition
+     *            the definition
+     * @param initEvent
+     *            init event to be passed to constructor
      *
      * @return the component
      */
-    protected final <T extends ComponentDefinition> Component create(
-            Class<T> definition, Init<T> initEvent, ConfigUpdate update) {
+    protected final <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent,
+            ConfigUpdate update) {
         return core.doCreate(definition, Optional.of(initEvent), Optional.of(update));
     }
 
     /**
      * Creates the.
      *
-     * @param definition the definition
-     * @param initEvent none
+     * @param definition
+     *            the definition
+     * @param initEvent
+     *            none
      *
      * @return the component
      */
-    protected final <T extends ComponentDefinition> Component create(
-            Class<T> definition, Init.None initEvent, ConfigUpdate update) {
+    protected final <T extends ComponentDefinition> Component create(Class<T> definition, Init.None initEvent,
+            ConfigUpdate update) {
         Optional<Init<T>> init = Optional.absent();
         return core.doCreate(definition, init, Optional.of(update));
     }
@@ -253,12 +259,10 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) }
-     * instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) } instead
      */
     @Deprecated
-    protected final <P extends PortType> Channel<P> connect(
-            Positive<P> positive, Negative<P> negative) {
+    protected final <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative) {
         return Channel.TWO_WAY.connect((PortCore<P>) positive, (PortCore<P>) negative);
     }
 
@@ -267,12 +271,10 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) }
-     * instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelFactory) } instead
      */
     @Deprecated
-    protected final <P extends PortType> Channel<P> connect(
-            Negative<P> negative, Positive<P> positive) {
+    protected final <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive) {
         return Channel.TWO_WAY.connect((PortCore<P>) positive, (PortCore<P>) negative);
     }
 
@@ -281,12 +283,11 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link  #connect(Positive, Negative, ChannelSelector, ChannelFactory)
-     * } instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelSelector, ChannelFactory) } instead
      */
     @Deprecated
-    protected <P extends PortType> Channel<P> connect(Positive<P> positive,
-            Negative<P> negative, ChannelSelector<?, ?> selector) {
+    protected <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative,
+            ChannelSelector<?, ?> selector) {
         return Channel.TWO_WAY.connect((PortCore<P>) positive, (PortCore<P>) negative, selector);
     }
 
@@ -295,17 +296,16 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #connect(Positive, Negative, ChannelSelector, ChannelFactory)
-     * } instead
+     * @deprecated Use {@link #connect(Positive, Negative, ChannelSelector, ChannelFactory) } instead
      */
     @Deprecated
-    protected <P extends PortType> Channel<P> connect(Negative<P> negative,
-            Positive<P> positive, ChannelSelector<?, ?> selector) {
+    protected <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive,
+            ChannelSelector<?, ?> selector) {
         return Channel.TWO_WAY.connect((PortCore<P>) positive, (PortCore<P>) negative, selector);
     }
 
-    protected <P extends PortType> Channel<P> connect(Negative<P> negative,
-            Positive<P> positive, ChannelSelector<?, ?> selector, ChannelFactory factory) {
+    protected <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive,
+            ChannelSelector<?, ?> selector, ChannelFactory factory) {
         return factory.connect((PortCore<P>) positive, (PortCore<P>) negative, selector);
     }
 
@@ -314,12 +314,13 @@ public abstract class ComponentDefinition {
         return factory.connect((PortCore<P>) positive, (PortCore<P>) negative, selector);
     }
 
-    protected <P extends PortType> Channel<P> connect(Negative<P> negative,
-            Positive<P> positive, ChannelFactory factory) {
+    protected <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive,
+            ChannelFactory factory) {
         return factory.connect((PortCore<P>) positive, (PortCore<P>) negative);
     }
 
-    protected <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelFactory factory) {
+    protected <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative,
+            ChannelFactory factory) {
         return factory.connect((PortCore<P>) positive, (PortCore<P>) negative);
     }
 
@@ -328,12 +329,10 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #disconnect(Channel)} or
-     * {@link Channel.disconnect()} instead
+     * @deprecated Use {@link #disconnect(Channel)} or {@link Channel.disconnect()} instead
      */
     @Deprecated
-    protected final <P extends PortType> void disconnect(Negative<P> negative,
-            Positive<P> positive) {
+    protected final <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive) {
         PortCore<P> pos = (PortCore<P>) positive;
         PortCore<P> neg = (PortCore<P>) negative;
         List<Channel<P>> channels = pos.findChannelsTo(neg);
@@ -347,12 +346,10 @@ public abstract class ComponentDefinition {
      * @param <P>
      * @param negative
      * @param positive
-     * @deprecated Use {@link #disconnect(Channel)} or
-     * {@link Channel.disconnect()} instead
+     * @deprecated Use {@link #disconnect(Channel)} or {@link Channel.disconnect()} instead
      */
     @Deprecated
-    protected final <P extends PortType> void disconnect(Positive<P> positive,
-            Negative<P> negative) {
+    protected final <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative) {
         PortCore<P> pos = (PortCore<P>) positive;
         PortCore<P> neg = (PortCore<P>) negative;
         List<Channel<P>> channels = neg.findChannelsTo(pos);
@@ -395,8 +392,8 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * Use for custom cleanup. Will be called after all child components have
-     * stopped, but before sending a Stopped message to the parent.
+     * Use for custom cleanup. Will be called after all child components have stopped, but before sending a Stopped
+     * message to the parent.
      *
      */
     public void tearDown() {
@@ -408,10 +405,10 @@ public abstract class ComponentDefinition {
      * <p>
      * Default action is ESCALATE.
      * <p>
-     * ESCALATE -> Forward fault to parent.
-     * IGNORE -> Drop fault. Resume component as if nothing happened.
-     * RESOLVED -> Fault has been handled by user. Don't do anything else.
+     * ESCALATE -> Forward fault to parent. IGNORE -> Drop fault. Resume component as if nothing happened. RESOLVED ->
+     * Fault has been handled by user. Don't do anything else.
      * <p>
+     * 
      * @param fault
      * @return
      */
@@ -424,6 +421,7 @@ public abstract class ComponentDefinition {
      * <p>
      * Default action is to propagate the original everywhere and apply to self.
      * <p>
+     * 
      * @param update
      * @return
      */
@@ -432,8 +430,7 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * Override to perform actions after a ConfigUpdate was applied and
-     * forwarded.
+     * Override to perform actions after a ConfigUpdate was applied and forwarded.
      */
     public void postUpdate() {
     }
@@ -443,17 +440,15 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * Override to allow components of this type to start their own independent
-     * {@link se.sics.kompics.config.Config} id lines.
+     * Override to allow components of this type to start their own independent {@link se.sics.kompics.config.Config} id
+     * lines.
      * <p>
-     * This is helpful in simulation, when simulating multiple independent
-     * nodes.
-     * Make sure that no {@code ConfigUpdate}s are passed to siblings or parents
-     * of such nodes! (Override
+     * This is helpful in simulation, when simulating multiple independent nodes. Make sure that no
+     * {@code ConfigUpdate}s are passed to siblings or parents of such nodes! (Override
      * {@link #handleUpdate(se.sics.kompics.config.ConfigUpdate)})
      * <p>
-     * @return Whether to create a new config id line for this component
-     * (default: {@code true})
+     * 
+     * @return Whether to create a new config id line for this component (default: {@code true})
      */
     public boolean separateConfigId() {
         return false;
@@ -467,12 +462,12 @@ public abstract class ComponentDefinition {
         }
 
         @Override
-        public <P extends PortType> void answer(Direct.Request event) {
+        public <P extends PortType> void answer(Direct.Request<?> event) {
             ComponentDefinition.this.answer(event);
         }
 
         @Override
-        public <P extends PortType> void answer(Direct.Request req, Direct.Response resp) {
+        public <P extends PortType> void answer(Direct.Request<?> req, Direct.Response resp) {
             ComponentDefinition.this.answer(req, resp);
         }
 
@@ -512,12 +507,14 @@ public abstract class ComponentDefinition {
         }
 
         @Override
-        public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelSelector<?, ?> filter) {
+        public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative,
+                ChannelSelector<?, ?> filter) {
             return ComponentDefinition.this.connect(positive, negative, filter);
         }
 
         @Override
-        public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive, ChannelSelector<?, ?> filter) {
+        public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive,
+                ChannelSelector<?, ?> filter) {
             return ComponentDefinition.this.connect(negative, positive, filter);
         }
 
@@ -527,7 +524,8 @@ public abstract class ComponentDefinition {
         }
 
         @Override
-        public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative, ChannelFactory factory) {
+        public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative,
+                ChannelFactory factory) {
             return ComponentDefinition.this.connect(positive, negative, factory);
         }
 
@@ -548,12 +546,12 @@ public abstract class ComponentDefinition {
         }
 
         @Override
-        public void subscribe(MatchedHandler handler, Port port) {
+        public void subscribe(MatchedHandler<?, ?, ?> handler, Port<?> port) {
             ComponentDefinition.this.subscribe(handler, port);
         }
 
         @Override
-        public void unsubscribe(MatchedHandler handler, Port port) {
+        public void unsubscribe(MatchedHandler<?, ?, ?> handler, Port<?> port) {
             ComponentDefinition.this.unsubscribe(handler, port);
         }
 
@@ -592,23 +590,20 @@ public abstract class ComponentDefinition {
     /**
      * Pre-configured MDC key for the unique component id.
      * <p>
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
-     * manuel</a> for how to use this with logback.
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
      */
     public static final String MDC_KEY_CID = "kcomponent-id";
     /**
      * Pre-configured MDC key for the current component lifecycle state.
      * <p>
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
-     * manuel</a> for how to use this with logback.
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
      */
     public static final String MDC_KEY_CSTATE = "kcomponent-state";
 
     /**
      * Kompics provided slf4j logger with managed diagnostic context.
      * <p>
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
-     * manuel</a> for how to use this with logback.
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
      */
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -620,8 +615,8 @@ public abstract class ComponentDefinition {
      * <p>
      * Protected mainly for use by Kompics Scala.
      * <p>
-     * Can also be used to set component MDC when executing related off-kompics
-     * work (check for concurrency issues, though!).
+     * Can also be used to set component MDC when executing related off-kompics work (check for concurrency issues,
+     * though!).
      */
     protected void setMDC() {
         MDC.setContextMap(mdcState);
@@ -630,8 +625,7 @@ public abstract class ComponentDefinition {
     /**
      * Associate key with value in the logging diagnostic context.
      * <p>
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
-     * manuel</a> for how to use this with logback.
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
      *
      * @param key
      * @param value
@@ -644,11 +638,9 @@ public abstract class ComponentDefinition {
     /**
      * Associate key permanently with value in the logging diagnostic context.
      * <p>
-     * Keys set in this way are not removed by {@link #loggingCtxReset()} or
-     * {@link #loggingCtxRemove()}.
+     * Keys set in this way are not removed by {@link #loggingCtxReset()} or {@link #loggingCtxRemove()}.
      * <p>
-     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback
-     * manuel</a> for how to use this with logback.
+     * See <a href="https://logback.qos.ch/manual/mdc.html">the logback manuel</a> for how to use this with logback.
      *
      * @param key
      * @param value
@@ -662,6 +654,7 @@ public abstract class ComponentDefinition {
     /**
      * Disassociate any value with the key in the logging diagnostic context.
      * <p>
+     * 
      * @param key
      */
     protected void loggingCtxRemove(String key) {
@@ -670,9 +663,9 @@ public abstract class ComponentDefinition {
     }
 
     /**
-     * Get the value associated with key in the current logging diagnostic
-     * context.
+     * Get the value associated with key in the current logging diagnostic context.
      * <p>
+     * 
      * @param key
      * @return the value associated with key
      */
@@ -683,8 +676,7 @@ public abstract class ComponentDefinition {
     /**
      * Reset the current logging diagnostic context.
      * <p>
-     * Removes all items added to context by the user that weren't set with
-     * {@link #loggingCtxPutAlways(String, String)}
+     * Removes all items added to context by the user that weren't set with {@link #loggingCtxPutAlways(String, String)}
      * <p>
      */
     protected void loggingCtxReset() {
@@ -698,9 +690,9 @@ public abstract class ComponentDefinition {
     }
 
     private void loggingCtxInit() {
-//        if (!mdcState.isEmpty()) {
-//            mdcReset.putAll(mdcState);
-//        }
+        // if (!mdcState.isEmpty()) {
+        // mdcReset.putAll(mdcState);
+        // }
         mdcReset.put(MDC_KEY_CID, this.id().toString());
         loggingCtxReset();
     }
@@ -719,6 +711,7 @@ public abstract class ComponentDefinition {
         loggingCtxInit();
     }
 
+    @SuppressWarnings("rawtypes")
     protected ComponentDefinition(Class<? extends ComponentCore> coreClass) {
         try {
             Constructor[] constrs = coreClass.getConstructors();
@@ -732,8 +725,8 @@ public abstract class ComponentDefinition {
                 core = coreClass.newInstance();
             }
         } catch (Exception e) {
-            //e.printStackTrace();
-            //System.out.println(e + ": " + e.getMessage());
+            // e.printStackTrace();
+            // System.out.println(e + ": " + e.getMessage());
             throw new ConfigurationException(e);
         }
         control = core.createControlPort();

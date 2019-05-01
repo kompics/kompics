@@ -24,13 +24,13 @@ import com.google.common.base.Optional;
 import java.util.ArrayList;
 import java.util.Collection;
 
-
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface ValueMerger {
     public ConfigValue merge(String key, ConfigValue oldValue, ConfigValue newValue, ConfigValueFactory cvFactory);
+
     public static final ValueMerger NEWEST = new ValueMerger() {
 
         @Override
@@ -51,15 +51,16 @@ public interface ValueMerger {
     };
     public static final ValueMerger APPEND = new ValueMerger() {
 
+        @SuppressWarnings("unchecked")
         @Override
         public ConfigValue merge(String key, ConfigValue oldValue, ConfigValue newValue, ConfigValueFactory cvFactory) {
             Object o = oldValue.unwrap();
             if (o instanceof Collection) {
-                Collection c = (Collection) o;
+                Collection<Object> c = (Collection<Object>) o;
                 c.add(newValue.unwrap());
                 return cvFactory.create(c, Math.max(oldValue.version(), newValue.version()), newValue.options());
             } else {
-                ArrayList l = new ArrayList();
+                ArrayList<Object> l = new ArrayList<Object>();
                 l.add(oldValue.unwrap());
                 l.add(newValue.unwrap());
                 return cvFactory.create(l, Math.max(oldValue.version(), newValue.version()), newValue.options());

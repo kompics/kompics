@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @RunWith(JUnit4.class)
 public class MatcherTest {
@@ -74,9 +74,10 @@ public class MatcherTest {
             this.data = data;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public Class<Object> extractPattern() {
-            Class c = data.getClass();
+            Class<?> c = data.getClass();
             return (Class<Object>) c;
         }
 
@@ -100,7 +101,7 @@ public class MatcherTest {
 
         public DataParent() {
             Component child = create(DataChild.class, Init.NONE);
-            connect(this.dp.getPair(), child.getPositive(DataPort.class));
+            connect(this.dp.getPair(), child.getPositive(DataPort.class), Channel.TWO_WAY);
 
             subscribe(falseDataHandler, dp);
             subscribe(dataHandler, dp);

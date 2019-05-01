@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -26,42 +26,42 @@ import se.sics.kompics.timer.Timeout;
 /**
  * The <code>PeriodicTimerSignalTask</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 final class PeriodicTimerSignalTask extends TimerTask {
 
-	final Timeout timeout;
+    final Timeout timeout;
 
-	private final JavaTimer timerComponent;
+    private final JavaTimer timerComponent;
 
-	/**
-	 * Instantiates a new periodic timer signal task.
-	 * 
-	 * @param timeout
-	 *            the timeout
-	 * @param timerComponent
-	 *            the timer component
-	 */
-	PeriodicTimerSignalTask(Timeout timeout, JavaTimer timerComponent) {
-		super();
-		this.timerComponent = timerComponent;
-		this.timeout = timeout;
-	}
+    /**
+     * Instantiates a new periodic timer signal task.
+     * 
+     * @param timeout
+     *            the timeout
+     * @param timerComponent
+     *            the timer component
+     */
+    PeriodicTimerSignalTask(Timeout timeout, JavaTimer timerComponent) {
+        super();
+        this.timerComponent = timerComponent;
+        this.timeout = timeout;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.util.TimerTask#run()
-	 */
-	@Override
-	public final void run() {
-            try {
-                timerComponent.periodicTimeout((Timeout) timeout.clone());
-            } catch (CloneNotSupportedException ex) {
-                // outside of JavaTimer thread...can't leak logger here
-                timerComponent.extLogger.warn("Error during PTST run", ex);
-            }
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.util.TimerTask#run()
+     */
+    @Override
+    public final void run() {
+        try {
+            timerComponent.periodicTimeout((Timeout) timeout.clone());
+        } catch (CloneNotSupportedException ex) {
+            // outside of JavaTimer thread...can't leak logger here
+            timerComponent.extLogger.warn("Error during PTST run", ex);
+        }
+    }
 }

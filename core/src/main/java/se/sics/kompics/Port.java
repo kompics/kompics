@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -20,67 +20,75 @@
  */
 package se.sics.kompics;
 
-// TODO: Auto-generated Javadoc
 /**
  * The <code>Port</code> class.
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public interface Port<P extends PortType> {
 
-	/**
-	 * Gets the port type.
-	 * 
-	 * @return the port type
-	 */
-	public P getPortType();
-	
-	/**
-	 * trigger event on this port
-	 * 
-	 * @param event to be triggered
-	 * @param wid ?
-	 * @param channel that triggered the event
-	 */
-	public void doTrigger(KompicsEvent event, int wid, ChannelCore<?> channel);
-	
-	/**
-	 * trigger event on this port
-	 * 
-	 * @param event to be triggered
-	 * @param wid ?
-	 * @param component that triggered the event
-	 */
-	public void doTrigger(KompicsEvent event, int wid, ComponentCore component);
-	
-	/**
-	 * 
-	 * @return the component the port is part of
-	 */
-	public ComponentCore getOwner();
-	
-	/**
-	 * 
-	 * @return complement port this one is connected to (if any)
-	 */
-	public PortCore<P> getPair();
-	
-	/**
-	 * 
-	 * @param port complement port
-	 */
-	public void setPair(PortCore<P> port);
-	
-	public <E extends KompicsEvent> void doSubscribe(Handler<E> handler);
-        public void doSubscribe(MatchedHandler handler);
-	
-	public void addChannel(ChannelCore<P> channel);
-	
-	public void addChannel(ChannelCore<P> channel, ChannelSelector<?, ?> filter);
-	
-	public void removeChannel(ChannelCore<P> remotePort);
-	
-	public void enqueue(KompicsEvent event);
+    /**
+     * Gets the port type.
+     * 
+     * @return the port type
+     */
+    public P getPortType();
+
+    /**
+     * trigger event on this port
+     * 
+     * @param event
+     *            to be triggered
+     * @param wid
+     *            ?
+     * @param channel
+     *            that triggered the event
+     */
+    public void doTrigger(KompicsEvent event, int wid, ChannelCore<?> channel);
+
+    /**
+     * trigger event on this port
+     * 
+     * @param event
+     *            to be triggered
+     * @param wid
+     *            ?
+     * @param component
+     *            that triggered the event
+     */
+    public void doTrigger(KompicsEvent event, int wid, ComponentCore component);
+
+    /**
+     * 
+     * @return the component the port is part of
+     */
+    public ComponentCore getOwner();
+
+    /**
+     * 
+     * @return complement port this one is connected to (if any)
+     */
+    public PortCore<P> getPair();
+
+    /**
+     * 
+     * @param port
+     *            complement port
+     */
+    public void setPair(PortCore<P> port);
+
+    public <E extends KompicsEvent> void doSubscribe(Handler<E> handler);
+
+    public void doSubscribe(MatchedHandler<?, ?, ?> handler);
+
+    public void addChannel(ChannelCore<P> channel);
+
+    public void addChannel(ChannelCore<P> channel, ChannelSelector<?, ?> filter);
+
+    public void removeChannel(ChannelCore<P> remotePort);
+
+    public void enqueue(KompicsEvent event);
 }

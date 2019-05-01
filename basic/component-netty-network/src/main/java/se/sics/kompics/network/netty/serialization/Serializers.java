@@ -41,16 +41,13 @@ import se.sics.kompics.network.netty.NettySerializer;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public abstract class Serializers {
 
     public static enum IdBytes {
 
-        ONE(1, 256),
-        TWO(2, 65536),
-        THREE(3, 16777216),
-        FOUR(4, Integer.MAX_VALUE);
+        ONE(1, 256), TWO(2, 65536), THREE(3, 16777216), FOUR(4, Integer.MAX_VALUE);
 
         private int values;
         private int bytes;
@@ -94,9 +91,10 @@ public abstract class Serializers {
             register(AckRequestMsg.class, "nettyS");
             register(SpecialSerializers.UUIDSerializer.INSTANCE, "uuidS");
             register(UUID.class, "uuidS");
-            register(new JavaSerializer(ClassResolvers.softCachingConcurrentResolver(ClassLoader.getSystemClassLoader())), "javaS");
+            register(new JavaSerializer(
+                    ClassResolvers.softCachingConcurrentResolver(ClassLoader.getSystemClassLoader())), "javaS");
             register(Serializable.class, "javaS");
-            //register(new AvroSerializer(), "avroS");
+            // register(new AvroSerializer(), "avroS");
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -175,10 +173,10 @@ public abstract class Serializers {
         }
         Integer sId = s.identifier();
         byte[] unserializedId = Ints.toByteArray(sId);
-        LOG.trace("ID: {} ({}, {})", new Object[]{unserializedId, BYTES - idSerializationBytes.getBytes(), BYTES});
+        LOG.trace("ID: {} ({}, {})", new Object[] { unserializedId, BYTES - idSerializationBytes.getBytes(), BYTES });
         byte[] serializedId = Arrays.copyOfRange(Ints.toByteArray(sId), BYTES - idSerializationBytes.getBytes(), BYTES);
         buf.writeBytes(serializedId);
-        LOG.debug("Using serializer {} for object {} (sID : {}) .", new Object[]{s, o, serializedId});
+        LOG.debug("Using serializer {} for object {} (sID : {}) .", new Object[] { s, o, serializedId });
         s.toBinary(o, buf);
     }
 
@@ -191,7 +189,7 @@ public abstract class Serializers {
             if (hint.isPresent()) {
                 Object ho = hint.get();
                 if (ho instanceof Class) {
-                    Class c = (Class) hint.get(); // see comment above -.-
+                    Class<?> c = (Class<?>) hint.get(); // see comment above -.-
                     s = lookupSerializer(c);
                 }
             }
@@ -199,14 +197,16 @@ public abstract class Serializers {
             if (s == null) {
                 byte[] serializedId = new byte[idSerializationBytes.getBytes()];
                 if (!(buf.readableBytes() >= serializedId.length)) {
-                    LOG.error("Could not read serializer id ({}) from buffer with length {}!", serializedId.length, buf.readableBytes());
+                    LOG.error("Could not read serializer id ({}) from buffer with length {}!", serializedId.length,
+                            buf.readableBytes());
                 }
                 buf.readBytes(serializedId);
                 byte[] unserializedId = new byte[BYTES];
                 Arrays.fill(unserializedId, (byte) 0);
-                System.arraycopy(serializedId, 0, unserializedId, BYTES - idSerializationBytes.getBytes(), serializedId.length);
+                System.arraycopy(serializedId, 0, unserializedId, BYTES - idSerializationBytes.getBytes(),
+                        serializedId.length);
                 sId = Ints.fromByteArray(unserializedId);
-                LOG.trace("DS-ID: {} ({}, {})", new Object[]{sId, serializedId, BYTES});
+                LOG.trace("DS-ID: {} ({}, {})", new Object[] { sId, serializedId, BYTES });
 
                 s = bindings[sId];
             }
@@ -228,14 +228,16 @@ public abstract class Serializers {
             int sId = -1;
             byte[] serializedId = new byte[idSerializationBytes.getBytes()];
             if (!(buf.readableBytes() >= serializedId.length)) {
-                LOG.error("Could not read serializer id ({}) from buffer with length {}!", serializedId.length, buf.readableBytes());
+                LOG.error("Could not read serializer id ({}) from buffer with length {}!", serializedId.length,
+                        buf.readableBytes());
             }
             buf.readBytes(serializedId);
             byte[] unserializedId = new byte[BYTES];
             Arrays.fill(unserializedId, (byte) 0);
-            System.arraycopy(serializedId, 0, unserializedId, BYTES - idSerializationBytes.getBytes(), serializedId.length);
+            System.arraycopy(serializedId, 0, unserializedId, BYTES - idSerializationBytes.getBytes(),
+                    serializedId.length);
             sId = Ints.fromByteArray(unserializedId);
-            LOG.trace("DS-ID: {} ({}, {})", new Object[]{sId, serializedId, BYTES});
+            LOG.trace("DS-ID: {} ({}, {})", new Object[] { sId, serializedId, BYTES });
 
             s = bindings[sId];
 
@@ -248,7 +250,9 @@ public abstract class Serializers {
                 DatagramSerializer ds = (DatagramSerializer) s;
                 return ds.fromBinary(buf, datagram);
             } else {
-                LOG.warn("Datagram message was serialised with a Serializer that is not a DatagramSerializer: \n   s: {}", s.getClass());
+                LOG.warn(
+                        "Datagram message was serialised with a Serializer that is not a DatagramSerializer: \n   s: {}",
+                        s.getClass());
                 return s.fromBinary(buf, Optional.absent());
             }
         } finally {
@@ -264,7 +268,7 @@ public abstract class Serializers {
         // the slow path on cache misses
         rwLock.readLock().lock();
         try {
-            //printRules();
+            // printRules();
             Class<?> clazz = aClass;
             while (clazz != null) { // the long way around
                 Integer sId = classMappings.get(clazz.getName());

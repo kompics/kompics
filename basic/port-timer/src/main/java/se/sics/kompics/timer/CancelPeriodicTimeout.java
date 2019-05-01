@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -22,35 +22,36 @@ package se.sics.kompics.timer;
 
 import java.util.UUID;
 
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 
 /**
  * The <code>CancelPeriodicTimeout</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
-public final class CancelPeriodicTimeout extends Event {
+public final class CancelPeriodicTimeout implements KompicsEvent {
 
-	private UUID timeoutId;
+    private UUID timeoutId;
 
-	/**
-	 * Instantiates a new cancel periodic timeout.
-	 * 
-	 * @param timeoutId
-	 *            the timeout id
-	 */
-	public CancelPeriodicTimeout(UUID timeoutId) {
-		this.timeoutId = timeoutId;
-	}
+    /**
+     * Instantiates a new cancel periodic timeout.
+     * 
+     * @param timeoutId
+     *            the timeout id
+     */
+    public CancelPeriodicTimeout(UUID timeoutId) {
+        this.timeoutId = timeoutId;
+    }
 
-	/**
-	 * Gets the timeout id.
-	 * 
-	 * @return the timeout id
-	 */
-	public final UUID getTimeoutId() {
-		return timeoutId;
-	}
+    /**
+     * Gets the timeout id.
+     * 
+     * @return the timeout id
+     */
+    public final UUID getTimeoutId() {
+        return timeoutId;
+    }
 }

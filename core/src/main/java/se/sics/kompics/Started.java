@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -25,7 +25,7 @@ package se.sics.kompics;
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public final class Started implements KompicsEvent {
-    
+
     public final Component component;
 
     /**

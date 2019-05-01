@@ -1,6 +1,22 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * This file is part of the Kompics component model runtime.
+ *
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 package se.sics.kompics.network.test;
 
@@ -30,7 +46,6 @@ import se.sics.kompics.Channel;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.ControlPort;
-import se.sics.kompics.Event;
 import se.sics.kompics.Fault;
 import se.sics.kompics.Fault.ResolveAction;
 import se.sics.kompics.Handler;
@@ -50,13 +65,13 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author Lars Kroll <lkroll@sics.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class NetworkTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetworkTest.class);
     private static final int SEED = 0;
-    //private static final String STARTED = "STARTED";
+    // private static final String STARTED = "STARTED";
     private static final String STOPPED = "STOPPED";
     private static final String SENDING = "SENDING";
     private static final String RECEIVED = "RECEIVED";
@@ -72,7 +87,7 @@ public class NetworkTest {
     private static int numNodes;
     private static final AtomicInteger msgId = new AtomicInteger(0);
     private static final ConcurrentSkipListMap<Integer, String> messageStatus = new ConcurrentSkipListMap<Integer, String>();
-    //private static int startPort = 33000;
+    // private static int startPort = 33000;
     private static Transport[] protos;
 
     public static synchronized void runTests(NetworkGenerator nGen, int numNodes, Transport[] protos) {
@@ -84,7 +99,16 @@ public class NetworkTest {
 
         msgId.set(0);
         messageStatus.clear();
-        TestUtil.reset("Stream test (" + Arrays.toString(NetworkTest.protos) + ") Nodes #" + numNodes, 100000); //10 sec timeout for all the connections to be dropped properly
+        TestUtil.reset("Stream test (" + Arrays.toString(NetworkTest.protos) + ") Nodes #" + numNodes, 100000); // 10
+                                                                                                                // sec
+                                                                                                                // timeout
+                                                                                                                // for
+                                                                                                                // all
+                                                                                                                // the
+                                                                                                                // connections
+                                                                                                                // to be
+                                                                                                                // dropped
+                                                                                                                // properly
 
         Kompics.createAndStart(LauncherComponent.class, 8, 50);
 
@@ -118,9 +142,11 @@ public class NetworkTest {
         for (Transport proto : protos) {
             LOG.info("\n******************** Running Fail-Recovery Test for {} ********************\n", proto);
             messageStatus.clear();
-            NetworkTest.protos = new Transport[]{proto};
+            NetworkTest.protos = new Transport[] { proto };
 
-            TestUtil.reset("FR test (" + Arrays.toString(NetworkTest.protos) + ")", 100000); //10 sec timeout for all the connections to be dropped properly
+            TestUtil.reset("FR test (" + Arrays.toString(NetworkTest.protos) + ")", 100000); // 10 sec timeout for all
+                                                                                             // the connections to be
+                                                                                             // dropped properly
 
             Kompics.createAndStart(FRLauncher.class, 8, 50);
 
@@ -137,12 +163,15 @@ public class NetworkTest {
         if (protos.length < 2) { // technically try all combinations, but I'm too lazy to generalise now
             return; // just stop here
         }
-        Transport[][] protoMatrix = new Transport[][]{{protos[0], protos[1]}, {protos[1], protos[0]}};
+        Transport[][] protoMatrix = new Transport[][] { { protos[0], protos[1] }, { protos[1], protos[0] } };
         for (Transport[] protoRow : protoMatrix) {
-            LOG.info("\n******************** Running Fail-Recovery Test for {} -> {} ********************\n", protoRow[0], protoRow[1]);
+            LOG.info("\n******************** Running Fail-Recovery Test for {} -> {} ********************\n",
+                    protoRow[0], protoRow[1]);
             messageStatus.clear();
             NetworkTest.protos = protoRow;
-            TestUtil.reset("FR test (" + Arrays.toString(NetworkTest.protos) + ")", 100000); //10 sec timeout for all the connections to be dropped properly
+            TestUtil.reset("FR test (" + Arrays.toString(NetworkTest.protos) + ")", 100000); // 10 sec timeout for all
+                                                                                             // the connections to be
+                                                                                             // dropped properly
 
             Kompics.createAndStart(FRLauncher.class, 8, 50);
 
@@ -154,7 +183,8 @@ public class NetworkTest {
             for (String s : messageStatus.values()) {
                 assertEquals(ACKED, s);
             }
-            LOG.info("\n******************** Fail-Recovery Test for {} -> {} done ********************\n", protoRow[0], protoRow[1]);
+            LOG.info("\n******************** Fail-Recovery Test for {} -> {} done ********************\n", protoRow[0],
+                    protoRow[1]);
         }
     }
 
@@ -167,7 +197,17 @@ public class NetworkTest {
 
         msgId.set(0);
         messageStatus.clear();
-        TestUtil.reset("Datagram test (" + Arrays.toString(NetworkTest.protos) + ") Nodes #" + numNodes, 10000); //10 sec timeout for all the connections to be dropped properly
+        TestUtil.reset("Datagram test (" + Arrays.toString(NetworkTest.protos) + ") Nodes #" + numNodes, 10000); // 10
+                                                                                                                 // sec
+                                                                                                                 // timeout
+                                                                                                                 // for
+                                                                                                                 // all
+                                                                                                                 // the
+                                                                                                                 // connections
+                                                                                                                 // to
+                                                                                                                 // be
+                                                                                                                 // dropped
+                                                                                                                 // properly
 
         Kompics.createAndStart(LauncherComponent.class, 8, 50);
 
@@ -190,7 +230,8 @@ public class NetworkTest {
 
         public LauncherComponent() {
             TestAddress[] nodes = new TestAddress[numNodes];
-            TestAddress[] fakeNodes = new TestAddress[numNodes]; // these are used to test that the network doesn't crash on connection errors
+            TestAddress[] fakeNodes = new TestAddress[numNodes]; // these are used to test that the network doesn't
+                                                                 // crash on connection errors
             for (int i = 0; i < numNodes; i++) {
                 try {
                     byte[] ipB = new byte[4];
@@ -228,7 +269,7 @@ public class NetworkTest {
                 nodes[i] = new TestAddress(ip, port);
                 Component net = nGen.generate(myProxy, nodes[i]);
                 Component scen = create(ScenarioComponent.class, new ScenarioInit(nodes[i], nodes, fakeNodes));
-                connect(net.provided(Network.class), scen.required(Network.class));
+                connect(net.provided(Network.class), scen.required(Network.class), Channel.TWO_WAY);
             }
             // check that all ports are unique
             Set<Integer> portSet = new TreeSet<Integer>();
@@ -248,9 +289,10 @@ public class NetworkTest {
                 }
             }
         }
+
         private final ComponentProxy myProxy = new ComponentProxy() {
             @Override
-            public <P extends PortType> void trigger(Event e, Port<P> p) {
+            public <P extends PortType> void trigger(KompicsEvent e, Port<P> p) {
                 LauncherComponent.this.trigger(e, p);
             }
 
@@ -269,21 +311,25 @@ public class NetworkTest {
                 LauncherComponent.this.destroy(component);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative) {
                 return LauncherComponent.this.connect(positive, negative);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive) {
                 return LauncherComponent.this.connect(negative, positive);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive) {
                 LauncherComponent.this.disconnect(negative, positive);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative) {
                 LauncherComponent.this.disconnect(positive, negative);
@@ -375,15 +421,18 @@ public class NetworkTest {
             }
             Transport proto = NetworkTest.protos[rand.nextInt(NetworkTest.protos.length)];
             TestAddress dest = nodes[rand.nextInt(nodes.length)];
-            //while (dest.sameHostAs(self)) {
-            //    dest = nodes[rand.nextInt(nodes.length)];
-            //}
+            // while (dest.sameHostAs(self)) {
+            // dest = nodes[rand.nextInt(nodes.length)];
+            // }
             TestMessage msg = new TestMessage(self, dest, id, proto);
             MessageNotify.Req req = MessageNotify.create(msg);
             pending.put(req.getMsgId(), id);
             trigger(req, net);
             if (sendFakes) {
-                TestMessage fakemsg = new TestMessage(self, fakeNodes[rand.nextInt(nodes.length)], id, proto); // send this as well
+                TestMessage fakemsg = new TestMessage(self, fakeNodes[rand.nextInt(nodes.length)], id, proto); // send
+                                                                                                               // this
+                                                                                                               // as
+                                                                                                               // well
                 trigger(fakemsg, net); // see fakeNodes in LauncherComponent
             }
             msgCount++;
@@ -453,10 +502,10 @@ public class NetworkTest {
             }
 
             init = new FRInit(nodes[0], nodes[1]);
-            Component acker = create(Acker.class, init);
+            Component acker = create(Acker.class, init.forAcker());
 
             Component net = nGen.generate(myProxy, nodes[1]);
-            connect(net.provided(Network.class), acker.required(Network.class));
+            connect(net.provided(Network.class), acker.required(Network.class), Channel.TWO_WAY);
 
             createFRComponent();
 
@@ -500,7 +549,7 @@ public class NetworkTest {
 
         private final ComponentProxy myProxy = new ComponentProxy() {
             @Override
-            public <P extends PortType> void trigger(Event e, Port<P> p) {
+            public <P extends PortType> void trigger(KompicsEvent e, Port<P> p) {
                 FRLauncher.this.trigger(e, p);
             }
 
@@ -519,21 +568,25 @@ public class NetworkTest {
                 FRLauncher.this.destroy(component);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative) {
                 return FRLauncher.this.connect(positive, negative);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive) {
                 return FRLauncher.this.connect(negative, positive);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive) {
                 FRLauncher.this.disconnect(negative, positive);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative) {
                 FRLauncher.this.disconnect(positive, negative);
@@ -558,7 +611,7 @@ public class NetworkTest {
             acker = init.ackerAddr;
 
             Component netw = nGen.generate(myProxy, self);
-            connect(netw.provided(Network.class), net.getPair());
+            connect(netw.provided(Network.class), net.getPair(), Channel.TWO_WAY);
 
             subscribe(startHandler, control);
             subscribe(ackHandler, net);
@@ -602,7 +655,7 @@ public class NetworkTest {
 
         private final ComponentProxy myProxy = new ComponentProxy() {
             @Override
-            public <P extends PortType> void trigger(Event e, Port<P> p) {
+            public <P extends PortType> void trigger(KompicsEvent e, Port<P> p) {
                 FRComponent.this.trigger(e, p);
             }
 
@@ -621,21 +674,25 @@ public class NetworkTest {
                 FRComponent.this.destroy(component);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative) {
                 return FRComponent.this.connect(positive, negative);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive) {
                 return FRComponent.this.connect(negative, positive);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive) {
                 FRComponent.this.disconnect(negative, positive);
             }
 
+            @SuppressWarnings("deprecation")
             @Override
             public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative) {
                 FRComponent.this.disconnect(positive, negative);
@@ -654,7 +711,7 @@ public class NetworkTest {
 
         private final TestAddress self;
 
-        public Acker(FRInit init) {
+        public Acker(AckerInit init) {
             self = init.ackerAddr;
 
             subscribe(msgHandler, net);
@@ -665,12 +722,13 @@ public class NetworkTest {
             @Override
             public void handle(TestMessage event) {
                 messageStatus.put(event.msgId, RECEIVED);
-                trigger(new Ack(self, event.getSource(), event.msgId, (protos.length < 2 ? protos[0] : protos[1])), net);
+                trigger(new Ack(self, event.getSource(), event.msgId, (protos.length < 2 ? protos[0] : protos[1])),
+                        net);
             }
         };
     }
 
-    public static class FRInit extends Init {
+    public static class FRInit extends Init<FRComponent> {
 
         public final TestAddress frAddr;
         public final TestAddress ackerAddr;
@@ -679,10 +737,26 @@ public class NetworkTest {
             this.frAddr = frAddr;
             this.ackerAddr = ackerAddr;
         }
+
+        public AckerInit forAcker() {
+            return new AckerInit(this.frAddr, this.ackerAddr);
+        }
+    }
+
+    public static class AckerInit extends Init<Acker> {
+
+        public final TestAddress frAddr;
+        public final TestAddress ackerAddr;
+
+        public AckerInit(TestAddress frAddr, TestAddress ackerAddr) {
+            this.frAddr = frAddr;
+            this.ackerAddr = ackerAddr;
+        }
     }
 
     public static class TestMessage extends Message implements Serializable {
 
+        private static final long serialVersionUID = 4908497486229248032L;
         public final int msgId;
 
         public TestMessage(TestAddress src, TestAddress dst, int id, Transport p) {
@@ -714,6 +788,7 @@ public class NetworkTest {
 
     public static class Ack extends Message implements Serializable {
 
+        private static final long serialVersionUID = 4770991054423926142L;
         public final int msgId;
 
         public Ack(TestAddress src, TestAddress dst, int id, Transport p) {

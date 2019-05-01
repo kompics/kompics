@@ -25,7 +25,7 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class ChannelClosed extends DirectMessage {
 

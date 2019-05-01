@@ -28,15 +28,16 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-public class AckRequestMsg implements Msg {
+public class AckRequestMsg implements Msg<Address, Header<Address>> {
 
-    public final Msg content;
+    public final Msg<Address, Header<Address>> content;
     public final UUID id;
 
-    public AckRequestMsg(Msg msg, UUID id) {
-        this.content = msg;
+    @SuppressWarnings("unchecked")
+    public AckRequestMsg(Msg<?, ?> msg, UUID id) {
+        this.content = (Msg<Address, Header<Address>>) msg;
         this.id = id;
     }
 
@@ -45,7 +46,7 @@ public class AckRequestMsg implements Msg {
     }
 
     @Override
-    public Header getHeader() {
+    public Header<Address> getHeader() {
         return content.getHeader();
     }
 

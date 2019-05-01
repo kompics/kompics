@@ -22,11 +22,14 @@ package se.sics.kompics.config;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface ConfigUpdateFactory {
     public void include(String key, ConfigValue original);
+
     public void replace(String key, ConfigValue original, Object replacement);
+
     public void replace(String key, ConfigValue original, Object replacement, ValueOptions options);
+
     public ConfigUpdate assemble();
 }

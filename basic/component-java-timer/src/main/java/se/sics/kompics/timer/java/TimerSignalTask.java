@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -28,41 +28,42 @@ import se.sics.kompics.timer.Timeout;
 /**
  * The <code>TimerSignalTask</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 final class TimerSignalTask extends TimerTask {
 
-	final Timeout timeout;
+    final Timeout timeout;
 
-	private final UUID timerId;
+    private final UUID timerId;
 
-	private final JavaTimer timerComponent;
-	
-	/**
-	 * Instantiates a new timer signal task.
-	 * 
-	 * @param timerComponent
-	 *            the timer component
-	 * @param timeout
-	 *            the timeout
-	 * @param timerId
-	 *            the timer id
-	 */
-	TimerSignalTask(JavaTimer timerComponent, Timeout timeout,
-			UUID timerId) {
-		super();
-		this.timerComponent = timerComponent;
-		this.timeout = timeout;
-		this.timerId = timerId;
-	}
+    private final JavaTimer timerComponent;
 
-	/* (non-Javadoc)
-	 * @see java.util.TimerTask#run()
-	 */
-	@Override
-	public final void run() {
-		timerComponent.timeout(timerId, timeout);
-	}
+    /**
+     * Instantiates a new timer signal task.
+     * 
+     * @param timerComponent
+     *            the timer component
+     * @param timeout
+     *            the timeout
+     * @param timerId
+     *            the timer id
+     */
+    TimerSignalTask(JavaTimer timerComponent, Timeout timeout, UUID timerId) {
+        super();
+        this.timerComponent = timerComponent;
+        this.timeout = timeout;
+        this.timerId = timerId;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.util.TimerTask#run()
+     */
+    @Override
+    public final void run() {
+        timerComponent.timeout(timerId, timeout);
+    }
 }

@@ -24,9 +24,10 @@ import java.util.List;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface BaselineConfig {
     public ConfigValue getValue(String key);
+
     public List<? extends ConfigValue> getValues(String path);
 }

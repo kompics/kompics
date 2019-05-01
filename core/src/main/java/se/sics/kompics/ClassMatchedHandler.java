@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -22,7 +22,7 @@ package se.sics.kompics;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public abstract class ClassMatchedHandler<V, E extends KompicsEvent & PatternExtractor<Class<Object>, ? super V>>
         extends MatchedHandler<Class<Object>, V, E> {
@@ -32,14 +32,16 @@ public abstract class ClassMatchedHandler<V, E extends KompicsEvent & PatternExt
     protected ClassMatchedHandler() {
     }
 
+    @SuppressWarnings("unchecked")
     protected ClassMatchedHandler(Class<?> matchType) {
         super();
         this.matchType = (Class<Object>) matchType; // just cast away the generics
     }
 
-    protected ClassMatchedHandler(Class<E> cxtType, Class matchType) {
+    @SuppressWarnings("unchecked")
+    protected ClassMatchedHandler(Class<E> cxtType, Class<?> matchType) {
         super(cxtType);
-        this.matchType = matchType;
+        this.matchType = (Class<Object>) matchType; // just cast away the generics
     }
 
     @Override

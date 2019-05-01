@@ -29,7 +29,7 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @ChannelHandler.Sharable
 public class UDTServerHandler extends StreamHandler {
@@ -39,7 +39,7 @@ public class UDTServerHandler extends StreamHandler {
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Msg msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
         component.channels.checkUDTChannel(msg, (UdtChannel) ctx.channel());
         super.messageReceived(ctx, msg);
     }
@@ -50,7 +50,8 @@ public class UDTServerHandler extends StreamHandler {
         UdtChannel channel = (UdtChannel) ctx.channel();
         component.channels.addLocalSocket(channel);
         InetSocketAddress other = channel.remoteAddress();
-        channel.writeAndFlush(new DisambiguateConnection(component.self, new NettyAddress(other), protocol, component.boundUDTPort, true));
+        channel.writeAndFlush(new DisambiguateConnection(component.self, new NettyAddress(other), protocol,
+                component.boundUDTPort, true));
     }
 
 }

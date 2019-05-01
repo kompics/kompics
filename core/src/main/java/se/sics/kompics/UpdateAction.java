@@ -27,7 +27,7 @@ import se.sics.kompics.config.ValueMerger;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class UpdateAction {
 
@@ -37,13 +37,11 @@ public class UpdateAction {
 
     public enum Propagation {
 
-        SWALLOW,
-        ORIGINAL,
-        MAP;
+        SWALLOW, ORIGINAL, MAP;
     }
-    
+
     public static final UpdateAction DEFAULT = UpdateAction.create().finalise();
-    
+
     public final Propagation upStrategy;
     public final Mapper upMapper;
     public final Propagation selfStrategy;
@@ -52,10 +50,8 @@ public class UpdateAction {
     public final Mapper downMapper;
     public final Optional<ValueMerger> merger;
 
-    private UpdateAction(Propagation upStrategy, Mapper upMapper,
-            Propagation selfStrategy, Mapper selfMapper,
-            Propagation downStrategy, Mapper downMapper,
-            Optional<ValueMerger> merger) {
+    private UpdateAction(Propagation upStrategy, Mapper upMapper, Propagation selfStrategy, Mapper selfMapper,
+            Propagation downStrategy, Mapper downMapper, Optional<ValueMerger> merger) {
         this.upStrategy = upStrategy;
         this.upMapper = upMapper;
         this.selfStrategy = selfStrategy;
@@ -68,7 +64,7 @@ public class UpdateAction {
     public static Builder create() {
         return new Builder();
     }
-    
+
     public static class Builder {
 
         private Propagation upStrategy = Propagation.ORIGINAL;
@@ -80,48 +76,54 @@ public class UpdateAction {
         private Optional<ValueMerger> merger = Optional.absent();
 
         public UpdateAction finalise() {
-            return new UpdateAction(upStrategy, upMapper,
-                    selfStrategy, selfMapper,
-                    downStrategy, downMapper,
-                    merger);
+            return new UpdateAction(upStrategy, upMapper, selfStrategy, selfMapper, downStrategy, downMapper, merger);
         }
 
         public void originalUp() {
             this.upStrategy = Propagation.ORIGINAL;
             this.upMapper = null;
         }
+
         public void originalSelf() {
             this.selfStrategy = Propagation.ORIGINAL;
             this.selfMapper = null;
         }
+
         public void originalDown() {
             this.downStrategy = Propagation.ORIGINAL;
             this.downMapper = null;
         }
+
         public void swallowUp() {
             this.upStrategy = Propagation.SWALLOW;
             this.upMapper = null;
         }
+
         public void swallowSelf() {
             this.selfStrategy = Propagation.SWALLOW;
             this.selfMapper = null;
         }
+
         public void swallowDown() {
             this.downStrategy = Propagation.SWALLOW;
             this.downMapper = null;
         }
+
         public void mapUp(Mapper mapper) {
             this.upStrategy = Propagation.MAP;
             this.upMapper = mapper;
         }
+
         public void mapSelf(Mapper mapper) {
             this.selfStrategy = Propagation.MAP;
             this.selfMapper = mapper;
         }
+
         public void mapDown(Mapper mapper) {
             this.downStrategy = Propagation.MAP;
             this.downMapper = mapper;
         }
+
         public void customMergeWith(ValueMerger merger) {
             this.merger = Optional.fromNullable(merger);
         }

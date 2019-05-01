@@ -32,20 +32,19 @@ import se.sics.kompics.network.data.DataHeader;
 public abstract class DataMessage implements Msg<Address, DataHeader<Address>> {
 
     public static final int MESSAGE_SIZE = 65000;
-    
-    private final DataHeader header;
-    
-    
+
+    private final DataHeader<Address> header;
+
     public DataMessage(Address src, Address dst, Transport proto) {
         this.header = new DataHeaderImpl(src, dst, proto);
     }
-    
-    DataMessage(DataHeader header) {
+
+    DataMessage(DataHeader<Address> header) {
         this.header = header;
     }
-    
+
     @Override
-    public DataHeader getHeader() {
+    public DataHeader<Address> getHeader() {
         return header;
     }
 
@@ -69,13 +68,13 @@ public abstract class DataMessage implements Msg<Address, DataHeader<Address>> {
         private final Address src;
         private final Address dst;
         private Transport proto;
-        
+
         DataHeaderImpl(Address src, Address dst, Transport proto) {
             this.src = src;
             this.dst = dst;
             this.proto = proto;
         }
-        
+
         @Override
         public void replaceProtocol(Transport newProto) {
             proto = newProto;
@@ -95,6 +94,6 @@ public abstract class DataMessage implements Msg<Address, DataHeader<Address>> {
         public Transport getProtocol() {
             return proto;
         }
-    
-}
+
+    }
 }

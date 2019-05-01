@@ -1,5 +1,5 @@
 /* 
- * This file is part of the CaracalDB distributed storage system.
+ * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
@@ -31,11 +31,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class ReadLockTest {
 
-    public static void main(String[] args) throws InterruptedException {        
+    public static void main(String[] args) throws InterruptedException {
         long executions = 10000000;
         int numT = 32;
         Random rand = new Random();
@@ -61,7 +61,8 @@ public class ReadLockTest {
         }
         long stopTS = System.nanoTime();
         long time = stopTS - startTS;
-        System.out.println("NoLocks finished in " + time + "ns with an average op time of " + (time / (numT * executions)) + "ns.");
+        System.out.println("NoLocks finished in " + time + "ns with an average op time of "
+                + (time / (numT * executions)) + "ns.");
         threads.clear();
 
         // ConcMap
@@ -79,7 +80,8 @@ public class ReadLockTest {
         }
         stopTS = System.nanoTime();
         time = stopTS - startTS;
-        System.out.println("ConcMap finished in " + time + "ns with an average op time of " + (time / (numT * executions)) + "ns.");
+        System.out.println("ConcMap finished in " + time + "ns with an average op time of "
+                + (time / (numT * executions)) + "ns.");
         threads.clear();
 
         // RWLock
@@ -97,7 +99,8 @@ public class ReadLockTest {
         }
         stopTS = System.nanoTime();
         time = stopTS - startTS;
-        System.out.println("RWLock finished in " + time + "ns with an average op time of " + (time / (numT * executions)) + "ns.");
+        System.out.println(
+                "RWLock finished in " + time + "ns with an average op time of " + (time / (numT * executions)) + "ns.");
         threads.clear();
 
         // SyncLock
@@ -115,9 +118,10 @@ public class ReadLockTest {
         }
         stopTS = System.nanoTime();
         time = stopTS - startTS;
-        System.out.println("SyncLock finished in " + time + "ns with an average op time of " + (time / (numT * executions)) + "ns.");
+        System.out.println("SyncLock finished in " + time + "ns with an average op time of "
+                + (time / (numT * executions)) + "ns.");
         threads.clear();
-        
+
     }
 
     public static class Worker implements Runnable {
@@ -145,9 +149,8 @@ public class ReadLockTest {
             }
             long endTS = System.nanoTime();
             long time = endTS - startTS;
-            System.out.println("    Worker " + id + " finished in "
-                    + time + "ns with average lookup time of "
-                    + (time / executions) + "ns.");
+            System.out.printf("     Worker %d finished in %dns with average lookup time of %fns. (Sum was %d.)", id,
+                    time, time / executions, sum);
         }
 
     }

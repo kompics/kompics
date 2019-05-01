@@ -25,7 +25,7 @@ import java.net.InetSocketAddress;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface Address {
     /**
@@ -33,22 +33,23 @@ public interface Address {
      * @return the IP address part of this object
      */
     public InetAddress getIp();
+
     /**
      * 
      * @return the port part of this object
      */
     public int getPort();
-    
+
     /**
      * Get this address as InetSocketAddress.
      * 
-     * This is used for lookups within network implementation, so it better be fast.
-     * Preferably no new object creation should happen as part of this call.
+     * This is used for lookups within network implementation, so it better be fast. Preferably no new object creation
+     * should happen as part of this call.
      * 
      * @return ip+port of this address.
      */
     public InetSocketAddress asSocket();
-    
+
     /**
      * Compares only the ip+port part of the address for equality.
      * 
@@ -57,7 +58,7 @@ public interface Address {
      * Most likely the same as "this.asSocket().equals(other.asSocket())".
      * 
      * @param other
-     * @return 
+     * @return
      */
     public boolean sameHostAs(Address other);
 }

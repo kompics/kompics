@@ -21,24 +21,23 @@
 package se.sics.kompics.network.netty;
 
 import se.sics.kompics.network.Address;
-import se.sics.kompics.network.Header;
 import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-public abstract class DirectMessage implements Msg {
-    
+public abstract class DirectMessage implements Msg<Address, DirectHeader> {
+
     public final DirectHeader header;
-    
+
     public DirectMessage(Address src, Address dst, Transport protocol) {
         this.header = new DirectHeader(src, dst, protocol);
     }
-    
+
     @Override
-    public Header getHeader() {
+    public DirectHeader getHeader() {
         return this.header;
     }
 
@@ -56,5 +55,5 @@ public abstract class DirectMessage implements Msg {
     public Transport getProtocol() {
         return this.header.proto;
     }
-    
+
 }

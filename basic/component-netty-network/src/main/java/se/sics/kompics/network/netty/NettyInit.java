@@ -27,19 +27,19 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class NettyInit extends Init<NettyNetwork> {
     public final Address self;
     public final int udtPort;
     public final ImmutableSet<Transport> protocols;
-    
+
     public NettyInit(Address self, int udtPort, ImmutableSet<Transport> protocols) {
         this.self = self;
         this.udtPort = udtPort;
         this.protocols = protocols;
     }
-    
+
     public NettyInit(Address self) {
         this(self, 0, ImmutableSet.of(Transport.TCP, Transport.UDP, Transport.UDT));
     }

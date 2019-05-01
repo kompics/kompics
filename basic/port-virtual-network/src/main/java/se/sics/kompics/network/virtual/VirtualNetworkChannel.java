@@ -1,6 +1,22 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * This file is part of the Kompics component model runtime.
+ *
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 package se.sics.kompics.network.virtual;
 
@@ -29,15 +45,16 @@ import se.sics.kompics.network.Msg;
 import se.sics.kompics.network.Network;
 
 /**
- *
- * @author Lars Kroll <lkr@lars-kroll.com>
+ * A network channel that allows switching on a virtual node id.
+ * 
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class VirtualNetworkChannel implements ChannelCore<Network> {
 
     private static Logger log = LoggerFactory.getLogger(VirtualNetworkChannel.class);
     private volatile boolean destroyed = false;
     private final PortCore<Network> sourcePort;
-    // Use HashMap for now and switch to a more efficient 
+    // Use HashMap for now and switch to a more efficient
     // datastructure if necessary
     private Map<ByteBuffer, Set<Negative<Network>>> destinationPorts = new HashMap<ByteBuffer, Set<Negative<Network>>>();
     private final ReadWriteLock rwlock = new ReentrantReadWriteLock();
@@ -77,7 +94,9 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         rwlock.writeLock().lock();
         try {
             destroyed = true;
-            // ATTENTION: Possible deadlock due to double locking (don't think it will happen, but if it does the fault is here!)
+            // ATTENTION: Possible deadlock due to double locking (don't think it will
+            // happen, but if it does the fault
+            // is here!)
             sourcePort.removeChannel(this);
             deadLetterBox.removeChannel(this);
             for (Set<Negative<Network>> portSet : destinationPorts.values()) {
@@ -110,12 +129,14 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         return vnc;
     }
 
-    public static VirtualNetworkChannel connect(Positive<Network> sourcePort, ChannelSelector<?, ?> selector, ComponentProxy parent) {
+    public static VirtualNetworkChannel connect(Positive<Network> sourcePort, ChannelSelector<?, ?> selector,
+            ComponentProxy parent) {
         Component deadLetterBox = parent.create(DefaultDeadLetterComponent.class, Init.NONE);
         return connect(sourcePort, deadLetterBox.getNegative(Network.class), selector);
     }
 
-    public static VirtualNetworkChannel connect(Positive<Network> sourcePort, Negative<Network> deadLetterBox, ChannelSelector<?, ?> selector) {
+    public static VirtualNetworkChannel connect(Positive<Network> sourcePort, Negative<Network> deadLetterBox,
+            ChannelSelector<?, ?> selector) {
         VirtualNetworkChannel vnc = new VirtualNetworkChannel(sourcePort, deadLetterBox);
         sourcePort.addChannel(vnc, selector);
         deadLetterBox.addChannel(vnc);
@@ -171,10 +192,10 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         if (destroyed) {
             return;
         }
-        Msg msg = (Msg) event;
-        se.sics.kompics.network.Header h = msg.getHeader();
+        Msg<?, ?> msg = (Msg<?, ?>) event;
+        se.sics.kompics.network.Header<?> h = msg.getHeader();
         if (h instanceof Header) {
-            Header vh = (Header) h;
+            Header<?> vh = (Header<?>) h;
             byte[] id = vh.getDstId();
 
             rwlock.readLock().lock();
@@ -197,7 +218,9 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
                     } else {
                         log.debug("No Port for id {}", id);
                     }
-                    //log.debug("Couldn't find routing Id for event: " + id.toString() + " of type " + id.getClass().getSimpleName());
+                    // log.debug("Couldn't find routing Id for event: " + id.toString() + " of type
+                    // " +
+                    // id.getClass().getSimpleName());
                 }
             } finally {
                 rwlock.readLock().unlock();
@@ -214,7 +237,7 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
         if (destroyed) {
             return;
         }
-        //log.debug("Forwarding Message down: " + event.toString());
+        // log.debug("Forwarding Message down: " + event.toString());
         sourcePort.doTrigger(event, wid, this);
     }
 
@@ -227,12 +250,13 @@ public class VirtualNetworkChannel implements ChannelCore<Network> {
 
         Positive<Network> net = requires(Network.class);
 
-        Handler<Msg> msgHandler = new Handler<Msg>() {
+        Handler<Msg<?, ?>> msgHandler = new Handler<Msg<?, ?>>() {
 
             @Override
-            public void handle(Msg event) {
-                Msg msg = (Msg) event;
-                log.warn("Message from " + msg.getSource() + " to " + msg.getDestination() + " was not delivered! \n    Message: " + msg.toString());
+            public void handle(Msg<?, ?> event) {
+                Msg<?, ?> msg = (Msg<?, ?>) event;
+                log.warn("Message from " + msg.getHeader().getSource() + " to " + msg.getHeader().getDestination()
+                        + " was not delivered! \n    Message: " + msg.toString());
 
             }
 

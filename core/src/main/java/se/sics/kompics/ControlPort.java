@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -20,23 +20,23 @@
  */
 package se.sics.kompics;
 
-
 /**
  * The <code>ControlPort</code> class.
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public class ControlPort extends PortType {
-	{
-		negative(Fault.class);
-		negative(Stop.class);
-		negative(Start.class);
-                negative(Kill.class);
-                negative(Stopped.class);
-		negative(Started.class);
-                negative(Killed.class);
-                negative(Update.class);
-	}
+    {
+        negative(Fault.class);
+        negative(Stop.class);
+        negative(Start.class);
+        negative(Kill.class);
+        negative(Stopped.class);
+        negative(Started.class);
+        negative(Killed.class);
+        negative(Update.class);
+    }
 }

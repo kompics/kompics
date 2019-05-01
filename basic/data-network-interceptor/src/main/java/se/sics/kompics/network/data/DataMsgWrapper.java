@@ -27,8 +27,9 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
+@SuppressWarnings("rawtypes")
 public class DataMsgWrapper implements Msg {
 
     public final Msg msg;
@@ -83,5 +84,5 @@ public class DataMsgWrapper implements Msg {
     public String toString() {
         return String.format("DataMsgWrapper(msg: %s, proto: %s)", msg, proto);
     }
-    
+
 }

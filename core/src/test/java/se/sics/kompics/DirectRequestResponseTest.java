@@ -1,8 +1,8 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  *
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
- * 2009 Royal Institute of Technology (KTH)
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
+ * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
  * Kompics is free software; you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @RunWith(JUnit4.class)
 public class DirectRequestResponseTest {
@@ -65,7 +65,7 @@ public class DirectRequestResponseTest {
         Kompics.shutdown();
     }
 
-    public static class Down extends Direct.Request {
+    public static class Down extends Direct.Request<Up> {
 
         public final long id;
 
@@ -107,7 +107,7 @@ public class DirectRequestResponseTest {
         Component ponger = create(Ponger.class, Init.NONE);
 
         {
-            connect(pinger.getNegative(PPPort.class), ponger.getPositive(PPPort.class));
+            connect(pinger.getNegative(PPPort.class), ponger.getPositive(PPPort.class), Channel.TWO_WAY);
         }
     }
 
@@ -151,7 +151,7 @@ public class DirectRequestResponseTest {
         };
 
         {
-            connect(p, starver.getNegative(PPPort.class));
+            connect(p, starver.getNegative(PPPort.class), Channel.TWO_WAY);
             subscribe(startHandler, control);
             subscribe(upHandler, p);
         }

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -25,33 +25,34 @@ package se.sics.kompics;
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
 public abstract class ChannelSelector<E extends KompicsEvent, F> {
 
-	private final Class<E> eventType;
+    private final Class<E> eventType;
 
-	private final F value;
+    private final F value;
 
-	private final boolean positive;
+    private final boolean positive;
 
-	protected ChannelSelector(Class<E> eventType, F value, boolean positive) {
-		this.eventType = eventType;
-		this.value = value;
-		this.positive = positive;
-	}
+    protected ChannelSelector(Class<E> eventType, F value, boolean positive) {
+        this.eventType = eventType;
+        this.value = value;
+        this.positive = positive;
+    }
 
-	public abstract F getValue(E event);
+    public abstract F getValue(E event);
 
-	public final F getValue() {
-		return value;
-	}
+    public final F getValue() {
+        return value;
+    }
 
-	public final Class<E> getEventType() {
-		return eventType;
-	}
-	
-	public final boolean isPositive() {
-		return positive;
-	}
+    public final Class<E> getEventType() {
+        return eventType;
+    }
+
+    public final boolean isPositive() {
+        return positive;
+    }
 }

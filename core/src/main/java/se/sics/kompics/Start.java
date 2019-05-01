@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -20,7 +20,6 @@
  */
 package se.sics.kompics;
 
-// TODO: Auto-generated Javadoc
 /**
  * The <code>Start</code> class.
  * 
@@ -29,12 +28,12 @@ package se.sics.kompics;
  * @version $Id$
  */
 public final class Start implements KompicsEvent {
-	
-	public static Start event = new Start();
 
-	/**
-	 * Instantiates a new start event.
-	 */
-	public Start() {
-	}
+    public static Start event = new Start();
+
+    /**
+     * Instantiates a new start event.
+     */
+    public Start() {
+    }
 }

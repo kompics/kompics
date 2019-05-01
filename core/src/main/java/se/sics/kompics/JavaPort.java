@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
@@ -34,20 +34,24 @@ import se.sics.kompics.HandlerStore.MatchedHandlerList;
  *
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
- * @author Lars Kroll <lkr@lars-kroll.com>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
+@SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
 public class JavaPort<P extends PortType> extends PortCore<P> {
 
     private JavaPort<P> pair;
     private final ReentrantReadWriteLock rwLock;
     private final HandlerStore handlers = new HandlerStore();
-    //private final HashMap<Class<? extends KompicsEvent>, ArrayList<Handler<?>>> subs = new HashMap<>();
+    // private final HashMap<Class<? extends KompicsEvent>, ArrayList<Handler<?>>>
+    // subs = new HashMap<>();
     // TODO change this one as well.
-    //private final HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>> matchers = new HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object, MatchedHandler>>();
+    // private final HashMap<Class<? extends PatternExtractor>,
+    // ArrayListMultimap<Object, MatchedHandler>> matchers =
+    // new HashMap<Class<? extends PatternExtractor>, ArrayListMultimap<Object,
+    // MatchedHandler>>();
     private ArrayList<ChannelCore<P>> normalChannels = new ArrayList<ChannelCore<P>>();
-    private ChannelSelectorSet selectorChannels = new ChannelSelectorSet();
-    ;
+    private ChannelSelectorSet selectorChannels = new ChannelSelectorSet();;
     private SpinlockQueue<KompicsEvent> eventQueue = new SpinlockQueue<KompicsEvent>();
 
     public JavaPort(JavaPort<P> other) {
@@ -114,7 +118,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     // delivers the event to the connected channels (called holding read lock)
     private boolean deliverToChannels(KompicsEvent event, int wid) {
-        //Kompics.logger.debug("{}: trying to deliver {} to channels...", owner.getComponent(), event);
+        // Kompics.logger.debug("{}: trying to deliver {} to channels...",
+        // owner.getComponent(), event);
         boolean delivered = false;
         if (normalChannels != null) {
             for (ChannelCore<?> channel : normalChannels) {
@@ -129,7 +134,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         if (selectorChannels != null) {
             ArrayList<ChannelCore<?>> channels = selectorChannels.get(event);
             if (channels != null) {
-                for (ChannelCore channel : channels) {
+                for (ChannelCore<?> channel : channels) {
                     if (isPositive) {
                         channel.forwardToNegative(event, wid);
                     } else {
@@ -139,7 +144,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
                 }
             }
         }
-        //Kompics.logger.debug("{}: {}", owner.getComponent(), delivered ? "succeeded" : "failed");
+        // Kompics.logger.debug("{}: {}", owner.getComponent(), delivered ? "succeeded"
+        // : "failed");
         return delivered;
     }
 
@@ -149,16 +155,16 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         if (eventType == null) {
             eventType = reflectHandlerEventType(handler);
             if (Fault.class.isAssignableFrom(eventType)) {
-                throw new RuntimeException("Custom Fault handlers are not support anymore! Please override ComponentDefinition.handleFault() instead, for custom Fault handling.");
+                throw new RuntimeException(
+                        "Custom Fault handlers are not support anymore! Please override ComponentDefinition.handleFault() instead, for custom Fault handling.");
             }
             handler.setEventType(eventType);
         }
 
         // check that the port type carries the event type in this direction
         if (!portType.hasEvent(isPositive, eventType)) {
-            throw new RuntimeException("Cannot subscribe handler " + handler
-                    + " to " + (isPositive ? "positive " : "negative ")
-                    + portType.getClass().getCanonicalName() + " for "
+            throw new RuntimeException("Cannot subscribe handler " + handler + " to "
+                    + (isPositive ? "positive " : "negative ") + portType.getClass().getCanonicalName() + " for "
                     + eventType.getCanonicalName() + " events.");
         }
 
@@ -171,7 +177,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     }
 
     @Override
-    public void doSubscribe(MatchedHandler handler) {
+    public void doSubscribe(MatchedHandler<?, ?, ?> handler) {
 
         if (handler instanceof ClassMatchedHandler) {
             Object matchType = handler.pattern();
@@ -188,9 +194,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         // check that the port type carries the event type in this direction
         if (!portType.hasEvent(isPositive, cxtType)) {
-            throw new RuntimeException("Cannot subscribe handler " + handler
-                    + " to " + (isPositive ? "positive " : "negative ")
-                    + portType.getClass().getCanonicalName() + " for "
+            throw new RuntimeException("Cannot subscribe handler " + handler + " to "
+                    + (isPositive ? "positive " : "negative ") + portType.getClass().getCanonicalName() + " for "
                     + cxtType.getCanonicalName() + " events.");
         }
 
@@ -211,9 +216,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         // check that the port type carries the event type in this direction
         if (!portType.hasEvent(isPositive, eventType)) {
-            throw new RuntimeException("Cannot subscribe handler " + handler
-                    + " to " + (isPositive ? "positive " : "negative ")
-                    + portType.getClass().getCanonicalName() + " for "
+            throw new RuntimeException("Cannot subscribe handler " + handler + " to "
+                    + (isPositive ? "positive " : "negative ") + portType.getClass().getCanonicalName() + " for "
                     + eventType.getCanonicalName() + " events.");
         }
 
@@ -235,10 +239,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         rwLock.writeLock().lock();
         try {
             if (!handlers.unsubscribe(handler)) {
-                throw new RuntimeException("Handler " + handler
-                        + " is not subscribed to "
-                        + (isPositive ? "positive " : "negative ")
-                        + portType.getClass().getCanonicalName() + " for "
+                throw new RuntimeException("Handler " + handler + " is not subscribed to "
+                        + (isPositive ? "positive " : "negative ") + portType.getClass().getCanonicalName() + " for "
                         + eventType.getCanonicalName() + " events.");
             }
         } finally {
@@ -246,7 +248,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         }
     }
 
-    void doUnsubscribe(MatchedHandler handler) {
+    void doUnsubscribe(MatchedHandler<?, ?, ?> handler) {
         Class cxtType = handler.getCxtType();
         if (cxtType == null) {
             cxtType = reflectHandlerCxtType(handler);
@@ -256,10 +258,8 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         rwLock.writeLock().lock();
         try {
             if (!handlers.unsubscribe(handler)) {
-                throw new RuntimeException("Handler " + handler
-                        + " is not subscribed to "
-                        + (isPositive ? "positive " : "negative ")
-                        + portType.getClass().getCanonicalName() + " for "
+                throw new RuntimeException("Handler " + handler + " is not subscribed to "
+                        + (isPositive ? "positive " : "negative ") + portType.getClass().getCanonicalName() + " for "
                         + handler.getCxtType().getCanonicalName() + " events.");
             }
         } finally {
@@ -278,7 +278,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     // TODO optimize trigger/subscribe
     @Override
     public void doTrigger(KompicsEvent event, int wid, ChannelCore<?> channel) {
-        //System.out.println(this.getClass()+": "+event+" triggert from "+channel);
+        // System.out.println(this.getClass()+": "+event+" triggert from "+channel);
         if (event instanceof Request) {
             Request request = (Request) event;
             request.pushPathElement(channel);
@@ -288,7 +288,7 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
     @Override
     public void doTrigger(KompicsEvent event, int wid, ComponentCore component) {
-        //System.out.println(this.getClass()+": "+event+" triggert from "+component);
+        // System.out.println(this.getClass()+": "+event+" triggert from "+component);
         if (event instanceof Request) {
             Request request = (Request) event;
             request.pushPathElement(component);
@@ -307,24 +307,18 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
                 RequestPathElement pe = response.getTopPathElement();
                 if (pe != null) {
                     if (pe.isChannel()) {
-                        ChannelCore<?> caller = (ChannelCore<?>) pe
-                                .getChannel();
+                        ChannelCore<?> caller = (ChannelCore<?>) pe.getChannel();
                         if (caller != null) {
                             // caller can be null since it is a WeakReference
-                            delivered = deliverToCallerChannel(event, wid,
-                                    caller);
+                            delivered = deliverToCallerChannel(event, wid, caller);
                         }
                     } else {
                         ComponentCore component = pe.getComponent();
                         if (component == owner) {
-                            delivered = deliverToSubscribers(event, wid,
-                                    eventType);
+                            delivered = deliverToSubscribers(event, wid, eventType);
                         } else {
-                            throw new RuntimeException(
-                                    "Response path invalid: expected to arrive to component "
-                                    + component.getComponent()
-                                    + " but instead arrived at "
-                                    + owner.getComponent());
+                            throw new RuntimeException("Response path invalid: expected to arrive to component "
+                                    + component.getComponent() + " but instead arrived at " + owner.getComponent());
                         }
                     }
                 } else {
@@ -346,37 +340,34 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
 
         if (!delivered) {
             if (portType.hasEvent(isPositive, eventType)) {
-//                if (event instanceof Fault) {
-//                    // forward fault to parent component
-//                    if (owner.parent != null) {
-//                        ((PortCore<?>) owner.getComponent().control).doTrigger(
-//                                event, wid, owner.getComponent().getComponentCore());
-//                    } else {
-//                        owner.escalateFault(((Fault) event));
-//                    }
-//                } else {
-//                    // warning, dropped event
-//                    // Kompics.logger.warn("Warning: {} event dropped by {} {} in"
-//                    // + " component {}", new Object[] {
-//                    // eventType.getCanonicalName(),
-//                    // (positive ? "positive " : "negative "),
-//                    // portType.getClass().getCanonicalName(),
-//                    // owner.getComponent() });
-//                }
+                // if (event instanceof Fault) {
+                // // forward fault to parent component
+                // if (owner.parent != null) {
+                // ((PortCore<?>) owner.getComponent().control).doTrigger(
+                // event, wid, owner.getComponent().getComponentCore());
+                // } else {
+                // owner.escalateFault(((Fault) event));
+                // }
+                // } else {
+                // // warning, dropped event
+                // // Kompics.logger.warn("Warning: {} event dropped by {} {} in"
+                // // + " component {}", new Object[] {
+                // // eventType.getCanonicalName(),
+                // // (positive ? "positive " : "negative "),
+                // // portType.getClass().getCanonicalName(),
+                // // owner.getComponent() });
+                // }
             } else {
                 // error, event type doesn't flow on this port in this direction
-                throw new RuntimeException(eventType.getCanonicalName()
-                        + " events cannot be triggered on "
-                        + (!isPositive ? "positive " : "negative ")
-                        + portType.getClass().getCanonicalName());
+                throw new RuntimeException(eventType.getCanonicalName() + " events cannot be triggered on "
+                        + (!isPositive ? "positive " : "negative ") + portType.getClass().getCanonicalName());
             }
         }
     }
 
     // delivers this response event to the channel through which the
     // corresponding request event came (called holding read lock)
-    private boolean deliverToCallerChannel(KompicsEvent event, int wid,
-            ChannelCore<?> caller) {
+    private boolean deliverToCallerChannel(KompicsEvent event, int wid, ChannelCore<?> caller) {
         // Kompics.logger.debug("Caller +{}-{} in {} fwd {}", new Object[] {
         // caller.getPositivePort().pair.owner.getComponent(),
         // caller.getNegativePort().pair.owner.getComponent(),
@@ -395,15 +386,16 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
     }
 
     // deliver event to the local component (called holding read lock)
-    private boolean deliverToSubscribers(KompicsEvent event, int wid,
-            Class<? extends KompicsEvent> eventType) {
-        //Kompics.logger.debug("{}: trying to deliver {} to subscribers...", owner, event);
+    private boolean deliverToSubscribers(KompicsEvent event, int wid, Class<? extends KompicsEvent> eventType) {
+        // Kompics.logger.debug("{}: trying to deliver {} to subscribers...", owner,
+        // event);
 
         if (handlers.hasSubscription(event)) {
             doDeliver(event, wid);
             return true;
         }
-        //Kompics.logger.debug("{}: Couldn't deliver {}, no matching subscribers", owner.getComponent(), event);
+        // Kompics.logger.debug("{}: Couldn't deliver {}, no matching subscribers",
+        // owner.getComponent(), event);
         return false;
     }
 
@@ -424,49 +416,42 @@ public class JavaPort<P extends PortType> extends PortCore<P> {
         return !eventQueue.isEmpty();
     }
 
-    @SuppressWarnings("unchecked")
     private <E extends KompicsEvent> Class<E> reflectEventType(Class handlerC, int parameter) {
         Class<E> eventType = null;
         try {
             Method declared[] = handlerC.getDeclaredMethods();
-            // The JVM in Java 7 wrongly reflects the "handle" methods for some 
+            // The JVM in Java 7 wrongly reflects the "handle" methods for some
             // handlers: e.g. both `handle(Event e)` and `handle(Message m)` are
             // reflected as "declared" methods when only the second is actually
             // declared in the handler. A workaround is to reflect all `handle`
             // methods and pick the one with the most specific event type.
             // This sorted set stores the event types of all reflected handler
             // methods topologically ordered by the event type relationships.
-            TreeSet<Class<? extends KompicsEvent>> relevant
-                    = new TreeSet<Class<? extends KompicsEvent>>(
-                            new Comparator<Class<? extends KompicsEvent>>() {
-                                @Override
-                                public int compare(Class<? extends KompicsEvent> e1,
-                                        Class<? extends KompicsEvent> e2) {
-                                    if (e1.isAssignableFrom(e2)) {
-                                        return 1;
-                                    } else if (e2.isAssignableFrom(e1)) {
-                                        return -1;
-                                    }
-                                    return 0;
-                                }
-                            });
+            TreeSet<Class<? extends KompicsEvent>> relevant = new TreeSet<Class<? extends KompicsEvent>>(
+                    new Comparator<Class<? extends KompicsEvent>>() {
+                        @Override
+                        public int compare(Class<? extends KompicsEvent> e1, Class<? extends KompicsEvent> e2) {
+                            if (e1.isAssignableFrom(e2)) {
+                                return 1;
+                            } else if (e2.isAssignableFrom(e1)) {
+                                return -1;
+                            }
+                            return 0;
+                        }
+                    });
             for (Method m : declared) {
                 if (m.getName().equals("handle")) {
-                    relevant.add(
-                            (Class<? extends KompicsEvent>) m.getParameterTypes()[parameter]);
+                    relevant.add((Class<? extends KompicsEvent>) m.getParameterTypes()[parameter]);
                 }
             }
             eventType = (Class<E>) relevant.first();
         } catch (Exception e) {
-            throw new RuntimeException("Cannot reflect handler event type for "
-                    + "handler " + handlerC + ". Please specify it "
-                    + "as an argument to the handler constructor.", e);
+            throw new RuntimeException("Cannot reflect handler event type for " + "handler " + handlerC
+                    + ". Please specify it " + "as an argument to the handler constructor.", e);
         } finally {
             if (eventType == null) {
-                throw new RuntimeException(
-                        "Cannot reflect handler event type for handler "
-                        + handlerC + ". Please specify it "
-                        + "as an argument to the handler constructor.");
+                throw new RuntimeException("Cannot reflect handler event type for handler " + handlerC
+                        + ". Please specify it " + "as an argument to the handler constructor.");
             }
         }
         return eventType;

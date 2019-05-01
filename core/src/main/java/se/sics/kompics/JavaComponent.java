@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -40,11 +40,13 @@ import se.sics.kompics.config.ValueMerger;
 /**
  * The <code>ComponentCore</code> class.
  * <p>
+ * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
- * @author Lars Kroll <lkr@lars-kroll.com>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
+@SuppressWarnings("serial")
 public class JavaComponent extends ComponentCore {
 
     private final int executeNEvents;
@@ -59,7 +61,9 @@ public class JavaComponent extends ComponentCore {
     /**
      * Instantiates a new component core.
      * <p>
-     * @param componentDefinition the component definition
+     * 
+     * @param componentDefinition
+     *            the component definition
      */
     public JavaComponent(ComponentDefinition componentDefinition) {
         this.positivePorts = new HashMap<Class<? extends PortType>, JavaPort<? extends PortType>>();
@@ -82,14 +86,14 @@ public class JavaComponent extends ComponentCore {
         executeNEvents = Kompics.maxNumOfExecutedEvents.get();
     }
 
-//    public JavaComponent(JavaComponent other) {
-//        this.positivePorts = other.positivePorts;
-//        this.negativePorts = other.negativePorts;
-//        this.parent = other.parent;
-//        this.conf = other.conf;
-//        this.component = other.component;
-//        parentThreadLocal.set(null);
-//    }
+    // public JavaComponent(JavaComponent other) {
+    // this.positivePorts = other.positivePorts;
+    // this.negativePorts = other.negativePorts;
+    // this.parent = other.parent;
+    // this.conf = other.conf;
+    // this.component = other.component;
+    // parentThreadLocal.set(null);
+    // }
     @Override
     protected Logger logger() {
         return this.component.logger;
@@ -114,7 +118,6 @@ public class JavaComponent extends ComponentCore {
         return negativePorts;
     }
 
-
     /*
      * (non-Javadoc)
      *
@@ -125,8 +128,7 @@ public class JavaComponent extends ComponentCore {
     public <P extends PortType> Negative<P> getNegative(Class<P> portType) {
         Negative<P> port = (Negative<P>) negativePorts.get(portType);
         if (port == null) {
-            throw new RuntimeException(component + " has no negative "
-                    + portType.getCanonicalName());
+            throw new RuntimeException(component + " has no negative " + portType.getCanonicalName());
         }
         return port;
     }
@@ -150,8 +152,7 @@ public class JavaComponent extends ComponentCore {
     public <P extends PortType> Positive<P> getPositive(Class<P> portType) {
         Positive<P> port = (Positive<P>) positivePorts.get(portType);
         if (port == null) {
-            throw new RuntimeException(component + " has no positive "
-                    + portType.getCanonicalName());
+            throw new RuntimeException(component + " has no positive " + portType.getCanonicalName());
         }
         return port;
     }
@@ -163,46 +164,38 @@ public class JavaComponent extends ComponentCore {
 
     @Override
     public <P extends PortType> Negative<P> createNegativePort(Class<P> portType) {
-        JavaPort<P> negativePort = new JavaPort<P>(false,
-                PortType.getPortType(portType), this);
-        JavaPort<P> positivePort = new JavaPort<P>(true,
-                PortType.getPortType(portType), parent);
+        JavaPort<P> negativePort = new JavaPort<P>(false, PortType.getPortType(portType), this);
+        JavaPort<P> positivePort = new JavaPort<P>(true, PortType.getPortType(portType), parent);
 
         negativePort.setPair(positivePort);
         positivePort.setPair(negativePort);
 
         Positive<?> existing = positivePorts.put(portType, positivePort);
         if (existing != null) {
-            throw new RuntimeException("Cannot create multiple negative "
-                    + portType.getCanonicalName());
+            throw new RuntimeException("Cannot create multiple negative " + portType.getCanonicalName());
         }
         return negativePort;
     }
 
     @Override
     public <P extends PortType> Positive<P> createPositivePort(Class<P> portType) {
-        JavaPort<P> negativePort = new JavaPort<P>(false,
-                PortType.getPortType(portType), parent);
-        JavaPort<P> positivePort = new JavaPort<P>(true,
-                PortType.getPortType(portType), this);
+        JavaPort<P> negativePort = new JavaPort<P>(false, PortType.getPortType(portType), parent);
+        JavaPort<P> positivePort = new JavaPort<P>(true, PortType.getPortType(portType), this);
 
         negativePort.setPair(positivePort);
         positivePort.setPair(negativePort);
 
         Negative<?> existing = negativePorts.put(portType, negativePort);
         if (existing != null) {
-            throw new RuntimeException("Cannot create multiple positive "
-                    + portType.getCanonicalName());
+            throw new RuntimeException("Cannot create multiple positive " + portType.getCanonicalName());
         }
         return positivePort;
     }
 
     @Override
     public Negative<ControlPort> createControlPort() {
-        negativeControl = new JavaPort<ControlPort>(false,
-                PortType.getPortType(ControlPort.class), this);
-        positiveControl = new JavaPort<ControlPort>(true,
-                PortType.getPortType(ControlPort.class), parent);
+        negativeControl = new JavaPort<ControlPort>(false, PortType.getPortType(ControlPort.class), this);
+        positiveControl = new JavaPort<ControlPort>(true, PortType.getPortType(ControlPort.class), parent);
 
         positiveControl.setPair(negativeControl);
         negativeControl.setPair(positiveControl);
@@ -239,7 +232,8 @@ public class JavaComponent extends ComponentCore {
     }
 
     @Override
-    public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent, Optional<ConfigUpdate> update) {
+    public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent,
+            Optional<ConfigUpdate> update) {
         // create an instance of the implementing component type
         ComponentDefinition component;
         childrenLock.writeLock().lock();
@@ -249,30 +243,27 @@ public class JavaComponent extends ComponentCore {
             component = createInstance(definition, initEvent);
             ComponentCore child = component.getComponentCore();
 
-            //child.workCount.incrementAndGet();
+            // child.workCount.incrementAndGet();
             child.setScheduler(scheduler);
 
             children.add(child);
 
             return child;
         } catch (InstantiationException e) {
-            throw new RuntimeException("Cannot create component "
-                    + definition.getCanonicalName(), e);
+            throw new RuntimeException("Cannot create component " + definition.getCanonicalName(), e);
         } catch (IllegalAccessException e) {
-            throw new RuntimeException("Cannot create component "
-                    + definition.getCanonicalName(), e);
+            throw new RuntimeException("Cannot create component " + definition.getCanonicalName(), e);
         } catch (NoSuchMethodException e) {
-            throw new RuntimeException("Cannot create component "
-                    + definition.getCanonicalName(), e);
+            throw new RuntimeException("Cannot create component " + definition.getCanonicalName(), e);
         } catch (InvocationTargetException e) {
-            throw new RuntimeException("Cannot create component "
-                    + definition.getCanonicalName(), e);
+            throw new RuntimeException("Cannot create component " + definition.getCanonicalName(), e);
         } finally {
             childrenLock.writeLock().unlock();
         }
     }
 
-    private <T extends ComponentDefinition> T createInstance(Class<T> definition, Optional<Init<T>> initEvent) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    private <T extends ComponentDefinition> T createInstance(Class<T> definition, Optional<Init<T>> initEvent)
+            throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         if (!initEvent.isPresent()) {
             return definition.newInstance();
         }
@@ -293,10 +284,10 @@ public class JavaComponent extends ComponentCore {
             return; // don't schedule these components
         }
         this.wid = wid;
-        //System.err.println("Executing " + wid);
+        // System.err.println("Executing " + wid);
 
-//		New scheduling code: Run n and move to end of schedule
-//		
+        // New scheduling code: Run n and move to end of schedule
+        //
         int count = 0;
         int wc = workCount.get();
 
@@ -316,7 +307,7 @@ public class JavaComponent extends ComponentCore {
                 KompicsEvent event;
                 JavaPort<?> nextPort;
                 if ((state == State.PASSIVE) || (state == State.STARTING)) {
-                    //System.err.println("non-active state " + wid);
+                    // System.err.println("non-active state " + wid);
 
                     event = negativeControl.pickFirstEvent();
                     nextPort = negativeControl;
@@ -331,7 +322,7 @@ public class JavaComponent extends ComponentCore {
                     }
                     readyPorts.remove(nextPort);
                 } else {
-                    //System.err.println("active state " + wid);
+                    // System.err.println("active state " + wid);
                     nextPort = (JavaPort<?>) readyPorts.poll();
                     if (nextPort == null) {
                         wc = workCount.decrementAndGet();
@@ -358,7 +349,7 @@ public class JavaComponent extends ComponentCore {
                     }
                 }
                 if (event instanceof PatternExtractor) {
-                    PatternExtractor pe = (PatternExtractor) event;
+                    PatternExtractor<?, ?> pe = (PatternExtractor<?, ?>) event;
                     MatchedHandlerList mhandlers = nextPort.getSubscribedMatchers(pe);
                     if ((mhandlers != null) && (mhandlers.length > 0)) {
                         for (int i = 0; i < mhandlers.length; i++) {
@@ -419,7 +410,7 @@ public class JavaComponent extends ComponentCore {
             // + throwable.getMessage());
             // do {
             // for (int i = 0; i < stackTrace.length; i++) {
-            // System.err.println("    " + stackTrace[i]);
+            // System.err.println(" " + stackTrace[i]);
             // }
             // throwable = throwable.getCause();
             // if (throwable != null) {
@@ -441,21 +432,21 @@ public class JavaComponent extends ComponentCore {
 
             ResolveAction ra = component.handleFault(event);
             switch (ra) {
-                case RESOLVED:
-                    logger().info("Fault {} was resolved by user.", event);
-                    break;
-                case IGNORE:
-                    logger().info("Fault {} was declared to be ignored by user. Resuming component...", event);
-                    markSubtreeAtAs(event.source, State.PASSIVE);
-                    event.source.control().doTrigger(Start.event, wid, JavaComponent.this);
-                    break;
-                case DESTROY:
-                    logger().info("User declared that Fault {} should destroy component tree...", event);
-                    destroyTreeAtParentOf(event.source);
-                    logger().info("finished destroying the subtree.");
-                    break;
-                default:
-                    escalateFault(event);
+            case RESOLVED:
+                logger().info("Fault {} was resolved by user.", event);
+                break;
+            case IGNORE:
+                logger().info("Fault {} was declared to be ignored by user. Resuming component...", event);
+                markSubtreeAtAs(event.source, State.PASSIVE);
+                event.source.control().doTrigger(Start.event, wid, JavaComponent.this);
+                break;
+            case DESTROY:
+                logger().info("User declared that Fault {} should destroy component tree...", event);
+                destroyTreeAtParentOf(event.source);
+                logger().info("finished destroying the subtree.");
+                break;
+            default:
+                escalateFault(event);
             }
         }
     };
@@ -465,86 +456,82 @@ public class JavaComponent extends ComponentCore {
         public void handle(Update event) {
             UpdateAction action = JavaComponent.this.component.handleUpdate(event.update);
             switch (action.selfStrategy) {
-                case ORIGINAL:
-                    ((Config.Impl) conf).apply(event.update, action.merger);
-                    break;
-                case MAP:
-                    ((Config.Impl) conf).apply(
-                            action.selfMapper.map(
-                                    event.update,
-                                    event.update.modify(id())
-                            ), action.merger
-                    );
-                    break;
-                case SWALLOW:
-                    break;
+            case ORIGINAL:
+                ((Config.Impl) conf).apply(event.update, action.merger);
+                break;
+            case MAP:
+                ((Config.Impl) conf).apply(action.selfMapper.map(event.update, event.update.modify(id())),
+                        action.merger);
+                break;
+            case SWALLOW:
+                break;
             }
             if ((parent != null) && (event.forwarder == parent.id())) { // downwards
                 switch (action.downStrategy) {
-                    case ORIGINAL: {
-                        Update forwardedEvent = new Update(event.update, id());
-                        for (Component child : children) {
-                            ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                                    forwardedEvent, wid, component.getComponentCore());
-                        }
+                case ORIGINAL: {
+                    Update forwardedEvent = new Update(event.update, id());
+                    for (Component child : children) {
+                        ((PortCore<ControlPort>) child.getControl()).doTrigger(forwardedEvent, wid,
+                                component.getComponentCore());
                     }
+                }
                     break;
-                    case MAP: {
-                        ConfigUpdate mappedUpdate = action.downMapper.map(event.update, event.update.modify(id()));
-                        Update forwardedEvent = new Update(mappedUpdate, id());
-                        for (Component child : children) {
-                            ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                                    forwardedEvent, wid, component.getComponentCore());
-                        }
+                case MAP: {
+                    ConfigUpdate mappedUpdate = action.downMapper.map(event.update, event.update.modify(id()));
+                    Update forwardedEvent = new Update(mappedUpdate, id());
+                    for (Component child : children) {
+                        ((PortCore<ControlPort>) child.getControl()).doTrigger(forwardedEvent, wid,
+                                component.getComponentCore());
                     }
+                }
                     break;
-                    case SWALLOW:
-                        break;
+                case SWALLOW:
+                    break;
                 }
             } else { // upwards and to other children
                 switch (action.downStrategy) {
-                    case ORIGINAL: {
-                        Update forwardedEvent = new Update(event.update, id());
-                        for (Component child : children) {
-                            if (child.id() != event.forwarder) {
-                                ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                                        forwardedEvent, wid, component.getComponentCore());
-                            }
+                case ORIGINAL: {
+                    Update forwardedEvent = new Update(event.update, id());
+                    for (Component child : children) {
+                        if (child.id() != event.forwarder) {
+                            ((PortCore<ControlPort>) child.getControl()).doTrigger(forwardedEvent, wid,
+                                    component.getComponentCore());
                         }
                     }
+                }
                     break;
-                    case MAP: {
-                        ConfigUpdate mappedUpdate = action.downMapper.map(event.update, event.update.modify(id()));
-                        Update forwardedEvent = new Update(mappedUpdate, id());
-                        for (Component child : children) {
-                            if (child.id() != event.forwarder) {
-                                ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                                        forwardedEvent, wid, component.getComponentCore());
-                            }
+                case MAP: {
+                    ConfigUpdate mappedUpdate = action.downMapper.map(event.update, event.update.modify(id()));
+                    Update forwardedEvent = new Update(mappedUpdate, id());
+                    for (Component child : children) {
+                        if (child.id() != event.forwarder) {
+                            ((PortCore<ControlPort>) child.getControl()).doTrigger(forwardedEvent, wid,
+                                    component.getComponentCore());
                         }
                     }
+                }
                     break;
-                    case SWALLOW:
-                        break;
+                case SWALLOW:
+                    break;
                 }
                 if (parent != null) {
                     switch (action.upStrategy) {
-                        case ORIGINAL: {
-                            Update forwardedEvent = new Update(event.update, id());
-                            ((PortCore<ControlPort>) parent.getControl()).doTrigger(
-                                    forwardedEvent, wid, component.getComponentCore());
-                        }
+                    case ORIGINAL: {
+                        Update forwardedEvent = new Update(event.update, id());
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(forwardedEvent, wid,
+                                component.getComponentCore());
+                    }
                         break;
 
-                        case MAP: {
-                            ConfigUpdate mappedUpdate = action.upMapper.map(event.update, event.update.modify(id()));
-                            Update forwardedEvent = new Update(mappedUpdate, id());
-                            ((PortCore<ControlPort>) parent.getControl()).doTrigger(
-                                    forwardedEvent, wid, component.getComponentCore());
-                        }
+                    case MAP: {
+                        ConfigUpdate mappedUpdate = action.upMapper.map(event.update, event.update.modify(id()));
+                        Update forwardedEvent = new Update(mappedUpdate, id());
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(forwardedEvent, wid,
+                                component.getComponentCore());
+                    }
                         break;
-                        case SWALLOW:
-                            break;
+                    case SWALLOW:
+                        break;
                     }
                 }
             }
@@ -564,13 +551,11 @@ public class JavaComponent extends ComponentCore {
         Update forwardedEvent = new Update(update, id());
         // forward down
         for (Component child : children) {
-            ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                    forwardedEvent, wid, this);
+            ((PortCore<ControlPort>) child.getControl()).doTrigger(forwardedEvent, wid, this);
         }
         // forward up
         if (parent != null) {
-          ((PortCore<ControlPort>) parent.getControl()).doTrigger(
-            forwardedEvent, wid, this);
+            ((PortCore<ControlPort>) parent.getControl()).doTrigger(forwardedEvent, wid, this);
         }
         component.postUpdate();
     }
@@ -598,6 +583,7 @@ public class JavaComponent extends ComponentCore {
     protected void setInactive(Component child) {
         activeSet.remove(child);
     }
+
     private Set<Component> activeSet = new HashSet<Component>();
     Handler<Start> handleStart = new Handler<Start>() {
         @Override
@@ -614,14 +600,15 @@ public class JavaComponent extends ComponentCore {
                     for (ComponentCore child : children) {
                         logger().debug("Sending Start to child: {}", child);
                         // start child
-                        ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                                Start.event, wid, component.getComponentCore());
+                        ((PortCore<ControlPort>) child.getControl()).doTrigger(Start.event, wid,
+                                component.getComponentCore());
                     }
                 } else {
                     logger().debug("Started!");
                     state = Component.State.ACTIVE;
                     if (parent != null) {
-                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(
+                                new Started(component.getComponentCore()), wid, component.getComponentCore());
                     }
                 }
             } finally {
@@ -632,10 +619,9 @@ public class JavaComponent extends ComponentCore {
         @Override
         public java.lang.Class<Start> getEventType() {
             return Start.class;
-        }
-    ;
+        };
     };
-    
+
     Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {
@@ -654,15 +640,16 @@ public class JavaComponent extends ComponentCore {
                         }
                         logger().debug("Sending Stop to child: {}", child);
                         // stop child
-                        ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                                Stop.event, wid, component.getComponentCore());
+                        ((PortCore<ControlPort>) child.getControl()).doTrigger(Stop.event, wid,
+                                component.getComponentCore());
                     }
                 } else {
                     logger().debug("Stopped!");
                     state = Component.State.PASSIVE;
                     component.tearDown();
                     if (parent != null) {
-                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Stopped(component.getComponentCore()), wid, component.getComponentCore());
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(
+                                new Stopped(component.getComponentCore()), wid, component.getComponentCore());
                     } else {
                         synchronized (component.getComponentCore()) {
                             component.getComponentCore().notifyAll();
@@ -677,10 +664,9 @@ public class JavaComponent extends ComponentCore {
         @Override
         public java.lang.Class<Stop> getEventType() {
             return Stop.class;
-        }
-    ;
+        };
     };
-    
+
     Handler<Kill> handleKill = new Handler<Kill>() {
 
         @Override
@@ -694,23 +680,26 @@ public class JavaComponent extends ComponentCore {
                 if (!children.isEmpty()) {
                     logger().debug("Slowly dying...");
                     state = Component.State.STOPPING;
-                    ((PortCore<ControlPort>) getControl().getPair()).cleanEvents(); // if multiple kills are queued up just ignore everything
+                    ((PortCore<ControlPort>) getControl().getPair()).cleanEvents(); // if multiple kills are queued up
+                                                                                    // just ignore everything
                     for (ComponentCore child : children) {
                         if (child.state() != Component.State.ACTIVE) {
                             continue; // don't send stop events to already stopping components
                         }
                         logger().debug("Sending Kill to child: {}", child);
                         // stop child
-                        ((PortCore<ControlPort>) child.getControl()).doTrigger(
-                                Kill.event, wid, component.getComponentCore());
+                        ((PortCore<ControlPort>) child.getControl()).doTrigger(Kill.event, wid,
+                                component.getComponentCore());
                     }
                 } else {
                     logger().debug("dying...");
                     state = Component.State.PASSIVE;
-                    ((PortCore<ControlPort>) getControl().getPair()).cleanEvents(); // if multiple kills are queued up just ignore everything
+                    ((PortCore<ControlPort>) getControl().getPair()).cleanEvents(); // if multiple kills are queued up
+                                                                                    // just ignore everything
                     component.tearDown();
                     if (parent != null) {
-                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Killed(component.getComponentCore()), wid, component.getComponentCore());
+                        ((PortCore<ControlPort>) parent.getControl())
+                                .doTrigger(new Killed(component.getComponentCore()), wid, component.getComponentCore());
                     } else {
                         synchronized (component.getComponentCore()) {
                             component.getComponentCore().notifyAll();
@@ -743,7 +732,8 @@ public class JavaComponent extends ComponentCore {
                 state = Component.State.PASSIVE;
                 component.tearDown();
                 if (parent != null) {
-                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Killed(component.getComponentCore()), wid, component.getComponentCore());
+                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Killed(component.getComponentCore()),
+                            wid, component.getComponentCore());
                 } else {
                     synchronized (component.getComponentCore()) {
                         component.getComponentCore().notifyAll();
@@ -770,7 +760,8 @@ public class JavaComponent extends ComponentCore {
                     logger().debug("Started!");
                     state = Component.State.ACTIVE;
                     if (parent != null) {
-                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Started(component.getComponentCore()), wid, component.getComponentCore());
+                        ((PortCore<ControlPort>) parent.getControl()).doTrigger(
+                                new Started(component.getComponentCore()), wid, component.getComponentCore());
                     }
                 }
             } finally {
@@ -782,8 +773,7 @@ public class JavaComponent extends ComponentCore {
         @Override
         public java.lang.Class<Started> getEventType() {
             return Started.class;
-        }
-    ;
+        };
     };
 
     Handler<Stopped> handleStopped = new Handler<Stopped>() {
@@ -798,7 +788,8 @@ public class JavaComponent extends ComponentCore {
                 state = Component.State.PASSIVE;
                 component.tearDown();
                 if (parent != null) {
-                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Stopped(component.getComponentCore()), wid, component.getComponentCore());
+                    ((PortCore<ControlPort>) parent.getControl()).doTrigger(new Stopped(component.getComponentCore()),
+                            wid, component.getComponentCore());
                 } else {
                     synchronized (component.getComponentCore()) {
                         component.getComponentCore().notifyAll();
@@ -811,9 +802,8 @@ public class JavaComponent extends ComponentCore {
         @Override
         public java.lang.Class<Stopped> getEventType() {
             return Stopped.class;
-        }
-    ;
+        };
 
-};
+    };
 
 }

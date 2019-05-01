@@ -47,9 +47,9 @@ import se.sics.kompics.timer.java.JavaTimer;
  * @author lkroll
  */
 public class Receiver {
-    
+
     public static final int THREADS = Runtime.getRuntime().availableProcessors();
-    
+
     static {
         Serializers.register(new DataMessageSerialiser(), "dmS");
         Serializers.register(DataMessage.class, "dmS");
@@ -97,20 +97,19 @@ public class Receiver {
     public static class ReceiverC extends ComponentDefinition {
 
         final Positive<Network> net = requires(Network.class);
-        
+
         private final Address selfAddress;
         private final TreeSet<Integer> tracker = new TreeSet<>();
         private byte[] data;
         private long startTS;
         private boolean first = true;
-        
-        
+
         public ReceiverC(Init init) {
             this.selfAddress = init.selfAddress;
             subscribe(dataHandler, net);
             subscribe(prepHandler, net);
         }
-        
+
         Handler<Data> dataHandler = new Handler<Data>() {
 
             @Override
@@ -121,26 +120,26 @@ public class Receiver {
                 }
                 System.arraycopy(event.data, 0, data, event.pos, DataMessage.MESSAGE_SIZE);
                 tracker.add(event.pos);
-                System.out.println("Received message #"+event.pos);
+                System.out.println("Received message #" + event.pos);
                 if (tracker.size() == event.total) {
                     long endTS = System.currentTimeMillis();
-                    double diff = ((double) endTS - startTS)/1000.0;
-                    double throughput = ((double)data.length)/(diff*1024.0);
+                    double diff = ((double) endTS - startTS) / 1000.0;
+                    double throughput = ((double) data.length) / (diff * 1024.0);
                     System.out.println("Transfer complete! Data received in " + diff + "s with " + throughput + "kb/s");
                     Kompics.asyncShutdown();
                 }
             }
         };
-        
+
         Handler<Prepare> prepHandler = new Handler<Prepare>() {
 
             @Override
             public void handle(Prepare event) {
-                data = new byte[DataMessage.MESSAGE_SIZE*event.volume];
+                data = new byte[DataMessage.MESSAGE_SIZE * event.volume];
                 trigger(new Prepared(selfAddress, event.getSource(), Transport.TCP), net);
             }
         };
-        
+
         public static class Init extends se.sics.kompics.Init<ReceiverC> {
 
             public final Address selfAddress;

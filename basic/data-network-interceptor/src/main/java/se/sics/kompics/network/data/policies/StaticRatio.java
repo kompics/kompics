@@ -39,33 +39,32 @@ public abstract class StaticRatio {
             // ignore
         }
 
-        
     }
-    
+
     public static class UDT implements ProtocolRatioPolicy {
 
         @Override
         public Rational update(double throughput, double deliveryLatency) {
             return Rational.ONE;
         }
-        
+
         @Override
         public void initialState(Rational initState) {
             // ignore
         }
     }
-    
+
     public static class FiftyFifty implements ProtocolRatioPolicy {
 
         @Override
         public Rational update(double throughput, double deliveryLatency) {
             return Rational.ZERO;
         }
-        
+
         @Override
         public void initialState(Rational initState) {
             // ignore
         }
-        
+
     }
 }

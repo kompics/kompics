@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -25,65 +25,66 @@ import se.sics.kompics.Request;
 /**
  * The <code>SchedulePeriodicTimeout</code> class.
  * 
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
+@SuppressWarnings("deprecation")
 public final class SchedulePeriodicTimeout extends Request {
 
-	private final long delay;
+    private final long delay;
 
-	private final long period;
+    private final long period;
 
-	private Timeout timeout;
+    private Timeout timeout;
 
-	/**
-	 * Instantiates a new schedule periodic timeout.
-	 * 
-	 * @param delay
-	 *            the delay
-	 * @param period
-	 *            the period
-	 */
-	public SchedulePeriodicTimeout(long delay, long period) {
-		this.delay = delay;
-		this.period = period;
-	}
+    /**
+     * Instantiates a new schedule periodic timeout.
+     * 
+     * @param delay
+     *            the delay
+     * @param period
+     *            the period
+     */
+    public SchedulePeriodicTimeout(long delay, long period) {
+        this.delay = delay;
+        this.period = period;
+    }
 
-	/**
-	 * Gets the delay.
-	 * 
-	 * @return the delay
-	 */
-	public final long getDelay() {
-		return delay;
-	}
+    /**
+     * Gets the delay.
+     * 
+     * @return the delay
+     */
+    public final long getDelay() {
+        return delay;
+    }
 
-	/**
-	 * Gets the period.
-	 * 
-	 * @return the period
-	 */
-	public final long getPeriod() {
-		return period;
-	}
+    /**
+     * Gets the period.
+     * 
+     * @return the period
+     */
+    public final long getPeriod() {
+        return period;
+    }
 
-	/**
-	 * Sets the timeout event.
-	 * 
-	 * @param timeout
-	 *            the new timeout event
-	 */
-	public final void setTimeoutEvent(Timeout timeout) {
-		this.timeout = timeout;
-	}
+    /**
+     * Sets the timeout event.
+     * 
+     * @param timeout
+     *            the new timeout event
+     */
+    public final void setTimeoutEvent(Timeout timeout) {
+        this.timeout = timeout;
+    }
 
-	/**
-	 * Gets the timeout event.
-	 * 
-	 * @return the timeout event
-	 */
-	public final Timeout getTimeoutEvent() {
-		return timeout;
-	}
+    /**
+     * Gets the timeout event.
+     * 
+     * @return the timeout event
+     */
+    public final Timeout getTimeoutEvent() {
+        return timeout;
+    }
 }

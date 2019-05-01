@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
@@ -22,7 +22,6 @@ package se.sics.kompics;
 
 import java.util.ArrayDeque;
 
-// TODO: Auto-generated Javadoc
 /**
  * The <code>Response</code> class.
  *
@@ -39,7 +38,8 @@ public abstract class Response implements KompicsEvent {
     /**
      * Instantiates a new response.
      *
-     * @param request the request
+     * @param request
+     *            the request
      */
     protected Response(Request request) {
         requestPath = request.requestPath;

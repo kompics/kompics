@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -36,14 +36,15 @@ import se.sics.kompics.timer.Timer;
 /**
  * The <code>JavaTimer</code> class.
  * <p>
- * @author Cosmin Arad <cosmin@sics.se>
- * @author Jim Dowling <jdowling@sics.se>
+ * 
+ * @author Cosmin Arad {@literal <cosmin@sics.se>}
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @version $Id$
  */
 public final class JavaTimer extends ComponentDefinition {
 
     Negative<Timer> timer = negative(Timer.class);
-    
+
     final Logger extLogger = this.logger;
 
     // set of active timers
@@ -61,8 +62,7 @@ public final class JavaTimer extends ComponentDefinition {
     public JavaTimer() {
         this.activeTimers = new HashMap<UUID, TimerSignalTask>();
         this.activePeriodicTimers = new HashMap<UUID, PeriodicTimerSignalTask>();
-        this.javaTimer = new java.util.Timer("JavaTimer@"
-                + Integer.toHexString(this.hashCode()), true);
+        this.javaTimer = new java.util.Timer("JavaTimer@" + Integer.toHexString(this.hashCode()), true);
         timerComponent = this;
 
         subscribe(handleST, timer);
@@ -75,19 +75,16 @@ public final class JavaTimer extends ComponentDefinition {
         public void handle(ScheduleTimeout event) {
             UUID id = event.getTimeoutEvent().getTimeoutId();
 
-            TimerSignalTask timeOutTask = new TimerSignalTask(timerComponent,
-                    event.getTimeoutEvent(), id);
+            TimerSignalTask timeOutTask = new TimerSignalTask(timerComponent, event.getTimeoutEvent(), id);
 
             synchronized (activeTimers) {
                 activeTimers.put(id, timeOutTask);
             }
             try {
                 javaTimer.schedule(timeOutTask, event.getDelay());
-                logger.debug("scheduled timer({}) {}", event.getDelay(),
-                        timeOutTask.timeout);
+                logger.debug("scheduled timer({}) {}", event.getDelay(), timeOutTask.timeout);
             } catch (IllegalStateException e) {
-                logger.error("Could not schedule timer {}.", event.getDelay(),
-                        timeOutTask.timeout);
+                logger.error("Could not schedule timer {}.", event.getDelay(), timeOutTask.timeout);
                 e.printStackTrace();
             }
         }
@@ -97,16 +94,14 @@ public final class JavaTimer extends ComponentDefinition {
         public void handle(SchedulePeriodicTimeout event) {
             UUID id = event.getTimeoutEvent().getTimeoutId();
 
-            PeriodicTimerSignalTask timeOutTask = new PeriodicTimerSignalTask(
-                    event.getTimeoutEvent(), timerComponent);
+            PeriodicTimerSignalTask timeOutTask = new PeriodicTimerSignalTask(event.getTimeoutEvent(), timerComponent);
 
             synchronized (activePeriodicTimers) {
                 activePeriodicTimers.put(id, timeOutTask);
             }
-            javaTimer.scheduleAtFixedRate(timeOutTask, event.getDelay(),
-                    event.getPeriod());
-            logger.debug("scheduled periodic timer({}, {}) {}", new Object[]{
-                event.getDelay(), event.getPeriod(), timeOutTask.timeout});
+            javaTimer.scheduleAtFixedRate(timeOutTask, event.getDelay(), event.getPeriod());
+            logger.debug("scheduled periodic timer({}, {}) {}",
+                    new Object[] { event.getDelay(), event.getPeriod(), timeOutTask.timeout });
         }
     };
 
@@ -145,10 +140,11 @@ public final class JavaTimer extends ComponentDefinition {
     /**
      * Timeout.
      * <p>
+     * 
      * @param timerId
-     * the timer id
+     *            the timer id
      * @param timeout
-     * the timeout
+     *            the timeout
      */
     final void timeout(UUID timerId, Timeout timeout) {
         synchronized (activeTimers) {
@@ -162,17 +158,18 @@ public final class JavaTimer extends ComponentDefinition {
     /**
      * Periodic timeout.
      * <p>
+     * 
      * @param timeout
-     * the timeout
+     *            the timeout
      */
     final void periodicTimeout(Timeout timeout) {
         logger.debug("trigger periodic timeout {}", timeout);
         trigger(timeout, timer);
     }
-    
+
     @Override
     public void tearDown() {
-        synchronized(activeTimers) {
+        synchronized (activeTimers) {
             for (TimerSignalTask tst : activeTimers.values()) {
                 tst.cancel();
             }

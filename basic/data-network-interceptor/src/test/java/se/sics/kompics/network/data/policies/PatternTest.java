@@ -105,18 +105,18 @@ public class PatternTest {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < N; i++) {
             switch (as.select(null)) {
-                case TCP:
-                    np++;
-                    sb.append("P");
-                    break;
-                case UDT:
-                    nq++;
-                    sb.append("Q");
-                    break;
+            case TCP:
+                np++;
+                sb.append("P");
+                break;
+            case UDT:
+                nq++;
+                sb.append("Q");
+                break;
             }
 
             if ((np + nq) % pq == 0) {
-                //System.out.println("Checking string: " + sb.toString());
+                // System.out.println("Checking string: " + sb.toString());
                 assertEquals(expectedPattern, sb.toString());
                 sb = new StringBuilder();
                 assertEquals(r, Rational.valueOf(np, nq));

@@ -1,5 +1,5 @@
 /* 
- * This file is part of the CaracalDB distributed storage system.
+ * This file is part of the Kompics component model runtime.
  *
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) 
  * Copyright (C) 2009 Royal Institute of Technology (KTH)
@@ -41,7 +41,7 @@ import se.sics.kompics.network.netty.NettyAddress;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 @RunWith(JUnit4.class)
 public class SerializationTest {
@@ -56,7 +56,7 @@ public class SerializationTest {
 
     @Test
     public void byteTest() {
-        byte[] some = new byte[]{1, 2, 3, 4};
+        byte[] some = new byte[] { 1, 2, 3, 4 };
         ByteBuf buf = Unpooled.directBuffer();
         Serializers.toBinary(some, buf);
         System.out.println("Bytes: " + ByteBufUtil.hexDump(buf));
@@ -175,16 +175,17 @@ public class SerializationTest {
         //
         ParentSomeAvro someP = new ParentSomeAvro(some);
         Serializers.toBinary(someP, buf);
-        System.out.println("AVRO - ParentSomeAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
+        System.out.println(
+                "AVRO - ParentSomeAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
         ParentSomeAvro somePRes = (ParentSomeAvro) Serializers.fromBinary(buf, Optional.absent());
         assertEquals(someP.getMySer().getField(), somePRes.getMySer().getField());
         //
         buf.clear();
         //
-        SomeGeneratedAvro sga = SomeGeneratedAvro.newBuilder()
-                .setSomeNumber(1234).build();
+        SomeGeneratedAvro sga = SomeGeneratedAvro.newBuilder().setSomeNumber(1234).build();
         Serializers.toBinary(sga, buf);
-        System.out.println("AVRO - SomeGeneratedAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
+        System.out.println(
+                "AVRO - SomeGeneratedAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
         SomeGeneratedAvro sgaR = (SomeGeneratedAvro) Serializers.fromBinary(buf, Optional.absent());
         assertEquals(sga.getSomeNumber(), sgaR.getSomeNumber());
         //
@@ -193,6 +194,7 @@ public class SerializationTest {
 
     public static class SomeSerializable implements Serializable {
 
+        private static final long serialVersionUID = -9018408129019394038L;
         private int someField = 12345;
 
         public void setField(int i) {
@@ -219,6 +221,7 @@ public class SerializationTest {
 
     public static class ParentSome implements Serializable {
 
+        private static final long serialVersionUID = 123030726141484625L;
         private SomeSerializable mySer;
 
         public ParentSome(SomeSerializable ss) {

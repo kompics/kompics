@@ -28,18 +28,18 @@ import io.netty.handler.codec.compression.SnappyFrameEncoder;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {
 
-    private final BaseHandler handler;
+    private final BaseHandler<?> handler;
 
     /**
      *
      * @param handler
      * @param msgDecoderClass
      */
-    public NettyInitializer(BaseHandler handler) {
+    public NettyInitializer(BaseHandler<?> handler) {
         super();
         this.handler = handler;
     }
@@ -54,18 +54,19 @@ public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {
         pipeline.addLast("decompressor", new SnappyFrameDecoder());
         pipeline.addLast("decoder", new MessageDecoder(handler.component));
         pipeline.addLast("handler", handler);
-        //pipeline.addBefore("handler", "handlerLogger", new LoggingHandler("handlerLogger"));
-        //pipeline.addBefore("handler", "decoder", new MessageDecoder());
-        //pipeline.addBefore("decoder", "decoderLogger", new LoggingHandler("decoderLogger"));
-        //pipeline.addBefore("decoderLogger", "deframer", new LengthFieldBasedFrameDecoder(65532, 0, 2)); //2^16 - 2bytes for the length header (snappy wants to more than 65536 bytes uncompressed)
-        //pipeline.addBefore("deframer", "deframerLogger", new LoggingHandler("deframerLogger"));
-        //pipeline.addBefore("decoder", "decompressor", new SnappyFramedDecoder());
+        // pipeline.addBefore("handler", "handlerLogger", new LoggingHandler("handlerLogger"));
+        // pipeline.addBefore("handler", "decoder", new MessageDecoder());
+        // pipeline.addBefore("decoder", "decoderLogger", new LoggingHandler("decoderLogger"));
+        // pipeline.addBefore("decoderLogger", "deframer", new LengthFieldBasedFrameDecoder(65532, 0, 2)); //2^16 -
+        // 2bytes for the length header (snappy wants to more than 65536 bytes uncompressed)
+        // pipeline.addBefore("deframer", "deframerLogger", new LoggingHandler("deframerLogger"));
+        // pipeline.addBefore("decoder", "decompressor", new SnappyFramedDecoder());
         // OUT
         pipeline.addLast("compressor", new SnappyFrameEncoder());
         pipeline.addLast("encoder", new MessageEncoder(handler.component));
-        //pipeline.addAfter("encoder", "encoderLogger", new LoggingHandler("encoderLogger"));
-        //pipeline.addAfter("encoderLogger", "framer", new LengthFieldPrepender(2));
-        //pipeline.addAfter("framer", "framerLogger", new LoggingHandler("framerLogger"));
-        //pipeline.addAfter("encoder", "compressor", new SnappyFramedEncoder());
+        // pipeline.addAfter("encoder", "encoderLogger", new LoggingHandler("encoderLogger"));
+        // pipeline.addAfter("encoderLogger", "framer", new LengthFieldPrepender(2));
+        // pipeline.addAfter("framer", "framerLogger", new LoggingHandler("framerLogger"));
+        // pipeline.addAfter("encoder", "compressor", new SnappyFramedEncoder());
     }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * <p>
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -22,7 +22,7 @@ package se.sics.kompics;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class BiDirectionalChannel<PT extends PortType> extends SimpleChannel<PT> {
 
@@ -48,27 +48,26 @@ public class BiDirectionalChannel<PT extends PortType> extends SimpleChannel<PT>
 
         @Override
         public <P extends PortType> Channel<P> connect(PortCore<P> positivePort, PortCore<P> negativePort) {
-            BiDirectionalChannel<P> c = new BiDirectionalChannel(positivePort, negativePort);
+            BiDirectionalChannel<P> c = new BiDirectionalChannel<P>(positivePort, negativePort);
             positivePort.addChannel(c);
             negativePort.addChannel(c);
             return c;
         }
 
         @Override
-        public <P extends PortType> Channel<P> connect(PortCore<P> positivePort, PortCore<P> negativePort, ChannelSelector selector) {
-            BiDirectionalChannel<P> c = new BiDirectionalChannel(positivePort, negativePort);
-            Class<? extends KompicsEvent> eventType = selector.getEventType();
+        public <P extends PortType, E extends KompicsEvent, F> Channel<P> connect(PortCore<P> positivePort,
+                PortCore<P> negativePort, ChannelSelector<E, F> selector) {
+            BiDirectionalChannel<P> c = new BiDirectionalChannel<P>(positivePort, negativePort);
+            Class<E> eventType = selector.getEventType();
             if (selector.isPositive()) {
                 if (!c.portType.hasPositive(eventType)) {
-                    throw new RuntimeException("Port type " + c.portType
-                            + " has no positive " + eventType);
+                    throw new RuntimeException("Port type " + c.portType + " has no positive " + eventType);
                 }
                 positivePort.addChannel(c, selector);
                 negativePort.addChannel(c);
             } else {
                 if (!c.portType.hasNegative(eventType)) {
-                    throw new RuntimeException("Port type " + c.portType
-                            + " has no negative " + eventType);
+                    throw new RuntimeException("Port type " + c.portType + " has no negative " + eventType);
                 }
                 positivePort.addChannel(c);
                 negativePort.addChannel(c, selector);

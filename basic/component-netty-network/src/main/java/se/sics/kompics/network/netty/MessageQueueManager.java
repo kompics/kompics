@@ -36,7 +36,7 @@ import se.sics.kompics.network.Msg;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 class MessageQueueManager {
 
@@ -50,7 +50,7 @@ class MessageQueueManager {
         this.component = component;
     }
 
-    void send(Msg msg) {
+    void send(Msg<?, ?> msg) {
         send(new MessageWrapper(msg));
     }
 
@@ -59,32 +59,32 @@ class MessageQueueManager {
     }
 
     private void send(MessageWrapper msg) {
-        switch (msg.msg.getProtocol()) {
-            case TCP:
-                sendTCP(msg);
-                break;
-            case UDT:
-                sendUDT(msg);
-                break;
-            case UDP: {
-                ChannelFuture cf = component.sendUdpMessage(msg);
-                if (msg.notify.isPresent()) {
-                    if (cf != null) {
-                        cf.addListener(new NotifyListener(msg.notify.get()));
-                    } else {
-                        msg.notify.get().prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
-                        component.notify(msg.notify.get());
-                    }
+        switch (msg.msg.getHeader().getProtocol()) {
+        case TCP:
+            sendTCP(msg);
+            break;
+        case UDT:
+            sendUDT(msg);
+            break;
+        case UDP: {
+            ChannelFuture cf = component.sendUdpMessage(msg);
+            if (msg.notify.isPresent()) {
+                if (cf != null) {
+                    cf.addListener(new NotifyListener(msg.notify.get()));
+                } else {
+                    msg.notify.get().prepareResponse(System.currentTimeMillis(), false, System.nanoTime());
+                    component.notify(msg.notify.get());
                 }
             }
+        }
             break;
-            default:
-                throw new Error("Unknown Transport type");
+        default:
+            throw new Error("Unknown Transport type");
         }
     }
 
     private void sendTCP(MessageWrapper msg) {
-        Address peer = msg.msg.getDestination();
+        Address peer = msg.msg.getHeader().getDestination();
         Queue<MessageWrapper> delays = tcpDelays.get(peer.asSocket());
         if (delays != null) {
             component.extLog.debug("Delaying message while establishing connection: {}", msg);
@@ -102,7 +102,8 @@ class MessageQueueManager {
             delays.add(msg);
             return;
         }
-        component.extLog.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
+        component.extLog.debug("Sending message {}. Local {}, Remote {}",
+                new Object[] { msg, c.localAddress(), c.remoteAddress() });
         ChannelFuture cf = c.writeAndFlush(msg);
         if (msg.notify.isPresent()) {
             cf.addListener(new NotifyListener(msg.notify.get()));
@@ -110,7 +111,7 @@ class MessageQueueManager {
     }
 
     private void sendUDT(MessageWrapper msg) {
-        Address peer = msg.msg.getDestination();
+        Address peer = msg.msg.getHeader().getDestination();
         Queue<MessageWrapper> delays = udtDelays.get(peer.asSocket());
         if (delays != null) {
             component.extLog.debug("Delaying message while establishing connection: {}", msg);
@@ -128,7 +129,8 @@ class MessageQueueManager {
             delays.add(msg);
             return;
         }
-        component.extLog.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
+        component.extLog.debug("Sending message {}. Local {}, Remote {}",
+                new Object[] { msg, c.localAddress(), c.remoteAddress() });
         ChannelFuture cf = c.writeAndFlush(msg);
         if (msg.notify.isPresent()) {
             cf.addListener(new NotifyListener(msg.notify.get()));
@@ -139,14 +141,14 @@ class MessageQueueManager {
         component.extLog.info("Trying to send delayed messages: {} on {}", event.peer, event.protocol);
         Address peer = event.peer;
         switch (event.protocol) {
-            case TCP:
-                retryTCP(peer);
-                break;
-            case UDT:
-                retryUDT(peer);
-                break;
-            default:
-                return;
+        case TCP:
+            retryTCP(peer);
+            break;
+        case UDT:
+            retryUDT(peer);
+            break;
+        default:
+            return;
         }
     }
 
@@ -162,7 +164,8 @@ class MessageQueueManager {
         }
         while (!delays.isEmpty()) {
             MessageWrapper msg = delays.poll();
-            component.extLog.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
+            component.extLog.debug("Sending message {}. Local {}, Remote {}",
+                    new Object[] { msg, c.localAddress(), c.remoteAddress() });
             ChannelFuture cf = c.write(msg);
             if (msg.notify.isPresent()) {
                 cf.addListener(new NotifyListener(msg.notify.get()));
@@ -184,7 +187,8 @@ class MessageQueueManager {
         }
         while (!delays.isEmpty()) {
             MessageWrapper msg = delays.poll();
-            component.extLog.debug("Sending message {}. Local {}, Remote {}", new Object[]{msg, c.localAddress(), c.remoteAddress()});
+            component.extLog.debug("Sending message {}. Local {}, Remote {}",
+                    new Object[] { msg, c.localAddress(), c.remoteAddress() });
             ChannelFuture cf = c.write(msg);
             if (msg.notify.isPresent()) {
                 cf.addListener(new NotifyListener(msg.notify.get()));
@@ -198,20 +202,21 @@ class MessageQueueManager {
         Address peer = event.peer;
         Queue<MessageWrapper> delays;
         switch (event.protocol) {
-            case TCP:
-                delays = tcpDelays.remove(peer.asSocket());
-                break;
-            case UDT:
-                delays = udtDelays.remove(peer.asSocket());
-                break;
-            default:
-                return;
+        case TCP:
+            delays = tcpDelays.remove(peer.asSocket());
+            break;
+        case UDT:
+            delays = udtDelays.remove(peer.asSocket());
+            break;
+        default:
+            return;
         }
         if (delays == null) {
             return;
         }
         for (MessageWrapper msgw : delays) {
-            component.extLog.warn("Dropping message {} (with notify) because connection could not be established.", msgw);
+            component.extLog.warn("Dropping message {} (with notify) because connection could not be established.",
+                    msgw);
             if (msgw.notify.isPresent()) {
                 MessageNotify.Req notify = msgw.notify.get();
                 notify.prepareResponse(System.currentTimeMillis(), false, System.nanoTime());

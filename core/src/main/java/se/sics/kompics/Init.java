@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Kompics component model runtime.
  * 
  * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
@@ -29,13 +29,12 @@ package se.sics.kompics;
  * @version $Id$
  */
 public abstract class Init<T extends ComponentDefinition> {
-    
+
     public static final None NONE = new None();
-    
-    
-    public static final class None extends Init<ComponentDefinition>{
-        private None()  {
-            
+
+    public static final class None extends Init<ComponentDefinition> {
+        private None() {
+
         }
     }
 

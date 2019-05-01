@@ -30,7 +30,7 @@ import se.sics.kompics.network.netty.serialization.Serializers;
 
 /**
  *
- * @author Lars Kroll <lkroll@kth.se>
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class MessageDecoder extends LengthFieldBasedFrameDecoder {
 
@@ -49,7 +49,8 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
         }
         component.setCustomMDC();
         try {
-            component.extLog.trace("Trying to decode incoming {} bytes of data from {} to {}.", new Object[]{frame.readableBytes(), ctx.channel().remoteAddress(), ctx.channel().localAddress()});
+            component.extLog.trace("Trying to decode incoming {} bytes of data from {} to {}.", new Object[] {
+                    frame.readableBytes(), ctx.channel().remoteAddress(), ctx.channel().localAddress() });
             Object o = Serializers.fromBinary(frame, Optional.absent());
             component.extLog.trace("Decoded incoming data from {}: {}", ctx.channel().remoteAddress(), o);
             if (o instanceof AckRequestMsg) {
@@ -61,7 +62,8 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
             } else if (o instanceof Msg) {
                 return o;
             } else {
-                component.extLog.warn("Got unexpected Stream message type: {} -> {}", o.getClass().getCanonicalName(), o);
+                component.extLog.warn("Got unexpected Stream message type: {} -> {}", o.getClass().getCanonicalName(),
+                        o);
             }
             return o;
         } finally {
