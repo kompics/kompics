@@ -401,7 +401,7 @@ class ChannelManager {
                             } else {
                                 component.extLog.error("Error while trying to connect to {}! Error was {}", destination,
                                         future.cause());
-                                component.networkStatus(ConnectionStatus.dropped(destination, Transport.TCP));
+                                component.networkStatus(ConnectionStatus.dropped(destination, Transport.TCP, true));
                                 component.trigger(new DropDelayed(destination, Transport.TCP));
                             }
                         } finally {
@@ -479,7 +479,7 @@ class ChannelManager {
                             } else {
                                 component.extLog.error("Error while trying to connect to {}! Error was {}", destination,
                                         future.cause());
-                                component.networkStatus(ConnectionStatus.dropped(destination, Transport.UDT));
+                                component.networkStatus(ConnectionStatus.dropped(destination, Transport.UDT, true));
                                 component.trigger(new DropDelayed(destination, Transport.UDT));
                             }
                         } finally {
@@ -520,10 +520,10 @@ class ChannelManager {
                             tcpChannelsByRemote.remove(remoteAddress);
                             component.extLog.debug("TCP Channel {} ({}) closed: {}",
                                     new Object[] { realAddress, remoteAddress, c });
-                            component.networkStatus(
-                                    ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.TCP));
                             printStuff();
                             if (tcpChannels.get(realAddress).isEmpty()) {
+                                component.networkStatus(
+                                        ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.TCP, true));
                                 component.extLog.info(
                                         "Last TCP Channel to {} dropped. " + "Also dropping all UDT channels under "
                                                 + "the assumption that the host is dead.",
@@ -536,13 +536,16 @@ class ChannelManager {
                                     uc.close();
                                     component.extLog.debug("   UDT Channel {} ({}) closed.", udtRealAddr,
                                             uc.remoteAddress());
-                                    component.networkStatus(
-                                            ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT));
                                 }
                                 udtChannels.removeAll(realAddress);
 
                                 udtBoundPorts.remove(realAddress);
+
+                                component.networkStatus(
+                                        ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT, true));
                             } else {
+                                component.networkStatus(
+                                        ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.TCP, false));
                                 component.extLog.trace("There are still {} TCP channel(s) remaining: [",
                                         tcpChannels.get(realAddress).size(), realAddress);
                                 for (SocketChannel sc : tcpChannels.get(realAddress)) {
@@ -574,7 +577,7 @@ class ChannelManager {
                             udtChannelsByRemote.remove(remoteAddress);
                             component.extLog.debug("UDT Channel {} ({}) closed.", realAddress, remoteAddress);
                             component.networkStatus(
-                                    ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT));
+                                    ConnectionStatus.dropped(new NettyAddress(realAddress), Transport.UDT, false));
                             printStuff();
                         } else {
                             udtChannelsByRemote.remove(remoteAddress);

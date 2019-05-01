@@ -26,32 +26,47 @@ import se.sics.kompics.KompicsEvent;
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-public class ConnectionStatus implements KompicsEvent {
+public abstract class ConnectionStatus implements KompicsEvent {
 
-    public static enum State {
-
-        REQUESTED, ESTABLISHED, DROPPED;
-    }
-
-    public final State state;
     public final Address peer;
     public final Transport protocol;
 
-    private ConnectionStatus(State state, Address peer, Transport protocol) {
-        this.state = state;
+    private ConnectionStatus(Address peer, Transport protocol) {
         this.peer = peer;
         this.protocol = protocol;
     }
 
-    public static ConnectionStatus requested(Address peer, Transport protocol) {
-        return new ConnectionStatus(State.REQUESTED, peer, protocol);
+    public static Requested requested(Address peer, Transport protocol) {
+        return new Requested(peer, protocol);
     }
 
-    public static ConnectionStatus established(Address peer, Transport protocol) {
-        return new ConnectionStatus(State.ESTABLISHED, peer, protocol);
+    public static Established established(Address peer, Transport protocol) {
+        return new Established(peer, protocol);
     }
 
-    public static ConnectionStatus dropped(Address peer, Transport protocol) {
-        return new ConnectionStatus(State.DROPPED, peer, protocol);
+    public static Dropped dropped(Address peer, Transport protocol, boolean last) {
+        return new Dropped(peer, protocol, last);
+    }
+
+    public static class Requested extends ConnectionStatus {
+        private Requested(Address peer, Transport protocol) {
+            super(peer, protocol);
+        }
+    }
+
+    public static class Established extends ConnectionStatus {
+        private Established(Address peer, Transport protocol) {
+            super(peer, protocol);
+        }
+    }
+
+    public static class Dropped extends ConnectionStatus {
+
+        public final boolean last;
+
+        private Dropped(Address peer, Transport protocol, boolean last) {
+            super(peer, protocol);
+            this.last = last;
+        }
     }
 }

@@ -33,6 +33,8 @@ import se.sics.kompics.PortType;
 public final class NetworkControl extends PortType {
     {
         indication(NetworkException.class);
-        indication(ConnectionStatus.class);
+        indication(ConnectionStatus.Requested.class);
+        indication(ConnectionStatus.Established.class);
+        indication(ConnectionStatus.Dropped.class);
     }
 }

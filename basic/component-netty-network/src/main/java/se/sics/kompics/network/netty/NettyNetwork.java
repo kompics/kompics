@@ -87,10 +87,6 @@ public class NettyNetwork extends ComponentDefinition {
     private Bootstrap bootstrapUDP;
     private ServerBootstrap bootstrapUDT;
     final Bootstrap bootstrapUDTClient;
-    // private final LinkedList<Msg> delayedMessages = new LinkedList<Msg>();
-    // private final LinkedList<MessageNotify.Req> delayedNotifies = new LinkedList<MessageNotify.Req>();
-    // private final HashSet<DisambiguateConnection> delayedDisambs = new HashSet<DisambiguateConnection>();
-    // private final HashMap<UUID, MessageNotify.Req> awaitingDelivery = new HashMap<UUID, MessageNotify.Req>();
     final ChannelManager channels = new ChannelManager(this);
     final MessageQueueManager messages = new MessageQueueManager(this);
     private DatagramChannel udpChannel;
