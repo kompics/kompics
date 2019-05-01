@@ -23,12 +23,19 @@ package se.sics.kompics.network;
 import se.sics.kompics.KompicsEvent;
 
 /**
+ *  All subclasses indicate a status change of a connection to the specified {@code peer}.
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public abstract class ConnectionStatus implements KompicsEvent {
 
+    /**
+     * The address of the node the connection relates to.
+     */
     public final Address peer;
+    /**
+     * The transport protocol of the connection to the {@code peer}.
+     */
     public final Transport protocol;
 
     private ConnectionStatus(Address peer, Transport protocol) {
@@ -48,20 +55,41 @@ public abstract class ConnectionStatus implements KompicsEvent {
         return new Dropped(peer, protocol, last);
     }
 
+    /**
+     * Indicates that a connection to the {@code peer} was requested, for example by sending a message to it.
+     *
+     */
     public static class Requested extends ConnectionStatus {
         private Requested(Address peer, Transport protocol) {
             super(peer, protocol);
         }
     }
 
+    /**
+     * Indicates that a connection to the {@code peer} has been established.
+     *
+     */
     public static class Established extends ConnectionStatus {
         private Established(Address peer, Transport protocol) {
             super(peer, protocol);
         }
     }
 
+    /**
+     * Indicates that a connection to the {@code peer} was dropped.
+     *
+     */
     public static class Dropped extends ConnectionStatus {
 
+        /**
+         * Was the last channel to the {@code peer} dropped?
+         * 
+         * If {@code true}, this is definitely equivalent to a session loss event.
+         * 
+         * If {@code false}, it may just be the case that a duplicate channel was closed, which does not incur message
+         * losses, and should thus not be treated as a session loss event.
+         * 
+         */
         public final boolean last;
 
         private Dropped(Address peer, Transport protocol, boolean last) {
