@@ -27,6 +27,9 @@ by putting together protocols programmed as event-driven components.</descriptio
 	<properties>
 		<java.compiler.version>1.8</java.compiler.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<junit.version>4.12</junit.version>
+		<junit.jupiter.version>5.4.2</junit.jupiter.version>
+		<junit.vintage.version>5.4.2</junit.vintage.version>
 	</properties>
 	<!-- Spacer //-->
 	<modules>
@@ -36,10 +39,28 @@ by putting together protocols programmed as event-driven components.</descriptio
 	<!-- Spacer //-->
 	<dependencies>
 		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.junit.vintage</groupId>
 			<artifactId>junit-vintage-engine</artifactId>
-			<version>5.4.2</version>
-			<scope>test</scope>
+			<version>${junit.vintage.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
