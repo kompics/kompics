@@ -20,7 +20,7 @@
  */
 package se.sics.kompics;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -78,7 +78,7 @@ public class JavaComponent extends ComponentCore {
         if (childUpdate.get().isPresent()) {
             Config.Impl ci = (Config.Impl) this.conf;
             ci.apply(childUpdate.get().get(), ValueMerger.NONE);
-            Optional<ConfigUpdate> resetUpdate = Optional.absent();
+            Optional<ConfigUpdate> resetUpdate = Optional.empty();
             childUpdate.set(resetUpdate);
         }
         this.component = componentDefinition;
@@ -227,7 +227,7 @@ public class JavaComponent extends ComponentCore {
 
     @Override
     public <T extends ComponentDefinition> Component doCreate(Class<T> definition, Optional<Init<T>> initEvent) {
-        Optional<ConfigUpdate> update = Optional.absent();
+        Optional<ConfigUpdate> update = Optional.empty();
         return doCreate(definition, initEvent, update);
     }
 

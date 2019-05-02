@@ -20,10 +20,8 @@
  */
 package se.sics.kompics.network.data;
 
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 import org.ujmp.core.DenseMatrix;
 import org.ujmp.core.Matrix;
 import org.ujmp.core.SparseMatrix;
@@ -33,7 +31,6 @@ import org.ujmp.core.calculation.Calculation;
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-@RunWith(JUnit4.class)
 public class MatrixTest {
 
     @Test

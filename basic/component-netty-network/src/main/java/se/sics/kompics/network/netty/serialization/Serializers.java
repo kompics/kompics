@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty.serialization;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.primitives.Ints;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.DatagramPacket;
@@ -253,7 +253,7 @@ public abstract class Serializers {
                 LOG.warn(
                         "Datagram message was serialised with a Serializer that is not a DatagramSerializer: \n   s: {}",
                         s.getClass());
-                return s.fromBinary(buf, Optional.absent());
+                return s.fromBinary(buf, Optional.empty());
             }
         } finally {
             rwLock.readLock().unlock();

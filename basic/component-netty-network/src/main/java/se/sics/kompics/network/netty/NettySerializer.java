@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.primitives.Ints;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.DatagramPacket;
@@ -112,12 +112,12 @@ public class NettySerializer implements DatagramSerializer {
         case ACK: {
             SpecialSerializers.MessageSerializationUtil.MessageFields fields = SpecialSerializers.MessageSerializationUtil
                     .msgFromBinary(buf);
-            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.empty());
             return new NotifyAck(fields.src, fields.dst, fields.proto, id);
         }
         case ACK_REQ: {
-            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
-            Msg<?, ?> msg = (Msg<?, ?>) Serializers.fromBinary(buf, Optional.absent());
+            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.empty());
+            Msg<?, ?> msg = (Msg<?, ?>) Serializers.fromBinary(buf, Optional.empty());
             return new AckRequestMsg(msg, id);
         }
         case CHECK: {
@@ -154,12 +154,12 @@ public class NettySerializer implements DatagramSerializer {
                     new NettyAddress(datagram.recipient()), Transport.UDP, udtPort, fields.flag1);
         }
         case ACK: {
-            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.empty());
             return new NotifyAck(new NettyAddress(datagram.sender()), new NettyAddress(datagram.recipient()),
                     Transport.UDP, id);
         }
         case ACK_REQ: {
-            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            UUID id = (UUID) SpecialSerializers.UUIDSerializer.INSTANCE.fromBinary(buf, Optional.empty());
             Msg<?, ?> msg = (Msg<?, ?>) Serializers.fromBinary(buf, datagram);
             return new AckRequestMsg(msg, id);
         }

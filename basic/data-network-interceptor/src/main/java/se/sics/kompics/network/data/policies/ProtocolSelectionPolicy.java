@@ -26,7 +26,7 @@ import se.sics.kompics.network.Transport;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @param <M>
  *            the type of message the policy deals with
  */

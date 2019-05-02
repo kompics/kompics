@@ -26,7 +26,7 @@ import se.sics.kompics.network.data.DataHeader;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class Prepared extends DataMessage {
     public Prepared(Address src, Address dst, Transport proto) {

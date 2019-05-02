@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty.serialization;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.UnsignedBytes;
 import io.netty.buffer.ByteBuf;
@@ -224,8 +224,8 @@ public abstract class SpecialSerializers {
             }
 
             // Addresses
-            fields.src = (NettyAddress) AddressSerializer.INSTANCE.fromBinary(buf, Optional.absent());
-            fields.dst = (NettyAddress) AddressSerializer.INSTANCE.fromBinary(buf, Optional.absent());
+            fields.src = (NettyAddress) AddressSerializer.INSTANCE.fromBinary(buf, Optional.empty());
+            fields.dst = (NettyAddress) AddressSerializer.INSTANCE.fromBinary(buf, Optional.empty());
             fields.orig = fields.src;
 
             return fields;

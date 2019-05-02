@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import io.netty.bootstrap.Bootstrap;

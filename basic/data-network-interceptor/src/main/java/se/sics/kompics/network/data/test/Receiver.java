@@ -44,7 +44,7 @@ import se.sics.kompics.timer.java.JavaTimer;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class Receiver {
 

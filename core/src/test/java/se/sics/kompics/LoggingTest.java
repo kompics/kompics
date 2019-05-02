@@ -20,16 +20,13 @@
  */
 package se.sics.kompics;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-@RunWith(JUnit4.class)
 public class LoggingTest {
 
     public LoggingTest() {
@@ -43,7 +40,7 @@ public class LoggingTest {
         } catch (InterruptedException ex) {
             // System.err.println(ex.getMessage());
             Kompics.shutdown();
-            Assert.fail(ex.getMessage());
+            fail(ex.getMessage());
         }
     }
 

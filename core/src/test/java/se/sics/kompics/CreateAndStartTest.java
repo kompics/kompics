@@ -20,13 +20,10 @@
  */
 package se.sics.kompics;
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.concurrent.Semaphore;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * The <code>CreateAndStartTest</code> class tests component creation and start.
@@ -36,7 +33,6 @@ import org.junit.runners.JUnit4;
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @version $Id$
  */
-@RunWith(JUnit4.class)
 public class CreateAndStartTest {
 
     private static class TestRoot0 extends ComponentDefinition {

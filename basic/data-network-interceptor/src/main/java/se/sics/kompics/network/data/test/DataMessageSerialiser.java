@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.data.test;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import io.netty.buffer.ByteBuf;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.Transport;
@@ -31,7 +31,7 @@ import se.sics.kompics.network.netty.serialization.SpecialSerializers;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class DataMessageSerialiser implements Serializer {
 
@@ -77,8 +77,8 @@ public class DataMessageSerialiser implements Serializer {
     @Override
     public Object fromBinary(ByteBuf buf, Optional<Object> hint) {
         // HEADER
-        Address srcAddr = (Address) addrS.fromBinary(buf, Optional.absent());
-        Address destAddr = (Address) addrS.fromBinary(buf, Optional.absent());
+        Address srcAddr = (Address) addrS.fromBinary(buf, Optional.empty());
+        Address destAddr = (Address) addrS.fromBinary(buf, Optional.empty());
         Transport proto = Transport.values()[buf.readUnsignedShort()];
         DataHeader<Address> h = new DataHeaderImpl(srcAddr, destAddr, proto);
         // CONTENT

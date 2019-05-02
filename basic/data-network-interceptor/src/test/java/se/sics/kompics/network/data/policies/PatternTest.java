@@ -21,17 +21,14 @@
 package se.sics.kompics.network.data.policies;
 
 import org.jscience.mathematics.number.Rational;
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 import se.sics.kompics.network.Transport;
 
 /**
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-@RunWith(JUnit4.class)
 public class PatternTest {
 
     private static final int N = 1000000;

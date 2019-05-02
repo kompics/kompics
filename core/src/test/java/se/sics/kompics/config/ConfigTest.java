@@ -20,25 +20,18 @@
  */
 package se.sics.kompics.config;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import org.junit.Test;
-import static org.junit.matchers.JUnitMatchers.hasItems;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-@RunWith(JUnit4.class)
 public class ConfigTest {
 
     @Test

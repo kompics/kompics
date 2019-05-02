@@ -22,8 +22,8 @@ package se.sics.kompics;
 
 import java.util.LinkedList;
 import java.util.concurrent.Semaphore;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 import se.sics.kompics.Fault.ResolveAction;
 
 /**
@@ -113,7 +113,7 @@ public class SubscribeTest {
 
         semaphore.acquire(EVENT_COUNT);
 
-        Assert.assertArrayEquals(expected, list1.toArray());
+        assertArrayEquals(expected, list1.toArray());
         Kompics.shutdown();
     }
 
@@ -208,7 +208,7 @@ public class SubscribeTest {
 
         semaphore.acquire(EVENT_COUNT);
 
-        Assert.assertArrayEquals(expected, list2.toArray());
+        assertArrayEquals(expected, list2.toArray());
         Kompics.shutdown();
     }
 }

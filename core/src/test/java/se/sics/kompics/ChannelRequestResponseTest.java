@@ -21,7 +21,7 @@
 package se.sics.kompics;
 
 import java.util.concurrent.Semaphore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
 public class ChannelRequestResponseTest {

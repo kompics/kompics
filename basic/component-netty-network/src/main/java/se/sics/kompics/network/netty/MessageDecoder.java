@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -51,7 +51,7 @@ public class MessageDecoder extends LengthFieldBasedFrameDecoder {
         try {
             component.extLog.trace("Trying to decode incoming {} bytes of data from {} to {}.", new Object[] {
                     frame.readableBytes(), ctx.channel().remoteAddress(), ctx.channel().localAddress() });
-            Object o = Serializers.fromBinary(frame, Optional.absent());
+            Object o = Serializers.fromBinary(frame, Optional.empty());
             component.extLog.trace("Decoded incoming data from {}: {}", ctx.channel().remoteAddress(), o);
             if (o instanceof AckRequestMsg) {
                 AckRequestMsg arm = (AckRequestMsg) o;
