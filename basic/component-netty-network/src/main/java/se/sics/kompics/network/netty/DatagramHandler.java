@@ -42,7 +42,7 @@ public class DatagramHandler extends BaseHandler<DatagramPacket> {
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         component.setCustomMDC();
         try {
             Object o = Serializers.fromBinary(msg.content(), msg);

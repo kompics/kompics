@@ -39,9 +39,9 @@ public class TCPServerHandler extends StreamHandler {
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
         component.channels.checkTCPChannel(msg, (SocketChannel) ctx.channel());
-        super.messageReceived(ctx, msg);
+        super.channelRead0(ctx, msg);
     }
 
     @Override

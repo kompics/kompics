@@ -39,9 +39,9 @@ public class UDTServerHandler extends StreamHandler {
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
         component.channels.checkUDTChannel(msg, (UdtChannel) ctx.channel());
-        super.messageReceived(ctx, msg);
+        super.channelRead0(ctx, msg);
     }
 
     @Override

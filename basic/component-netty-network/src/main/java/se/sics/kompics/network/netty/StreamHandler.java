@@ -37,7 +37,7 @@ public class StreamHandler extends BaseHandler<Msg<?, ?>> {
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
         component.deliverMessage(msg, ctx.channel());
     }
 
