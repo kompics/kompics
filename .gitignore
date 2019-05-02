@@ -8,3 +8,15 @@ lib/
 .DS_Store
 
 nb-configuration.xml
+
+.idea/
+basic/component-java-timer/kompics-component-java-timer.iml
+basic/component-netty-network/kompics-component-netty-network.iml
+basic/data-network-interceptor/kompics-data-network-interceptor.iml
+basic/kompics-basic-components.iml
+basic/port-timer/kompics-port-timer.iml
+basic/port-network/kompics-port-network.iml
+basic/port-virtual-network/kompics-port-virtual-network.iml
+core/kompics-core.iml
+kompics-parent-pom.iml
+core/pom.xml
