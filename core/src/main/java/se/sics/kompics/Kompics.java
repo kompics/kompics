@@ -43,8 +43,8 @@ import se.sics.kompics.scheduler.WorkStealingScheduler;
 public final class Kompics {
 
     public static final long SHUTDOWN_TIMEOUT = 5000;
-    public static Logger logger = LoggerFactory.getLogger("Kompics");
-    public static AtomicInteger maxNumOfExecutedEvents = new AtomicInteger(1);
+    public static final Logger logger = LoggerFactory.getLogger("Kompics");
+    public static final AtomicInteger maxNumOfExecutedEvents = new AtomicInteger(1);
     private static boolean on = false;
     private static Scheduler scheduler;
     private static ComponentCore mainCore;

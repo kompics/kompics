@@ -29,7 +29,7 @@ package se.sics.kompics;
  */
 public final class Stop implements KompicsEvent {
 
-    public static Stop event = new Stop();
+    public static final Stop event = new Stop();
 
     /**
      * Instantiates a new stop.

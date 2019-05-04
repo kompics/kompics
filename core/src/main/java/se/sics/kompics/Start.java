@@ -29,7 +29,7 @@ package se.sics.kompics;
  */
 public final class Start implements KompicsEvent {
 
-    public static Start event = new Start();
+    public static final Start event = new Start();
 
     /**
      * Instantiates a new start event.
