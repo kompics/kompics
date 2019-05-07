@@ -127,6 +127,7 @@ public class NettyNetwork extends ComponentDefinition {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public NettyNetwork(NettyInit init) {
         // probably useless to set here as it won't be re-read in most JVMs after start
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -186,7 +187,7 @@ public class NettyNetwork extends ComponentDefinition {
         }
         if (udtMonitoring) {
             logger.info("Activating UDT monitoring (client).");
-            bootstrapUDTClient.group().scheduleAtFixedRate(new Runnable() {
+            bootstrapUDTClient.config().group().scheduleAtFixedRate(new Runnable() {
 
                 @Override
                 public void run() {
@@ -244,13 +245,13 @@ public class NettyNetwork extends ComponentDefinition {
                 trigger(status, netC);
             } catch (NetworkException ex) {
                 logger.error("Failed during start-up!");
-                bootstrapUDTClient.group().shutdownGracefully();
-                bootstrapTCP.childGroup().shutdownGracefully();
-                bootstrapTCP.group().shutdownGracefully();
-                bootstrapTCPClient.group().shutdownGracefully();
-                bootstrapUDP.group().shutdownGracefully();
-                bootstrapUDT.childGroup().shutdownGracefully();
-                bootstrapUDT.group().shutdownGracefully();
+                bootstrapUDTClient.config().group().shutdownGracefully();
+                bootstrapTCP.config().childGroup().shutdownGracefully();
+                bootstrapTCP.config().group().shutdownGracefully();
+                bootstrapTCPClient.config().group().shutdownGracefully();
+                bootstrapUDP.config().group().shutdownGracefully();
+                bootstrapUDT.config().childGroup().shutdownGracefully();
+                bootstrapUDT.config().group().shutdownGracefully();
                 // just rethrow to crash the component
                 throw new RuntimeException(ex);
             }
@@ -409,6 +410,7 @@ public class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
+    @SuppressWarnings("deprecation")
     private boolean bindUdtPort(final InetAddress addr) {
         NioEventLoopGroup bossGroup = new NioEventLoopGroup(0, (Executor) null, NioUdtProvider.BYTE_PROVIDER);
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(0, (Executor) null, NioUdtProvider.BYTE_PROVIDER);
@@ -424,7 +426,7 @@ public class NettyNetwork extends ComponentDefinition {
         }
         if (udtMonitoring) {
             logger.info("Activating UDT monitoring (server).");
-            bootstrapUDT.childGroup().scheduleAtFixedRate(new Runnable() {
+            bootstrapUDT.config().childGroup().scheduleAtFixedRate(new Runnable() {
 
                 @Override
                 public void run() {
@@ -541,18 +543,18 @@ public class NettyNetwork extends ComponentDefinition {
 
         logger.info("Shutting down handler groups...");
         List<Future<?>> gfutures = new LinkedList<>();
-        gfutures.add(bootstrapUDTClient.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        gfutures.add(bootstrapUDTClient.config().group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         if (bindTCP) {
-            gfutures.add(bootstrapTCP.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
-            gfutures.add(bootstrapTCP.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+            gfutures.add(bootstrapTCP.config().childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+            gfutures.add(bootstrapTCP.config().group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         }
-        gfutures.add(bootstrapTCPClient.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+        gfutures.add(bootstrapTCPClient.config().group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         if (bindUDP) {
-            gfutures.add(bootstrapUDP.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+            gfutures.add(bootstrapUDP.config().group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         }
         if (bindUDT) {
-            gfutures.add(bootstrapUDT.childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
-            gfutures.add(bootstrapUDT.group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+            gfutures.add(bootstrapUDT.config().childGroup().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
+            gfutures.add(bootstrapUDT.config().group().shutdownGracefully(1, 5, TimeUnit.MILLISECONDS));
         }
         for (Future<?> f : gfutures) {
             f.syncUninterruptibly();
