@@ -38,12 +38,14 @@ public class UDTServerHandler extends StreamHandler {
         super(component, Transport.UDT);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Msg<?, ?> msg) throws Exception {
         component.channels.checkUDTChannel(msg, (UdtChannel) ctx.channel());
         super.channelRead0(ctx, msg);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         super.channelActive(ctx);

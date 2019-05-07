@@ -54,6 +54,7 @@ import se.sics.kompics.network.Transport;
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
+@SuppressWarnings("deprecation")
 class ChannelManager {
 
     private final ConcurrentMap<InetSocketAddress, SocketChannel> tcpActiveChannels = new ConcurrentHashMap<>();

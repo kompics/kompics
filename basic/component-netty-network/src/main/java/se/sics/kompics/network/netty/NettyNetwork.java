@@ -127,6 +127,7 @@ public class NettyNetwork extends ComponentDefinition {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public NettyNetwork(NettyInit init) {
         // probably useless to set here as it won't be re-read in most JVMs after start
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -409,6 +410,7 @@ public class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
+    @SuppressWarnings("deprecation")
     private boolean bindUdtPort(final InetAddress addr) {
         NioEventLoopGroup bossGroup = new NioEventLoopGroup(0, (Executor) null, NioUdtProvider.BYTE_PROVIDER);
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(0, (Executor) null, NioUdtProvider.BYTE_PROVIDER);
