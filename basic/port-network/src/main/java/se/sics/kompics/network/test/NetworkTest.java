@@ -87,8 +87,10 @@ public class NetworkTest {
     private static int numNodes;
     private static final AtomicInteger msgId = new AtomicInteger(0);
     private static final ConcurrentSkipListMap<Integer, String> messageStatus = new ConcurrentSkipListMap<Integer, String>();
+    private static final ConcurrentSkipListMap<Integer, Integer> failedBindings = new ConcurrentSkipListMap<Integer, Integer>();    // <node, port>
     // private static int startPort = 33000;
     private static Transport[] protos;
+    private static int taken_port;
 
     public static synchronized void runTests(NetworkGenerator nGen, int numNodes, Transport[] protos) {
         LOG.info("\n******************** Running All Test ********************\n");
@@ -222,6 +224,69 @@ public class NetworkTest {
 
         assertTrue(numNodes <= messageStatus.size());
         LOG.info("\n******************** AT LEAST Test Done ********************\n");
+    }
+
+    public static synchronized void runPBTest(NetworkGenerator nGen, int numNodes) {
+        LOG.info("\n******************** Running PB Test ********************\n");
+        NetworkTest.nGen = nGen;
+        NetworkTest.numNodes = numNodes;
+        WAIT_FOR.set(numNodes); // 1 msg per node
+
+        msgId.set(0);
+        failedBindings.clear();
+        TestUtil.reset("Failed Port Binding test: Nodes #" + numNodes, 100000); // 10
+        // sec
+        // timeout
+        // for
+        // all
+        // the
+        // connections
+        // to be
+        // dropped
+        // properly
+        ServerSocket[] sockets = new ServerSocket[1];
+        try {
+            ServerSocket s = new ServerSocket(0); // find a free port to test on
+            taken_port = s.getLocalPort();
+            sockets[0] = s;
+        } catch (IOException ex) {
+            LOG.error("Could not find any free ports: {}", ex);
+            System.exit(1);
+        }
+        Kompics.createAndStart(PBLauncher.class, 8, 50);
+
+        for (int i = 0; i < numNodes; i++) {
+            LOG.info("Waiting for {}/{} STOPPED.", i + 1, numNodes);
+            try {
+                TestUtil.waitFor(STOPPED);
+            } finally {
+                StringBuilder sb = new StringBuilder();
+                sb.append("FailedBindings {\n");
+                for (Entry<Integer, Integer> e : failedBindings.entrySet()) {
+                    sb.append(e.getKey());
+                    sb.append(" -> ");
+                    sb.append(e.getValue());
+                    sb.append("\n");
+                }
+                sb.append("}");
+                LOG.debug(sb.toString());
+            }
+            LOG.info("Got {}/{} STOPPED.", i + 1, numNodes);
+        }
+        try {
+            sockets[0].close();
+        } catch (IOException ex) {
+            LOG.error("Could not close port: {}", ex);
+            System.exit(1);
+        }
+        LOG.info("\n******************** Shutting Down Kompics ********************\n");
+        Kompics.shutdown();
+
+        assertEquals(numNodes, failedBindings.size());
+        for (int port : failedBindings.values()) {
+            assertEquals(taken_port, port);
+        }
+
     }
 
     public static class LauncherComponent extends ComponentDefinition {
@@ -705,6 +770,64 @@ public class NetworkTest {
         };
     }
 
+    public static class PBLauncher extends ComponentDefinition{
+        public PBLauncher(){
+            Component pbReceiver = create(PBReceiver.class, Init.NONE);
+            for (int i = 0; i < numNodes; i++){
+                Component pbComponent = create(PBComponent.class, new PBInit(i));
+                connect(pbComponent.getPositive(PBPort.class), pbReceiver.getNegative(PBPort.class), Channel.ONE_WAY_NEG);
+            }
+        }
+    }
+
+    public static class PBReceiver extends ComponentDefinition{
+        Positive<PBPort> pb_port = requires(PBPort.class);
+
+        public PBReceiver(){
+            LOG.debug("PBReceiver started");
+            Handler<FailedPortBind> handler = new Handler<FailedPortBind>() {
+                @Override
+                public void handle(FailedPortBind event) {
+                    LOG.debug("Got event {}", event);
+                    failedBindings.put(event.node, event.port);
+                }
+            };
+            subscribe(handler, pb_port);
+        }
+    }
+
+    public static class PBComponent extends  ComponentDefinition{
+        int self;
+        Negative<PBPort> pb_port = provides(PBPort.class);
+
+        public PBComponent(PBInit init){
+            this.self = init.id;
+
+            Handler<Start> startHandler = new Handler<Start>() {
+                @Override
+                public void handle(Start event) {
+                    try {
+                        new ServerSocket(taken_port); // try bind to taken port
+                    } catch (IOException ex) {
+                        LOG.info("Node " + self + ": Exception on taken port!");
+                        trigger(new FailedPortBind(self, taken_port), pb_port);
+                    } finally {
+                        LOG.info("PB Component {} is done.", self);
+                        TestUtil.submit(STOPPED);
+                    }
+
+                }
+            };
+            subscribe(startHandler, control);
+        }
+    }
+
+    public static class PBInit extends Init<PBComponent>{
+        public final int id;
+
+        public PBInit(int id){ this.id = id;}
+    }
+
     public static class Acker extends ComponentDefinition {
 
         private final Positive<Network> net = requires(Network.class);
@@ -821,5 +944,21 @@ public class NetworkTest {
         public Recover(long timestamp) {
             this.timestamp = timestamp;
         }
+    }
+
+    public static class FailedPortBind implements KompicsEvent {
+        public final int node;
+        public final int port;
+
+        public FailedPortBind(int node, int port){
+            this.node = node;
+            this.port = port;
+        }
+    }
+
+    public static class PBPort extends PortType{{
+        indication(FailedPortBind.class);
+    }
+
     }
 }

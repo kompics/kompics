@@ -83,4 +83,25 @@ public class NetworkTest {
         LOG.info("********* 5 Node Datagram Network Test ***********");
         se.sics.kompics.network.test.NetworkTest.runAtLeastTests(netGen, 5, protos);
     }
+
+    @Test
+    public void failedPortBindingTest() {
+
+        NetworkGenerator netGen = new NetworkGenerator() {
+
+            @Override
+            public Component generate(ComponentProxy parent, Address self) {
+                NettyInit init = new NettyInit(self);
+                return parent.create(NettyNetwork.class, init);
+            }
+
+        };
+
+        LOG.info("********* 2 Node Taken Port Binding Test ***********");
+        se.sics.kompics.network.test.NetworkTest.runPBTest(netGen, 2);
+        LOG.info("********* 5 Node Taken Port Binding Test ***********");
+        se.sics.kompics.network.test.NetworkTest.runPBTest(netGen, 5);
+    }
+
+
 }
