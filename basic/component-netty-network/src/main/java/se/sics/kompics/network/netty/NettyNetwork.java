@@ -245,13 +245,19 @@ public class NettyNetwork extends ComponentDefinition {
                 trigger(status, netC);
             } catch (NetworkException ex) {
                 logger.error("Failed during start-up!");
-                bootstrapUDTClient.config().group().shutdownGracefully();
-                bootstrapTCP.config().childGroup().shutdownGracefully();
-                bootstrapTCP.config().group().shutdownGracefully();
                 bootstrapTCPClient.config().group().shutdownGracefully();
-                bootstrapUDP.config().group().shutdownGracefully();
-                bootstrapUDT.config().childGroup().shutdownGracefully();
-                bootstrapUDT.config().group().shutdownGracefully();
+                bootstrapUDTClient.config().group().shutdownGracefully();
+                if (bootstrapTCP != null){
+                    bootstrapTCP.config().childGroup().shutdownGracefully();
+                    bootstrapTCP.config().group().shutdownGracefully();
+                }
+                if (bootstrapUDT != null){
+                    bootstrapUDT.config().childGroup().shutdownGracefully();
+                    bootstrapUDT.config().group().shutdownGracefully();
+                }
+                if (bootstrapUDP != null){
+                    bootstrapUDP.config().group().shutdownGracefully();
+                }
                 // just rethrow to crash the component
                 throw new RuntimeException(ex);
             }
@@ -401,7 +407,7 @@ public class NettyNetwork extends ComponentDefinition {
             boundPort = localAddress.getPort(); // in case it was 0 -> random port
 
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             logger.error("Problem when trying to bind to {}:{}", addr, port);
             return false;
         }

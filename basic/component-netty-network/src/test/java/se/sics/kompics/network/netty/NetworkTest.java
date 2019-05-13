@@ -88,7 +88,6 @@ public class NetworkTest {
     public void failedPortBindingTest() {
 
         NetworkGenerator netGen = new NetworkGenerator() {
-
             @Override
             public Component generate(ComponentProxy parent, Address self) {
                 NettyInit init = new NettyInit(self);
