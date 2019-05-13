@@ -47,12 +47,12 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
     protected ComponentCore parent;
     protected Config conf;
     public static final ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
-    public static final ThreadLocal<Optional<ConfigUpdate>> childUpdate = new ThreadLocal<Optional<ConfigUpdate>>();
-
-    static {
-        Optional<ConfigUpdate> update = Optional.empty();
-        childUpdate.set(update);
-    }
+    public static final ThreadLocal<Optional<ConfigUpdate>> childUpdate = new ThreadLocal<Optional<ConfigUpdate>>() {
+        @Override
+        protected Optional<ConfigUpdate> initialValue() {
+            return Optional.empty();
+        }
+    };
 
     protected List<ComponentCore> children = new LinkedList<ComponentCore>();
 
