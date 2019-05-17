@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty.serialization;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;

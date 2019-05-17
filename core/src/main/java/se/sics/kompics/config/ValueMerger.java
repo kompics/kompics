@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.config;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -67,5 +67,5 @@ public interface ValueMerger {
             }
         }
     };
-    public static final Optional<ValueMerger> NONE = Optional.absent();
+    public static final Optional<ValueMerger> NONE = Optional.empty();
 }

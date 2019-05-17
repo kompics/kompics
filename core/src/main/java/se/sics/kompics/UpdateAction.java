@@ -20,7 +20,7 @@
  */
 package se.sics.kompics;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import se.sics.kompics.config.ConfigUpdate;
 import se.sics.kompics.config.ConfigUpdateFactory;
 import se.sics.kompics.config.ValueMerger;
@@ -73,7 +73,7 @@ public class UpdateAction {
         private Mapper selfMapper = null;
         private Propagation downStrategy = Propagation.ORIGINAL;
         private Mapper downMapper = null;
-        private Optional<ValueMerger> merger = Optional.absent();
+        private Optional<ValueMerger> merger = Optional.empty();
 
         public UpdateAction finalise() {
             return new UpdateAction(upStrategy, upMapper, selfStrategy, selfMapper, downStrategy, downMapper, merger);
@@ -125,7 +125,7 @@ public class UpdateAction {
         }
 
         public void customMergeWith(ValueMerger merger) {
-            this.merger = Optional.fromNullable(merger);
+            this.merger = Optional.ofNullable(merger);
         }
     }
 }

@@ -20,7 +20,7 @@
  */
 package se.sics.kompics;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.List;
@@ -215,7 +215,7 @@ public abstract class ComponentDefinition {
      * @return the component
      */
     protected final <T extends ComponentDefinition> Component create(Class<T> definition, Init.None initEvent) {
-        Optional<Init<T>> init = Optional.absent();
+        Optional<Init<T>> init = Optional.empty();
         return core.doCreate(definition, init);
     }
 
@@ -246,7 +246,7 @@ public abstract class ComponentDefinition {
      */
     protected final <T extends ComponentDefinition> Component create(Class<T> definition, Init.None initEvent,
             ConfigUpdate update) {
-        Optional<Init<T>> init = Optional.absent();
+        Optional<Init<T>> init = Optional.empty();
         return core.doCreate(definition, init, Optional.of(update));
     }
 

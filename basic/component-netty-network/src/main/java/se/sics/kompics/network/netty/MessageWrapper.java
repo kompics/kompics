@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import se.sics.kompics.network.MessageNotify;
 import se.sics.kompics.network.Msg;
 
@@ -40,7 +40,7 @@ class MessageWrapper {
 
     MessageWrapper(Msg<?, ?> msg) {
         this.msg = msg;
-        this.notify = Optional.absent();
+        this.notify = Optional.empty();
     }
 
     void injectSize(int diff, long startTS) {

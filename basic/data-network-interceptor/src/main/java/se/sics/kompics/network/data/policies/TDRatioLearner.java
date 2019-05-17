@@ -45,7 +45,7 @@ import se.sics.kompics.config.Config;
  * Uses the Sarsa algorithm from Reinforcement Learning: An Introduction, figure 6.9, page 146
  * <p>
  * 
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class TDRatioLearner implements ProtocolRatioPolicy {
 

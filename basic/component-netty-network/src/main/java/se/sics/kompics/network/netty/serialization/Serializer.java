@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty.serialization;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import io.netty.buffer.ByteBuf;
 
 /**

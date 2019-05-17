@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty.serialization;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -28,12 +28,8 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.UUID;
-import junit.framework.Assert;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 import se.sics.kompics.network.Address;
 import se.sics.kompics.network.Transport;
 import se.sics.kompics.network.netty.DisambiguateConnection;
@@ -43,7 +39,6 @@ import se.sics.kompics.network.netty.NettyAddress;
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-@RunWith(JUnit4.class)
 public class SerializationTest {
 
     @Test
@@ -60,7 +55,7 @@ public class SerializationTest {
         ByteBuf buf = Unpooled.directBuffer();
         Serializers.toBinary(some, buf);
         System.out.println("Bytes: " + ByteBufUtil.hexDump(buf));
-        byte[] someRes = (byte[]) Serializers.fromBinary(buf, Optional.absent());
+        byte[] someRes = (byte[]) Serializers.fromBinary(buf, Optional.empty());
         assertArrayEquals(some, someRes);
     }
 
@@ -70,7 +65,7 @@ public class SerializationTest {
         ByteBuf buf = Unpooled.directBuffer();
         Serializers.toBinary(some, buf);
         System.out.println("Nulls: " + ByteBufUtil.hexDump(buf));
-        Object someRes = Serializers.fromBinary(buf, Optional.absent());
+        Object someRes = Serializers.fromBinary(buf, Optional.empty());
         assertEquals(some, someRes);
     }
 
@@ -80,13 +75,13 @@ public class SerializationTest {
         ByteBuf buf = Unpooled.directBuffer();
         Serializers.toBinary(some, buf);
         System.out.println("Ints: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
-        Integer someRes = (Integer) Serializers.fromBinary(buf, Optional.absent());
+        Integer someRes = (Integer) Serializers.fromBinary(buf, Optional.empty());
         assertEquals(some, someRes);
 
         int someI = 1234;
         Serializers.toBinary(someI, buf);
         System.out.println("Ints2: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
-        int someResI = (Integer) Serializers.fromBinary(buf, Optional.absent());
+        int someResI = (Integer) Serializers.fromBinary(buf, Optional.empty());
         assertEquals(someI, someResI);
     }
 
@@ -96,7 +91,7 @@ public class SerializationTest {
         ByteBuf buf = Unpooled.directBuffer();
         Serializers.toBinary(some, buf);
         System.out.println("SomeSerializable: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
-        SomeSerializable someRes = (SomeSerializable) Serializers.fromBinary(buf, Optional.absent());
+        SomeSerializable someRes = (SomeSerializable) Serializers.fromBinary(buf, Optional.empty());
         assertEquals(some.getField(), someRes.getField());
     }
 
@@ -107,7 +102,7 @@ public class SerializationTest {
         ByteBuf buf = Unpooled.directBuffer();
         Serializers.toBinary(some, buf);
         System.out.println("SomeParent: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
-        ParentSome someRes = (ParentSome) Serializers.fromBinary(buf, Optional.absent());
+        ParentSome someRes = (ParentSome) Serializers.fromBinary(buf, Optional.empty());
         assertEquals(some.getMySer().getField(), someRes.getMySer().getField());
     }
 
@@ -118,12 +113,12 @@ public class SerializationTest {
             ByteBuf buf = Unpooled.directBuffer();
             Serializers.toBinary(addr, buf);
             System.out.println("Address: " + ByteBufUtil.hexDump(buf));
-            Address someRes = (Address) Serializers.fromBinary(buf, Optional.absent());
+            Address someRes = (Address) Serializers.fromBinary(buf, Optional.empty());
             assertEquals(addr, someRes);
 
             buf.release();
         } catch (UnknownHostException ex) {
-            Assert.fail(ex.getMessage());
+            fail(ex.getMessage());
         }
     }
 
@@ -137,13 +132,13 @@ public class SerializationTest {
                 ByteBuf buf = Unpooled.directBuffer();
                 Serializers.toBinary(req, buf);
                 System.out.println("DisambReq: " + ByteBufUtil.hexDump(buf));
-                Object someRes = Serializers.fromBinary(buf, Optional.absent());
-                Assert.assertNotNull(someRes);
+                Object someRes = Serializers.fromBinary(buf, Optional.empty());
+                assertNotNull(someRes);
                 someRes = null;
                 buf.clear();
 
             } catch (UnknownHostException ex) {
-                Assert.fail(ex.getMessage());
+                fail(ex.getMessage());
             }
         }
     }
@@ -154,8 +149,8 @@ public class SerializationTest {
         UUID orig = UUID.randomUUID();
         Serializers.toBinary(orig, buf);
         System.out.println("UUID: " + ByteBufUtil.hexDump(buf));
-        UUID copy = (UUID) Serializers.fromBinary(buf, Optional.absent());
-        Assert.assertEquals(orig, copy);
+        UUID copy = (UUID) Serializers.fromBinary(buf, Optional.empty());
+        assertEquals(orig, copy);
     }
 
     @Test
@@ -168,7 +163,7 @@ public class SerializationTest {
         ByteBuf buf = Unpooled.directBuffer();
         Serializers.toBinary(some, buf);
         System.out.println("AVRO - SomeAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
-        SomeAvro someRes = (SomeAvro) Serializers.fromBinary(buf, Optional.absent());
+        SomeAvro someRes = (SomeAvro) Serializers.fromBinary(buf, Optional.empty());
         assertEquals(some.getField(), someRes.getField());
         //
         buf.clear();
@@ -177,7 +172,7 @@ public class SerializationTest {
         Serializers.toBinary(someP, buf);
         System.out.println(
                 "AVRO - ParentSomeAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
-        ParentSomeAvro somePRes = (ParentSomeAvro) Serializers.fromBinary(buf, Optional.absent());
+        ParentSomeAvro somePRes = (ParentSomeAvro) Serializers.fromBinary(buf, Optional.empty());
         assertEquals(someP.getMySer().getField(), somePRes.getMySer().getField());
         //
         buf.clear();
@@ -186,7 +181,7 @@ public class SerializationTest {
         Serializers.toBinary(sga, buf);
         System.out.println(
                 "AVRO - SomeGeneratedAvro: " + ByteBufUtil.hexDump(buf) + " : " + ByteBufUtil.hexDump(buf).length());
-        SomeGeneratedAvro sgaR = (SomeGeneratedAvro) Serializers.fromBinary(buf, Optional.absent());
+        SomeGeneratedAvro sgaR = (SomeGeneratedAvro) Serializers.fromBinary(buf, Optional.empty());
         assertEquals(sga.getSomeNumber(), sgaR.getSomeNumber());
         //
         buf.release();

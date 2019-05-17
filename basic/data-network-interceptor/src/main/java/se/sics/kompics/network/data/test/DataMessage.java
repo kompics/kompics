@@ -27,7 +27,7 @@ import se.sics.kompics.network.data.DataHeader;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public abstract class DataMessage implements Msg<Address, DataHeader<Address>> {
 

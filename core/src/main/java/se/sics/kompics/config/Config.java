@@ -20,7 +20,8 @@
  */
 package se.sics.kompics.config;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -166,7 +167,7 @@ public interface Config {
                 T v = (T) cv.unwrap();
                 return Optional.of(v);
             }
-            return Optional.absent();
+            return Optional.empty();
         }
 
         @Override
@@ -178,7 +179,7 @@ public interface Config {
                     if (v != null) {
                         return Optional.of(v);
                     } else {
-                        return Optional.absent();
+                        return Optional.empty();
                     }
                 }
                 cv = baseline.getValue(key);
@@ -187,12 +188,12 @@ public interface Config {
                     if (v != null) {
                         return Optional.of(v);
                     } else {
-                        return Optional.absent();
+                        return Optional.empty();
                     }
                 }
-                return Optional.absent();
+                return Optional.empty();
             } catch (ClassCastException ex) {
-                return Optional.absent();
+                return Optional.empty();
             }
         }
 
@@ -420,13 +421,13 @@ public interface Config {
                     if (v != null) {
                         return Optional.of(v);
                     } else {
-                        return Optional.absent();
+                        return Optional.empty();
                     }
                 } else {
                     return conf.readValue(key, type);
                 }
             } catch (ClassCastException ex) {
-                return Optional.absent();
+                return Optional.empty();
             }
         }
 

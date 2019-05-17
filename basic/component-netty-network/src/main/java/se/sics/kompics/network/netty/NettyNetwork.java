@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.netty;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import io.netty.bootstrap.Bootstrap;
@@ -245,6 +245,7 @@ public class NettyNetwork extends ComponentDefinition {
                 trigger(status, netC);
             } catch (NetworkException ex) {
                 logger.error("Failed during start-up!");
+
                 bootstrapTCPClient.config().group().shutdownGracefully();
                 bootstrapUDTClient.config().group().shutdownGracefully();
                 if (bootstrapTCP != null){
@@ -258,6 +259,7 @@ public class NettyNetwork extends ComponentDefinition {
                 if (bootstrapUDP != null){
                     bootstrapUDP.config().group().shutdownGracefully();
                 }
+              
                 // just rethrow to crash the component
                 throw new RuntimeException(ex);
             }

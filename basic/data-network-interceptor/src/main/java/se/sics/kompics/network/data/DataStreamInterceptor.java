@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.data;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.larskroll.common.Either;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -213,7 +213,7 @@ public class DataStreamInterceptor extends ComponentDefinition {
                 or = Optional.of(mnr);
             } else {
                 event = eMsg.getRight();
-                or = Optional.absent();
+                or = Optional.empty();
             }
             Header h = event.getHeader();
             @SuppressWarnings("unchecked")

@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.junit.Assert;
+import static org.junit.jupiter.api.Assertions.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.kompics.KompicsEvent;
@@ -57,7 +57,7 @@ public abstract class TestUtil {
     public static void submit(String s) {
         try {
             if (!stringQ.offer(s, timeout, timeUnit)) {
-                Assert.fail(testDesc + " -- " + "Timeout");
+                fail(testDesc + " -- " + "Timeout");
             }
         } catch (InterruptedException ex) {
             log.debug(testDesc + " -- " + "Failed on putting String: " + s, ex);
@@ -67,7 +67,7 @@ public abstract class TestUtil {
     public static void submit(KompicsEvent e) {
         try {
             if (!eventQ.offer(e, timeout, timeUnit)) {
-                Assert.fail(testDesc + " -- " + "Timeout");
+                fail(testDesc + " -- " + "Timeout");
             }
         } catch (InterruptedException ex) {
             log.debug(testDesc + " -- " + "Failed on putting Event: " + e, ex);
@@ -78,9 +78,9 @@ public abstract class TestUtil {
         try {
             KompicsEvent qEvent = eventQ.poll(timeout, timeUnit);
             if (qEvent == null) {
-                Assert.fail(testDesc + " -- " + "Timeout");
+                fail(testDesc + " -- " + "Timeout");
             }
-            Assert.assertEquals(e, qEvent);
+            assertEquals(e, qEvent);
         } catch (InterruptedException ex) {
             log.debug(testDesc + " -- " + "Failed waiting for Event: " + e, ex);
         }
@@ -90,9 +90,9 @@ public abstract class TestUtil {
         try {
             KompicsEvent qEvent = eventQ.poll(timeout, timeUnit);
             if (qEvent == null) {
-                Assert.fail(testDesc + " -- " + "Timeout");
+                fail(testDesc + " -- " + "Timeout");
             }
-            Assert.assertTrue(eventType.isInstance(qEvent));
+            assertTrue(eventType.isInstance(qEvent));
         } catch (InterruptedException ex) {
             log.debug(testDesc + " -- " + "Failed waiting for Event of Type: " + eventType, ex);
         }
@@ -102,9 +102,9 @@ public abstract class TestUtil {
         try {
             String qString = stringQ.poll(timeout, timeUnit);
             if (qString == null) {
-                Assert.fail(testDesc + " -- " + "Timeout on waiting for \'" + s + "\'");
+                fail(testDesc + " -- " + "Timeout on waiting for \'" + s + "\'");
             }
-            Assert.assertEquals(s, qString);
+            assertEquals(s, qString);
         } catch (InterruptedException ex) {
             log.debug(testDesc + " -- " + "Failed waiting for String: " + s, ex);
         }
@@ -119,12 +119,12 @@ public abstract class TestUtil {
             while (!el.isEmpty()) {
                 KompicsEvent qEvent = eventQ.poll(timeout, timeUnit);
                 if (qEvent == null) {
-                    Assert.fail(testDesc + " -- " + "Timeout");
+                    fail(testDesc + " -- " + "Timeout");
                 }
                 if (el.contains(qEvent)) {
                     el.remove(qEvent);
                 } else {
-                    Assert.fail(testDesc + " -- " + "Unexpected event: " + qEvent);
+                    fail(testDesc + " -- " + "Unexpected event: " + qEvent);
                 }
             }
         } catch (InterruptedException ex) {
@@ -142,7 +142,7 @@ public abstract class TestUtil {
             while (!el.isEmpty()) {
                 KompicsEvent qEvent = eventQ.poll(timeout, timeUnit);
                 if (qEvent == null) {
-                    Assert.fail(testDesc + " -- " + "Timeout");
+                    fail(testDesc + " -- " + "Timeout");
                 }
                 Iterator<Class<? extends KompicsEvent>> it = el.iterator();
                 boolean found = false;
@@ -155,7 +155,7 @@ public abstract class TestUtil {
                     }
                 }
                 if (!found) {
-                    Assert.fail(testDesc + " -- " + "Unexpected event: " + qEvent);
+                    fail(testDesc + " -- " + "Unexpected event: " + qEvent);
                 }
             }
         } catch (InterruptedException ex) {
@@ -172,13 +172,13 @@ public abstract class TestUtil {
             while (!sl.isEmpty()) {
                 String qString = stringQ.poll(timeout, timeUnit);
                 if (qString == null) {
-                    Assert.fail(testDesc + " -- " + "Timeout");
+                    fail(testDesc + " -- " + "Timeout");
                 }
                 if (sl.contains(qString)) {
                     sl.remove(qString);
                     System.out.println("Got " + qString);
                 } else {
-                    Assert.fail(testDesc + " -- " + "Unexpected key: " + qString);
+                    fail(testDesc + " -- " + "Unexpected key: " + qString);
                 }
             }
         } catch (InterruptedException ex) {

@@ -22,17 +22,13 @@ package se.sics.kompics;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-@RunWith(JUnit4.class)
 public class StartStopTest {
 
     private static BlockingQueue<KompicsEvent> queue;
@@ -43,13 +39,13 @@ public class StartStopTest {
         Kompics.createAndStart(RootComponent.class, 4, 10); // totally arbitrary values
         try {
             KompicsEvent e = queue.take();
-            assertTrue("First run started.", e instanceof TestReply);
+            assertTrue(e instanceof TestReply, "First run started.");
             e = queue.take();
-            assertTrue("First run stopped.", e instanceof Stopped);
+            assertTrue(e instanceof Stopped, "First run stopped.");
             e = queue.take();
-            assertTrue("Second run started.", e instanceof TestReply);
+            assertTrue(e instanceof TestReply, "Second run started.");
             e = queue.take();
-            assertTrue("Second run stopped.", e instanceof Stopped);
+            assertTrue(e instanceof Stopped, "Second run stopped.");
         } catch (InterruptedException ex) {
             fail(ex.getMessage());
         }
@@ -59,13 +55,13 @@ public class StartStopTest {
         Kompics.createAndStart(RootComponent.class, 4, 10); // totally arbitrary values
         try {
             KompicsEvent e = queue.take();
-            assertTrue("Third run started.", e instanceof TestReply);
+            assertTrue(e instanceof TestReply, "Third run started.");
             e = queue.take();
-            assertTrue("Third run stopped.", e instanceof Stopped);
+            assertTrue(e instanceof Stopped, "Third run stopped.");
             e = queue.take();
-            assertTrue("Fourth run started.", e instanceof TestReply);
+            assertTrue(e instanceof TestReply, "Fourth run started.");
             e = queue.take();
-            assertTrue("Fourth run stopped.", e instanceof Stopped);
+            assertTrue(e instanceof Stopped, "Fourth run stopped.");
         } catch (InterruptedException ex) {
             fail(ex.getMessage());
         }

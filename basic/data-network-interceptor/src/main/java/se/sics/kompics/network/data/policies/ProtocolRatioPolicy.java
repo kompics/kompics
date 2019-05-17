@@ -24,7 +24,7 @@ import org.jscience.mathematics.number.Rational;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public interface ProtocolRatioPolicy {
     /**

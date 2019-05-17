@@ -20,7 +20,7 @@
  */
 package se.sics.kompics;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -47,12 +47,12 @@ public abstract class ComponentCore extends ForkJoinTask<Void> implements Compon
     protected ComponentCore parent;
     protected Config conf;
     public static final ThreadLocal<ComponentCore> parentThreadLocal = new ThreadLocal<ComponentCore>();
-    public static final ThreadLocal<Optional<ConfigUpdate>> childUpdate = new ThreadLocal<Optional<ConfigUpdate>>();
-
-    static {
-        Optional<ConfigUpdate> update = Optional.absent();
-        childUpdate.set(update);
-    }
+    public static final ThreadLocal<Optional<ConfigUpdate>> childUpdate = new ThreadLocal<Optional<ConfigUpdate>>() {
+        @Override
+        protected Optional<ConfigUpdate> initialValue() {
+            return Optional.empty();
+        }
+    };
 
     protected List<ComponentCore> children = new LinkedList<ComponentCore>();
 

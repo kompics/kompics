@@ -23,10 +23,8 @@ package se.sics.kompics;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +32,6 @@ import org.slf4j.LoggerFactory;
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-@RunWith(JUnit4.class)
 public class DirectRequestResponseTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DirectRequestResponseTest.class);
@@ -134,7 +131,7 @@ public class DirectRequestResponseTest {
             @Override
             public void handle(Up event) {
                 if (rcount != event.id) {
-                    Assert.fail("Messages got misordered! Expected " + rcount + " but got " + event.id);
+                    fail("Messages got misordered! Expected " + rcount + " but got " + event.id);
                 }
                 rcount++;
                 if (rcount == scount) {
@@ -182,7 +179,7 @@ public class DirectRequestResponseTest {
 
             @Override
             public void handle(Up event) {
-                Assert.fail("Direct.Response is not supposed to be forwarded!");
+                fail("Direct.Response is not supposed to be forwarded!");
             }
         };
 
@@ -195,9 +192,9 @@ public class DirectRequestResponseTest {
         try {
             String qString = stringQ.poll(timeout, timeUnit);
             if (qString == null) {
-                Assert.fail("Timeout on waiting for \'" + s + "\'");
+                fail("Timeout on waiting for \'" + s + "\'");
             }
-            Assert.assertEquals(s, qString);
+            assertEquals(s, qString);
         } catch (InterruptedException ex) {
             LOG.debug("Failed waiting for String: " + s, ex);
         }

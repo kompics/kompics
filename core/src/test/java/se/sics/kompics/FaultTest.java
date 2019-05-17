@@ -23,10 +23,8 @@ package se.sics.kompics;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.kompics.Fault.ResolveAction;
@@ -35,7 +33,6 @@ import se.sics.kompics.Fault.ResolveAction;
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-@RunWith(JUnit4.class)
 public class FaultTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(FaultTest.class);
@@ -64,7 +61,7 @@ public class FaultTest {
         try {
             Kompics.waitForTermination();
         } catch (InterruptedException ex) {
-            Assert.fail(ex.getMessage());
+            fail(ex.getMessage());
         }
         LOG.info("Escalate Test: Kompics shut down.");
     }
@@ -83,7 +80,7 @@ public class FaultTest {
         try {
             Kompics.waitForTermination();
         } catch (InterruptedException ex) {
-            Assert.fail(ex.getMessage());
+            fail(ex.getMessage());
         }
         LOG.info("Ignore Test: Kompics shut down.");
     }
@@ -106,7 +103,7 @@ public class FaultTest {
         try {
             Kompics.waitForTermination();
         } catch (InterruptedException ex) {
-            Assert.fail(ex.getMessage());
+            fail(ex.getMessage());
         }
         LOG.info("Parent Fault Test: Kompics shut down.");
     }
@@ -234,9 +231,9 @@ public class FaultTest {
         try {
             String qString = stringQ.poll(timeout, timeUnit);
             if (qString == null) {
-                Assert.fail("Timeout on waiting for \'" + s + "\'");
+                fail("Timeout on waiting for \'" + s + "\'");
             }
-            Assert.assertEquals(s, qString);
+            assertEquals(s, qString);
         } catch (InterruptedException ex) {
             LOG.debug("Failed waiting for String: " + s, ex);
         }

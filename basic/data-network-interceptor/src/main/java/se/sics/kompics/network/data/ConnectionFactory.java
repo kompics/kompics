@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.data;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import io.netty.buffer.ByteBuf;
 import java.lang.reflect.Constructor;
 import java.net.InetSocketAddress;

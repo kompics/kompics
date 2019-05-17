@@ -20,10 +20,8 @@
  */
 package se.sics.kompics.network.data;
 
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 import org.ujmp.core.DenseMatrix;
 import org.ujmp.core.Matrix;
 import org.ujmp.core.SparseMatrix;
@@ -31,9 +29,8 @@ import org.ujmp.core.calculation.Calculation;
 
 /**
  *
- * @author lkroll
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-@RunWith(JUnit4.class)
 public class MatrixTest {
 
     @Test
@@ -41,7 +38,7 @@ public class MatrixTest {
         double[][] baseM = new double[][] { { 0.0, 1.0, 3.0, 1.0, 0.0 }, { 0.0, 1.0, 3.0, 1.0, 0.0 },
                 { 0.0, 1.0, 3.0, 1.0, 0.0 }, { 0.0, 1.0, 3.0, 1.0, 0.0 }, { 0.0, 1.0, 3.0, 1.0, 0.0 } };
         Matrix m = DenseMatrix.Factory.importFromArray(baseM);
-        Matrix ms = SparseMatrix.Factory.zeros(5, 5);
+        // Matrix ms = SparseMatrix.Factory.zeros(5, 5);
         System.out.println("Matrix is: " + m);
         Matrix row = m.getRowList().get(3);
         // Matrix rows = ms.getRowList().get(3); // doesn't work...in sparse matrices rows do not exist
