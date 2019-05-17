@@ -79,7 +79,7 @@ public class NetworkTest {
     private static final ConcurrentSkipListMap<Integer, ConnectionStatus.Dropped> droppedConnections = new ConcurrentSkipListMap<Integer, ConnectionStatus.Dropped>();
     // private static int startPort = 33000;
     private static Transport[] protos;
-    private static int taken_port;
+    private static int taken_port = 80;
 
     public static synchronized void runTests(NetworkGenerator nGen, int numNodes, Transport[] protos) {
         LOG.info("\n******************** Running All Test ********************\n");
@@ -236,7 +236,7 @@ public class NetworkTest {
         ServerSocket[] sockets = new ServerSocket[1];
         try {
             ServerSocket s = new ServerSocket(0); // find a free port to test on
-            taken_port = s.getLocalPort();
+            // taken_port = s.getLocalPort();
             sockets[0] = s;
             LOG.debug("Testing on port: " + taken_port);
         } catch (IOException ex) {
@@ -263,7 +263,7 @@ public class NetworkTest {
         }
         LOG.info("Got PBLauncher STOPPED.");
         try {
-            sockets[0].close();     // close test port
+            sockets[0].close(); // close test port
         } catch (IOException ex) {
             LOG.error("Could not close port: {}", ex);
             System.exit(1);
@@ -279,7 +279,7 @@ public class NetworkTest {
 
     }
 
-    public static synchronized void runDCTest(NetworkGenerator nGen, int numNodes, Transport[] protos){
+    public static synchronized void runDCTest(NetworkGenerator nGen, int numNodes, Transport[] protos) {
         LOG.info("\n******************** Running Dropped Connection Test ********************\n");
         NetworkTest.nGen = nGen;
         NetworkTest.numNodes = numNodes;
@@ -288,7 +288,8 @@ public class NetworkTest {
 
         msgId.set(0);
         messageStatus.clear();
-        TestUtil.reset("Dropped Connection test (" + Arrays.toString(NetworkTest.protos) + ") Nodes #" + numNodes, 100000); // 10
+        TestUtil.reset("Dropped Connection test (" + Arrays.toString(NetworkTest.protos) + ") Nodes #" + numNodes,
+                100000); // 10
         // sec
         // timeout
         // for
@@ -326,19 +327,20 @@ public class NetworkTest {
         LOG.info("\n******************** Shutting Down Kompics ********************\n");
         Kompics.shutdown();
 
-        assertEquals(numNodes * numNodes, droppedConnections.size());   // each node should get one dropped
-                                                                                // event from each fake node
-        for (ConnectionStatus.Dropped status: droppedConnections.values()){
+        assertEquals(numNodes * numNodes, droppedConnections.size()); // each node should get one dropped
+                                                                      // event from each fake node
+        for (ConnectionStatus.Dropped status : droppedConnections.values()) {
             assertTrue(status.last);
         }
         LOG.info("\n******************** Drop Connection Test Done ********************\n");
     }
+
     public static class LauncherComponent extends ComponentDefinition {
 
         public LauncherComponent() {
             TestAddress[] nodes = new TestAddress[numNodes];
             TestAddress[] fakeNodes = createFakeNodes(); // these are used to test that the network doesn't
-                                                                 // crash on connection errors
+                                                         // crash on connection errors
             InetAddress ip = null;
             try {
                 ip = InetAddress.getByName("127.0.0.1");
@@ -800,11 +802,11 @@ public class NetworkTest {
         };
     }
 
-    public static class PBLauncher extends ComponentDefinition{
+    public static class PBLauncher extends ComponentDefinition {
 
         int count = 0;
 
-        public PBLauncher(){
+        public PBLauncher() {
             InetAddress ip = null;
             try {
                 ip = InetAddress.getByName("127.0.0.1");
@@ -812,36 +814,35 @@ public class NetworkTest {
                 LOG.error("Aborting test.", ex);
                 System.exit(1);
             }
-            for (int i = 0; i < numNodes; i++){
+            for (int i = 0; i < numNodes; i++) {
                 TestAddress ta = new TestAddress(ip, taken_port);
-                Component net = nGen.generate(myProxy, ta);     // try set up NettyNetwork with taken port
+                Component net = nGen.generate(myProxy, ta); // try set up NettyNetwork with taken port
             }
         }
 
         @Override
-        public ResolveAction handleFault(Fault f){
-            if (f.getCause() instanceof RuntimeException){
-                if (f.getCause().getCause() instanceof NetworkException){
+        public ResolveAction handleFault(Fault f) {
+            if (f.getCause() instanceof RuntimeException) {
+                if (f.getCause().getCause() instanceof NetworkException) {
                     count++;
                     NetworkException nex = (NetworkException) f.getCause().getCause();
                     failedBindings.put(f.getSourceCore().id(), nex.peer.getPort());
-                    if (count == numNodes){
+                    if (count == numNodes) {
                         TestUtil.submit(STOPPED);
                     }
                     return ResolveAction.RESOLVED;
-                }
-                else {
+                } else {
                     LOG.error("Got unexpected fault: " + f);
                     System.exit(1);
                     return ResolveAction.ESCALATE;
                 }
-            }
-            else {
+            } else {
                 LOG.error("Got unexpected fault: " + f);
                 System.exit(1);
                 return ResolveAction.ESCALATE;
             }
         }
+
         private final ComponentProxy myProxy = new ComponentProxy() {
             @Override
             public <P extends PortType> void trigger(KompicsEvent e, Port<P> p) {
@@ -894,7 +895,7 @@ public class NetworkTest {
         };
     }
 
-    public static class DCLauncher extends ComponentDefinition{
+    public static class DCLauncher extends ComponentDefinition {
         public DCLauncher() {
             TestAddress[] nodes = new TestAddress[numNodes];
             TestAddress[] fakeNodes = createFakeNodes();
@@ -1017,7 +1018,7 @@ public class NetworkTest {
             };
             subscribe(startHandler, control);
 
-            Handler<ConnectionStatus.Dropped> droppedHandler = new Handler<ConnectionStatus.Dropped>(){
+            Handler<ConnectionStatus.Dropped> droppedHandler = new Handler<ConnectionStatus.Dropped>() {
 
                 @Override
                 public void handle(ConnectionStatus.Dropped event) {
@@ -1026,7 +1027,7 @@ public class NetworkTest {
                     }
                     int id = msgId.incrementAndGet();
                     droppedConnections.put(id, event);
-                    if (dropsReceived >= numNodes){
+                    if (dropsReceived >= numNodes) {
                         TestUtil.submit(STOPPED);
                     }
                 }
@@ -1035,9 +1036,9 @@ public class NetworkTest {
         }
 
         private void sendMessages() {
-            for (int i = 0; i < fakeNodes.length; i++){
+            for (int i = 0; i < fakeNodes.length; i++) {
                 TestAddress dest = fakeNodes[i];
-                for (int j = 0; j < NetworkTest.protos.length; j++){
+                for (int j = 0; j < NetworkTest.protos.length; j++) {
                     Transport proto = NetworkTest.protos[j];
                     TestMessage msg = new TestMessage(self, dest, 0, proto);
                     trigger(msg, net);
@@ -1175,7 +1176,7 @@ public class NetworkTest {
         }
     }
 
-    private static TestAddress[] createFakeNodes(){
+    private static TestAddress[] createFakeNodes() {
         Random rand = new Random(SEED);
         TestAddress[] fakeNodes = new TestAddress[numNodes]; // these are used to test that the network doesn't
         // crash on connection errors

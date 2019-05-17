@@ -248,18 +248,18 @@ public class NettyNetwork extends ComponentDefinition {
 
                 bootstrapTCPClient.config().group().shutdownGracefully();
                 bootstrapUDTClient.config().group().shutdownGracefully();
-                if (bootstrapTCP != null){
+                if (bootstrapTCP != null) {
                     bootstrapTCP.config().childGroup().shutdownGracefully();
                     bootstrapTCP.config().group().shutdownGracefully();
                 }
-                if (bootstrapUDT != null){
+                if (bootstrapUDT != null) {
                     bootstrapUDT.config().childGroup().shutdownGracefully();
                     bootstrapUDT.config().group().shutdownGracefully();
                 }
-                if (bootstrapUDP != null){
+                if (bootstrapUDP != null) {
                     bootstrapUDP.config().group().shutdownGracefully();
                 }
-              
+
                 // just rethrow to crash the component
                 throw new RuntimeException(ex);
             }

@@ -119,5 +119,4 @@ public class NetworkTest {
         se.sics.kompics.network.test.NetworkTest.runDCTest(netGen, 5, protos);
     }
 
-
 }
