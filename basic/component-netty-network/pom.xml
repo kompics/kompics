@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
     <parent>
         <groupId>se.sics.kompics.basic</groupId>
         <artifactId>kompics-basic-components</artifactId>
-        <version>1.1.0-SNAPSHOT</version>
+        <version>1.1.0</version>
     </parent>
     <groupId>se.sics.kompics.basic</groupId>
     <artifactId>kompics-component-netty-network</artifactId>
@@ -33,7 +33,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
         <dependency>
             <groupId>se.sics.kompics.basic</groupId>
             <artifactId>kompics-port-network</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>1.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -128,15 +128,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
         <id>bintray-kompics-Maven</id>
         <name>bintray</name>
         <url>https://dl.bintray.com/kompics/Maven</url>
-    </repository>
-    <!-- this is where the custom Netty implementation is from //-->
-    <repository>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-        <id>bintray-lkrollcom-maven</id>
-        <name>bintray</name>
-        <url>https://dl.bintray.com/lkrollcom/maven</url>
     </repository>
 </repositories>
 </project>
