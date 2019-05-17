@@ -80,4 +80,44 @@ public class NetworkTest {
         LOG.info("********* 5 Node Datagram Network Test ***********");
         se.sics.kompics.network.test.NetworkTest.runAtLeastTests(netGen, 5, protos);
     }
+
+    @Test
+    public void failedPortBindingTest() {
+
+        NetworkGenerator netGen = new NetworkGenerator() {
+            @Override
+            public Component generate(ComponentProxy parent, Address self) {
+                NettyInit init = new NettyInit(self);
+                return parent.create(NettyNetwork.class, init);
+            }
+
+        };
+
+        LOG.info("********* 2 Node Failed Port Binding Test ***********");
+        se.sics.kompics.network.test.NetworkTest.runPBTest(netGen, 2);
+        LOG.info("********* 5 Node Failed Port Binding Test ***********");
+        se.sics.kompics.network.test.NetworkTest.runPBTest(netGen, 5);
+    }
+
+    @Test
+    public void droppedConnectionTest() {
+
+        final Transport[] protos = new Transport[] { Transport.TCP, Transport.UDT };
+
+        NetworkGenerator netGen = new NetworkGenerator() {
+            @Override
+            public Component generate(ComponentProxy parent, Address self) {
+                NettyInit init = new NettyInit(self, 0, ImmutableSet.copyOf(protos));
+                return parent.create(NettyNetwork.class, init);
+            }
+
+        };
+
+        LOG.info("********* 2 Node Dropped Connection Test ***********");
+        se.sics.kompics.network.test.NetworkTest.runDCTest(netGen, 2, protos);
+        LOG.info("********* 5 Node Dropped Connection Test ***********");
+        se.sics.kompics.network.test.NetworkTest.runDCTest(netGen, 5, protos);
+    }
+
+
 }

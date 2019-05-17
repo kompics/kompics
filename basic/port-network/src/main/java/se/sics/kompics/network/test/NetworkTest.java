@@ -25,16 +25,9 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,10 +49,7 @@ import se.sics.kompics.Port;
 import se.sics.kompics.PortType;
 import se.sics.kompics.Positive;
 import se.sics.kompics.Start;
-import se.sics.kompics.network.Address;
-import se.sics.kompics.network.MessageNotify;
-import se.sics.kompics.network.Network;
-import se.sics.kompics.network.Transport;
+import se.sics.kompics.network.*;
 
 /**
  *
@@ -85,8 +75,11 @@ public class NetworkTest {
     private static int numNodes;
     private static final AtomicInteger msgId = new AtomicInteger(0);
     private static final ConcurrentSkipListMap<Integer, String> messageStatus = new ConcurrentSkipListMap<Integer, String>();
+    private static final ConcurrentHashMap<UUID, Integer> failedBindings = new ConcurrentHashMap<UUID, Integer>();
+    private static final ConcurrentSkipListMap<Integer, ConnectionStatus.Dropped> droppedConnections = new ConcurrentSkipListMap<Integer, ConnectionStatus.Dropped>();
     // private static int startPort = 33000;
     private static Transport[] protos;
+    private static int taken_port;
 
     public static synchronized void runTests(NetworkGenerator nGen, int numNodes, Transport[] protos) {
         LOG.info("\n******************** Running All Test ********************\n");
@@ -222,26 +215,130 @@ public class NetworkTest {
         LOG.info("\n******************** AT LEAST Test Done ********************\n");
     }
 
-    public static class LauncherComponent extends ComponentDefinition {
+    public static synchronized void runPBTest(NetworkGenerator nGen, int numNodes) {
+        LOG.info("\n******************** Running Failed Port Binding Test ********************\n");
+        NetworkTest.nGen = nGen;
+        NetworkTest.numNodes = numNodes;
+        WAIT_FOR.set(1); // wait for PBLauncher
 
-        private Random rand = new Random(SEED);
+        msgId.set(0);
+        failedBindings.clear();
+        TestUtil.reset("Failed Port Binding test: Nodes #" + numNodes, 100000); // 10
+        // sec
+        // timeout
+        // for
+        // all
+        // the
+        // connections
+        // to be
+        // dropped
+        // properly
+        ServerSocket[] sockets = new ServerSocket[1];
+        try {
+            ServerSocket s = new ServerSocket(0); // find a free port to test on
+            taken_port = s.getLocalPort();
+            sockets[0] = s;
+            LOG.debug("Testing on port: " + taken_port);
+        } catch (IOException ex) {
+            LOG.error("Could not find any free ports: {}", ex);
+            System.exit(1);
+        }
+        Kompics.createAndStart(PBLauncher.class, 8, 50);
+
+        LOG.info("Waiting for PBLauncher to be STOPPED.");
+        try {
+            TestUtil.waitFor(STOPPED);
+        } finally {
+            StringBuilder sb = new StringBuilder();
+            sb.append("FailedBindings {\n");
+            for (Entry<UUID, Integer> e : failedBindings.entrySet()) {
+                sb.append("Component ID: ");
+                sb.append(e.getKey());
+                sb.append(" -> Port: ");
+                sb.append(e.getValue());
+                sb.append("\n");
+            }
+            sb.append("}");
+            LOG.debug(sb.toString());
+        }
+        LOG.info("Got PBLauncher STOPPED.");
+        try {
+            sockets[0].close();     // close test port
+        } catch (IOException ex) {
+            LOG.error("Could not close port: {}", ex);
+            System.exit(1);
+        }
+        LOG.info("\n******************** Shutting Down Kompics ********************\n");
+        Kompics.shutdown();
+
+        assertEquals(numNodes, failedBindings.size());
+        for (int port : failedBindings.values()) {
+            assertEquals(taken_port, port);
+        }
+        LOG.info("\n******************** Failed Port Binding Test Done ********************\n");
+
+    }
+
+    public static synchronized void runDCTest(NetworkGenerator nGen, int numNodes, Transport[] protos){
+        LOG.info("\n******************** Running Dropped Connection Test ********************\n");
+        NetworkTest.nGen = nGen;
+        NetworkTest.numNodes = numNodes;
+        NetworkTest.protos = protos;
+        WAIT_FOR.set(NUM_MESSAGES);
+
+        msgId.set(0);
+        messageStatus.clear();
+        TestUtil.reset("Dropped Connection test (" + Arrays.toString(NetworkTest.protos) + ") Nodes #" + numNodes, 100000); // 10
+        // sec
+        // timeout
+        // for
+        // all
+        // the
+        // connections
+        // to be
+        // dropped
+        // properly
+
+        Kompics.createAndStart(DCLauncher.class, 8, 50);
+        for (int i = 0; i < numNodes; i++) {
+            LOG.info("Waiting for {}/{} STOPPED.", i + 1, numNodes);
+            try {
+                TestUtil.waitFor(STOPPED);
+            } finally {
+                StringBuilder sb = new StringBuilder();
+                sb.append("droppedConnections {\n");
+                for (Entry<Integer, ConnectionStatus.Dropped> e : droppedConnections.entrySet()) {
+                    sb.append(e.getKey());
+                    sb.append(" -> ");
+                    sb.append(e.getValue().peer);
+                    sb.append(", protocol=");
+                    sb.append(e.getValue().protocol);
+                    sb.append(", last=");
+                    sb.append(e.getValue().last);
+                    sb.append("\n");
+                }
+                sb.append("}");
+                LOG.debug(sb.toString());
+            }
+            LOG.info("Got {}/{} STOPPED.", i + 1, numNodes);
+        }
+
+        LOG.info("\n******************** Shutting Down Kompics ********************\n");
+        Kompics.shutdown();
+
+        assertEquals(numNodes * numNodes, droppedConnections.size());   // each node should get one dropped
+                                                                                // event from each fake node
+        for (ConnectionStatus.Dropped status: droppedConnections.values()){
+            assertTrue(status.last);
+        }
+        LOG.info("\n******************** Drop Connection Test Done ********************\n");
+    }
+    public static class LauncherComponent extends ComponentDefinition {
 
         public LauncherComponent() {
             TestAddress[] nodes = new TestAddress[numNodes];
-            TestAddress[] fakeNodes = new TestAddress[numNodes]; // these are used to test that the network doesn't
+            TestAddress[] fakeNodes = createFakeNodes(); // these are used to test that the network doesn't
                                                                  // crash on connection errors
-            for (int i = 0; i < numNodes; i++) {
-                try {
-                    byte[] ipB = new byte[4];
-                    rand.nextBytes(ipB);
-                    InetAddress ip = InetAddress.getByAddress(ipB);
-                    int port = rand.nextInt(65535 - 49152) + 49152;
-                    fakeNodes[i] = new TestAddress(ip, port);
-                } catch (UnknownHostException ex) {
-                    LOG.error("Aborting test.", ex);
-                    System.exit(1);
-                }
-            }
             InetAddress ip = null;
             try {
                 ip = InetAddress.getByName("127.0.0.1");
@@ -703,6 +800,263 @@ public class NetworkTest {
         };
     }
 
+    public static class PBLauncher extends ComponentDefinition{
+
+        int count = 0;
+
+        public PBLauncher(){
+            InetAddress ip = null;
+            try {
+                ip = InetAddress.getByName("127.0.0.1");
+            } catch (UnknownHostException ex) {
+                LOG.error("Aborting test.", ex);
+                System.exit(1);
+            }
+            for (int i = 0; i < numNodes; i++){
+                TestAddress ta = new TestAddress(ip, taken_port);
+                Component net = nGen.generate(myProxy, ta);     // try set up NettyNetwork with taken port
+            }
+        }
+
+        @Override
+        public ResolveAction handleFault(Fault f){
+            if (f.getCause() instanceof RuntimeException){
+                if (f.getCause().getCause() instanceof NetworkException){
+                    count++;
+                    NetworkException nex = (NetworkException) f.getCause().getCause();
+                    failedBindings.put(f.getSourceCore().id(), nex.peer.getPort());
+                    if (count == numNodes){
+                        TestUtil.submit(STOPPED);
+                    }
+                    return ResolveAction.RESOLVED;
+                }
+                else {
+                    LOG.error("Got unexpected fault: " + f);
+                    System.exit(1);
+                    return ResolveAction.ESCALATE;
+                }
+            }
+            else {
+                LOG.error("Got unexpected fault: " + f);
+                System.exit(1);
+                return ResolveAction.ESCALATE;
+            }
+        }
+        private final ComponentProxy myProxy = new ComponentProxy() {
+            @Override
+            public <P extends PortType> void trigger(KompicsEvent e, Port<P> p) {
+                PBLauncher.this.trigger(e, p);
+            }
+
+            @Override
+            public <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent) {
+                return PBLauncher.this.create(definition, initEvent);
+            }
+
+            @Override
+            public <T extends ComponentDefinition> Component create(Class<T> definition, None initEvent) {
+                return PBLauncher.this.create(definition, initEvent);
+            }
+
+            @Override
+            public void destroy(Component component) {
+                PBLauncher.this.destroy(component);
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative) {
+                return PBLauncher.this.connect(positive, negative);
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive) {
+                return PBLauncher.this.connect(negative, positive);
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive) {
+                PBLauncher.this.disconnect(negative, positive);
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative) {
+                PBLauncher.this.disconnect(positive, negative);
+            }
+
+            @Override
+            public Negative<ControlPort> getControlPort() {
+                return PBLauncher.this.control;
+            }
+        };
+    }
+
+    public static class DCLauncher extends ComponentDefinition{
+        public DCLauncher() {
+            TestAddress[] nodes = new TestAddress[numNodes];
+            TestAddress[] fakeNodes = createFakeNodes();
+            InetAddress ip = null;
+            try {
+                ip = InetAddress.getByName("127.0.0.1");
+            } catch (UnknownHostException ex) {
+                LOG.error("Aborting test.", ex);
+                System.exit(1);
+            }
+            List<ServerSocket> sockets = new LinkedList<ServerSocket>();
+            for (int i = 0; i < numNodes; i++) {
+                int port = -1;
+                try {
+                    ServerSocket s = new ServerSocket(0); // try to find a free port for each address
+                    sockets.add(s);
+                    port = s.getLocalPort();
+                } catch (IOException ex) {
+                    LOG.error("Could not find any free ports: {}", ex);
+                    System.exit(1);
+                }
+                if (port < 0) {
+                    LOG.error("Could not find enough free ports!");
+                    System.exit(1);
+                }
+                nodes[i] = new TestAddress(ip, port);
+                Component net = nGen.generate(myProxy, nodes[i]);
+                Component dc = create(DCComponent.class, new DCInit(nodes[i], fakeNodes));
+                connect(net.provided(Network.class), dc.required(Network.class), Channel.TWO_WAY);
+                connect(net.provided(NetworkControl.class), dc.required(NetworkControl.class), Channel.TWO_WAY);
+            }
+            // check that all ports are unique
+            Set<Integer> portSet = new TreeSet<Integer>();
+            for (Address addr : nodes) {
+                portSet.add(addr.getPort());
+            }
+            if (portSet.size() != nodes.length) {
+                LOG.error("Some ports do not appear to be unique! \n {} \n");
+                System.exit(1);
+            }
+            for (ServerSocket s : sockets) {
+                try {
+                    s.close();
+                } catch (IOException ex) {
+                    LOG.error("Could not close port: {}", ex);
+                    System.exit(1);
+                }
+            }
+        }
+
+        private final ComponentProxy myProxy = new ComponentProxy() {
+            @Override
+            public <P extends PortType> void trigger(KompicsEvent e, Port<P> p) {
+                DCLauncher.this.trigger(e, p);
+            }
+
+            @Override
+            public <T extends ComponentDefinition> Component create(Class<T> definition, Init<T> initEvent) {
+                return DCLauncher.this.create(definition, initEvent);
+            }
+
+            @Override
+            public <T extends ComponentDefinition> Component create(Class<T> definition, None initEvent) {
+                return DCLauncher.this.create(definition, initEvent);
+            }
+
+            @Override
+            public void destroy(Component component) {
+                DCLauncher.this.destroy(component);
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public <P extends PortType> Channel<P> connect(Positive<P> positive, Negative<P> negative) {
+                return DCLauncher.this.connect(positive, negative);
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public <P extends PortType> Channel<P> connect(Negative<P> negative, Positive<P> positive) {
+                return DCLauncher.this.connect(negative, positive);
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public <P extends PortType> void disconnect(Negative<P> negative, Positive<P> positive) {
+                DCLauncher.this.disconnect(negative, positive);
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public <P extends PortType> void disconnect(Positive<P> positive, Negative<P> negative) {
+                DCLauncher.this.disconnect(positive, negative);
+            }
+
+            @Override
+            public Negative<ControlPort> getControlPort() {
+                return DCLauncher.this.control;
+            }
+        };
+    }
+
+    public static class DCComponent extends ComponentDefinition {
+
+        public final TestAddress self;
+        public final TestAddress[] fakeNodes;
+        private final Positive<Network> net = requires(Network.class);
+        private final Positive<NetworkControl> netC = requires(NetworkControl.class);
+        private int dropsReceived = 0;
+
+        public DCComponent(DCInit init) {
+            self = init.self;
+            fakeNodes = init.fakeNodes;
+
+            Handler<Start> startHandler = new Handler<Start>() {
+                @Override
+                public void handle(Start event) {
+                    sendMessages();
+                }
+            };
+            subscribe(startHandler, control);
+
+            Handler<ConnectionStatus.Dropped> droppedHandler = new Handler<ConnectionStatus.Dropped>(){
+
+                @Override
+                public void handle(ConnectionStatus.Dropped event) {
+                    if (event.last) {
+                        dropsReceived++;
+                    }
+                    int id = msgId.incrementAndGet();
+                    droppedConnections.put(id, event);
+                    if (dropsReceived >= numNodes){
+                        TestUtil.submit(STOPPED);
+                    }
+                }
+            };
+            subscribe(droppedHandler, netC);
+        }
+
+        private void sendMessages() {
+            for (int i = 0; i < fakeNodes.length; i++){
+                TestAddress dest = fakeNodes[i];
+                for (int j = 0; j < NetworkTest.protos.length; j++){
+                    Transport proto = NetworkTest.protos[j];
+                    TestMessage msg = new TestMessage(self, dest, 0, proto);
+                    trigger(msg, net);
+                }
+            }
+        }
+    }
+
+    public static class DCInit extends Init<DCComponent> {
+
+        public final TestAddress self;
+        public final TestAddress[] fakeNodes;
+
+        public DCInit(TestAddress self, TestAddress[] fakeNodes) {
+            this.self = self;
+            this.fakeNodes = fakeNodes;
+        }
+    }
+
     public static class Acker extends ComponentDefinition {
 
         private final Positive<Network> net = requires(Network.class);
@@ -819,5 +1173,24 @@ public class NetworkTest {
         public Recover(long timestamp) {
             this.timestamp = timestamp;
         }
+    }
+
+    private static TestAddress[] createFakeNodes(){
+        Random rand = new Random(SEED);
+        TestAddress[] fakeNodes = new TestAddress[numNodes]; // these are used to test that the network doesn't
+        // crash on connection errors
+        for (int i = 0; i < numNodes; i++) {
+            try {
+                byte[] ipB = new byte[4];
+                rand.nextBytes(ipB);
+                InetAddress ip = InetAddress.getByAddress(ipB);
+                int port = rand.nextInt(65535 - 49152) + 49152;
+                fakeNodes[i] = new TestAddress(ip, port);
+            } catch (UnknownHostException ex) {
+                LOG.error("Aborting test.", ex);
+                System.exit(1);
+            }
+        }
+        return fakeNodes;
     }
 }
