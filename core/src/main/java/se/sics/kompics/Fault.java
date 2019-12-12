@@ -26,7 +26,6 @@ package se.sics.kompics;
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @author Lars Kroll {@literal <lkroll@kth.se>}
- * @version $Id$
  */
 public class Fault implements KompicsEvent {
 
@@ -38,7 +37,11 @@ public class Fault implements KompicsEvent {
      * Instantiates a new fault.
      * 
      * @param throwable
-     *            the throwable
+     *            the exception that caused the fault
+     * @param source
+     *            the component where the fault originated
+     * @param event
+     *            the event that caused the fault
      */
     public Fault(Throwable throwable, ComponentCore source, KompicsEvent event) {
         this.cause = throwable;
@@ -46,18 +49,38 @@ public class Fault implements KompicsEvent {
         this.event = event;
     }
 
+    /**
+     * Get the component where the fault originated.
+     * 
+     * @return the origin component
+     */
     public ComponentDefinition getSource() {
         return source.getComponent();
     }
 
+    /**
+     * Get the runtime core instance of the component where the fault originated.
+     * 
+     * @return the origin runtime core
+     */
     public Component getSourceCore() {
         return source;
     }
 
+    /**
+     * Get the exception that caused the fault.
+     * 
+     * @return the original exception
+     */
     public Throwable getCause() {
         return cause;
     }
 
+    /**
+     * The event that was being handled when the fault occurred.
+     * 
+     * @return the original event
+     */
     public KompicsEvent getEvent() {
         return this.event;
     }
@@ -75,6 +98,11 @@ public class Fault implements KompicsEvent {
         return sb.toString();
     }
 
+    /**
+     * The events that can be taken to resolve a fault.
+     * 
+     * See {@link ComponentDefinition#handleFault(Fault)} for semantics of the values.
+     */
     public static enum ResolveAction {
         RESOLVED, IGNORE, DESTROY, ESCALATE;
     }

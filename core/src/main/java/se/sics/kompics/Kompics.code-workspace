@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "/Users/lkroll/Documents/Programming/Kompics/kompics"
+		}
+	],
+	"settings": {
+		"java.format.settings.url": "file:///Users/lkroll/Documents/Programming/Kompics/kompics/eclipse-formatter-config.xml",
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"java.format.enabled": false
+	}
+}

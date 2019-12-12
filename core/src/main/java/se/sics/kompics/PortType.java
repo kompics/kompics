@@ -29,7 +29,6 @@ import java.util.Set;
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
- * @version $Id$
  */
 public abstract class PortType {
 
@@ -43,6 +42,8 @@ public abstract class PortType {
     /**
      * Gets the port type.
      * 
+     * @param <P>
+     *            the type of the port type
      * @param portTypeClass
      *            the port type class
      * 
@@ -64,12 +65,20 @@ public abstract class PortType {
         return portType;
     }
 
+    /**
+     * Forces the singleton instance of the port to be loaded.
+     * 
+     * Mostly meant for use with Kompics Scala.
+     * 
+     * @param p
+     *            the port type to load
+     */
     public static void preloadInstance(PortType p) {
         map.put(p.getClass(), p);
     }
 
     /**
-     * specifies an indication, response, or confirmation event type
+     * Specifies an indication, response, or confirmation event type.
      * 
      * @param eventType
      *            the event type
@@ -79,16 +88,17 @@ public abstract class PortType {
     }
 
     /**
-     * specifies an indication, response, or confirmation event type
+     * Specifies an indication, response, or confirmation event type.
      * 
      * @param eventType
+     *            the event type
      */
     protected final void indication(Class<? extends KompicsEvent> eventType) {
         positive.add(eventType);
     }
 
     /**
-     * specifies a request event type
+     * Specifies a request, or instruction event type.
      * 
      * @param eventType
      *            the event type
@@ -98,9 +108,10 @@ public abstract class PortType {
     }
 
     /**
-     * specifies a request event type
+     * Specifies a request, or instruction event type.
      * 
      * @param eventType
+     *            the event type
      */
     protected final void request(Class<? extends KompicsEvent> eventType) {
         negative.add(eventType);
@@ -160,10 +171,20 @@ public abstract class PortType {
         return (positive == true ? hasPositive(eventType) : hasNegative(eventType));
     }
 
+    /**
+     * Get all positive (indication) events.
+     * 
+     * @return a set of all positive events
+     */
     Set<Class<? extends KompicsEvent>> getPositiveEvents() {
         return positive;
     }
 
+    /**
+     * Get all negative (request) events.
+     * 
+     * @return a set of all negative events
+     */
     Set<Class<? extends KompicsEvent>> getNegativeEvents() {
         return negative;
     }

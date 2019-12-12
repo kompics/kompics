@@ -59,6 +59,15 @@ public final class Kompics {
     private static FaultHandler faultHandler = defaultFaultHandler;
     private static Config config;
 
+    /**
+     * Set the Kompics runtime scheduler.
+     * 
+     * @param sched
+     *            the scheduler to set
+     * 
+     * @throws java.lang.RuntimeException
+     *             if the Kompics runtime is already running
+     */
     public static void setScheduler(Scheduler sched) {
         synchronized (obj) {
             if (on) {
@@ -68,12 +77,26 @@ public final class Kompics {
         }
     }
 
+    /**
+     * Get the current Kompics runtime scheduler.
+     * 
+     * @return the current scheduler
+     */
     public static Scheduler getScheduler() {
         synchronized (obj) {
             return scheduler;
         }
     }
 
+    /**
+     * Set the root fault handler to its default.
+     * 
+     * @param fh
+     *            the new root fault handler
+     * 
+     * @throws java.lang.RuntimeException
+     *             if the Kompics runtime is already running
+     */
     public static void setFaultHandler(FaultHandler fh) {
         synchronized (obj) {
             if (on) {
@@ -83,6 +106,12 @@ public final class Kompics {
         }
     }
 
+    /**
+     * Reset the root fault handler to its default.
+     * 
+     * @throws java.lang.RuntimeException
+     *             if the Kompics runtime is already running
+     */
     public static void resetFaultHandler() {
         synchronized (obj) {
             if (on) {
@@ -92,12 +121,26 @@ public final class Kompics {
         }
     }
 
+    /**
+     * Get the root fault handler.
+     * 
+     * @return the root fault handler
+     */
     public static FaultHandler getFaultHandler() {
         synchronized (obj) {
             return faultHandler;
         }
     }
 
+    /**
+     * Set the root config to the default value.
+     * 
+     * @param conf
+     *            the new config to set
+     * 
+     * @throws java.lang.RuntimeException
+     *             if the Kompics runtime is already running
+     */
     public static void setConfig(Config conf) {
         synchronized (obj) {
             if (on) {
@@ -107,6 +150,12 @@ public final class Kompics {
         }
     }
 
+    /**
+     * Reset the root config to the default value.
+     * 
+     * @throws java.lang.RuntimeException
+     *             if the Kompics runtime is already running
+     */
     public static void resetConfig() {
         synchronized (obj) {
             if (on) {
@@ -116,6 +165,13 @@ public final class Kompics {
         }
     }
 
+    /**
+     * Get the top-level config instance.
+     * 
+     * Will load a default config, if none was set before.
+     * 
+     * @return the root config
+     */
     public static Config getConfig() {
         synchronized (obj) {
             if (config == null) {
@@ -125,6 +181,11 @@ public final class Kompics {
         }
     }
 
+    /**
+     * Checks if the Kompics runtime is currently running.
+     * 
+     * @return true, if its running
+     */
     public static boolean isOn() {
         synchronized (obj) {
             return on;
@@ -132,10 +193,14 @@ public final class Kompics {
     }
 
     /**
-     * Creates the and start.
+     * Creates the top-level component and starts it together with the Kompics runtime.
+     * 
+     * The value {@code Init.NONE} is passed to the root component.
      *
+     * @param <C>
+     *            the type of the root component
      * @param main
-     *            the main
+     *            the class instance of the root component
      */
     @SuppressWarnings("unchecked")
     public static <C extends ComponentDefinition> void createAndStart(Class<C> main) {
@@ -143,27 +208,71 @@ public final class Kompics {
         createAndStart(main, (Init<C>) Init.NONE, 1);
     }
 
+    /**
+     * Creates the top-level component and starts it together with the Kompics runtime.
+     * 
+     * Passes the provided init event to the root component.
+     *
+     * @param <C>
+     *            the type of the root component
+     * @param main
+     *            the class instance of the root component
+     * @param initEvent
+     *            the init event to pass to the root component
+     */
     public static <C extends ComponentDefinition> void createAndStart(Class<C> main, Init<C> initEvent) {
         createAndStart(main, initEvent, 1);
     }
 
     /**
-     * Creates the and start.
+     * Creates the top-level component and starts it together with the Kompics runtime.
+     * 
+     * The value {@code Init.NONE} is passed to the root component.
      *
+     * @param <C>
+     *            the type of the root component
      * @param main
-     *            the main
+     *            the class instance of the root component
      * @param workers
-     *            the workers
+     *            the number of workers to use in the runtime's threadpool
      */
     @SuppressWarnings("unchecked")
     public static <C extends ComponentDefinition> void createAndStart(Class<C> main, int workers) {
         createAndStart(main, (Init<C>) Init.NONE, workers, 1);
     }
 
+    /**
+     * Creates the top-level component and starts it together with the Kompics runtime.
+     * 
+     * The value {@code Init.NONE} is passed to the root component.
+     *
+     * @param <C>
+     *            the type of the root component
+     * @param main
+     *            the class instance of the root component
+     * @param initEvent
+     *            the init event to pass to the root component
+     * @param workers
+     *            the number of workers to use in the runtime's threadpool
+     */
     public static <C extends ComponentDefinition> void createAndStart(Class<C> main, Init<C> initEvent, int workers) {
         createAndStart(main, initEvent, workers, 1);
     }
 
+    /**
+     * Creates the top-level component and starts it together with the Kompics runtime.
+     * 
+     * The value {@code Init.NONE} is passed to the root component.
+     *
+     * @param <C>
+     *            the type of the root component
+     * @param main
+     *            the class instance of the root component
+     * @param workers
+     *            the number of workers to use in the runtime's threadpool
+     * @param maxEventExecuteNumber
+     *            the maximum number of events to execute before forcing a rescheduling of a component
+     */
     @SuppressWarnings("unchecked")
     public static <C extends ComponentDefinition> void createAndStart(Class<C> main, int workers,
             int maxEventExecuteNumber) {
@@ -171,17 +280,20 @@ public final class Kompics {
     }
 
     /**
-     * Creates the main component and starts it.
-     * <p>
+     * Creates the top-level component and starts it together with the Kompics runtime.
      * 
-     * @param <T>
+     * The value {@code Init.NONE} is passed to the root component.
      *
+     * @param <C>
+     *            the type of the root component
      * @param main
-     *            the main
+     *            the class instance of the root component
      * @param initEvent
+     *            the init event to pass to the root component
      * @param workers
-     *            the workers
+     *            the number of workers to use in the runtime's threadpool
      * @param maxEventExecuteNumber
+     *            the maximum number of events to execute before forcing a rescheduling of a component
      */
     public static <C extends ComponentDefinition> void createAndStart(Class<C> main, Init<C> initEvent, int workers,
             int maxEventExecuteNumber) {
@@ -225,6 +337,11 @@ public final class Kompics {
     private Kompics() {
     }
 
+    /**
+     * Asynchronously shut down the Kompics runtime.
+     * <p>
+     * Can be used safely from within components.
+     */
     public static void asyncShutdown() {
         Runnable r = new Runnable() {
 
@@ -238,6 +355,11 @@ public final class Kompics {
         t.start();
     }
 
+    /**
+     * Synchronously shut down the Kompics runtime.
+     * <p>
+     * Can <b>not</b> be used safely from within Kompics components. Use {@link #asyncShutdown()} instead.
+     */
     public static void shutdown() {
         synchronized (obj) {
             if (mainCore != null) {
@@ -270,6 +392,11 @@ public final class Kompics {
         }
     }
 
+    /**
+     * Force an immediate shutdown of the Kompics runtime.
+     * <p>
+     * Can <b>not</b> be used safely from within Kompics components.
+     */
     public static void forceShutdown() {
         synchronized (obj) {
             if (scheduler != null) {
@@ -282,6 +409,14 @@ public final class Kompics {
         }
     }
 
+    /**
+     * Wait until the Kompics runtime is shut down.
+     * <p>
+     * Can <b>not</b> be used safely from within Kompics components.
+     * 
+     * @throws InterruptedException
+     *             if the waiting is interrupted
+     */
     public static void waitForTermination() throws InterruptedException {
         synchronized (obj) {
             while (on) {
@@ -329,8 +464,11 @@ public final class Kompics {
     }
 
     /**
-     * Log stats.
+     * Log statistics if the @{link WorkStealingScheduler} is used.
+     * 
+     * @deprecated since 1.2.0, don't use the the @{link WorkStealingScheduler}!
      */
+    @Deprecated
     public static void logStats() {
         if (scheduler instanceof WorkStealingScheduler) {
             ((WorkStealingScheduler) scheduler).logStats();

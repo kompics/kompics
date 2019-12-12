@@ -26,9 +26,8 @@ import se.sics.kompics.PortType;
  * The <code>NetworkControl</code> class.
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
- * @author Jim Dowling <jdowling@sics.se>
+ * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @author Lars Kroll {@literal <lkroll@kth.se>}
- * @version $Id: NetworkControl.java 3881 2010-12-17 16:19:47Z Cosmin $
  */
 public final class NetworkControl extends PortType {
     {

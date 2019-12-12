@@ -21,18 +21,32 @@
 package se.sics.kompics;
 
 /**
- * The <code>Stop</code> class.
+ * This lifecycle events instructs a component to stop.
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
- * @version $Id$
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public final class Stop implements KompicsEvent {
 
+    /**
+     * Singleton instance.
+     * 
+     * @deprecated since 1.2.0, use {@link #EVENT} instead.
+     */
+    @Deprecated
     public static final Stop event = new Stop();
 
     /**
-     * Instantiates a new stop.
+     * Singleton instance.
+     * 
+     */
+    public static final Stop EVENT = new Stop();
+
+    /**
+     * Instantiates a new stop event.
+     * 
+     * Developers should prefer to use {@link #EVENT} instead.
      */
     public Stop() {
     }

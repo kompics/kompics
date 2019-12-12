@@ -20,25 +20,27 @@
  */
 package se.sics.kompics;
 
+import java.util.function.Consumer;
+
 /**
- * This lifecycle event indicates that a component was killed and is being deallocated.
+ * A Kompics event handler that uses Java8 functions internally.
+ * 
+ * @param <E>
+ *            the type of event to handle
  * 
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
-public class Killed implements KompicsEvent {
+public class FunctionHandler<E extends KompicsEvent> extends Handler<E> {
 
-    /**
-     * The component that was killed.
-     */
-    public final Component component;
+    private Consumer<E> handleFunction;
 
-    /**
-     * Instantiates a new killed event.
-     * 
-     * @param component
-     *            the component that was killed
-     */
-    public Killed(Component component) {
-        this.component = component;
+    public FunctionHandler(Class<E> eventType, Consumer<E> handleFunction) {
+        this.eventType = eventType;
+        this.handleFunction = handleFunction;
+    }
+
+    @Override
+    public void handle(E event) {
+        handleFunction.accept(event);
     }
 }

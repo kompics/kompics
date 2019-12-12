@@ -27,18 +27,14 @@ import io.netty.handler.codec.compression.SnappyFrameDecoder;
 import io.netty.handler.codec.compression.SnappyFrameEncoder;
 
 /**
- *
+ * An initialiasation class for Netty channels.
+ * 
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {
 
     private final BaseHandler<?> handler;
 
-    /**
-     *
-     * @param handler
-     * @param msgDecoderClass
-     */
     public NettyInitializer(BaseHandler<?> handler) {
         super();
         this.handler = handler;
@@ -46,6 +42,9 @@ public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {
 
     /**
      * Initiate the Pipeline for the newly active connection.
+     * 
+     * @param ch
+     *            the channel to initialise
      */
     @Override
     protected void initChannel(C ch) throws Exception {

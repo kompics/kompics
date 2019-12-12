@@ -21,18 +21,31 @@
 package se.sics.kompics;
 
 /**
- * The <code>Start</code> class.
+ * This lifecycle events instructs a component to start.
  * 
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
- * @version $Id$
+ * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public final class Start implements KompicsEvent {
 
+    /**
+     * Singleton instance.
+     * 
+     * @deprecated since 1.2.0, use {@link #EVENT} instead.
+     */
+    @Deprecated
     public static final Start event = new Start();
 
     /**
+     * Singleton instance.
+     */
+    public static final Start EVENT = new Start();
+
+    /**
      * Instantiates a new start event.
+     * 
+     * Developers should prefer to use {@link #EVENT} instead.
      */
     public Start() {
     }

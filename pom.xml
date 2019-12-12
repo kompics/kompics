@@ -3,7 +3,7 @@
 	<groupId>se.sics.kompics</groupId>
 	<artifactId>kompics-parent-pom</artifactId>
 	<packaging>pom</packaging>
-	<version>1.1.0</version>
+	<version>1.2.0-SNAPSHOT</version>
 	<!-- Spacer //-->
 	<name>Kompics</name>
 	<url>http://kompics.sics.se</url>
@@ -83,7 +83,10 @@ by putting together protocols programmed as event-driven components.</descriptio
 			<plugin>
 				<groupId>net.revelc.code.formatter</groupId>
 				<artifactId>formatter-maven-plugin</artifactId>
-				<version>2.8.1</version>
+				<version>2.11.0</version>
+				<configuration>
+					<configFile>${maven.multiModuleProjectDirectory}/eclipse-formatter-config.xml</configFile>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -140,7 +143,7 @@ by putting together protocols programmed as event-driven components.</descriptio
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>3.2.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -154,43 +157,19 @@ by putting together protocols programmed as event-driven components.</descriptio
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>3.1.1</version>
+				<configuration>
+					<linksource>true</linksource>
+					<source>1.8</source>
+				</configuration>
 				<executions>
-					<!-- <execution><id>attach-javadoc</id><phase>verify</phase><goals><goal>jar</goal></goals></execution>-->
 					<execution>
-						<id>aggregate</id>
+						<id>attach-javadocs</id>
 						<goals>
-							<goal>aggregate</goal>
+							<goal>jar</goal>
 						</goals>
-						<phase>site</phase>
-						<configuration>
-							<breakiterator>true</breakiterator>
-							<charset>UTF-8</charset>
-							<docencoding>UTF-8</docencoding>
-							<windowtitle>Kompics ${project.version} API Documentation</windowtitle>
-							<doctitle>Kompics ${project.version} API Documentation</doctitle>
-							<encoding>UTF-8</encoding>
-							<links>
-								<link>https://docs.oracle.com/javase/7/docs/api/</link>
-								<link>http://www.slf4j.org/api/</link>
-							</links>
-							<groups>
-								<group>
-									<title>Kompics Core</title>
-									<packages>se.sics.kompics</packages>
-								</group>
-								<group>
-									<title>Kompics Network</title>
-									<packages>se.sics.kompics.network:se.sics.kompics.network.*</packages>
-								</group>
-								<group>
-									<title>Kompics Timer</title>
-									<packages>se.sics.kompics.timer:se.sics.kompics.timer.*</packages>
-								</group>
-							</groups>
-							<locale>en_US</locale>
-						</configuration>
 					</execution>
+					<!-- <execution><id>aggregate</id><goals><goal>aggregate</goal></goals><phase>site</phase><configuration><breakiterator>true</breakiterator><charset>UTF-8</charset><docencoding>UTF-8</docencoding><windowtitle>Kompics ${project.version} API Documentation</windowtitle><doctitle>Kompics ${project.version} API Documentation</doctitle><encoding>UTF-8</encoding><links><link>https://docs.oracle.com/javase/7/docs/api/</link><link>http://www.slf4j.org/api/</link></links><groups><group><title>Kompics Core</title><packages>se.sics.kompics</packages></group><group><title>Kompics Network</title><packages>se.sics.kompics.network:se.sics.kompics.network.*</packages></group><group><title>Kompics Timer</title><packages>se.sics.kompics.timer:se.sics.kompics.timer.*</packages></group></groups><locale>en_US</locale></configuration></execution>-->
 				</executions>
 			</plugin>
 			<plugin>

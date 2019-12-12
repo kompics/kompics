@@ -38,7 +38,6 @@ import se.sics.kompics.config.ConfigUpdate;
  * @author Cosmin Arad {@literal <cosmin@sics.se>}
  * @author Jim Dowling {@literal <jdowling@sics.se>}
  * @author Lars Kroll {@literal <lkroll@kth.se>}
- * @version $Id: $
  */
 @SuppressWarnings("serial")
 public abstract class ComponentCore extends ForkJoinTask<Void> implements Component {

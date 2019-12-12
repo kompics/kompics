@@ -21,14 +21,24 @@
 package se.sics.kompics;
 
 /**
- *
+ * This lifecycle event indicates that a component was stopped.
+ * 
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public final class Stopped implements KompicsEvent {
 
+    /**
+     * The component that was stopped.
+     */
     public final Component component;
 
-    public Stopped(Component c) {
-        component = c;
+    /**
+     * Instantiates a new stopped event.
+     * 
+     * @param component
+     *            the component that was stopped
+     */
+    public Stopped(Component component) {
+        this.component = component;
     }
 }

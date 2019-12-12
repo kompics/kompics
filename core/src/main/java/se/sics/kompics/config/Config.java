@@ -32,6 +32,9 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * A Kompics configuration.
+ * <p>
+ * Basically a versioned, in-memory key-value store with some implicit type coercions ({@link Converter}).
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
@@ -517,7 +520,7 @@ public interface Config {
         /**
          * Sets the value at {@code key} to {@code o}.
          * <p>
-         * Uses {@link ValueOptions.DEFAULT}.
+         * Uses {@link ValueOptions#DEFAULT}.
          * <p>
          * 
          * @param key

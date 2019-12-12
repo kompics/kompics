@@ -33,40 +33,52 @@ import java.util.UUID;
 public interface Component extends Runnable {
 
     /**
-     * Gets the positive.
+     * Gets a positive (provided) instance of the given port.
      * 
+     * @param <P>
+     *            the type of the port type
      * @param portType
-     *            the port type
+     *            the port type class instance
      * 
-     * @return the positive
+     * @return a positive instance of the port type
      */
     public <P extends PortType> Positive<P> getPositive(Class<P> portType);
 
     /**
-     * returns the <code>portType</code> port provided by the component.
+     * Gets a provided (positive) instance of the given port.
+     * 
+     * Same as {@link #getPositive(Class)}.
      * 
      * @param <P>
+     *            the type of the port type
      * @param portType
-     * @return
+     *            the port type class instance
+     * @return a provided instance of the port type
      */
     public <P extends PortType> Positive<P> provided(Class<P> portType);
 
     /**
-     * Gets the negative.
+     * Gets a negative (required) instance of the given port.
      * 
+     * @param <P>
+     *            the type of the port type
      * @param portType
-     *            the port type
+     *            the port type class instance
      * 
-     * @return the negative
+     * @return a negative instance of the port type
      */
     public <P extends PortType> Negative<P> getNegative(Class<P> portType);
 
     /**
-     * returns the <code>portType</code> port required by the component.
+     * Gets a required (negative) instance of the given port.
+     * 
+     * Same as {@link #getNegative(Class)}.
      * 
      * @param <P>
+     *            the type of the port type
      * @param portType
-     * @return
+     *            the port type class instance
+     * @return a required instance of the port type
      */
     public <P extends PortType> Negative<P> required(Class<P> portType);
 

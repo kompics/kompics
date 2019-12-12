@@ -32,9 +32,11 @@ import se.sics.kompics.network.NetworkException;
 import se.sics.kompics.network.Transport;
 
 /**
- *
+ * A basic channel handler type.
+ * 
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @param <M>
+ *            the message type of the handler
  */
 @ChannelHandler.Sharable
 public abstract class BaseHandler<M> extends SimpleChannelInboundHandler<M> {

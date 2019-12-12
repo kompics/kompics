@@ -21,6 +21,10 @@
 package se.sics.kompics;
 
 /**
+ * Base class for matching handlers, which use an extracted value to "pattern match" against.
+ * 
+ * A pattern matching handler separates an incoming event into a <i>context</i> and a <i>content</i> part. It passes
+ * them separately to the {@link #handle(Object, PatternExtractor)} method.
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  * @param <P>
@@ -32,13 +36,13 @@ package se.sics.kompics;
  */
 public abstract class MatchedHandler<P, V, E extends PatternExtractor<P, ? super V>> {
 
-    Class<E> cxtType = null;
+    Class<E> contextType = null;
 
     protected MatchedHandler() {
     }
 
-    protected MatchedHandler(Class<E> cxtType) {
-        this.cxtType = cxtType;
+    protected MatchedHandler(Class<E> contextType) {
+        this.contextType = contextType;
     }
 
     public abstract P pattern();
@@ -46,23 +50,46 @@ public abstract class MatchedHandler<P, V, E extends PatternExtractor<P, ? super
     public abstract void handle(V content, E context);
 
     /**
-     * Sets the event type.
+     * Sets the context type.
      * <p>
      * 
-     * @param eventType
-     *            the new event type
+     * @param cxtType
+     *            the context type
+     * @deprecated Since 1.2.0, use {@link #setContextType(Class)} instead. Method will be dropped in 1.3.0!
      */
+    @Deprecated
     public void setCxtType(Class<E> cxtType) {
-        this.cxtType = cxtType;
+        this.contextType = cxtType;
     }
 
     /**
-     * Gets the event type.
+     * Sets the context type.
+     * 
+     * @param contextType
+     *            the type of the context
+     */
+    public void setContextType(Class<E> contextType) {
+        this.contextType = contextType;
+    }
+
+    /**
+     * Gets the context type.
      * <p>
      * 
-     * @return the event type
+     * @return the context type
+     * @deprecated Since 1.2.0, use {@link #getContextType()} instead. Method will be dropped in 1.3.0!
      */
+    @Deprecated
     public Class<E> getCxtType() {
-        return cxtType;
+        return contextType;
+    }
+
+    /**
+     * Gets the context type.
+     * 
+     * @return the context type
+     */
+    public Class<E> getContextType() {
+        return contextType;
     }
 }

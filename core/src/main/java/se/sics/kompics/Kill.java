@@ -22,12 +22,24 @@
 package se.sics.kompics;
 
 /**
- *
+ * This lifecycle events instructs a component to stop and get deallocated.
+ * 
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public class Kill implements KompicsEvent {
 
+    /**
+     * Singleton instance.
+     * 
+     * @deprecated since 1.2.0, use {@link #EVENT} instead.
+     */
+    @Deprecated
     public static final Kill event = new Kill();
+
+    /**
+     * Singleton instance.
+     */
+    public static final Kill EVENT = new Kill();
 
     private Kill() {
     }

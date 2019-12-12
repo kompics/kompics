@@ -58,7 +58,8 @@ public interface Address {
      * Most likely the same as "this.asSocket().equals(other.asSocket())".
      * 
      * @param other
-     * @return
+     *            the addess to compare to
+     * @return {@literal true}, if {@code other} is on the same port as {@code this}
      */
     public boolean sameHostAs(Address other);
 }

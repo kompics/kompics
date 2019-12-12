@@ -21,17 +21,24 @@
 package se.sics.kompics;
 
 /**
+ * This lifecycle event indicates that a component was started.
  *
  * @author Lars Kroll {@literal <lkroll@kth.se>}
  */
 public final class Started implements KompicsEvent {
 
+    /**
+     * The component that was started.
+     */
     public final Component component;
 
     /**
      * Instantiates a new started event.
+     * 
+     * @param component
+     *            the component that was started
      */
-    public Started(Component c) {
-        component = c;
+    public Started(Component component) {
+        this.component = component;
     }
 }
