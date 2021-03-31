@@ -69,7 +69,7 @@ by putting together protocols programmed as event-driven components.</descriptio
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>27.1-jre</version>
+			<version>29.0-jre</version>
 		</dependency>
 		<dependency>
 			<groupId>com.typesafe</groupId>
