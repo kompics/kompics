@@ -21,7 +21,7 @@
 package se.sics.kompics.network.data;
 
 import java.util.Optional;
-import com.larskroll.common.Either;
+import com.lkroll.common.Either;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;

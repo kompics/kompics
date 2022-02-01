@@ -118,16 +118,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             </build>
         </profile>
     </profiles>
-
-
-    <repositories>
-    <repository>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-        <id>bintray-kompics-Maven</id>
-        <name>bintray</name>
-        <url>https://dl.bintray.com/kompics/Maven</url>
-    </repository>
-</repositories>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>

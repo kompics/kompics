@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.data;
 
-import com.larskroll.common.statistics.ExponentialMovingAverage;
+import com.lkroll.common.statistics.ExponentialMovingAverage;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import se.sics.kompics.network.Transport;

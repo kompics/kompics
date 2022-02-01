@@ -55,9 +55,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.larskroll</groupId>
+            <groupId>com.lkroll</groupId>
             <artifactId>common-utils</artifactId>
-            <version>1.4.1</version>
+            <version>1.5.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -107,23 +107,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
             </plugin>
         </plugins>
     </build>
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-kompics-Maven</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/kompics/Maven</url>
-        </repository>
-        <!-- this is where the common-utils is from //-->
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-lkrollcom-maven</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/lkrollcom/maven</url>
-        </repository>
-    </repositories>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
