@@ -20,7 +20,7 @@
  */
 package se.sics.kompics.network.data;
 
-import com.larskroll.common.Either;
+import com.lkroll.common.Either;
 import io.netty.buffer.ByteBuf;
 import java.net.InetSocketAddress;
 import java.util.LinkedList;
